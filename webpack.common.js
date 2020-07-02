@@ -110,6 +110,6 @@ module.exports = {
             }
         ]
     },
-    target: 'node',
+    target: 'web',
     externals: [nodeExternals()]
 };
