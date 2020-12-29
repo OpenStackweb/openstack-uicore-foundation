@@ -13,16 +13,18 @@
 import React from 'react';
 import URI from "urijs";
 import IdTokenVerifier from 'idtoken-verifier';
-import {doLogin} from "./actions";
-import {getFromLocalStorage, getCurrentPathName, getCurrentHref} from '../../utils/methods';
+import {doLogin, emitAccessToken, RESPONSE_TYPE_IMPLICIT, RESPONSE_TYPE_CODE} from "./actions";
+import {getFromLocalStorage, getCurrentPathName, getCurrentHref, getOAuth2Flow} from '../../utils/methods';
 
 class AbstractAuthorizationCallbackRoute extends React.Component {
 
     constructor(issuer, audience, props) {
+        // console.log('AbstractAuthorizationCallbackRoute::constructor init');
         super(props);
 
-        const { access_token , id_token, session_state, error, error_description } = this.extractHashParams();
+        let flow = getOAuth2Flow();
 
+        // initial state
         this.state = {
             id_token_is_valid: true,
             error: null,
@@ -31,52 +33,135 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
             audience: audience
         };
 
-        if (error){
+        if (flow === RESPONSE_TYPE_IMPLICIT) {
+            this._implicitFlow();
+        }
+
+        if (flow === RESPONSE_TYPE_CODE) {
+            this._codeFlow();
+        }
+
+        // console.log('AbstractAuthorizationCallbackRoute::constructor finish');
+    }
+
+    _implicitFlow(){
+        const {access_token, id_token, session_state, error, error_description, expires_in} = this.extractHashParams();
+
+        if (error) {
             // if error condition short cut...
             this.state.error = error;
             this.state.error_description = error_description;
-        } else {
-            if (!access_token){
-                // re start flow
-                doLogin(getCurrentPathName());
-            } else {
-                const id_token_is_valid = id_token ? this.validateIdToken(id_token) : false;
-                this.state.id_token_is_valid = id_token_is_valid;
-                this.state.error = error;
-                this.state.error_description = error_description;
+            return;
+        }
 
-                if(access_token && id_token_is_valid) {
-                    props.onUserAuth(access_token, id_token, session_state);
-                }
+        if (!access_token) {
+            // re start flow
+            doLogin(getCurrentPathName());
+            return;
+        }
+
+        const id_token_is_valid = id_token ? this.validateIdToken(id_token) : false;
+
+            this.state.id_token_is_valid = id_token_is_valid;
+            this.state.error = !id_token_is_valid ? "Invalid Token" : null;
+            this.state.error_description = !id_token_is_valid ? "Invalid Token" : null;
+
+            if (access_token && id_token_is_valid) {
+                this.props.onUserAuth(access_token, id_token, session_state, expires_in);
+            }
+    }
+
+    _codeFlow() {
+
+        const {code, session_state, error, error_description} = this.extractHashParams();
+
+        if (error) {
+            // if error condition short cut...
+            // we set here directtly bc we are at construction time
+            this.state.error = error;
+            this.state.error_description = error_description;
+            return;
+        }
+
+        if (!code) {
+            // re start flow
+            doLogin(getCurrentPathName());
+            return;
+        }
+
+        let url = URI(getCurrentHref());
+        let query = url.search(true);
+        let backUrl = query.hasOwnProperty('BackUrl') ? query['BackUrl'] : null;
+        // async code
+        // console.log(`AbstractAuthorizationCallbackRoute::_codeFlow getting access token with code ${code}`)
+
+        emitAccessToken(code, backUrl).then(response => {
+            // console.log(`AbstractAuthorizationCallbackRoute::_codeFlow [ASYNC] got response ${JSON.stringify(response)}`);
+            let { id_token, access_token, refresh_token, expires_in,  error: error2, error_description: error_description2} = response;
+
+            if(error2){
+                // set with
+                this.setState({
+                    ...this.state,
+                    error: error2,
+                    error_description:error_description2
+                });
+                return;
             }
 
-        }
+            const id_token_is_valid = id_token ? this.validateIdToken(id_token) : false;
+
+            // this.state.id_token_is_valid = id_token_is_valid;
+            //this.state.error = !id_token_is_valid ? "Invalid Token" : error;
+            //this.state.error_description = !id_token_is_valid ? "Invalid Token" : error_description;
+
+            // set with
+            // console.log(`AbstractAuthorizationCallbackRoute::_codeFlow [ASYNC] setting state`);
+
+            this.setState({
+                ...this.state,
+                id_token_is_valid: id_token_is_valid,
+                error: !id_token_is_valid ? "Invalid Token" : error,
+                error_description:!id_token_is_valid ? "Invalid Token" : error_description,
+            });
+
+            if (access_token && id_token_is_valid) {
+                // console.log(`AbstractAuthorizationCallbackRoute::_codeFlow [ASYNC] onUserAuth`);
+                this.props.onUserAuth(access_token, id_token, session_state, expires_in, refresh_token);
+            }
+        });
     }
 
     extractHashParams() {
         return URI.parseQuery(this.props.location.hash.substr(1));
     }
 
-    validateIdToken(idToken){
-        let {audience , issuer} = this.state;
+    validateIdToken(idToken) {
+        let {audience, issuer} = this.state;
         let verifier = new IdTokenVerifier({
-            issuer:   issuer,
+            issuer: issuer,
             audience: audience
         });
         let storedNonce = getFromLocalStorage('nonce', true);
-        let jwt    = verifier.decode(idToken);
-        let alg    = jwt.header.alg;
-        let kid    = jwt.header.kid;
-        let aud    = jwt.payload.aud;
-        let iss    = jwt.payload.iss;
-        let exp    = jwt.payload.exp;
-        let nbf    = jwt.payload.nbf;
+        let jwt = verifier.decode(idToken);
+        let alg = jwt.header.alg;
+        let kid = jwt.header.kid;
+        let aud = jwt.payload.aud;
+        let iss = jwt.payload.iss;
+        let exp = jwt.payload.exp;
+        let nbf = jwt.payload.nbf;
         let tnonce = jwt.payload.nonce || null;
-        return tnonce == storedNonce && aud == audience && iss == issuer;
+        return tnonce === storedNonce && aud === audience && iss === issuer;
     }
 
     shouldComponentUpdate(nextProps, nextState, nextContext) {
-        if(nextProps.accessToken !== this.props.accessToken){
+        if (nextProps.accessToken !== this.props.accessToken) {
+            return true;
+        }
+        if(nextState.error !== this.state.error){
+            return true;
+        }
+        if(nextState.id_token_is_valid !== this.state.id_token_is_valid){
             return true;
         }
         return false;
@@ -84,7 +169,8 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         // if we have an access token refresh ...
-        if(prevProps.accessToken !== this.props.accessToken){
+        if (prevProps.accessToken !== this.props.accessToken) {
+            //console.log(`AbstractAuthorizationCallbackRoute::componentDidUpdate prevProps.accessToken ${prevProps.accessToken} this.props.accessToken ${this.props.accessToken}`);
             let url = URI(getCurrentHref());
             let query = url.search(true);
             let fragment = URI.parseQuery(url.fragment());
@@ -111,27 +197,27 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
      * @param error
      * @private
      */
-    _callback(backUrl){}
+    _callback(backUrl) {
+    }
 
     /**
      * Abstract
      * @param error
      * @private
      */
-    _redirect2Error(error){
+    _redirect2Error(error) {
     }
 
     render() {
-        //console.log("AuthorizationCallbackRoute::render");
-        let {id_token_is_valid, error, error_description } = this.state;
 
-        if(error != null){
-           return this._redirect2Error(error);
+        let {id_token_is_valid, error, error_description} = this.state;
+
+        if (error != null) {
+            return this._redirect2Error(`${error} - ${error_description}.`);
         }
 
-        if(!id_token_is_valid)
-        {
-            return this._redirect2Error("token_validation_error");
+        if (!id_token_is_valid) {
+            return this._redirect2Error("Token Validation Error - Token is invalid.");
         }
 
         return null;

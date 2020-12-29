@@ -17,7 +17,8 @@ import {
     RECEIVE_USER_INFO,
     CLEAR_SESSION_STATE,
     SESSION_STATE_STATUS_UNCHANGED,
-    UPDATE_SESSION_STATE_STATUS
+    UPDATE_SESSION_STATE_STATUS,
+    UPDATE_ACCESS_TOKEN,
 } from './actions';
 import IdTokenVerifier from 'idtoken-verifier';
 
@@ -29,8 +30,11 @@ const DEFAULT_STATE = {
     member: null,
     idToken: null,
     sessionState: null,
+    expiresIn: null,
+    accessTokenUpdatedAt: null,
     backUrl : null,
     sessionStateStatus: SESSION_STATE_STATUS_UNCHANGED,
+    refreshToken : null,
 };
 
 export const loggedUserReducer = (state = DEFAULT_STATE, action) => {
@@ -40,28 +44,64 @@ export const loggedUserReducer = (state = DEFAULT_STATE, action) => {
 
     switch(type) {
         case SET_LOGGED_USER: {
-            let { accessToken, idToken, sessionState } = action.payload;
-            storeAuthInfo(accessToken, idToken, sessionState);
-            return {...state, isLoggedUser:true, accessToken, idToken, sessionState, backUrl : null };
+            let { accessToken, idToken, sessionState, refreshToken, expiresIn } = action.payload;
+            storeAuthInfo(accessToken, idToken, sessionState, expiresIn, refreshToken);
+            return {...state,
+                isLoggedUser:true,
+                accessToken,
+                idToken,
+                sessionState,
+                backUrl : null,
+                refreshToken: refreshToken,
+                expiresIn: expiresIn,
+                accessTokenUpdatedAt: Math.floor(Date.now() / 1000),
+            };
         }
+        case UPDATE_ACCESS_TOKEN: {
+            let { accessToken, refreshToken, expiresIn } = action.payload;
+            // console.log(`UPDATE_ACCESS_TOKEN new access token ${accessToken} expiresIn ${expiresIn}`);
+            let update = {
+                accessToken,
+                expiresIn: expiresIn,
+                accessTokenUpdatedAt: Math.floor(Date.now() / 1000),
+            };
+
+            if(refreshToken !== null){
+                update['refreshToken'] = refreshToken;
+            }
+
+            return {...state, ...update};
+        }
+        break;
         case UPDATE_SESSION_STATE_STATUS:{
             let { sessionStateStatus } = action.payload;
             return {...state, sessionStateStatus:sessionStateStatus};
         }
-
+        break;
         case CLEAR_SESSION_STATE:
         {
             clearAuthInfo();
-            return {...state, isLoggedUser:false, accessToken:null, idToken:null, sessionState:null, backUrl : null };
+            return {...state,
+                isLoggedUser:false,
+                accessToken:null,
+                idToken:null,
+                sessionState:null,
+                backUrl : null,
+                refreshToken: null,
+                expiresIn: null,
+                accessTokenUpdatedAt: null,
+            };
         }
+        break;
         case LOGOUT_USER : {
             clearAuthInfo();
             return {...DEFAULT_STATE, backUrl: payload.backUrl};
         }
+        break;
         case RECEIVE_USER_INFO: {
             let { response } = action.payload;
 
-            if(issuer != '' && audience != '') {
+            if(issuer !== '' && audience !== '') {
                 // check on idp groups
                 let verifier = new IdTokenVerifier({
                     issuer: issuer,
@@ -86,6 +126,7 @@ export const loggedUserReducer = (state = DEFAULT_STATE, action) => {
             }
             return {...state, member: response};
         }
+        break;
         default:
             return state;
     }

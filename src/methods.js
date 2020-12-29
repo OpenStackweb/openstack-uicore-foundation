@@ -58,6 +58,9 @@ import {
     initLogOut,
     doLogout,
     getUserInfo,
+    emitAccessToken,
+    getAccessToken,
+
 } from './components/security/actions';
 
 import {getCurrentUserLanguage} from './utils/methods';
@@ -126,5 +129,7 @@ export {
     doLogout,
     getUserInfo,
     authErrorHandler,
-    escapeFilterValue
+    escapeFilterValue,
+    emitAccessToken,
+    getAccessToken,
 };

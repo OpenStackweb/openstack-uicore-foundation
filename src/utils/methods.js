@@ -13,6 +13,7 @@
 
 import moment from 'moment-timezone';
 import URI from "urijs";
+import { randomBytes, createHash } from 'crypto'
 
 export const findElementPos = (obj) => {
     var curtop = -70;
@@ -90,6 +91,13 @@ export const getOAuth2ClientId = () => {
     return null;
 };
 
+export const getOAuth2Flow = () => {
+    if(typeof window !== 'undefined') {
+        return window.OAUTH2_FLOW || "token id_token";
+    }
+    return "token id_token";
+}
+
 export const getOAuth2IDPBaseUrl = () => {
     if(typeof window !== 'undefined') {
         return window.IDP_BASE_URL;
@@ -157,11 +165,13 @@ export const buildAPIBaseUrl = (relativeUrl) => {
     return null``;
 };
 
-export const storeAuthInfo = (accessToken, idToken, sessionState) => {
+export const storeAuthInfo = (accessToken, idToken, sessionState, expiresIn = 0, refreshToken = null) => {
     if(typeof window !== 'undefined'){
         window.accessToken = accessToken;
         window.idToken = idToken;
         window.sessionState = sessionState;
+        window.refreshToken = refreshToken;
+        window.expiresIn = expiresIn;
         return;
     }
 };
@@ -171,6 +181,8 @@ export const clearAuthInfo = () => {
         window.accessToken = null;
         window.idToken = null;
         window.sessionState = null;
+        window.refreshToken = null;
+        window.expiresIn = null;
         return;
     }
 };
@@ -248,3 +260,28 @@ export const shallowEqual = (object1, object2) => {
 export const isEmpty = (obj) => {
     return Object.keys(obj).length === 0;
 };
+
+export const base64URLEncode = (str) => {
+    return str
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '')
+}
+
+export const sha256 = (buffer) => {
+    return createHash('sha256').update(buffer).digest()
+}
+
+export const retryPromise = async (
+    cb,
+    maxNumberOfRetries = 3
+) => {
+    for (let i = 0; i < maxNumberOfRetries; i++) {
+        if (await cb()) {
+            return true;
+        }
+    }
+
+    return false;
+}
