@@ -22,7 +22,7 @@ import {
 } from './actions';
 import IdTokenVerifier from 'idtoken-verifier';
 
-import {storeAuthInfo, clearAuthInfo, getOAuth2IDPBaseUrl, getOAuth2ClientId} from '../../utils/methods';
+import {storeAuthInfo, clearAuthInfo, getOAuth2IDPBaseUrl, getOAuth2ClientId, updateAuthInfo} from '../../utils/methods';
 
 const DEFAULT_STATE = {
     isLoggedUser: false,
@@ -59,6 +59,7 @@ export const loggedUserReducer = (state = DEFAULT_STATE, action) => {
         }
         case UPDATE_ACCESS_TOKEN: {
             let { accessToken, refreshToken, expiresIn } = action.payload;
+            updateAuthInfo(accessToken, expiresIn, refreshToken);
             // console.log(`UPDATE_ACCESS_TOKEN new access token ${accessToken} expiresIn ${expiresIn}`);
             let update = {
                 accessToken,

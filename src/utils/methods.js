@@ -176,6 +176,17 @@ export const storeAuthInfo = (accessToken, idToken, sessionState, expiresIn = 0,
     }
 };
 
+export const updateAuthInfo = (accessToken, expiresIn = 0, refreshToken = null) => {
+    if(typeof window !== 'undefined'){
+        window.accessToken = accessToken;
+        window.expiresIn = expiresIn;
+        if(refreshToken !== null){
+            window.refreshToken = refreshToken;
+        }
+        return;
+    }
+}
+
 export const clearAuthInfo = () => {
     if(typeof window !== 'undefined'){
         window.accessToken = null;
