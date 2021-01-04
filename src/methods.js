@@ -49,19 +49,25 @@ import {
     getBackURL
 } from './utils/methods'
 
+import {
+    onUserAuth,
+    doLogout,
+    getUserInfo,
+} from './components/security/actions';
 
 import {
     getAuthUrl,
     getLogoutUrl,
     doLogin,
-    onUserAuth,
     initLogOut,
-    doLogout,
-    getUserInfo,
     emitAccessToken,
     getAccessToken,
-
-} from './components/security/actions';
+    getAuthInfo,
+    clearAuthInfo,
+    getIdToken,
+    getOAuth2IDPBaseUrl,
+    getOAuth2ClientId
+} from './components/security/methods';
 
 import {getCurrentUserLanguage} from './utils/methods';
 
@@ -132,4 +138,9 @@ export {
     escapeFilterValue,
     emitAccessToken,
     getAccessToken,
+    getIdToken,
+    getAuthInfo,
+    getOAuth2IDPBaseUrl,
+    getOAuth2ClientId,
+    clearAuthInfo
 };

@@ -13,15 +13,20 @@
 
 import React from 'react';
 import {connect} from "react-redux";
+
 import {
     doLogout,
-    getAuthUrl,
-    initLogOut,
     SESSION_STATE_STATUS_CHANGED,
     SESSION_STATE_STATUS_ERROR,
     SESSION_STATE_STATUS_UNCHANGED,
     updateSessionStateStatus
 } from "../actions";
+
+import {
+    getAuthUrl,
+    initLogOut
+} from "../methods";
+
 import URI from "urijs"
 
 const CHECK_SESSION_INTERVAL = (1000 * 60) * 30;
@@ -74,7 +79,7 @@ class OPSessionChecker extends React.Component {
         if(resultUrl.hasQuery("error")){
             let error = resultUrl.query(true).error;
             // console.log("OPSessionChecker::rpCheckSessionStateFrameOnLoad - error " + error);
-            // check session state with prompt none failed do logoutdebugger;
+            // check session state with prompt none failed do logout
             //console.log('OPSessionChecker::rpCheckSessionStateFrameOnLoad - initiating logout');
             initLogOut();
             return;
@@ -233,7 +238,6 @@ class OPSessionChecker extends React.Component {
 const mapStateToProps = ({ loggedUserState }) => ({
     sessionState: loggedUserState.sessionState,
     isLoggedUser: loggedUserState.isLoggedUser,
-    idToken: loggedUserState.idToken,
     sessionStateStatus: loggedUserState.sessionStateStatus,
 })
 

@@ -13,7 +13,7 @@
 
 import moment from 'moment-timezone';
 import URI from "urijs";
-import { randomBytes, createHash } from 'crypto'
+import { createHash } from 'crypto'
 
 export const findElementPos = (obj) => {
     var curtop = -70;
@@ -65,52 +65,6 @@ export const getBackURL = () => {
     return backUrl;
 };
 
-/**
- *
- * Auth Utils
- */
-
-export const getAccessToken = () => {
-    if(typeof window !== 'undefined') {
-        return window.accessToken;
-    }
-    return null;
-};
-
-export const getIdToken = () => {
-    if(typeof window !== 'undefined') {
-        return window.idToken;
-    }
-    return null;
-};
-
-export const getOAuth2ClientId = () => {
-    if(typeof window !== 'undefined') {
-        return window.OAUTH2_CLIENT_ID;
-    }
-    return null;
-};
-
-export const getOAuth2Flow = () => {
-    if(typeof window !== 'undefined') {
-        return window.OAUTH2_FLOW || "token id_token";
-    }
-    return "token id_token";
-}
-
-export const getOAuth2IDPBaseUrl = () => {
-    if(typeof window !== 'undefined') {
-        return window.IDP_BASE_URL;
-    }
-    return null;
-};
-
-export const getOAuth2Scopes = () => {
-    if(typeof window !== 'undefined') {
-        return window.SCOPES;
-    }
-    return null;
-};
 
 export const getAuthCallback = () => {
     if(typeof window !== 'undefined') {
@@ -165,39 +119,6 @@ export const buildAPIBaseUrl = (relativeUrl) => {
     return null``;
 };
 
-export const storeAuthInfo = (accessToken, idToken, sessionState, expiresIn = 0, refreshToken = null) => {
-    if(typeof window !== 'undefined'){
-        window.accessToken = accessToken;
-        window.idToken = idToken;
-        window.sessionState = sessionState;
-        window.refreshToken = refreshToken;
-        window.expiresIn = expiresIn;
-        return;
-    }
-};
-
-export const updateAuthInfo = (accessToken, expiresIn = 0, refreshToken = null) => {
-    if(typeof window !== 'undefined'){
-        window.accessToken = accessToken;
-        window.expiresIn = expiresIn;
-        if(refreshToken !== null){
-            window.refreshToken = refreshToken;
-        }
-        return;
-    }
-}
-
-export const clearAuthInfo = () => {
-    if(typeof window !== 'undefined'){
-        window.accessToken = null;
-        window.idToken = null;
-        window.sessionState = null;
-        window.refreshToken = null;
-        window.expiresIn = null;
-        return;
-    }
-};
-
 export const putOnLocalStorage = (key, value) => {
     if(typeof window !== 'undefined') {
         window.localStorage.setItem(key, value);
@@ -208,12 +129,19 @@ export const getFromLocalStorage = (key, removeIt) => {
     if(typeof window !== 'undefined') {
         let val = window.localStorage.getItem(key);
         if(removeIt){
-            window.localStorage.removeItem(key);
+            console.log(`getFromLocalStorage removing key ${key}`);
+            removeFromLocalStorage(key);
         }
         return val;
     }
     return null;
 };
+
+export const removeFromLocalStorage = (key) => {
+    if(typeof window !== 'undefined') {
+        window.localStorage.removeItem(key);
+    }
+}
 
 export const isClearingSessionState = () => {
     if(typeof window !== 'undefined') {

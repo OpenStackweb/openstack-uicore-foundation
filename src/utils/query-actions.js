@@ -12,14 +12,15 @@
  **/
 
 import {fetchErrorHandler, fetchResponseHandler, escapeFilterValue } from "./actions";
-import { getAccessToken, buildAPIBaseUrl } from "../utils/methods"
+import {getAccessToken} from '../components/security/actions';
+import {  buildAPIBaseUrl } from "../utils/methods"
 import _ from 'lodash';
 export const RECEIVE_COUNTRIES  = 'RECEIVE_COUNTRIES';
 const callDelay = 500; //miliseconds
 
-export const queryMembers = _.debounce((input, callback) => {
+export const queryMembers = _.debounce(async (input, callback) => {
 
-    let accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let filters = encodeURIComponent(`full_name=@${input},first_name=@${input},last_name=@${input},email=@${input}`);
     let expand = `tickets,rsvp,schedule_summit_events,all_affiliations`
@@ -35,9 +36,9 @@ export const queryMembers = _.debounce((input, callback) => {
 }, callDelay);
 
 
-export const querySummits = _.debounce((input, callback) => {
+export const querySummits = _.debounce(async (input, callback) => {
 
-    let accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let filters = encodeURIComponent(`name=@${input}`);
 
@@ -52,9 +53,9 @@ export const querySummits = _.debounce((input, callback) => {
 }, callDelay);
 
 
-export const querySpeakers = _.debounce((summitId, input, callback) => {
+export const querySpeakers = _.debounce(async (summitId, input, callback) => {
 
-    let accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let filters = encodeURIComponent(`full_name=@${input},first_name=@${input},last_name=@${input},email=@${input}`);
     let apiUrl = `/api/v1`;
@@ -77,9 +78,9 @@ export const querySpeakers = _.debounce((summitId, input, callback) => {
 
 
 
-export const queryTags = _.debounce((summitId, input, callback) => {
+export const queryTags = _.debounce(async (summitId, input, callback) => {
 
-    let accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let apiUrl = `/api/v1`;
     let filter = encodeURIComponent(`tag=@${input}`);
@@ -108,9 +109,9 @@ export const queryTags = _.debounce((summitId, input, callback) => {
 
 
 
-export const queryTracks = _.debounce((summitId, input, callback) => {
+export const queryTracks = _.debounce(async (summitId, input, callback) => {
 
-    let accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let filter = encodeURIComponent(`name=@${input}`);
 
@@ -126,9 +127,9 @@ export const queryTracks = _.debounce((summitId, input, callback) => {
 
 
 
-export const queryTrackGroups = _.debounce((summitId, input, callback) => {
+export const queryTrackGroups = _.debounce(async (summitId, input, callback) => {
 
-    let accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let filter = input ? encodeURIComponent(`filter=name=@${input}`) : '';
 
@@ -144,9 +145,9 @@ export const queryTrackGroups = _.debounce((summitId, input, callback) => {
 
 
 
-export const queryEvents = _.debounce((summitId, input, onlyPublished = false, callback) => {
+export const queryEvents = _.debounce(async (summitId, input, onlyPublished = false, callback) => {
 
-    let accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let baseUrl = `/api/v1/summits/${summitId}/events` + (onlyPublished ? '/published' : '');
     let filter = encodeURIComponent(`title=@${input}`);
@@ -163,9 +164,9 @@ export const queryEvents = _.debounce((summitId, input, onlyPublished = false, c
 
 
 
-export const queryGroups = _.debounce((input, callback) => {
+export const queryGroups = _.debounce(async (input, callback) => {
 
-    let accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
     let filters = encodeURIComponent(`title=@${input},code=@${input}`);
 
     fetch(buildAPIBaseUrl(`/api/v1/groups?filter=${filters}&access_token=${accessToken}`))
@@ -180,9 +181,9 @@ export const queryGroups = _.debounce((input, callback) => {
 
 
 
-export const queryCompanies = _.debounce((input, callback) => {
+export const queryCompanies = _.debounce(async (input, callback) => {
 
-    let accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let filters = encodeURIComponent(`name=@${input}`);
 
@@ -197,9 +198,9 @@ export const queryCompanies = _.debounce((input, callback) => {
 }, callDelay);
 
 
-export const querySponsors = _.debounce((summitId, input, callback) => {
+export const querySponsors = _.debounce(async (summitId, input, callback) => {
 
-    let accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let filters = encodeURIComponent(`company_name=@${input}`);
 
@@ -214,9 +215,9 @@ export const querySponsors = _.debounce((summitId, input, callback) => {
 }, callDelay);
 
 
-export const queryOrganizations = _.debounce((input, callback) => {
+export const queryOrganizations = _.debounce(async (input, callback) => {
 
-    let accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let filters = encodeURIComponent(`name=@${input}`);
 
@@ -231,8 +232,8 @@ export const queryOrganizations = _.debounce((input, callback) => {
 }, callDelay);
 
 
-export const getLanguageList = (callback, signal) => {
-    let accessToken = getAccessToken();
+export const getLanguageList = async (callback, signal) => {
+    const accessToken = await getAccessToken();
 
     return fetch(buildAPIBaseUrl(`/api/public/v1/languages?access_token=${accessToken}`), {signal})
         .then(fetchResponseHandler)
@@ -243,8 +244,8 @@ export const getLanguageList = (callback, signal) => {
 };
 
 
-export const getCountryList = (callback, signal) => {
-    let accessToken = getAccessToken();
+export const getCountryList = async (callback, signal) => {
+    const accessToken = await getAccessToken();
 
     return fetch(buildAPIBaseUrl(`/api/public/v1/countries?access_token=${accessToken}`), {signal})
         .then(fetchResponseHandler)

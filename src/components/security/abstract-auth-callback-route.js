@@ -13,8 +13,8 @@
 import React from 'react';
 import URI from "urijs";
 import IdTokenVerifier from 'idtoken-verifier';
-import {doLogin, emitAccessToken, RESPONSE_TYPE_IMPLICIT, RESPONSE_TYPE_CODE} from "./actions";
-import {getFromLocalStorage, getCurrentPathName, getCurrentHref, getOAuth2Flow} from '../../utils/methods';
+import {doLogin, emitAccessToken, getOAuth2Flow, RESPONSE_TYPE_IMPLICIT, RESPONSE_TYPE_CODE} from "./methods";
+import {getFromLocalStorage, getCurrentPathName, getCurrentHref} from '../../utils/methods';
 
 class AbstractAuthorizationCallbackRoute extends React.Component {
 
@@ -30,7 +30,8 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
             error: null,
             error_description: null,
             issuer: issuer,
-            audience: audience
+            audience: audience,
+            accessToken: null,
         };
 
         if (flow === RESPONSE_TYPE_IMPLICIT) {
@@ -61,11 +62,11 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
         }
 
         const id_token_is_valid = id_token ? this.validateIdToken(id_token) : false;
-
+            // set the state synchronusly bc we are on constructor context
             this.state.id_token_is_valid = id_token_is_valid;
             this.state.error = !id_token_is_valid ? "Invalid Token" : null;
             this.state.error_description = !id_token_is_valid ? "Invalid Token" : null;
-
+            this.state.accessToken = access_token;
             if (access_token && id_token_is_valid) {
                 this.props.onUserAuth(access_token, id_token, session_state, expires_in);
             }
@@ -77,7 +78,7 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
 
         if (error) {
             // if error condition short cut...
-            // we set here directtly bc we are at construction time
+            // we set here directly bc we are at construction time
             this.state.error = error;
             this.state.error_description = error_description;
             return;
@@ -117,10 +118,11 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
 
             // set with
             // console.log(`AbstractAuthorizationCallbackRoute::_codeFlow [ASYNC] setting state`);
-
+            // set the state asynchronusly bc we are not  on constructor context
             this.setState({
                 ...this.state,
                 id_token_is_valid: id_token_is_valid,
+                accessToken:access_token,
                 error: !id_token_is_valid ? "Invalid Token" : error,
                 error_description:!id_token_is_valid ? "Invalid Token" : error_description,
             });
@@ -155,27 +157,31 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
     }
 
     shouldComponentUpdate(nextProps, nextState, nextContext) {
-        if (nextProps.accessToken !== this.props.accessToken) {
+
+        if (nextState.accessToken !== this.state.accessToken) {
             return true;
         }
         if(nextState.error !== this.state.error){
             return true;
         }
+
         if(nextState.id_token_is_valid !== this.state.id_token_is_valid){
             return true;
         }
+
         return false;
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         // if we have an access token refresh ...
-        if (prevProps.accessToken !== this.props.accessToken) {
-            //console.log(`AbstractAuthorizationCallbackRoute::componentDidUpdate prevProps.accessToken ${prevProps.accessToken} this.props.accessToken ${this.props.accessToken}`);
+        if (prevState.accessToken !== this.state.accessToken) {
+
             let url = URI(getCurrentHref());
             let query = url.search(true);
             let fragment = URI.parseQuery(url.fragment());
 
             // purge fragment
+            delete fragment['code'];
             delete fragment['access_token'];
             delete fragment['expires_in'];
             delete fragment['token_type'];
@@ -188,6 +194,7 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
             if (fragment.lenght > 0) {
                 backUrl += `#${URI.buildQuery(fragment)}`;
             }
+
             this._callback(backUrl);
         }
     }
