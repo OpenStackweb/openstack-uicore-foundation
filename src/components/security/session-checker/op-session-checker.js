@@ -70,7 +70,7 @@ class OPSessionChecker extends React.Component {
         //console.log("OPSessionChecker::rpCheckSessionStateFrameOnLoad");
         let resultUrl = new URI(event.target.baseURI);
         // test the result Url
-        //console.log("OPSessionChecker::rpCheckSessionStateFrameOnLoad - resultUrl " + resultUrl);
+        console.log("OPSessionChecker::rpCheckSessionStateFrameOnLoad - resultUrl " + resultUrl);
         if(resultUrl.hasQuery("error")){
             let error = resultUrl.query(true).error;
             // console.log("OPSessionChecker::rpCheckSessionStateFrameOnLoad - error " + error);
@@ -105,7 +105,7 @@ class OPSessionChecker extends React.Component {
             }
         }
         if(this.props.sessionState !== prevProps.sessionState){
-            //console.log(`OPSessionChecker::componentDidUpdate updated session state ${this.props.sessionState}`);
+            console.log(`OPSessionChecker::componentDidUpdate updated session state ${this.props.sessionState}`);
             this.onSetupCheckSessionRP();
         }
     }
