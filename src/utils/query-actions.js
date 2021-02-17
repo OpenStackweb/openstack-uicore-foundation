@@ -12,8 +12,8 @@
  **/
 
 import {fetchErrorHandler, fetchResponseHandler, escapeFilterValue } from "./actions";
-import {getAccessToken} from '../components/security/actions';
-import {  buildAPIBaseUrl } from "../utils/methods"
+import {getAccessToken} from '../components/security/methods';
+import {  buildAPIBaseUrl } from "./methods";
 import _ from 'lodash';
 export const RECEIVE_COUNTRIES  = 'RECEIVE_COUNTRIES';
 const callDelay = 500; //miliseconds
