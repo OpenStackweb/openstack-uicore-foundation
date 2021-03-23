@@ -40,27 +40,26 @@ export default class SummitDropdown extends React.Component {
 
     render() {
 
-        let {summits, actionLabel, ...rest} = this.props;
+        let {summits, actionLabel, actionClass} = this.props;
         let summitOptions = summits
             .sort(
                 (a, b) => (a.start_date < b.start_date ? 1 : (a.start_date > b.start_date ? -1 : 0))
             ).map(s => ({label: s.name, value: s.id}));
 
-        let smallDdl = this.props.hasOwnProperty('small') ? 'small' : '';
-        let smallBtn = this.props.hasOwnProperty('small') ? 'btn-group-sm' : 'normal';
+        let bigClass = this.props.hasOwnProperty('big') ? 'big' : '';
 
         return (
-            <div className={"summit-dropdown btn-group " + smallBtn}>
+            <div className={"summit-dropdown btn-group " + bigClass}>
                 <Select
                     id="summit-select"
                     value={this.state.summitValue}
                     onChange={this.handleChange}
                     options={summitOptions}
                     placeholder={T.translate("general.select_summit")}
-                    className={"btn-group summit-select text-left" + smallDdl}
+                    className="btn-group summit-select text-left"
                     isClearable={false}
                 />
-                <button type="button" className="btn btn-default" onClick={this.handleClick}>
+                <button type="button" className={`btn btn-default ${actionClass}`} onClick={this.handleClick}>
                     {actionLabel}
                 </button>
             </div>

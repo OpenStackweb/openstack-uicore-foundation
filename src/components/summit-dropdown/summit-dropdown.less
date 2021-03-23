@@ -14,37 +14,25 @@
 .summit-dropdown {
     .summit-select {
         width: 150px;
-        .Select-control {
-            border-radius: 4px 0 0 4px;
-            height: 100%;
-            .Select-input {
-                height: 32px;
-            }
+
+        & > div {
+            border-top-right-radius: unset;
+            border-bottom-right-radius: unset;
         }
     }
-    .small {
-        :global .Select-control {
-            height: 30px;
-        }
-        :global .Select-placeholder {
-            line-height: 20px
-        }
-        :global .Select-value {
-            line-height: 26px !important;
-        }
 
-        :global .Select-value-label {
-            line-height: 26px;
-        }
-
-        :global .Select-input {
-            height: 26px;
-        }
+    .btn {
+        border-left-color: #e7e7e7;
+        height: 38px;
     }
-    .normal {
+
+    &.big {
+        .summit-select input {
+            height: 32px
+        }
+
         .btn {
-            height: 36px;
+            height: 46px;
         }
     }
-
 }
