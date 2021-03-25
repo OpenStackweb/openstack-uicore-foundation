@@ -36,6 +36,10 @@ class OPSessionChecker extends React.Component {
     constructor(props) {
         //console.log("OPSessionChecker::constructor");
         super(props);
+        this.state ={
+            opFrame_src: "",
+            rpCheckSessionStateFrame_src : ""
+        }
         this.receiveMessage = this.receiveMessage.bind(this);
         this.setTimer = this.setTimer.bind(this);
         this.checkSession = this.checkSession.bind(this);
@@ -82,7 +86,8 @@ class OPSessionChecker extends React.Component {
     rpCheckSessionStateFrameOnLoad(event){
         //console.log("OPSessionChecker::rpCheckSessionStateFrameOnLoad");
         let frame = event.target;
-        if(frame.src === "") return;
+        if(this.state.rpCheckSessionStateFrame_src == "") return;
+
         //console.log(`OPSessionChecker::rpCheckSessionStateFrameOnLoad frame.src ${frame.src}`);
         // this is called bc we set the RP frame to check the session state with promp=none
         if(!frame.contentDocument){
@@ -90,7 +95,7 @@ class OPSessionChecker extends React.Component {
             return;
         }
         let resultUrl = new URI(frame.contentDocument.URL);
-        // test the result Url
+        // test the result Url1qa
         console.log("OPSessionChecker::rpCheckSessionStateFrameOnLoad - resultUrl " + resultUrl);
 
         let query = resultUrl.search(true);
@@ -120,9 +125,8 @@ class OPSessionChecker extends React.Component {
                 let url = getAuthUrl(null, 'none');
                 // https://openid.net/specs/openid-connect-session-1_0.html#RPiframe
                 // set the frame to idp
-                this.rpCheckSessionStateFrame.src = url.toString();
-                //console.log(`OPSessionChecker::componentDidUpdate this.rpCheckSessionStateFrame.src ${this.rpCheckSessionStateFrame.src}`);
-                this.opFrame.src = "";
+                if(this.state.rpCheckSessionStateFrame_src == "")
+                    this.setState({...this.state, opFrame_src : "", rpCheckSessionStateFrame_src : url.toString()});
                 return;
             }
             if(this.props.sessionStateStatus === SESSION_STATE_STATUS_UNCHANGED){
@@ -157,6 +161,7 @@ class OPSessionChecker extends React.Component {
             //console.log("OPSessionChecker::checkSession - this.props.clientId == null ");
             return;
         }
+
         let targetOrigin = this.props.idpBaseUrl;
         let frame = this.opFrame.contentWindow;
         let message = this.props.clientId + " " + this.props.sessionState;
@@ -168,7 +173,7 @@ class OPSessionChecker extends React.Component {
     setTimer(event)
     {
         let frame = event.target;
-        if(frame.src === "") return;
+        if(this.state.opFrame_src == "") return;
         //console.log("OPSessionChecker::setTimer");
 
         if(!this.props.isLoggedUser){
@@ -181,7 +186,6 @@ class OPSessionChecker extends React.Component {
             return;
         }
 
-        this.checkSession();
         if(typeof window !== 'undefined') {
             console.log(`OPSessionChecker::setTimer setting interval ${CHECK_SESSION_INTERVAL}`);
             this.interval = window.setInterval(this.checkSession, CHECK_SESSION_INTERVAL);
@@ -190,7 +194,7 @@ class OPSessionChecker extends React.Component {
 
     onSetupCheckSessionRP(){
         // https://openid.net/specs/openid-connect-session-1_0.html#OPiframe
-        console.log("OPSessionChecker::onSetupCheckSessionRP");
+        // console.log("OPSessionChecker::onSetupCheckSessionRP");
         if(this.opFrame == null){
             //console.log("OPSessionChecker::onSetupCheckSessionRP - opFrame is null");
             return;
@@ -198,8 +202,8 @@ class OPSessionChecker extends React.Component {
         window.addEventListener("message", this.receiveMessage, false);
         const sessionCheckEndpoint = `${this.props.idpBaseUrl}/oauth2/check-session`;
         //console.log("OPSessionChecker::onSetupCheckSessionRP - sessionCheckEndpoint "+ sessionCheckEndpoint);
-        this.opFrame.src = sessionCheckEndpoint;
-        this.rpCheckSessionStateFrame.src = "";
+        if(this.state.opFrame_src == "")
+            this.setState({...this.state, opFrame_src : sessionCheckEndpoint, rpCheckSessionStateFrame_src : ""});
     }
 
     receiveMessage(e)
@@ -222,7 +226,7 @@ class OPSessionChecker extends React.Component {
                 if(typeof window !== 'undefined')
                     window.clearInterval(this.interval);
                 this.interval = null;
-                this.props.updateSessionStateStatus('changed');
+                this.props.updateSessionStateStatus(SESSION_STATE_STATUS_CHANGED);
                 return;
             }
         }
@@ -242,11 +246,13 @@ class OPSessionChecker extends React.Component {
                 <iframe
                     ref={this.setOPFrameRef}
                     id="OPFrame" onLoad={this.setTimer}
-                    style={{visibility:'hidden', position: 'absolute', left: 0, top: 0, border: 'none'}}>></iframe>
+                    src={this.state.opFrame_src}
+                    style={{visibility:'hidden', position: 'absolute', left: 0, top: 0, border: 'none', width:0 , height:0}}>></iframe>
                 <iframe ref={this.setCheckSessionStateFrameRef}
                         id="RPCHeckSessionStateFrame"
+                        src={this.state.rpCheckSessionStateFrame_src}
                         onLoad={this.rpCheckSessionStateFrameOnLoad}
-                        style={{visibility:'hidden', position: 'absolute', left: 0, top: 0, border: 'none'}}>></iframe>
+                        style={{visibility:'hidden', position: 'absolute', left: 0, top: 0, border: 'none', width:0 , height:0}}>></iframe>
             </div>
         );
     }
