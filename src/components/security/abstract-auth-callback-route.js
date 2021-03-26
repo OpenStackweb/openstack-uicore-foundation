@@ -69,6 +69,18 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
             this.state.accessToken = access_token;
             if (access_token && id_token_is_valid) {
                 this.props.onUserAuth(access_token, id_token, session_state, expires_in);
+                if(typeof window !== 'undefined') {
+                    if (window.location !== window.parent.location ) {
+                        console.log("AbstractAuthorizationCallbackRoute::_implicitFlow running inside iframe, sending auth state to parent");
+                        window.parent.postMessage(JSON.stringify({
+                            action : 'SET_AUTH_INFO_SILENTLY',
+                            access_token : access_token,
+                            id_token : id_token,
+                            session_state : session_state,
+                            expires_in: expires_in,
+                        }),  window.location.origin);
+                    }
+                }
             }
     }
 
@@ -130,6 +142,19 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
             if (access_token && id_token_is_valid) {
                 // console.log(`AbstractAuthorizationCallbackRoute::_codeFlow [ASYNC] onUserAuth`);
                 this.props.onUserAuth(access_token, id_token, session_state, expires_in, refresh_token);
+                if(typeof window !== 'undefined') {
+                    if (window.location !== window.parent.location ) {
+                        console.log("AbstractAuthorizationCallbackRoute::_codeFlow running inside iframe, sending auth state to parent");
+                        window.parent.postMessage(JSON.stringify({
+                            action : 'SET_AUTH_INFO_SILENTLY',
+                            access_token : access_token,
+                            id_token : id_token,
+                            session_state : session_state,
+                            expires_in : expires_in,
+                            refresh_token : refresh_token
+                        }),  window.location.origin);
+                    }
+                }
             }
         });
     }

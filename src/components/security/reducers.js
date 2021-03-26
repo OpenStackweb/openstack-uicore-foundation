@@ -44,6 +44,7 @@ export const loggedUserReducer = (state = DEFAULT_STATE, action) => {
                 isLoggedUser:true,
                 sessionState,
                 backUrl : null,
+                sessionStateStatus: SESSION_STATE_STATUS_UNCHANGED
             };
         }
         case UPDATE_SESSION_STATE_STATUS:{

@@ -19,7 +19,8 @@ import {
     SESSION_STATE_STATUS_CHANGED,
     SESSION_STATE_STATUS_ERROR,
     SESSION_STATE_STATUS_UNCHANGED,
-    updateSessionStateStatus
+    updateSessionStateStatus,
+    onUserAuth
 } from "../actions";
 
 import {
@@ -41,6 +42,7 @@ class OPSessionChecker extends React.Component {
             rpCheckSessionStateFrame_src : ""
         }
         this.receiveMessage = this.receiveMessage.bind(this);
+        this.receiveMessageFromChild = this.receiveMessageFromChild.bind(this);
         this.setTimer = this.setTimer.bind(this);
         this.checkSession = this.checkSession.bind(this);
         this.onSetupCheckSessionRP = this.onSetupCheckSessionRP.bind(this);
@@ -62,10 +64,16 @@ class OPSessionChecker extends React.Component {
 
     componentWillUnmount() {
         //console.log(`OPSessionChecker::componentWillUnmount`);
-        window.removeEventListener("message", this.receiveMessage, false);
-        if(this.interval){
-            window.clearInterval(this.interval);
-            this.interval = null;
+        try {
+            if (this.interval) {
+                window.clearInterval(this.interval);
+                this.interval = null;
+            }
+            window.removeEventListener('message', this.receiveMessageFromChild, false);
+            window.removeEventListener("message", this.receiveMessage, false);
+        }
+        catch (e){
+            console.log(e);
         }
     }
 
@@ -94,10 +102,11 @@ class OPSessionChecker extends React.Component {
             //console.log("OPSessionChecker::rpCheckSessionStateFrameOnLoad !frame.contentDocument) is null");
             return;
         }
+
+        window.removeEventListener('message', this.receiveMessageFromChild, false);
         let resultUrl = new URI(frame.contentDocument.URL);
         // test the result Url1qa
         console.log("OPSessionChecker::rpCheckSessionStateFrameOnLoad - resultUrl " + resultUrl);
-
         let query = resultUrl.search(true);
         let fragment = URI.parseQuery(resultUrl.fragment());
         // check if we have some error on query string or fragment
@@ -206,6 +215,27 @@ class OPSessionChecker extends React.Component {
             this.setState({...this.state, opFrame_src : sessionCheckEndpoint, rpCheckSessionStateFrame_src : ""});
     }
 
+    receiveMessageFromChild(e){
+        if (typeof e.data === 'string' || e.data instanceof String){
+            try {
+                let authInfo = JSON.parse(e.data);
+                if (authInfo.hasOwnProperty('action') && authInfo.action == 'SET_AUTH_INFO_SILENTLY') {
+                    window.removeEventListener('message', this.receiveMessageFromChild, false);
+                    this.props.onUserAuth(
+                        authInfo.access_token,
+                        authInfo.id_token,
+                        authInfo.session_state,
+                        authInfo.expires_in,
+                        authInfo.hasOwnProperty("refresh_token") ? authInfo.refresh_token : null
+                    );
+                }
+            }
+            catch (e){
+                console.log(e);
+            }
+        }
+    }
+
     receiveMessage(e)
     {
         //console.log("OPSessionChecker::receiveMessage - e.origin " + e.origin);
@@ -222,10 +252,21 @@ class OPSessionChecker extends React.Component {
                 console.log("OPSessionChecker::receiveMessage - session state has changed on OP");
                 // signal session start check
                 // kill timer
-                window.removeEventListener("message", this.receiveMessage, false);
+
                 if(typeof window !== 'undefined')
                     window.clearInterval(this.interval);
                 this.interval = null;
+                /**
+                 * When the RP detects a session state change, it SHOULD first try a prompt=none request within an
+                 * iframe to obtain a new ID Token and session state, sending the old ID Token as the id_token_hint.
+                 * If the RP receives an ID token for the same End-User, it SHOULD simply update the value of the
+                 * session state. If it does not receive an ID token or receives an ID token for another End-User,
+                 * then it needs to handle this case as a logout for the original End-User. If the original End-User
+                 * is already logged out at the RP when the state changes indicate that End-User should be logged out,
+                 * the logout is considered to have succeeded.
+                 */
+                window.addEventListener('message', this.receiveMessageFromChild, false);
+                window.removeEventListener("message", this.receiveMessage, false);
                 this.props.updateSessionStateStatus(SESSION_STATE_STATUS_CHANGED);
                 return;
             }
@@ -265,5 +306,5 @@ const mapStateToProps = ({ loggedUserState }) => ({
 })
 
 export default connect(mapStateToProps, {
-    doLogout, updateSessionStateStatus
+    doLogout, updateSessionStateStatus, onUserAuth
 })(OPSessionChecker);
