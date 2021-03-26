@@ -48,7 +48,6 @@ export const loggedUserReducer = (state = DEFAULT_STATE, action) => {
             let { sessionStateStatus } = action.payload;
             return {...state, sessionStateStatus:sessionStateStatus};
         }
-
         case CLEAR_SESSION_STATE:
         {
             clearAuthInfo();

@@ -53,6 +53,17 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
 
         if (access_token && id_token_is_valid) {
             props.onUserAuth(access_token, id_token, session_state);
+            if(typeof window !== 'undefined') {
+                if (window.location !== window.parent.location ) {
+                    console.log("AbstractAuthorizationCallbackRoute::constructor running inside iframe, sending auth state to parent");
+                    window.parent.postMessage(JSON.stringify({
+                        action : 'SET_AUTH_INFO_SILENTLY',
+                        access_token : access_token,
+                        id_token : id_token,
+                        session_state : session_state
+                    }),  window.location.origin);
+                }
+            }
         }
     }
 
