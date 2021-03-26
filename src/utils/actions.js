@@ -374,14 +374,16 @@ export const showSuccessMessage = (html) => (dispatch) => {
     });
 }
 
-export const getCSV = (url, params, filename, header = null) => (dispatch) => {
+export const getCSV = (endpoint, params, filename, header = null) => (dispatch) => {
 
-    let queryString = objectToQueryString(params);
-    let apiUrl = `${url}?${queryString}`;
+    let url = URI(endpoint);
+
+    if(!isObjectEmpty(params))
+        url = url.query(params);
 
     dispatch(startLoading());
 
-    return fetch(apiUrl)
+    return fetch(url.toString())
         .then((response) => {
             if (!response.ok) {
                 throw response;
