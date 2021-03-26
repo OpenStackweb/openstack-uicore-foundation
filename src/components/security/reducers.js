@@ -42,7 +42,7 @@ export const loggedUserReducer = (state = DEFAULT_STATE, action) => {
         case SET_LOGGED_USER: {
             let { accessToken, idToken, sessionState } = action.payload;
             storeAuthInfo(accessToken, idToken, sessionState);
-            return {...state, isLoggedUser:true, accessToken, idToken, sessionState, backUrl : null };
+            return {...state, isLoggedUser:true, accessToken, idToken, sessionState, backUrl : null, sessionStateStatus: SESSION_STATE_STATUS_UNCHANGED };
         }
         case UPDATE_SESSION_STATE_STATUS:{
             let { sessionStateStatus } = action.payload;
