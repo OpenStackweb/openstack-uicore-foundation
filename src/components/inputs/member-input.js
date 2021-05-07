@@ -26,6 +26,24 @@ export default class MemberInput extends React.Component {
 
         this.handleChange = this.handleChange.bind(this);
         this.getMembers = this.getMembers.bind(this);
+        this.getOptionValue = this.getOptionValue.bind(this);
+        this.getOptionLabel = this.getOptionLabel.bind(this);
+    }
+
+    getOptionValue(member){
+        if(this.props.hasOwnProperty("getOptionValue")){
+            return this.props.getOptionValue(member);
+        }
+        //default
+        return member.id;
+    }
+
+    getOptionLabel(member){
+        if(this.props.hasOwnProperty("getOptionLabel")){
+            return this.props.getOptionLabel(member);
+        }
+        //default
+        return `${member.first_name} ${member.last_name} (${member.id})`;
     }
 
     handleChange(value) {
@@ -42,10 +60,8 @@ export default class MemberInput extends React.Component {
         if (!input) {
             return Promise.resolve({ options: [] });
         }
-
         queryMembers(input, callback);
     }
-
 
     render() {
         let {value, error, onChange, id, multi, ...rest} = this.props;
@@ -58,8 +74,8 @@ export default class MemberInput extends React.Component {
                     value={value}
                     onChange={this.handleChange}
                     loadOptions={this.getMembers}
-                    getOptionValue={op => op.id}
-                    getOptionLabel={op => (`${op.first_name} ${op.last_name} (${op.id})`)}
+                    getOptionValue={m => this.getOptionValue(m)}
+                    getOptionLabel={m => this.getOptionLabel(m)}
                     isMulti={isMulti}
                     {...rest}
                 />
