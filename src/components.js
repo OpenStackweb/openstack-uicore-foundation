@@ -47,6 +47,7 @@ import CircleButton from "./components/circle-button";
 import VideoStream from "./components/video-stream";
 import AttendanceTracker from "./components/attendance-tracker";
 import {getCurrentUserLanguage} from './utils/methods';
+import useFitText from './components/use-fit-text';
 
 let language = getCurrentUserLanguage();
 
@@ -111,4 +112,5 @@ export {
     VideoStream,
     AttendanceTracker,
     SelectableTable,
+    useFitText
 };
