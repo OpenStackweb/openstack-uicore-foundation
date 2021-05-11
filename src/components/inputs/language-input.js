@@ -21,7 +21,8 @@ export default class LanguageInput extends React.Component {
         super(props);
 
         this.state = {
-            options: []
+            options: [],
+            shouldUseId: props.hasOwnProperty('shouldUseId') ? props.shouldUseId : false,
         };
 
         this.handleChange = this.handleChange.bind(this);
@@ -36,7 +37,9 @@ export default class LanguageInput extends React.Component {
     }
 
     setOptions(response) {
-        let languageList = response.map(l => ({label: l.name, value: l.iso_code}));
+        let languageList = (this.state.shouldUseId) ?
+            response.map(l => ({label: l.name, value: l.id})):
+            response.map(l => ({label: l.name, value: l.iso_code}));
         this.setState({options: languageList});
     }
 
