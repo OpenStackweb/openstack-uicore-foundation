@@ -28,7 +28,7 @@ export const RESPONSE_TYPE_CODE = 'code';
 
 import URI from "urijs";
 
-export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null) => {
+export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null, provider = null) => {
 
     let oauth2ClientId = getOAuth2ClientId();
     let redirectUri = getAuthCallback();
@@ -71,6 +71,10 @@ export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null) =>
         query['id_token_hint'] = tokenIdHint;
     }
 
+    if (provider) {
+        query['provider'] = provider;
+    }
+
     url = url.query(query);
     //console.log(`getAuthUrl ${url.toString()}`);
     return url;
@@ -106,10 +110,8 @@ const createNonce = (len) => {
     return nonce;
 }
 
-export const doLogin = (backUrl = null) => {
-    if (backUrl)
-        console.log(`doLogin - backUrl ${backUrl} `);
-    let url = getAuthUrl(backUrl);
+export const doLogin = (backUrl = null, provider = null) => {
+    let url = getAuthUrl(backUrl, null ,null, provider);
     let location = getCurrentLocation()
     location.replace(url.toString());
 }
