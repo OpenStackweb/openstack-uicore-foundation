@@ -31,7 +31,7 @@ export const SESSION_STATE_STATUS_UNCHANGED = 'unchanged';
 export const SESSION_STATE_STATUS_CHANGED = 'changed';
 export const SESSION_STATE_STATUS_ERROR = 'error';
 
-export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null) => {
+export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null, provider = null) => {
 
     let oauth2ClientId = getOAuth2ClientId();
     let baseUrl = getOAuth2IDPBaseUrl();
@@ -57,6 +57,10 @@ export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null) =>
 
     if (prompt) {
         query['prompt'] = prompt;
+    }
+
+    if (provider) {
+        query['provider'] = provider;
     }
 
     if (tokenIdHint) {
@@ -98,10 +102,8 @@ const createNonce = (len) => {
     return nonce;
 }
 
-export const doLogin = (backUrl = null) => {
-    if (backUrl)
-        console.log(`doLogin - backUrl ${backUrl} `);
-    let url = getAuthUrl(backUrl);
+export const doLogin = (backUrl = null, provider = null) => {
+    let url = getAuthUrl(backUrl,null, null,  provider);
     let location = getCurrentLocation()
     location.replace(url.toString());
 }
