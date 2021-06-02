@@ -13,7 +13,6 @@
 
 import React from 'react';
 import RawHTML from '../raw-html';
-import CheckboxList from "./checkbox-list";
 import PropTypes from 'prop-types'
 
 export default class RadioList extends React.Component {
@@ -39,11 +38,18 @@ export default class RadioList extends React.Component {
         this.props.onChange(ev);
     }
 
-    getLabel(option, id, inline, simple) {
+    getLabel(option, id, inline, simple, html) {
         if (inline) {
             return (
                 <label className="form-check-label" htmlFor={`radio_${id}_${option.value}`} style={{display: 'inline-block'}}>
-                    {option.label}
+                    {html &&
+                        <RawHTML>
+                            {option.label}
+                        </RawHTML>
+                    }
+                    {!html &&
+                        option.label
+                    }
                 </label>
             );
         } else if (simple) {
@@ -68,6 +74,7 @@ export default class RadioList extends React.Component {
         let has_error = ( this.props.hasOwnProperty('error') && error != '' );
         let inline = ( this.props.hasOwnProperty('inline') );
         let simple = ( this.props.hasOwnProperty('simple') );
+        let html = ( this.props.hasOwnProperty('html') );
 
         let style, label;
 
@@ -100,7 +107,7 @@ export default class RadioList extends React.Component {
                                 onChange={this.handleChange}
                                 name={`radio_${id}`}
                             />
-                            {this.getLabel(op, id, inline, simple)}
+                            {this.getLabel(op, id, inline, simple, html)}
                         </div>
                     )
                 })}
