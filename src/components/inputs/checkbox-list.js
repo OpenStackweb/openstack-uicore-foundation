@@ -13,6 +13,7 @@
 import PropTypes from 'prop-types'
 import React from 'react';
 import T from 'i18n-react/dist/i18n-react';
+import RawHTML from '../raw-html';
 
 export default class CheckboxList extends React.Component {
 
@@ -64,6 +65,7 @@ export default class CheckboxList extends React.Component {
         let { otherChecked } = this.state;
 
         let inline = ( this.props.hasOwnProperty('inline') );
+        let html = ( this.props.hasOwnProperty('html') );
         let allowOther = ( this.props.hasOwnProperty('allowOther') );
         let otherValue = value ? value.find( v => !options.map(op => op.value).includes(v) ) : false ;
         let has_error = ( this.props.hasOwnProperty('error') && error !== '' );
@@ -96,7 +98,12 @@ export default class CheckboxList extends React.Component {
                                 <input type="checkbox" id={`cb_${id}_${op.value}`} checked={checked}
                                        onChange={this.handleChange} className="form-check-input" value={op.value} />
                                 <label className="form-check-label" htmlFor={`cb_${id}_${op.value}`  } >
-                                    {op.label}
+                                    {html &&
+                                        <RawHTML>{op.label}</RawHTML>
+                                    }
+                                    {!html &&
+                                        op.label
+                                    }
                                 </label>
                             </div>
                         )
