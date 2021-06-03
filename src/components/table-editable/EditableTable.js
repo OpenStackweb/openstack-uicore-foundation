@@ -13,12 +13,12 @@ const defaults = {
     colWidth: ''
 };
 
-const createRow = (row, columns, actions) => {
+const createRow = (row, columns, actions, shouldUseTextArea) => {
 
     var action_buttons = '';
     var cells = columns.map((col,i) => {
         return (
-            <EditableTableCell key={row['id'] + '_field' + i} name={col.columnKey} id={row.id} is_edit={row.is_edit} handleChange={actions.handleChange}>
+            <EditableTableCell shouldUseTextArea={shouldUseTextArea} key={row['id'] + '_field' + i} name={col.columnKey} id={row.id} is_edit={row.is_edit} handleChange={actions.handleChange}>
                 {row[col.columnKey]}
             </EditableTableCell>
         );
@@ -31,13 +31,20 @@ const createRow = (row, columns, actions) => {
     return cells;
 };
 
-const createNewRow = (columns, new_row, addNew, handleChange) => {
+const createNewRow = (columns, new_row, addNew, handleChange, shouldUseTextArea) => {
 
     var cells = columns.map((col,i) => {
         let cell_value = (typeof new_row[col.columnKey] !== 'undefined') ? new_row[col.columnKey] : '';
         return (
             <td key={'new_row_' + i}>
-                <input className="form-control" id={ 'new_' + col.columnKey } name={col.columnKey} onChange={handleChange} value={cell_value} />
+                {shouldUseTextArea &&
+                    <textarea className="form-control" id={'new_' + col.columnKey} name={col.columnKey} onChange={handleChange}
+                           value={cell_value}/>
+                }
+                {!shouldUseTextArea &&
+                    <input className="form-control" id={'new_' + col.columnKey} name={col.columnKey} onChange={handleChange}
+                           value={cell_value}/>
+                }
             </td>
         );
     });
@@ -184,7 +191,7 @@ export default class EditableTable extends React.Component {
     render() {
         let {options, columns } = this.props;
         let tableClass = options.hasOwnProperty('className') ? options.className : '';
-
+        let textArea = this.props.hasOwnProperty("textArea");
         return (
             <div>
                 <table className={"table table-striped table-bordered editableTable " + tableClass}>
@@ -213,13 +220,13 @@ export default class EditableTable extends React.Component {
                             }
                             return (
                                 <EditableTableRow even={i%2 === 0} key={'row_' + row.id} id={row.id} >
-                                    {createRow(row, columns, this.actions)}
+                                    {createRow(row, columns, this.actions, textArea)}
                                 </EditableTableRow>
 
                             );
                         })}
                         <EditableTableRow even={0} id='new_row' key='new_row'>
-                            {createNewRow(columns, this.state.new_row, this.saveNewRow, this.handleNewChange)}
+                            {createNewRow(columns, this.state.new_row, this.saveNewRow, this.handleNewChange, textArea)}
                         </EditableTableRow>
                     </tbody>
                 </table>
