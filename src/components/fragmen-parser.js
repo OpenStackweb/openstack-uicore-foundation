@@ -32,7 +32,7 @@ class FragmentParser {
     }
 
     getParam(key){
-        if(this.originalHash !== window.location.hash){
+        if(typeof window !== 'undefined' && this.originalHash !== window.location.hash){
             this.originalHash = window.location.hash;
             this.hash = this.convertToHash(this.originalHash);
         }
@@ -42,7 +42,7 @@ class FragmentParser {
     }
 
     getParams(){
-        if(this.originalHash !==  window.location.hash){
+        if(typeof window !== 'undefined' && this.originalHash !==  window.location.hash){
             this.originalHash = window.location.hash;
             this.hash = this.convertToHash(this.originalHash);
         }
@@ -69,7 +69,7 @@ class FragmentParser {
     }
 
     setParam(key, value){
-        if(this.originalHash !==  window.location.hash){
+        if(typeof window !== 'undefined' && this.originalHash !==  window.location.hash){
             this.originalHash = window.location.hash;
             this.hash = this.convertToHash(this.originalHash);
         }

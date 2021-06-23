@@ -57,8 +57,7 @@ const CircleButton = ({event, isScheduled, nowUtc, addToSchedule, removeFromSche
             <i className={`fa ${iconClass}`} aria-hidden="true" />
         </button>
     );
-
-}
+};
 
 CircleButton.propTypes = {
     event: PropTypes.object.isRequired,

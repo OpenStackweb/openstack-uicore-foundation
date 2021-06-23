@@ -12,16 +12,20 @@
  **/
 
 import React from 'react';
-import RichTextEditor from 'react-rte-ref-fix';
-
 
 export default class TextEditor extends React.Component {
 
     constructor(props) {
         super(props);
 
+        this.RichTextEditor = null;
+
+        if (typeof window !== 'undefined') {
+            this.RichTextEditor = require('react-rte-ref-fix').default;
+        }
+
         this.state = {
-            editorValue: RichTextEditor.createEmptyValue(),
+            editorValue: this.RichTextEditor.createEmptyValue(),
             currentValue: null
         };
 
@@ -75,13 +79,17 @@ export default class TextEditor extends React.Component {
 
         return (
             <div>
+                {this.RichTextEditor &&
                 <RichTextEditor
                     id={id}
-                    ref={inst => { editor = inst;}}
+                    ref={inst => {
+                        editor = inst;
+                    }}
                     className={className + ' ' + (has_error ? 'error' : '')}
                     value={this.state.editorValue}
                     onChange={this.handleChange}
                 />
+                }
                 {has_error &&
                 <p className="error-label">{error}</p>
                 }
