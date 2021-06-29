@@ -377,8 +377,8 @@ export const passwordlessStart = (params, callback) => {
         "scope": encodeURI(scopes),
         "nonce": nonce,
         "client_id": encodeURI(oauth2ClientId),
-        "connection": params.connection | "email",
-        "send": params.send | "code",
+        "connection": params.connection || "email",
+        "send": params.send || "code",
     };
 
     if(params.hasOwnProperty('email')){
@@ -411,7 +411,7 @@ export const passwordlessLogin = (params, callback) => (dispatch) => {
 
     let payload = {
         "grant_type": "passwordless",
-        "connection": params.connection | "email",
+        "connection": params.connection || "email",
         "scope": encodeURI(scopes),
         "client_id": encodeURI(oauth2ClientId),
         "otp": params.otp
