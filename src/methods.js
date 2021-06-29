@@ -66,7 +66,9 @@ import {
     clearAuthInfo,
     getIdToken,
     getOAuth2IDPBaseUrl,
-    getOAuth2ClientId
+    getOAuth2ClientId,
+    passwordlessStart,
+    passwordlessLogin,
 } from './components/security/methods';
 
 import {getCurrentUserLanguage} from './utils/methods';
@@ -142,5 +144,7 @@ export {
     getAuthInfo,
     getOAuth2IDPBaseUrl,
     getOAuth2ClientId,
-    clearAuthInfo
+    clearAuthInfo,
+    passwordlessStart,
+    passwordlessLogin
 };
