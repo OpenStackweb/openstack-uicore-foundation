@@ -362,7 +362,7 @@ export const validateIdToken = (idToken, issuer, audience) => {
     return tnonce === storedNonce && aud === audience && iss === issuer;
 }
 
-export const passwordlessStart = (params, callback) => {
+export const passwordlessStart = (params) => {
 
     let oauth2ClientId = getOAuth2ClientId();
     let scopes = getOAuth2Scopes();
@@ -392,14 +392,16 @@ export const passwordlessStart = (params, callback) => {
     let req = http.post(url.toString());
 
     req.send(payload).then((res) => {
-       callback(res, null);
+        let json = res.body;
+        return Promise.resolve({response:json});
     }).catch((err) => {
-        callback(null, err);
+        return Promise.reject(err);
     });
 
 }
 
-export const passwordlessLogin = (params, callback) => (dispatch) => {
+export const passwordlessLogin = (params) => (dispatch) => {
+
     let oauth2ClientId = getOAuth2ClientId();
     let scopes = getOAuth2Scopes();
     let baseUrl = getOAuth2IDPBaseUrl();
@@ -447,12 +449,15 @@ export const passwordlessLogin = (params, callback) => (dispatch) => {
         }
 
         storeAuthInfo(access_token, expires_in, refresh_token, id_token);
-        dispatch({
-            type: SET_LOGGED_USER,
-            payload: { sessionState:null }
-        });
-        callback(json, null);
+
+        if(dispatch) {
+            dispatch({
+                type: SET_LOGGED_USER,
+                payload: {sessionState: null}
+            });
+        }
+        return Promise.resolve({response:json});
     }).catch((err) => {
-        callback(null, err);
+        return Promise.reject(err);
     });
 }
