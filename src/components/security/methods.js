@@ -391,7 +391,7 @@ export const passwordlessStart = (params) => {
 
     let req = http.post(url.toString());
 
-    req.send(payload).then((res) => {
+    return req.send(payload).then((res) => {
         let json = res.body;
         return Promise.resolve({response:json});
     }).catch((err) => {
@@ -429,7 +429,7 @@ export const passwordlessLogin = (params) => (dispatch) => {
 
     let req = http.post(url.toString());
 
-    req.send(payload).then((res) => {
+    return req.send(payload).then((res) => {
         // now we got token
         let json = res.body;
         let {access_token, expires_in, refresh_token, id_token} = json;
