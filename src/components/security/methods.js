@@ -346,10 +346,13 @@ export const initLogOut = () => {
 }
 
 export const validateIdToken = (idToken, issuer, audience) => {
+    console.log(`validateIdToken idToken ${idToken} issuer ${issuer} audience ${audience}`);
+
     let verifier = new IdTokenVerifier({
         issuer: issuer,
         audience: audience
     });
+
     let storedNonce = getFromLocalStorage('nonce', true);
     let jwt = verifier.decode(idToken);
     let alg = jwt.header.alg;
@@ -359,7 +362,9 @@ export const validateIdToken = (idToken, issuer, audience) => {
     let exp = jwt.payload.exp;
     let nbf = jwt.payload.nbf;
     let tnonce = jwt.payload.nonce || null;
-    return tnonce === storedNonce && aud === audience && iss === issuer;
+    console.log(`validateIdToken tnonce ${tnonce} storedNonce ${storedNonce} aud ${aud} audience ${audience} iss ${iss} issuer ${issuer}`);
+
+    return tnonce == storedNonce && aud == audience && iss == issuer;
 }
 
 export const passwordlessStart = (params) => {
@@ -430,34 +435,45 @@ export const passwordlessLogin = (params) => (dispatch) => {
     let req = http.post(url.toString());
 
     return req.send(payload).then((res) => {
-        // now we got token
-        let json = res.body;
-        let {access_token, expires_in, refresh_token, id_token} = json;
-        //console.log(`getAccessToken access_token ${access_token} expires_in ${expires_in} refresh_token ${refresh_token}`);
-        if (typeof refresh_token === 'undefined') {
-            refresh_token = null; // not using rotate policy
-        }
-        if (typeof id_token === 'undefined') {
-            id_token = null; // not using rotate policy
-        }
-        // verify id token
+        try {
+            // now we got token
+            let json = res.body;
+            let {access_token, expires_in, refresh_token, id_token} = json;
+            console.log(`passwordlessLogin::then access_token ${access_token} expires_in ${expires_in} refresh_token ${refresh_token} id_token ${id_token}`);
 
-        if(id_token){
-            if(!validateIdToken(id_token, baseUrl, oauth2ClientId)){
-                throw Error("id token is not valid.");
+            if (typeof refresh_token === 'undefined') {
+                refresh_token = null; // not using rotate policy
             }
-        }
 
-        storeAuthInfo(access_token, expires_in, refresh_token, id_token);
+            if (typeof id_token === 'undefined') {
+                id_token = null; // not using rotate policy
+            }
 
-        if(dispatch) {
-            dispatch({
-                type: SET_LOGGED_USER,
-                payload: {sessionState: null}
-            });
+            // verify id token
+
+            if (id_token) {
+                if (!validateIdToken(id_token, baseUrl, oauth2ClientId)) {
+                    throw Error("id token is not valid.");
+                }
+            }
+
+            storeAuthInfo(access_token, expires_in, refresh_token, id_token);
+
+            if (dispatch) {
+                dispatch({
+                    type: SET_LOGGED_USER,
+                    payload: {sessionState: null}
+                });
+            }
+
+            return Promise.resolve({response: json});
         }
-        return Promise.resolve({response:json});
+        catch(e){
+            console.log(e);
+            return Promise.reject(e);
+        }
     }).catch((err) => {
+        console.log(`passwordlessLogin::catch err ${err}`);
         return Promise.reject(err);
     });
 }
