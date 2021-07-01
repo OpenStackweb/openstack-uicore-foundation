@@ -346,7 +346,6 @@ export const initLogOut = () => {
 }
 
 export const validateIdToken = (idToken, issuer, audience) => {
-    console.log(`validateIdToken idToken ${idToken} issuer ${issuer} audience ${audience}`);
 
     let verifier = new IdTokenVerifier({
         issuer: issuer,
@@ -362,7 +361,6 @@ export const validateIdToken = (idToken, issuer, audience) => {
     let exp = jwt.payload.exp;
     let nbf = jwt.payload.nbf;
     let tnonce = jwt.payload.nonce || null;
-    console.log(`validateIdToken tnonce ${tnonce} storedNonce ${storedNonce} aud ${aud} audience ${audience} iss ${iss} issuer ${issuer}`);
 
     return tnonce == storedNonce && aud == audience && iss == issuer;
 }
@@ -439,7 +437,6 @@ export const passwordlessLogin = (params) => (dispatch) => {
             // now we got token
             let json = res.body;
             let {access_token, expires_in, refresh_token, id_token} = json;
-            console.log(`passwordlessLogin::then access_token ${access_token} expires_in ${expires_in} refresh_token ${refresh_token} id_token ${id_token}`);
 
             if (typeof refresh_token === 'undefined') {
                 refresh_token = null; // not using rotate policy
@@ -473,7 +470,6 @@ export const passwordlessLogin = (params) => (dispatch) => {
             return Promise.reject(e);
         }
     }).catch((err) => {
-        console.log(`passwordlessLogin::catch err ${err}`);
         return Promise.reject(err);
     });
 }
