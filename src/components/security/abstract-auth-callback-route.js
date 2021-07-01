@@ -12,8 +12,8 @@
  **/
 import React from 'react';
 import URI from "urijs";
-import {doLogin, emitAccessToken, getOAuth2Flow, RESPONSE_TYPE_IMPLICIT, RESPONSE_TYPE_CODE} from "./methods";
-import {getCurrentPathName, getCurrentHref, validateIdToken} from '../../utils/methods';
+import {doLogin, emitAccessToken, getOAuth2Flow, RESPONSE_TYPE_IMPLICIT, RESPONSE_TYPE_CODE, validateIdToken} from "./methods";
+import {getCurrentPathName, getCurrentHref} from '../../utils/methods';
 
 class AbstractAuthorizationCallbackRoute extends React.Component {
 
