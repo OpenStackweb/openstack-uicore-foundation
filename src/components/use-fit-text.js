@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect } from 'react';
 
-const useFitText = () => {
-    const MIN_FONT_SIZE = 50;
-    const MAX_FONT_SIZE = 130;
+const useFitText = (maxSize = 50, minSize = 130) => {
+    const MIN_FONT_SIZE = minSize;
+    const MAX_FONT_SIZE = maxSize;
     const RESOLUTION = 5;
 
     const ref = useRef(null);
