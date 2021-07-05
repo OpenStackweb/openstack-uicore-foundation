@@ -11,9 +11,10 @@ import {
     setSessionClearingState,
     sha256
 } from "../../utils/methods";
-
+import request from 'superagent';
 import {randomBytes} from "crypto";
 import Lock from 'browser-tabs-lock';
+let http = request;
 
 /**
  * @ignore
@@ -27,6 +28,8 @@ export const RESPONSE_TYPE_IMPLICIT = "token id_token";
 export const RESPONSE_TYPE_CODE = 'code';
 
 import URI from "urijs";
+import IdTokenVerifier from "idtoken-verifier";
+import {SET_LOGGED_USER} from "./actions";
 
 export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null, provider = null) => {
 
@@ -340,4 +343,133 @@ export const getOAuth2Scopes = () => {
 export const initLogOut = () => {
     let location = getCurrentLocation();
     location.replace(getLogoutUrl(getIdToken()).toString());
+}
+
+export const validateIdToken = (idToken, issuer, audience) => {
+
+    let verifier = new IdTokenVerifier({
+        issuer: issuer,
+        audience: audience
+    });
+
+    let storedNonce = getFromLocalStorage('nonce', true);
+    let jwt = verifier.decode(idToken);
+    let alg = jwt.header.alg;
+    let kid = jwt.header.kid;
+    let aud = jwt.payload.aud;
+    let iss = jwt.payload.iss;
+    let exp = jwt.payload.exp;
+    let nbf = jwt.payload.nbf;
+    let tnonce = jwt.payload.nonce || null;
+
+    return tnonce == storedNonce && aud == audience && iss == issuer;
+}
+
+export const passwordlessStart = (params) => {
+
+    let oauth2ClientId = getOAuth2ClientId();
+    let scopes = getOAuth2Scopes();
+    let nonce = createNonce(NONCE_LEN);
+    // store nonce to check it later
+    putOnLocalStorage('nonce', nonce);
+    let baseUrl = getOAuth2IDPBaseUrl();
+    let url = URI(`${baseUrl}/oauth2/auth`);
+
+    let payload = {
+        "response_type": "otp",
+        "scope": encodeURI(scopes),
+        "nonce": nonce,
+        "client_id": encodeURI(oauth2ClientId),
+        "connection": params.connection || "email",
+        "send": params.send || "code",
+    };
+
+    if(params.hasOwnProperty('email')){
+        payload["email"] = encodeURI(params.email);
+    }
+
+    if(params.hasOwnProperty('phone_number')){
+        payload["phone_number"] = encodeURI(params.phone_number);
+    }
+
+    let req = http.post(url.toString());
+
+    return req.send(payload).then((res) => {
+        let json = res.body;
+        return Promise.resolve({response:json});
+    }).catch((err) => {
+        return Promise.reject(err);
+    });
+
+}
+
+export const passwordlessLogin = (params) => (dispatch) => {
+
+    let oauth2ClientId = getOAuth2ClientId();
+    let scopes = getOAuth2Scopes();
+    let baseUrl = getOAuth2IDPBaseUrl();
+    let url = URI(`${baseUrl}/oauth2/token`);
+
+    if(!params.hasOwnProperty("otp")){
+        throw Error("otp param is mandatory.");
+    }
+
+    let payload = {
+        "grant_type": "passwordless",
+        "connection": params.connection || "email",
+        "scope": encodeURI(scopes),
+        "client_id": encodeURI(oauth2ClientId),
+        "otp": params.otp
+    };
+
+    if(params.hasOwnProperty('email')){
+        payload["email"] = encodeURI(params.email);
+    }
+
+    if(params.hasOwnProperty('phone_number')){
+        payload["phone_number"] = encodeURI(params.phone_number);
+    }
+
+    let req = http.post(url.toString());
+
+    return req.send(payload).then((res) => {
+        try {
+            // now we got token
+            let json = res.body;
+            let {access_token, expires_in, refresh_token, id_token} = json;
+
+            if (typeof refresh_token === 'undefined') {
+                refresh_token = null; // not using rotate policy
+            }
+
+            if (typeof id_token === 'undefined') {
+                id_token = null; // not using rotate policy
+            }
+
+            // verify id token
+
+            if (id_token) {
+                if (!validateIdToken(id_token, baseUrl, oauth2ClientId)) {
+                    throw Error("id token is not valid.");
+                }
+            }
+
+            storeAuthInfo(access_token, expires_in, refresh_token, id_token);
+
+            if (dispatch) {
+                dispatch({
+                    type: SET_LOGGED_USER,
+                    payload: {sessionState: null}
+                });
+            }
+
+            return Promise.resolve({response: json});
+        }
+        catch(e){
+            console.log(e);
+            return Promise.reject(e);
+        }
+    }).catch((err) => {
+        return Promise.reject(err);
+    });
 }

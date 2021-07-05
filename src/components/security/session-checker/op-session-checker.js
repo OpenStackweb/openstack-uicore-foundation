@@ -274,7 +274,10 @@ class OPSessionChecker extends React.Component {
     }
 
     render() {
+
         if(!this.props.isLoggedUser) return null;
+        if(!this.props.sessionState) return null;
+
         if(typeof window !== 'undefined') {
             if ( window.location !== window.parent.location ) {
                 //console.log("OPSessionChecker::render running inside iframe, skipping");

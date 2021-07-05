@@ -12,9 +12,8 @@
  **/
 import React from 'react';
 import URI from "urijs";
-import IdTokenVerifier from 'idtoken-verifier';
-import {doLogin, emitAccessToken, getOAuth2Flow, RESPONSE_TYPE_IMPLICIT, RESPONSE_TYPE_CODE} from "./methods";
-import {getFromLocalStorage, getCurrentPathName, getCurrentHref} from '../../utils/methods';
+import {doLogin, emitAccessToken, getOAuth2Flow, RESPONSE_TYPE_IMPLICIT, RESPONSE_TYPE_CODE, validateIdToken} from "./methods";
+import {getCurrentPathName, getCurrentHref} from '../../utils/methods';
 
 class AbstractAuthorizationCallbackRoute extends React.Component {
 
@@ -61,7 +60,12 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
             return;
         }
 
-        const id_token_is_valid = id_token ? this.validateIdToken(id_token) : false;
+        const id_token_is_valid = id_token ? validateIdToken
+        (
+            id_token,
+            this.state.issuer,
+            this.state.audience
+        )  : false;
             // set the state synchronusly bc we are on constructor context
             this.state.id_token_is_valid = id_token_is_valid;
             this.state.error = !id_token_is_valid ? "Invalid Token" : null;
@@ -122,7 +126,12 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
                 return;
             }
 
-            const id_token_is_valid = id_token ? this.validateIdToken(id_token) : false;
+            const id_token_is_valid = id_token ? validateIdToken
+            (
+                id_token,
+                this.state.issuer,
+                this.state.audience
+            ) : false;
 
             // this.state.id_token_is_valid = id_token_is_valid;
             //this.state.error = !id_token_is_valid ? "Invalid Token" : error;
@@ -161,24 +170,6 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
 
     extractHashParams() {
         return URI.parseQuery(this.props.location.hash.substr(1));
-    }
-
-    validateIdToken(idToken) {
-        let {audience, issuer} = this.state;
-        let verifier = new IdTokenVerifier({
-            issuer: issuer,
-            audience: audience
-        });
-        let storedNonce = getFromLocalStorage('nonce', true);
-        let jwt = verifier.decode(idToken);
-        let alg = jwt.header.alg;
-        let kid = jwt.header.kid;
-        let aud = jwt.payload.aud;
-        let iss = jwt.payload.iss;
-        let exp = jwt.payload.exp;
-        let nbf = jwt.payload.nbf;
-        let tnonce = jwt.payload.nonce || null;
-        return tnonce === storedNonce && aud === audience && iss === issuer;
     }
 
     shouldComponentUpdate(nextProps, nextState, nextContext) {
