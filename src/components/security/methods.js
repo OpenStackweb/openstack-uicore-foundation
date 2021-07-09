@@ -385,11 +385,11 @@ export const passwordlessStart = (params) => {
     };
 
     if(params.hasOwnProperty('email')){
-        payload["email"] = encodeURI(params.email);
+        payload["email"] = encodeURIComponent(params.email);
     }
 
     if(params.hasOwnProperty('phone_number')){
-        payload["phone_number"] = encodeURI(params.phone_number);
+        payload["phone_number"] = encodeURIComponent(params.phone_number);
     }
 
     let req = http.post(url.toString());
@@ -423,11 +423,11 @@ export const passwordlessLogin = (params) => (dispatch) => {
     };
 
     if(params.hasOwnProperty('email')){
-        payload["email"] = encodeURI(params.email);
+        payload["email"] = encodeURIComponent(params.email);
     }
 
     if(params.hasOwnProperty('phone_number')){
-        payload["phone_number"] = encodeURI(params.phone_number);
+        payload["phone_number"] = encodeURIComponent(params.phone_number);
     }
 
     let req = http.post(url.toString());
