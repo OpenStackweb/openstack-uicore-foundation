@@ -2989,7 +2989,7 @@ draft-js@>=0.10.0:
     immutable "~3.7.4"
     object-assign "^4.1.1"
 
-dropzone@^5.7.2:
+dropzone@5.7.2:
   version "5.7.2"
   resolved "https://registry.yarnpkg.com/dropzone/-/dropzone-5.7.2.tgz#91bee1572dda515d40901da304bc79dddf309b4c"
   integrity sha512-m217bJHtf0J1IiKn4Tv6mnu1h5QvQNBnKZ39gma7hzGQhIZMxYq1vYEHs4AVd4ThFwmALys+52NAOD4zdLTG4w==
@@ -6715,10 +6715,10 @@ react-redux@^5.0.7:
     react-is "^16.6.0"
     react-lifecycles-compat "^3.0.0"
 
-react-rte-ref-fix@^0.16.2:
-  version "0.16.2"
-  resolved "https://registry.yarnpkg.com/react-rte-ref-fix/-/react-rte-ref-fix-0.16.2.tgz#7d3f314eaca573bd61c46d7e5b8943078af7bed3"
-  integrity sha512-Mm8SHppTeVv/z5IUN+IdaARas3CTOE8j691FbDnOCofnlO6U2es6EqNHDVO6lcXv/VLzUOEWldZ8E8VqL/1XRQ==
+react-rte@^0.16.3:
+  version "0.16.3"
+  resolved "https://registry.yarnpkg.com/react-rte/-/react-rte-0.16.3.tgz#27a069800a281b57c35b063c0e53eb04657af08f"
+  integrity sha512-IDZtdd+jjtd8zqrlEeO+DdujANdM9cy7o5AAKKzcSoW77r7U5PVicpkuWu5as3rzWRqlfQqPpjXq/PEFTRTmNA==
   dependencies:
     babel-runtime "^6.23.0"
     class-autobind "^0.1.4"
@@ -6730,8 +6730,6 @@ react-rte-ref-fix@^0.16.2:
     draft-js-import-markdown ">=0.3.0"
     draft-js-utils ">=0.2.0"
     immutable "^3.8.1"
-    react "^16.4.1"
-    react-dom "^16.4.1"
 
 react-select@^2.4.3:
   version "2.4.4"
@@ -6772,7 +6770,7 @@ react-transition-group@^2.2.1:
     prop-types "^15.6.2"
     react-lifecycles-compat "^3.0.4"
 
-react@^16.1.0, react@^16.4.1, react@^16.6.3:
+react@^16.1.0, react@^16.6.3:
   version "16.14.0"
   resolved "https://registry.yarnpkg.com/react/-/react-16.14.0.tgz#94d776ddd0aaa37da3eda8fc5b6b18a4c9a3114d"
   integrity sha512-0X2CImDkJGApiAlcf0ODKIneSwBPhqJawOa5wCtKbu7ZECrmS26NvtSILynQ66cgkT/RJ4LidJOc3bUESwmU8g==
