@@ -12,20 +12,16 @@
  **/
 
 import React from 'react';
+import RichTextEditor from 'react-rte';
+
 
 export default class TextEditor extends React.Component {
 
     constructor(props) {
         super(props);
 
-        this.RichTextEditor = null;
-
-        if (typeof window !== 'undefined') {
-            this.RichTextEditor = require('react-rte-ref-fix').default;
-        }
-
         this.state = {
-            editorValue: this.RichTextEditor.createEmptyValue(),
+            editorValue: RichTextEditor.createEmptyValue(),
             currentValue: null
         };
 
@@ -61,10 +57,10 @@ export default class TextEditor extends React.Component {
 
             if (stringValue !== this.props.value) {
                 let ev = {target: {
-                    id: this.props.id,
-                    value: stringValue,
-                    type: 'texteditor'
-                }};
+                        id: this.props.id,
+                        value: stringValue,
+                        type: 'texteditor'
+                    }};
 
                 this.props.onChange(ev);
             }
@@ -75,21 +71,15 @@ export default class TextEditor extends React.Component {
 
         let {onChange, value, error, className, id, ...rest} = this.props;
         let has_error = ( this.props.hasOwnProperty('error') && error !== '' );
-        let editor;
 
         return (
             <div>
-                {this.RichTextEditor &&
                 <RichTextEditor
                     id={id}
-                    ref={inst => {
-                        editor = inst;
-                    }}
                     className={className + ' ' + (has_error ? 'error' : '')}
                     value={this.state.editorValue}
                     onChange={this.handleChange}
                 />
-                }
                 {has_error &&
                 <p className="error-label">{error}</p>
                 }
