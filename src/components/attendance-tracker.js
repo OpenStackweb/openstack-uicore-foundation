@@ -14,6 +14,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import http from 'superagent';
+import {getAccessToken} from './security/methods';
 
 // SCOPES NEEDED
 // %s/me/summits/events/leave
@@ -43,28 +44,30 @@ class AttendanceTracker extends React.Component {
         }
     }
 
-    trackEnter = () => {
-        const {apiBaseUrl, summitId, sourceId, sourceName, accessToken} = this.props;
+    trackEnter = async () => {
+        const {apiBaseUrl, summitId, sourceId, sourceName} = this.props;
         const location = this.getLocation();
+        const accessToken = await getAccessToken();
 
         http.put(`${apiBaseUrl}/api/v1/summits/${summitId}/metrics/enter`)
             .send({access_token: accessToken, type: sourceName, source_id: sourceId, location: location})
             .end(() => console.log('ENTER PAGE'));
     };
 
-    trackLeave = () => {
-        const {apiBaseUrl, summitId, sourceId, sourceName, accessToken} = this.props;
+    trackLeave = async () => {
+        const {apiBaseUrl, summitId, sourceId, sourceName} = this.props;
         const location = this.getLocation();
+        const accessToken = await getAccessToken();
 
         http.post(`${apiBaseUrl}/api/v1/summits/${summitId}/metrics/leave`)
             .send({access_token: accessToken, type: sourceName, source_id: sourceId, location: location})
             .end(() => console.log('LEFT PAGE'));
     };
 
-    onBeforeUnload = () => {
-        const {apiBaseUrl, summitId, sourceId, sourceName, accessToken} = this.props;
+    onBeforeUnload = async () => {
+        const {apiBaseUrl, summitId, sourceId, sourceName} = this.props;
         const location = this.getLocation();
-
+        const accessToken = await getAccessToken();
         navigator.sendBeacon(
             `${apiBaseUrl}/api/v1/summits/${summitId}/metrics/leave?access_token=${accessToken}&type=${sourceName}&source_id=${sourceId}&location=${location}`, {});
         return undefined;
@@ -74,7 +77,6 @@ class AttendanceTracker extends React.Component {
       if (typeof window !== 'undefined') {
           return encodeURIComponent(window.location.href);
       }
-
       return '';
     };
 
@@ -87,8 +89,7 @@ AttendanceTracker.propTypes = {
     sourceName: PropTypes.string,
     sourceId: PropTypes.number,
     summitId: PropTypes.number.isRequired,
-    apiBaseUrl: PropTypes.string.isRequired,
-    accessToken: PropTypes.string.isRequired
+    apiBaseUrl: PropTypes.string.isRequired
 };
 
 AttendanceTracker.defaultProps = {
