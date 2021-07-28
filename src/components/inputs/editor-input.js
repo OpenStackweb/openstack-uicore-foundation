@@ -12,16 +12,21 @@
  **/
 
 import React from 'react';
-import RichTextEditor from 'react-rte';
+
 
 
 export default class TextEditor extends React.Component {
 
     constructor(props) {
         super(props);
+        this.RichTextEditor = null;
+
+        if (typeof window !== 'undefined') {
+            this.RichTextEditor = require('react-rte').default;
+        }
 
         this.state = {
-            editorValue: RichTextEditor.createEmptyValue(),
+            editorValue: this.RichTextEditor?.createEmptyValue(),
             currentValue: null
         };
 
@@ -74,12 +79,14 @@ export default class TextEditor extends React.Component {
 
         return (
             <div>
-                <RichTextEditor
-                    id={id}
-                    className={className + ' ' + (has_error ? 'error' : '')}
-                    value={this.state.editorValue}
-                    onChange={this.handleChange}
-                />
+                {this.RichTextEditor &&
+                    <RichTextEditor
+                        id={id}
+                        className={className + ' ' + (has_error ? 'error' : '')}
+                        value={this.state.editorValue}
+                        onChange={this.handleChange}
+                    />
+                }
                 {has_error &&
                 <p className="error-label">{error}</p>
                 }
