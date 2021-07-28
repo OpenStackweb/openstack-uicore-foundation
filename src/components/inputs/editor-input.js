@@ -82,7 +82,7 @@ export default class TextEditor extends React.Component {
         return (
             <div>
                 {this.RichTextEditor &&
-                    <RichTextEditor
+                    <this.RichTextEditor
                         id={id}
                         className={className + ' ' + (has_error ? 'error' : '')}
                         value={this.state.editorValue}
