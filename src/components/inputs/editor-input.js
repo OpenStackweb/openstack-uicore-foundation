@@ -21,6 +21,8 @@ export default class TextEditor extends React.Component {
         super(props);
         this.RichTextEditor = null;
 
+        // this is done bc due SSR issues
+        // @see https://github.com/sstur/react-rte/issues/373
         if (typeof window !== 'undefined') {
             this.RichTextEditor = require('react-rte').default;
         }
