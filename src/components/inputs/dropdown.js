@@ -42,11 +42,17 @@ export default class Dropdown extends React.Component {
 
     render() {
 
-        let {onChange, value, className, error, clearable, disabled, ...rest} = this.props;
+        let {onChange, value, className, error, clearable, disabled, overrideCSS, ...rest} = this.props;
         let has_error = ( this.props.hasOwnProperty('error') && error != '' );
         let isClearable = (this.props.hasOwnProperty('clearable'));
         let isDisabled = (this.props.hasOwnProperty('disabled') && disabled == true);
         let theValue = null;
+
+        let selectClassName = className;
+
+        if (!this.props.hasOwnProperty('overrideCSS') || overrideCSS == false) {
+            selectClassName = 'dropdown ' + className + ' ' + (has_error ? 'error' : '');
+        }
 
         if (this.props.isMulti) {
             theValue = this.props.options.filter(op => value.includes(op.value));
@@ -59,7 +65,7 @@ export default class Dropdown extends React.Component {
         return (
             <div>
                 <Select
-                    className={'dropdown ' + className + ' ' + (has_error ? 'error' : '')}
+                    className={selectClassName}
                     value={theValue}
                     onChange={this.handleChange}
                     isClearable={isClearable}
