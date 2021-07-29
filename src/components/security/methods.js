@@ -26,6 +26,9 @@ const NONCE_LEN = 16;
 export const ACCESS_TOKEN_SKEW_TIME = 20;
 export const RESPONSE_TYPE_IMPLICIT = "token id_token";
 export const RESPONSE_TYPE_CODE = 'code';
+const AUTH_INFO = 'authInfo';
+const NONCE = 'nonce';
+const PKCE = 'pkce';
 
 import URI from "urijs";
 import IdTokenVerifier from "idtoken-verifier";
@@ -45,7 +48,7 @@ export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null, pr
     let nonce = createNonce(NONCE_LEN);
 
     // store nonce to check it later
-    putOnLocalStorage('nonce', nonce);
+    putOnLocalStorage(NONCE, nonce);
     let url = URI(`${baseUrl}/oauth2/auth`);
 
     let query = {
@@ -59,7 +62,7 @@ export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null, pr
 
     if(flow === RESPONSE_TYPE_CODE){
         const pkce = createPKCECodes()
-        putOnLocalStorage('pkce', JSON.stringify(pkce));
+        putOnLocalStorage(PKCE, JSON.stringify(pkce));
         query['code_challenge'] = pkce.codeChallenge;
         query['code_challenge_method'] = 'S256';
         query['access_type'] = 'offline';
@@ -136,7 +139,7 @@ export const emitAccessToken = async (code, backUrl = null) => {
     let baseUrl = getOAuth2IDPBaseUrl();
     let oauth2ClientId = getOAuth2ClientId();
     let redirectUri = getAuthCallback();
-    let pkce = JSON.parse(getFromLocalStorage('pkce', true));
+    let pkce = JSON.parse(getFromLocalStorage(PKCE, true));
 
     if (backUrl != null)
         redirectUri += `?BackUrl=${encodeURI(backUrl)}`;
@@ -179,10 +182,13 @@ export const getAccessToken = async () => {
         )
     ) {
         try {
+
             let authInfo =  getAuthInfo();
+
             if( !authInfo ) {
                 throw Error("Missing Auth info.");
             }
+
             let { accessToken, expiresIn, accessTokenUpdatedAt, refreshToken } = authInfo;
             let flow = getOAuth2Flow();
             // check life time
@@ -239,14 +245,12 @@ export const refreshAccessToken = async (refresh_token) => {
             if (response.status === 400){
                 let currentLocation = getCurrentPathName();
                 setSessionClearingState(true);
-                //console.log('refreshAccessToken 400 - re login....');
-                doLogin(currentLocation);
-                throw Error(response.statusText);
+                throw Error(`${response.status} - ${response.statusText}`);
             }
             return response;
 
         }).catch(function(error) {
-            console.log('Request failed:', error.message);
+            throw Error(`Request failed:  ${error.message}`);
         });
 
         const json = await response.json();
@@ -254,6 +258,8 @@ export const refreshAccessToken = async (refresh_token) => {
         return {access_token, refresh_token, expires_in}
     } catch (err) {
         console.log(err);
+        clearAuthInfo();
+        throw err;
     }
 }
 
@@ -283,20 +289,20 @@ export const storeAuthInfo = (accessToken, expiresIn, refreshToken = null, idTok
         authInfo['idToken'] = idToken;
     }
 
-    putOnLocalStorage('authInfo', JSON.stringify(authInfo));
+    putOnLocalStorage(AUTH_INFO, JSON.stringify(authInfo));
 }
 
 export const getAuthInfo = () => {
-    let res = getFromLocalStorage('authInfo', false)
+    let res = getFromLocalStorage(AUTH_INFO, false)
     if(res === null) return null;
     return JSON.parse(res);
 }
 
 export const clearAuthInfo = () => {
     if(typeof window !== 'undefined'){
-        removeFromLocalStorage('authInfo');
-        removeFromLocalStorage('nonce');
-        removeFromLocalStorage('pkce');
+        removeFromLocalStorage(AUTH_INFO);
+        removeFromLocalStorage(NONCE);
+        removeFromLocalStorage(PKCE);
         return;
     }
 };
@@ -352,7 +358,7 @@ export const validateIdToken = (idToken, issuer, audience) => {
         audience: audience
     });
 
-    let storedNonce = getFromLocalStorage('nonce', true);
+    let storedNonce = getFromLocalStorage(NONCE, true);
     let jwt = verifier.decode(idToken);
     let alg = jwt.header.alg;
     let kid = jwt.header.kid;
@@ -371,7 +377,7 @@ export const passwordlessStart = (params) => {
     let scopes = getOAuth2Scopes();
     let nonce = createNonce(NONCE_LEN);
     // store nonce to check it later
-    putOnLocalStorage('nonce', nonce);
+    putOnLocalStorage(NONCE, nonce);
     let baseUrl = getOAuth2IDPBaseUrl();
     let url = URI(`${baseUrl}/oauth2/auth`);
 

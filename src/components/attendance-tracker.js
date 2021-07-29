@@ -47,30 +47,44 @@ class AttendanceTracker extends React.Component {
     trackEnter = async () => {
         const {apiBaseUrl, summitId, sourceId, sourceName} = this.props;
         const location = this.getLocation();
-        const accessToken = await getAccessToken();
-
-        http.put(`${apiBaseUrl}/api/v1/summits/${summitId}/metrics/enter`)
-            .send({access_token: accessToken, type: sourceName, source_id: sourceId, location: location})
-            .end(() => console.log('ENTER PAGE'));
+        try{
+            const accessToken = await getAccessToken();
+            http.put(`${apiBaseUrl}/api/v1/summits/${summitId}/metrics/enter`)
+                .send({access_token: accessToken, type: sourceName, source_id: sourceId, location: location})
+                .end(() => console.log('ENTER PAGE'));
+        }
+        catch (e){
+            console.log(e);
+        }
     };
 
     trackLeave = async () => {
         const {apiBaseUrl, summitId, sourceId, sourceName} = this.props;
         const location = this.getLocation();
-        const accessToken = await getAccessToken();
+        try {
+            const accessToken = await getAccessToken();
 
-        http.post(`${apiBaseUrl}/api/v1/summits/${summitId}/metrics/leave`)
-            .send({access_token: accessToken, type: sourceName, source_id: sourceId, location: location})
-            .end(() => console.log('LEFT PAGE'));
+            http.post(`${apiBaseUrl}/api/v1/summits/${summitId}/metrics/leave`)
+                .send({access_token: accessToken, type: sourceName, source_id: sourceId, location: location})
+                .end(() => console.log('LEFT PAGE'));
+        }
+        catch (e){
+            console.log(e);
+        }
     };
 
     onBeforeUnload = async () => {
         const {apiBaseUrl, summitId, sourceId, sourceName} = this.props;
         const location = this.getLocation();
-        const accessToken = await getAccessToken();
-        navigator.sendBeacon(
-            `${apiBaseUrl}/api/v1/summits/${summitId}/metrics/leave?access_token=${accessToken}&type=${sourceName}&source_id=${sourceId}&location=${location}`, {});
-        return undefined;
+        try {
+            const accessToken = await getAccessToken();
+            navigator.sendBeacon(
+                `${apiBaseUrl}/api/v1/summits/${summitId}/metrics/leave?access_token=${accessToken}&type=${sourceName}&source_id=${sourceId}&location=${location}`, {});
+            return undefined;
+        }
+        catch (e){
+            console.log(e);
+        }
     };
 
     getLocation = () => {
