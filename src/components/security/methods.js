@@ -116,8 +116,8 @@ const createNonce = (len) => {
     return nonce;
 }
 
-export const doLogin = (backUrl = null, provider = null) => {
-    let url = getAuthUrl(backUrl, null ,null, provider);
+export const doLogin = (backUrl = null, provider = null, prompt = 'consent') => {
+    let url = getAuthUrl(backUrl, prompt ,null, provider);
     let location = getCurrentLocation()
     location.replace(url.toString());
 }
