@@ -65,7 +65,6 @@ export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null, pr
         putOnLocalStorage(PKCE, JSON.stringify(pkce));
         query['code_challenge'] = pkce.codeChallenge;
         query['code_challenge_method'] = 'S256';
-        query['access_type'] = 'offline';
         query['approval_prompt'] = 'force';
     }
 
