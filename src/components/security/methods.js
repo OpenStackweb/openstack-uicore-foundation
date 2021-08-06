@@ -196,20 +196,26 @@ export const getAccessToken = async () => {
             expiresIn = (expiresIn - ACCESS_TOKEN_SKEW_TIME);
             //console.log(`getAccessToken now ${now} accessTokenUpdatedAt ${accessTokenUpdatedAt} timeElapsedSecs ${timeElapsedSecs} expiresIn ${expiresIn}.`);
 
-            if (timeElapsedSecs > expiresIn && flow === RESPONSE_TYPE_CODE) {
-                //console.log('getAccessToken getting new access token, access token got void');
-                if(!refreshToken){
-                    throw Error("Refresh token is null.");
+            if (timeElapsedSecs > expiresIn) {
+                console.log(`getAccessToken access token expired`)
+                if(flow === RESPONSE_TYPE_CODE && useOAuth2RefreshToken()) {
+                    //console.log('getAccessToken getting new access token, access token got void');
+                    if (!refreshToken) {
+                        clearAuthInfo();
+                        throw Error("missing Refresh Token");
+                    }
+                    let response = await refreshAccessToken(refreshToken);
+                    let {access_token, expires_in, refresh_token} = response;
+                    //console.log(`getAccessToken access_token ${access_token} expires_in ${expires_in} refresh_token ${refresh_token}`);
+                    if (typeof refresh_token === 'undefined') {
+                        refresh_token = null; // not using rotate policy
+                    }
+                    storeAuthInfo(access_token, expires_in, refresh_token);
+                    //console.log(`getAccessToken access_token ${access_token} [NEW]`);
+                    return access_token;
                 }
-                let response = await refreshAccessToken(refreshToken);
-                let {access_token, expires_in, refresh_token} = response;
-                //console.log(`getAccessToken access_token ${access_token} expires_in ${expires_in} refresh_token ${refresh_token}`);
-                if (typeof refresh_token === 'undefined') {
-                    refresh_token = null; // not using rotate policy
-                }
-                storeAuthInfo(access_token, expires_in, refresh_token);
-                //console.log(`getAccessToken access_token ${access_token} [NEW]`);
-                return access_token;
+                clearAuthInfo();
+                throw Error("Access Token Expired.");
             }
             //console.log(`getAccessToken access_token ${accessToken} [CACHED]`);
             return accessToken;
@@ -329,6 +335,13 @@ export const getOAuth2Flow = () => {
         return window.OAUTH2_FLOW || "token id_token";
     }
     return "token id_token";
+}
+
+export const useOAuth2RefreshToken = () => {
+    if(typeof window !== 'undefined') {
+        return new Boolean(window.OAUTH2_USE_REFRESH_TOKEN || true);
+    }
+    return true;
 }
 
 export const getOAuth2IDPBaseUrl = () => {
