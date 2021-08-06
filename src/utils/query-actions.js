@@ -64,7 +64,7 @@ export const querySpeakers = _.debounce(async (summitId, input, callback) => {
         apiUrl += `/summits/${summitId}`;
     }
 
-    apiUrl += `/speakers?filter=${filters}&access_token=${accessToken}`;
+    apiUrl += `/speakers?filter=${filters}&access_token=${accessToken}&expand=member,registration_request`;
 
     fetch(buildAPIBaseUrl(apiUrl))
         .then(fetchResponseHandler)
