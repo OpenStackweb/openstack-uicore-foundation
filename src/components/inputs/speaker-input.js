@@ -24,6 +24,8 @@ export default class SpeakerInput extends React.Component {
         this.handleChange = this.handleChange.bind(this);
         this.getSpeakers = this.getSpeakers.bind(this);
         this.handleClick = this.handleClick.bind(this);
+        this.getOptionValue = this.getOptionValue.bind(this);
+        this.getOptionLabel = this.getOptionLabel.bind(this);
     }
 
     handleChange(value) {
@@ -52,6 +54,21 @@ export default class SpeakerInput extends React.Component {
         querySpeakers(summitId, input, callback);
     }
 
+    getOptionValue(speaker){
+        if(this.props.hasOwnProperty("getOptionValue")){
+            return this.props.getOptionValue(speaker);
+        }
+        //default
+        return speaker.id;
+    }
+
+    getOptionLabel(speaker){
+        if(this.props.hasOwnProperty("getOptionLabel")){
+            return this.props.getOptionLabel(speaker);
+        }
+        //default
+        return `${speaker.first_name} ${speaker.last_name} (${speaker.id})`;
+    }
 
     render() {
         let {value, onChange, history, summitId, error, id, multi, ...rest} = this.props;
@@ -73,8 +90,8 @@ export default class SpeakerInput extends React.Component {
                     onChange={this.handleChange}
                     loadOptions={this.getSpeakers}
                     components={{ MultiValueLabel }}
-                    getOptionValue={op => op.id}
-                    getOptionLabel={op => (`${op.first_name} ${op.last_name} (${op.id})`)}
+                    getOptionValue={s => this.getOptionValue(s)}
+                    getOptionLabel={s => this.getOptionLabel(s)}
                     isMulti={isMulti}
                     {...rest}
                 />
