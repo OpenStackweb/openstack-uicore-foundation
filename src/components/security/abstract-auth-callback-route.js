@@ -12,7 +12,14 @@
  **/
 import React from 'react';
 import URI from "urijs";
-import {doLogin, emitAccessToken, getOAuth2Flow, RESPONSE_TYPE_IMPLICIT, RESPONSE_TYPE_CODE, validateIdToken} from "./methods";
+import {
+    doLogin,
+    emitAccessToken,
+    getOAuth2Flow,
+    RESPONSE_TYPE_IMPLICIT,
+    RESPONSE_TYPE_CODE,
+    validateIdToken
+} from "./methods";
 import {getCurrentPathName, getCurrentHref} from '../../utils/methods';
 
 class AbstractAuthorizationCallbackRoute extends React.Component {
@@ -21,7 +28,7 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
         // console.log('AbstractAuthorizationCallbackRoute::constructor init');
         super(props);
 
-        let flow = getOAuth2Flow();
+
 
         // initial state
         this.state = {
@@ -31,26 +38,17 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
             issuer: issuer,
             audience: audience,
             accessToken: null,
+            flow: getOAuth2Flow(),
         };
-
-        if (flow === RESPONSE_TYPE_IMPLICIT) {
-            this._implicitFlow();
-        }
-
-        if (flow === RESPONSE_TYPE_CODE) {
-            this._codeFlow();
-        }
-
-        // console.log('AbstractAuthorizationCallbackRoute::constructor finish');
     }
 
-    _implicitFlow(){
+    _implicitFlow() {
+        // get data from url hash
         const {access_token, id_token, session_state, error, error_description, expires_in} = this.extractHashParams();
 
         if (error) {
             // if error condition short cut...
-            this.state.error = error;
-            this.state.error_description = error_description;
+            this.setState({...this.state, error: error, error_description: error_description})
             return;
         }
 
@@ -65,27 +63,32 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
             id_token,
             this.state.issuer,
             this.state.audience
-        )  : false;
-            // set the state synchronusly bc we are on constructor context
-            this.state.id_token_is_valid = id_token_is_valid;
-            this.state.error = !id_token_is_valid ? "Invalid Token" : null;
-            this.state.error_description = !id_token_is_valid ? "Invalid Token" : null;
-            this.state.accessToken = access_token;
-            if (access_token && id_token_is_valid) {
-                this.props.onUserAuth(access_token, id_token, session_state, expires_in);
-                if(typeof window !== 'undefined') {
-                    if (window.location !== window.parent.location ) {
-                        console.log("AbstractAuthorizationCallbackRoute::_implicitFlow running inside iframe, sending auth state to parent");
-                        window.parent.postMessage(JSON.stringify({
-                            action : 'SET_AUTH_INFO_SILENTLY',
-                            access_token : access_token,
-                            id_token : id_token,
-                            session_state : session_state,
-                            expires_in: expires_in,
-                        }),  window.location.origin);
-                    }
+        ) : false;
+
+        this.setState({
+            ...this.state,
+            id_token_is_valid: id_token_is_valid,
+            error: !id_token_is_valid ? "Invalid Token" : null,
+            error_description: !id_token_is_valid ? "Invalid Token" : null,
+            accessToken: access_token,
+        })
+
+        if (access_token && id_token_is_valid) {
+            this.props.onUserAuth(access_token, id_token, session_state, expires_in);
+
+            if (typeof window !== 'undefined') {
+                if (window.location !== window.parent.location) {
+                    console.log("AbstractAuthorizationCallbackRoute::_implicitFlow running inside iframe, sending auth state to parent");
+                    window.parent.postMessage(JSON.stringify({
+                        action: 'SET_AUTH_INFO_SILENTLY',
+                        access_token: access_token,
+                        id_token: id_token,
+                        session_state: session_state,
+                        expires_in: expires_in,
+                    }), window.location.origin);
                 }
             }
+        }
     }
 
     _codeFlow() {
@@ -114,14 +117,14 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
 
         emitAccessToken(code, backUrl).then(response => {
             // console.log(`AbstractAuthorizationCallbackRoute::_codeFlow [ASYNC] got response ${JSON.stringify(response)}`);
-            let { id_token, access_token, refresh_token, expires_in,  error: error2, error_description: error_description2} = response;
+            let {id_token, access_token, refresh_token, expires_in, error: error2, error_description: error_description2} = response;
 
-            if(error2){
+            if (error2) {
                 // set with
                 this.setState({
                     ...this.state,
                     error: error2,
-                    error_description:error_description2
+                    error_description: error_description2
                 });
                 return;
             }
@@ -143,29 +146,43 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
             this.setState({
                 ...this.state,
                 id_token_is_valid: id_token_is_valid,
-                accessToken:access_token,
+                accessToken: access_token,
                 error: !id_token_is_valid ? "Invalid Token" : error,
-                error_description:!id_token_is_valid ? "Invalid Token" : error_description,
+                error_description: !id_token_is_valid ? "Invalid Token" : error_description,
             });
 
             if (access_token && id_token_is_valid) {
                 // console.log(`AbstractAuthorizationCallbackRoute::_codeFlow [ASYNC] onUserAuth`);
                 this.props.onUserAuth(access_token, id_token, session_state, expires_in, refresh_token);
-                if(typeof window !== 'undefined') {
-                    if (window.location !== window.parent.location ) {
+                if (typeof window !== 'undefined') {
+                    if (window.location !== window.parent.location) {
                         console.log("AbstractAuthorizationCallbackRoute::_codeFlow running inside iframe, sending auth state to parent");
                         window.parent.postMessage(JSON.stringify({
-                            action : 'SET_AUTH_INFO_SILENTLY',
-                            access_token : access_token,
-                            id_token : id_token,
-                            session_state : session_state,
-                            expires_in : expires_in,
-                            refresh_token : refresh_token
-                        }),  window.location.origin);
+                            action: 'SET_AUTH_INFO_SILENTLY',
+                            access_token: access_token,
+                            id_token: id_token,
+                            session_state: session_state,
+                            expires_in: expires_in,
+                            refresh_token: refresh_token
+                        }), window.location.origin);
                     }
                 }
             }
         });
+    }
+
+    componentDidMount() {
+
+        let {flow} = this.state;
+
+        if (flow === RESPONSE_TYPE_IMPLICIT) {
+            this._implicitFlow();
+            return;
+        }
+
+        if (flow === RESPONSE_TYPE_CODE) {
+            this._codeFlow();
+        }
     }
 
     extractHashParams() {
@@ -177,11 +194,11 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
         if (nextState.accessToken !== this.state.accessToken) {
             return true;
         }
-        if(nextState.error !== this.state.error){
+        if (nextState.error !== this.state.error) {
             return true;
         }
 
-        if(nextState.id_token_is_valid !== this.state.id_token_is_valid){
+        if (nextState.id_token_is_valid !== this.state.id_token_is_valid) {
             return true;
         }
 
