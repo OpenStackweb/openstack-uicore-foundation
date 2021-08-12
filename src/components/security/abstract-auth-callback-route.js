@@ -28,8 +28,6 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
         // console.log('AbstractAuthorizationCallbackRoute::constructor init');
         super(props);
 
-
-
         // initial state
         this.state = {
             id_token_is_valid: true,
@@ -98,8 +96,7 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
         if (error) {
             // if error condition short cut...
             // we set here directly bc we are at construction time
-            this.state.error = error;
-            this.state.error_description = error_description;
+            this.setState({...this.state, error: error, error_description: error_description})
             return;
         }
 
