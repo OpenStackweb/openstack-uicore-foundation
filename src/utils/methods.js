@@ -227,3 +227,45 @@ export const retryPromise = async (
 
     return false;
 }
+
+export const formatAuthProviderButtons = (customProviders, thirdPartyProviders) => {
+    const thirdPartyProvidersFormat = [
+        {
+            button_color: "#0370C5",
+            provider_label: "Facebook",
+            provider_param: "facebook",
+            provider_icon: "facebook",
+        },
+        {
+            button_color: "#DD4437",
+            provider_label: "Google",
+            provider_param: "google",
+            provider_icon: "google",
+        },
+        {
+            button_color: "#000000",
+            provider_label: "Apple ID",
+            provider_param: "apple",
+            provider_icon: "apple",
+        },
+        {
+            button_color: "#3FA2F7",
+            provider_label: "LinkedIn",
+            provider_param: "linkedin",
+            provider_icon: "linkedin",
+        },
+        {
+            button_color: "#2272E7",
+            provider_label: "Microsoft",
+            provider_param: "microsoft",
+            provider_icon: "microsoft",
+        },
+    ];
+
+    return [
+        ...customProviders,
+        ...thirdPartyProvidersFormat.filter((p) =>
+            thirdPartyProviders?.includes(p.provider_param)
+        ),
+    ];
+};
