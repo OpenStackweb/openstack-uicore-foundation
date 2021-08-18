@@ -69,6 +69,7 @@ import {
     getOAuth2ClientId,
     passwordlessStart,
     passwordlessLogin,
+    formatAuthProviderButtons
 } from './components/security/methods';
 
 import {getCurrentUserLanguage} from './utils/methods';
@@ -146,5 +147,6 @@ export {
     getOAuth2ClientId,
     clearAuthInfo,
     passwordlessStart,
-    passwordlessLogin
+    passwordlessLogin,
+    formatAuthProviderButtons
 };
