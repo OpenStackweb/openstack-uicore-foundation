@@ -68,7 +68,7 @@ export default class UploadInput extends React.Component {
         icon =  (fileName && fileName.endsWith('mov') ? mov_icon: icon);
         icon =  (fileName && fileName.endsWith('mp4') ? mp4_icon: icon);
 
-        if(fileName && ( fileName.endsWith('jpg') || fileName.endsWith('png')) && value){
+        if(fileName && ( fileName.endsWith('jpg') || fileName.endsWith('png') || fileName.endsWith('svg')) && value){
             icon = value
         }
 
