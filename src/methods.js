@@ -46,8 +46,7 @@ import {
     epochToMomentTimeZone,
     formatEpoch,
     objectToQueryString,
-    getBackURL,
-    formatAuthProviderButtons
+    getBackURL
 } from './utils/methods'
 
 import {
@@ -147,6 +146,5 @@ export {
     getOAuth2ClientId,
     clearAuthInfo,
     passwordlessStart,
-    passwordlessLogin,
-    formatAuthProviderButtons
+    passwordlessLogin
 };
