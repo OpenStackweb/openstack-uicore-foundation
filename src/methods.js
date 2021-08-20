@@ -46,8 +46,7 @@ import {
     epochToMomentTimeZone,
     formatEpoch,
     objectToQueryString,
-    getBackURL,
-    formatAuthProviderButtons
+    getBackURL
 } from './utils/methods'
 
 
@@ -127,6 +126,5 @@ export {
     doLogout,
     getUserInfo,
     authErrorHandler,
-    escapeFilterValue,
-    formatAuthProviderButtons
+    escapeFilterValue
 };
