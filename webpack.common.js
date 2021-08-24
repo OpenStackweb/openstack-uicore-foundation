@@ -52,7 +52,11 @@ module.exports = {
                             '@babel/preset-react',
                             '@babel/preset-flow'
                         ],
-                        plugins: ['@babel/plugin-proposal-object-rest-spread', '@babel/plugin-proposal-class-properties']
+                        plugins: [
+                            '@babel/plugin-proposal-object-rest-spread', 
+                            '@babel/plugin-proposal-class-properties',
+                            '@babel/plugin-proposal-optional-chaining'
+                        ]
                     }
                 }
             },
