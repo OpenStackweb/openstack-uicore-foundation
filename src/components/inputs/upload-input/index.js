@@ -28,13 +28,20 @@ export default class UploadInput extends React.Component {
         super(props);
 
         this.state = {
-            show_remove: false
+            show_remove: false,
+            logo_preview: {
+                preview: null,
+                name: '',
+            },
         }
     }
 
-    onDrop(acceptedFiles, fileRejections, evt) {
-        if(acceptedFiles.length > 0)
+    onDrop(acceptedFiles, fileRejections, evt) {        
+        if(acceptedFiles.length > 0) {
             this.props.handleUpload(acceptedFiles[0], this.props);
+            if(acceptedFiles[0].name.endsWith('jpg') || acceptedFiles[0].name.endsWith('png') || acceptedFiles[0].name.endsWith('svg'))
+                this.setState({logo_preview: { preview: acceptedFiles[0].preview, name: acceptedFiles[0].name}})
+        }
         if(fileRejections.length > 0 && this.props.hasOwnProperty("handleError"))
             this.props.handleError(fileRejections, this.props)
     }
@@ -53,6 +60,7 @@ export default class UploadInput extends React.Component {
 
     render() {
         let {value, file, handleRemove, handleUpload, handleError, fileName, error, ...rest} = this.props;
+        let {logo_preview} = this.state;
         let has_error = ( this.props.hasOwnProperty('error') && error !== '' );
         let icon = file_icon;
 
@@ -70,6 +78,11 @@ export default class UploadInput extends React.Component {
 
         if(fileName && ( fileName.endsWith('jpg') || fileName.endsWith('png') || fileName.endsWith('svg')) && value){
             icon = value
+        }
+
+        if (logo_preview.preview && logo_preview.name) {
+            icon = logo_preview.preview;
+            fileName = logo_preview.name;
         }
 
         return (
