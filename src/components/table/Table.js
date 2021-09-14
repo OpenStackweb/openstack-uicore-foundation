@@ -19,6 +19,13 @@ const createRow = (row, columns, actions) => {
 
     var action_buttons = '';
     var cells = columns.map((col,i) => {
+        if(col.hasOwnProperty("render"))
+            return (
+                <TableCell key={'cell_'+i} >
+                    {col.render(row, row[col.columnKey])}
+                </TableCell>
+            );
+
         return (
             <TableCell key={'cell_'+i} >
                 {row[col.columnKey]}
