@@ -48,7 +48,7 @@ import VideoStream from "./components/video-stream";
 import AttendanceTracker from "./components/attendance-tracker";
 import {getCurrentUserLanguage} from './utils/methods';
 import useFitText from './components/use-fit-text';
-
+import AccessLevelsInput from './components/inputs/access-levels-input';
 let language = getCurrentUserLanguage();
 
 // language would be something like es-ES or es_ES
@@ -112,5 +112,6 @@ export {
     VideoStream,
     AttendanceTracker,
     SelectableTable,
-    useFitText
+    useFitText,
+    AccessLevelsInput
 };
