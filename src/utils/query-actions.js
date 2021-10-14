@@ -214,6 +214,21 @@ export const querySponsors = _.debounce(async (summitId, input, callback) => {
         .catch(fetchErrorHandler);
 }, callDelay);
 
+export const queryAccessLevels = _.debounce((summitId, input, callback) => {
+
+    let accessToken = getAccessToken();
+    input = escapeFilterValue(input);
+    let filters = encodeURIComponent(`name=@${input}`);
+
+    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/access-level-types?filter=${filters}&&access_token=${accessToken}`))
+        .then(fetchResponseHandler)
+        .then((json) => {
+            let options = [...json.data];
+
+            callback(options);
+        })
+        .catch(fetchErrorHandler);
+}, callDelay);
 
 export const queryOrganizations = _.debounce(async (input, callback) => {
 
