@@ -46,7 +46,8 @@ export const doLogout = (backUrl) => (dispatch, getState) => {
     });
 }
 
-export const getUserInfo =  (expand = 'groups', backUrl = null, history = null, errorHandler = null ) => async (dispatch, getState) => {
+export const getUserInfo = (expand = 'groups', fields='', backUrl = null, history = null, errorHandler = null ) =>
+    async (dispatch, getState) => {
 
     let AllowedUserGroups = getAllowedUserGroups();
     AllowedUserGroups = AllowedUserGroups !== '' ? AllowedUserGroups.split(' ') : [];
@@ -66,12 +67,21 @@ export const getUserInfo =  (expand = 'groups', backUrl = null, history = null, 
 
     dispatch(startLoading());
 
+    let params = {
+        'access_token': accessToken,
+        'expand' : expand,
+    }
+
+    if(fields){
+        params['fields'] = fields;
+    }
+
     return getRequest(
         createAction(REQUEST_USER_INFO),
         createAction(RECEIVE_USER_INFO),
-        buildAPIBaseUrl(`/api/v1/members/me?expand=${expand}&access_token=${accessToken}`),
+        buildAPIBaseUrl(`/api/v1/members/me`),
         errorHandler
-    )({})(dispatch, getState).then(() => {
+    )(params)(dispatch, getState).then(() => {
             dispatch(stopLoading());
 
             let {member} = getState().loggedUserState;
