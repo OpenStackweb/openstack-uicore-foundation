@@ -58,6 +58,7 @@ import {
     initLogOut,
     doLogout,
     getUserInfo,
+    doLoginBasicLogin,
 } from './components/security/actions';
 
 import {getCurrentUserLanguage} from './utils/methods';
@@ -121,6 +122,7 @@ export {
     getAuthUrl,
     getLogoutUrl,
     doLogin,
+    doLoginBasicLogin,
     onUserAuth,
     initLogOut,
     doLogout,

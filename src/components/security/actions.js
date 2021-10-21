@@ -108,6 +108,10 @@ export const doLogin = (backUrl = null, provider = null, prompt = 'consent') => 
     location.replace(url.toString());
 }
 
+export const doLoginBasicLogin = (backUrl = null) => {
+    doLogin(backUrl, null, null);
+}
+
 export const onUserAuth = (accessToken, idToken, sessionState) => (dispatch) => {
     dispatch({
         type: SET_LOGGED_USER,
