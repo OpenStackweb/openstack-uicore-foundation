@@ -53,6 +53,7 @@ import {
     onUserAuth,
     doLogout,
     getUserInfo,
+    updateUserInfo,
 } from './components/security/actions';
 
 import {
@@ -149,4 +150,5 @@ export {
     passwordlessStart,
     passwordlessLogin,
     doLoginBasicLogin,
+    updateUserInfo,
 };

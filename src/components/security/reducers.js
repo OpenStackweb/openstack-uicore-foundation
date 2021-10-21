@@ -18,6 +18,7 @@ import {
     SESSION_STATE_STATUS_UNCHANGED,
     SET_LOGGED_USER,
     UPDATE_SESSION_STATE_STATUS,
+    UPDATE_USER_INFO
 } from './actions';
 
 import IdTokenVerifier from 'idtoken-verifier';
@@ -94,6 +95,10 @@ export const loggedUserReducer = (state = DEFAULT_STATE, action) => {
                 response = {...response, groups: [...response.groups, ...idpGroups], address};
             }
             return {...state, member: response};
+        }
+        case UPDATE_USER_INFO:{
+            let newMemberInfo = action.payload;
+            return {...state, member: newMemberInfo};
         }
         break;
         default:

@@ -28,6 +28,7 @@ export const UPDATE_SESSION_STATE_STATUS = 'UPDATE_SESSION_STATE_STATUS';
 export const SESSION_STATE_STATUS_UNCHANGED = 'unchanged';
 export const SESSION_STATE_STATUS_CHANGED = 'changed';
 export const SESSION_STATE_STATUS_ERROR = 'error';
+export const UPDATE_USER_INFO = 'UPDATE_USER_INFO';
 
 export const onUserAuth = (accessToken, idToken, sessionState, expiresIn = 0, refreshToken = null) => (dispatch) => {
 
@@ -119,6 +120,22 @@ export const getUserInfo = (expand = 'groups', fields='', backUrl = null, histor
         }
     );
 };
+
+export const updateUserInfo = (updatedMember) => (dispatch, getState) => {
+    let {loggedUserState} = getState();
+    let {member} = loggedUserState;
+    if(member == null){
+        throw Error("Member is not set.");
+    }
+    if(updatedMember.id != member.id){
+        throw Error("Member is not the same.");
+    }
+    dispatch({
+        type: UPDATE_USER_INFO,
+        payload: {updatedMember}
+    });
+
+}
 
 export const updateSessionStateStatus = (newStatus) => (dispatch, getState) => {
     dispatch({
