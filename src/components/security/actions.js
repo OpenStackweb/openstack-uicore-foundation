@@ -68,8 +68,8 @@ export const getUserInfo = (expand = 'groups', fields='', backUrl = null, histor
     dispatch(startLoading());
 
     let params = {
-        'access_token': accessToken,
-        'expand' : expand,
+        access_token: accessToken,
+        expand : expand,
     }
 
     if(fields){

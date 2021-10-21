@@ -12,6 +12,4 @@ import 'openstack-uicore-foundation/lib/css/components.css';
 import 'sweetalert2/dist/sweetalert2.css';
 
 
-npm run build
-npm version patch
-npm publish
+1 - yarn build && yarn publish
