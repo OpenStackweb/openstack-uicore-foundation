@@ -1,6 +1,6 @@
 {
   "name": "openstack-uicore-foundation",
-  "version": "2.1.17",
+  "version": "2.1.18",
   "description": "ui reactjs components for openstack marketing site",
   "main": "lib/openstack-uicore-foundation.js",
   "scripts": {
@@ -59,7 +59,7 @@
     "redux-thunk": "^2.3.0",
     "sass-loader": "^6.0.7",
     "style-loader": "^0.19.1",
-    "superagent": "^3.8.1",
+    "superagent": "^6.1.0",
     "sweetalert2": "^8.15.2",
     "urijs": "^1.19.1",
     "url-loader": "^0.6.2",
@@ -99,7 +99,7 @@
     "redux": "^3.7.2",
     "redux-persist": "^5.10.0",
     "redux-thunk": "^2.3.0",
-    "superagent": "^3.8.1",
+    "superagent": "^6.1.0",
     "sweetalert2": "^8.15.2",
     "urijs": "^1.19.1",
     "validator": "^9.4.1",
