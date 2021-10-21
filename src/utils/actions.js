@@ -141,10 +141,6 @@ export const getRequest =(
             response: 60000,
             deadline: 60000,
         })
-        .abort(() => {
-            // we need this so firefox doesn't call reject and triggers the errorHandler
-            console.log('ABORTED');
-        })
         .end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject))
 
         schedule(key, req);
@@ -173,10 +169,6 @@ export const putRequest = (
             payload = {};
         http.put(url.toString())
             .send(payload)
-            .abort(() => {
-                // we need this so firefox doesn't call reject and triggers the errorHandler
-                console.log('ABORTED');
-            })
             .end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject))
     });
 };
@@ -203,10 +195,6 @@ export const deleteRequest = (
 
         http.delete(url)
             .send(payload)
-            .abort(() => {
-                // we need this so firefox doesn't call reject and triggers the errorHandler
-                console.log('ABORTED');
-            })
             .end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject));
     });
 };
@@ -237,12 +225,7 @@ export const postRequest = (
         else // to be a simple CORS request
             request.set('Content-Type', 'text/plain');
 
-        request
-            .abort(() => {
-                // we need this so firefox doesn't call reject and triggers the errorHandler
-                console.log('ABORTED');
-            })
-            .end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject));
+        request.end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject));
     });
 };
 
