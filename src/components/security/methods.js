@@ -121,6 +121,10 @@ export const doLogin = (backUrl = null, provider = null, prompt = 'consent') => 
     location.replace(url.toString());
 }
 
+export const doLoginBasicLogin = (backUrl = null) => {
+    doLogin(backUrl, null, null);
+}
+
 const createPKCECodes = () => {
     const codeVerifier = base64URLEncode(randomBytes(64))
     const codeChallenge = base64URLEncode(sha256(Buffer.from(codeVerifier)))
