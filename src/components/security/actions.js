@@ -214,7 +214,7 @@ export const updateUserInfo = (updatedMember) => (dispatch, getState) => {
     }
     dispatch({
         type: UPDATE_USER_INFO,
-        payload: {updatedMember}
+        payload: {...updatedMember}
     });
 
 }
