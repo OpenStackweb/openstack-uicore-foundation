@@ -14,7 +14,7 @@
 import T from "i18n-react/dist/i18n-react";
 import {authErrorHandler, createAction, getRequest, showMessage, startLoading, stopLoading} from "../../utils/actions";
 import {buildAPIBaseUrl, getAllowedUserGroups} from '../../utils/methods';
-import { getAccessToken, storeAuthInfo} from './methods';
+import { getAccessToken, storeAuthInfo, initLogOut} from './methods';
 
 /**
  * @ignore
