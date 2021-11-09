@@ -374,6 +374,16 @@ export const showSuccessMessage = (html) => (dispatch) => {
     });
 }
 
+export const downloadFileByContent = (filename, content, mime) => {
+    let link = document.createElement('a');
+    link.textContent = 'download';
+    link.download = filename;
+    link.href = `data:${mime},${encodeURIComponent(content)}`
+    document.body.appendChild(link); // Required for FF
+    link.click();
+    document.body.removeChild(link);
+}
+
 export const getCSV = (endpoint, params, filename, header = null) => (dispatch) => {
 
     let url = URI(endpoint);
@@ -397,18 +407,35 @@ export const getCSV = (endpoint, params, filename, header = null) => (dispatch) 
             if (header) {
                 csv = header + '\r\r' + csv;
             }
-
-            let link = document.createElement('a');
-            link.textContent = 'download';
-            link.download = filename;
-            link.href = 'data:text/csv;charset=utf-8,'+ encodeURIComponent(csv);
-            document.body.appendChild(link); // Required for FF
-            link.click();
-            document.body.removeChild(link);
+            downloadFileByContent(filename, csv, 'text/csv;charset=utf-8');
         })
         .catch(fetchErrorHandler);
 };
 
+export const getRawCSV = (endpoint, params, header = null) => {
+
+    let url = URI(endpoint);
+
+    if(!isObjectEmpty(params))
+        url = url.query(params);
+
+    return fetch(url.toString())
+        .then((response) => {
+            if (!response.ok) {
+                throw response;
+            } else {
+                return response.text();
+            }
+        })
+        .then((csv) => {
+            if (header) {
+                csv = header + '\r\r' + csv;
+            }
+
+          return csv;
+        })
+        .catch(fetchErrorHandler);
+};
 
 export const escapeFilterValue = (value) => {
     value = value.replace(/,/g, "\\,");
