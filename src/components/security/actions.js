@@ -19,6 +19,7 @@ import {
     getCurrentLocation, getOrigin, getIdToken
 } from '../../utils/methods';
 import URI from "urijs";
+import IdTokenVerifier from "idtoken-verifier";
 
 export const SET_LOGGED_USER = 'SET_LOGGED_USER';
 export const LOGOUT_USER = 'LOGOUT_USER';
@@ -225,3 +226,28 @@ export const updateSessionStateStatus = (newStatus) => (dispatch, getState) => {
         payload: {sessionStateStatus: newStatus}
     });
 }
+const ACCESS_TOKEN_SKEW_TIME = 500;
+
+export const isIdTokenAlive = () => (dispatch, getState) => {
+    let {loggedUserState} = getState();
+    let {accessToken, idToken, isLoggedUser} = loggedUserState;
+    if (!accessToken)
+        throw Error('Access Token not set.');
+    if (!idToken)
+        throw Error('Id Token not set.');
+    if (!isLoggedUser) {
+        throw Error('User is not logged.')
+    }
+
+    let issuer = getOAuth2IDPBaseUrl();
+    let audience = getOAuth2ClientId();
+    let verifier = new IdTokenVerifier({
+        issuer: issuer,
+        audience: audience
+    });
+    let jwt = verifier.decode(idToken);
+    let exp = jwt.payload.exp;
+    let now = Math.floor(Date.now() / 1000);
+    return exp - (now + ACCESS_TOKEN_SKEW_TIME) > 0;
+}
+

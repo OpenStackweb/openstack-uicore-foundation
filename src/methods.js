@@ -61,7 +61,8 @@ import {
     doLogout,
     getUserInfo,
     doLoginBasicLogin,
-    updateUserInfo
+    updateUserInfo,
+    isIdTokenAlive,
 } from './components/security/actions';
 
 import {getCurrentUserLanguage} from './utils/methods';
@@ -134,5 +135,6 @@ export {
     getUserInfo,
     authErrorHandler,
     escapeFilterValue,
-    updateUserInfo
+    updateUserInfo,
+    isIdTokenAlive,
 };

@@ -60,17 +60,18 @@ export const loggedUserReducer = (state = DEFAULT_STATE, action) => {
         }
         case RECEIVE_USER_INFO: {
             let { response } = action.payload;
-
             if(issuer != '' && audience != '') {
+
                 // check on idp groups
                 let verifier = new IdTokenVerifier({
                     issuer: issuer,
                     audience: audience
                 });
 
-                let jwt       = verifier.decode(idToken);
+                let jwt       = verifier.decode(state.idToken);
                 let idpGroups = jwt.payload.groups || [];
                 let address   = jwt.payload.address || {};
+
                 // merge
 
                 idpGroups = idpGroups.map((idpGroup) => { return {

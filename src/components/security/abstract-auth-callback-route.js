@@ -136,6 +136,9 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
     _redirect2Error(error) {
     }
 
+    _render(){
+        return null;
+    }
     render() {
         //console.log("AuthorizationCallbackRoute::render");
         let {id_token_is_valid, error, error_description} = this.state;
@@ -149,7 +152,7 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
             return this._redirect2Error("token_validation_error");
         }
 
-        return null;
+        return this._render();
     }
 }
 
