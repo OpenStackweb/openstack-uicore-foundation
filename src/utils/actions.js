@@ -120,7 +120,9 @@ export const getRequest =(
     receiveActionCreator,
     endpoint,
     errorHandler = defaultErrorHandler,
-    requestActionPayload = {}
+    requestActionPayload = {},
+    responseTimeout = 60, // secs,
+    deadlineTimeout = 60, //secs
 ) => (params = {}) => (dispatch, state) => {
 
     let url = URI(endpoint);
@@ -138,8 +140,8 @@ export const getRequest =(
     return new Promise((resolve, reject) => {
         let req = http.get(url.toString())
         .timeout({
-            response: 60000,
-            deadline: 60000,
+            response: (responseTimeout * 1000),
+            deadline: (deadlineTimeout * 1000),
         })
         .end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject))
 
