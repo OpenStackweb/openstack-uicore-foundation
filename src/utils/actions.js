@@ -122,7 +122,8 @@ export const getRequest =(
     errorHandler = defaultErrorHandler,
     requestActionPayload = {},
     responseTimeout = 60, // secs,
-    deadlineTimeout = 60, //secs
+    deadlineTimeout = 60, //secs,
+    withCredentials = false
 ) => (params = {}) => (dispatch, state) => {
 
     let url = URI(endpoint);
@@ -138,8 +139,12 @@ export const getRequest =(
     cancel(key);
 
     return new Promise((resolve, reject) => {
-        let req = http.get(url.toString())
-        .timeout({
+        let request = http.get(url.toString());
+
+        if(withCredentials)
+            request = request.withCredentials();
+
+        request.timeout({
             response: (responseTimeout * 1000),
             deadline: (deadlineTimeout * 1000),
         })
@@ -186,7 +191,8 @@ export const deleteRequest = (
     endpoint,
     payload,
     errorHandler  = defaultErrorHandler,
-    requestActionPayload = {}
+    requestActionPayload = {},
+    withCredentials = false
 ) => (params) => (dispatch, state) => {
     let url = URI(endpoint);
 
@@ -200,8 +206,12 @@ export const deleteRequest = (
         if(payload == null)
             payload = {};
 
-        http.delete(url)
-            .send(payload)
+        let request = http.delete(url);
+
+        if(withCredentials)
+            request = request.withCredentials();
+
+        request.send(payload)
             .end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject));
     });
 };
@@ -212,7 +222,8 @@ export const postRequest = (
         endpoint,
         payload,
         errorHandler = defaultErrorHandler,
-        requestActionPayload = {}
+        requestActionPayload = {},
+        withCredentials = false
 ) => (params = {}) => (dispatch, state) => {
 
     let url = URI(endpoint);
@@ -226,6 +237,9 @@ export const postRequest = (
     return new Promise((resolve, reject) => {
 
         let request = http.post(url);
+
+        if(withCredentials)
+            request = request.withCredentials();
 
         if(payload != null)
             request.send(payload);
