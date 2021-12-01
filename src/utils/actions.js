@@ -155,7 +155,8 @@ export const putRequest = (
     endpoint,
     payload,
     errorHandler = defaultErrorHandler,
-    requestActionPayload = {}
+    requestActionPayload = {},
+    withCredentials = false
 ) => (params = {}) => ( dispatch, state) => {
 
     let url = URI(endpoint);
@@ -169,8 +170,12 @@ export const putRequest = (
     return new Promise((resolve, reject) => {
         if(payload == null)
             payload = {};
-        http.put(url.toString())
-            .send(payload)
+        let request = http.put(url.toString());
+
+        if(withCredentials)
+            request = request.withCredentials();
+
+        request.send(payload)
             .end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject))
     });
 };
