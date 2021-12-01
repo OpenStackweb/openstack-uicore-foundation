@@ -150,7 +150,7 @@ export const getRequest =(
         })
         .end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject))
 
-        schedule(key, req);
+        schedule(key, request);
     });
 };
 
