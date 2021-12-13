@@ -320,4 +320,20 @@ export const geoCodeLatLng = (lat, lng) => {
     });
 };
 
+export const queryTicketTypes = _.debounce((summitId, input, callback) => {
+
+    let accessToken = getAccessToken();
+    input = escapeFilterValue(input);
+    let filters = encodeURIComponent(`name=@${input}`);
+
+    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/ticket-types?filter=${filters}&&access_token=${accessToken}`))
+        .then(fetchResponseHandler)
+        .then((json) => {
+            let options = [...json.data];
+
+            callback(options);
+        })
+        .catch(fetchErrorHandler);
+}, callDelay);
+
 
