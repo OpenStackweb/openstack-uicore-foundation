@@ -13,9 +13,9 @@
 
 import React from 'react';
 import AsyncSelect from 'react-select/lib/Async';
-import {queryAccessLevels} from '../../utils/query-actions';
+import {queryTicketTypes} from '../../utils/query-actions';
 
-export default class AccessLevelsInput extends React.Component {
+export default class TicketTypesInput extends React.Component {
 
     constructor(props) {
         super(props);
@@ -25,47 +25,48 @@ export default class AccessLevelsInput extends React.Component {
         };
 
         this.handleChange = this.handleChange.bind(this);
-        this.getAccessLevels = this.getAccessLevels.bind(this);
+        this.getTicketTypes = this.getTicketTypes.bind(this);
         this.getOptionValue = this.getOptionValue.bind(this);
         this.getOptionLabel = this.getOptionLabel.bind(this);
     }
 
-    getOptionValue(accessLevel){
+    getOptionValue(ticketType){
         if(this.props.hasOwnProperty("getOptionValue")){
-            return this.props.getOptionValue(accessLevel);
+            return this.props.getOptionValue(ticketType);
         }
         //default
-        return accessLevel.id;
+        return ticketType.id;
     }
 
-    getOptionLabel(accessLevel){
+    getOptionLabel(ticketType){
         if(this.props.hasOwnProperty("getOptionLabel")){
-            return this.props.getOptionLabel(accessLevel);
+            return this.props.getOptionLabel(ticketType);
         }
         //default
-        return `${accessLevel.name}`;
+        return `${ticketType.name}`;
     }
 
     handleChange(value) {
         let ev = {target: {
                 id: this.props.id,
                 value: value,
-                type: 'accesslevelinput'
+                type: 'tickettypeinput'
             }};
 
         this.props.onChange(ev);
     }
 
-    getAccessLevels (input, callback) {
+    getTicketTypes (input, callback) {
         let {summitId} = this.props;
 
         if (!input) {
             return Promise.resolve({ options: [] });
         }
-        queryAccessLevels(summitId,input, callback);
+        queryTicketTypes(summitId,input, callback);
     }
 
     render() {
+
         let {value, error, onChange, id, multi, ...rest} = this.props;
         let isMulti = (this.props.hasOwnProperty('multi'));
         let has_error = ( this.props.hasOwnProperty('error') && error != '' );
@@ -75,7 +76,7 @@ export default class AccessLevelsInput extends React.Component {
                 <AsyncSelect
                     value={value}
                     onChange={this.handleChange}
-                    loadOptions={this.getAccessLevels}
+                    loadOptions={this.getTicketTypes}
                     getOptionValue={m => this.getOptionValue(m)}
                     getOptionLabel={m => this.getOptionLabel(m)}
                     isMulti={isMulti}

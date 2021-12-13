@@ -57,6 +57,7 @@ module.exports = {
         'components/inputs/text-input': './src/components/inputs/text-input.js',
         'components/inputs/textarea-input': './src/components/inputs/textarea-input.js',
         'components/inputs/registration-company-input':'./src/components/inputs/registration-company-input.js',
+        'components/inputs/ticket-types-input':'./src/components/inputs/ticket-types-input.js',
         'utils/fragment-parser': './src/components/fragment-parser.js',
         'utils/use-fit-text': './src/components/use-fit-text.js',
         'utils/actions': './src/utils/actions.js',
