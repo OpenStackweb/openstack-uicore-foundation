@@ -48,7 +48,8 @@ import {
     epochToMomentTimeZone,
     formatEpoch,
     objectToQueryString,
-    getBackURL
+    getBackURL,
+    getCurrentHref,
 } from './utils/methods'
 
 import {
@@ -155,4 +156,5 @@ export {
     passwordlessLogin,
     doLoginBasicLogin,
     updateUserInfo,
+    getCurrentHref,
 };
