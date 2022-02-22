@@ -111,7 +111,7 @@ export const doLogin = (backUrl = null, provider = null, prompt = 'consent') => 
 }
 
 export const doLoginBasicLogin = (backUrl = null) => {
-    doLogin(backUrl, null, null);
+    doLogin(backUrl, null, null, null);
 }
 
 export const onUserAuth = (accessToken, idToken, sessionState) => (dispatch) => {
