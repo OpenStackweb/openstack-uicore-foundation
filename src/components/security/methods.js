@@ -176,6 +176,33 @@ export const emitAccessToken = async (code, backUrl = null) => {
     }
 };
 
+export const clearAccessToken = async () => {
+    if (
+        await retryPromise(
+            () => lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, 5000),
+            10
+        )
+    ) {
+        try {
+
+            let authInfo =  getAuthInfo();
+
+            if( !authInfo ) {
+                throw Error("Missing Auth info.");
+            }
+
+            let { accessToken, expiresIn, accessTokenUpdatedAt, refreshToken } = authInfo;
+
+            storeAuthInfo(null, 0 , refreshToken )
+
+        }
+        finally {
+            await lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
+        }
+    }
+    throw Error("Lock acquire error.");
+}
+
 export const getAccessToken = async () => {
 
     if (
@@ -200,7 +227,7 @@ export const getAccessToken = async () => {
             expiresIn = (expiresIn - ACCESS_TOKEN_SKEW_TIME);
             //console.log(`getAccessToken now ${now} accessTokenUpdatedAt ${accessTokenUpdatedAt} timeElapsedSecs ${timeElapsedSecs} expiresIn ${expiresIn}.`);
 
-            if (timeElapsedSecs > expiresIn) {
+            if (timeElapsedSecs > expiresIn || accessToken == null) {
                 console.log(`getAccessToken access token expired`)
                 if(flow === RESPONSE_TYPE_CODE && useOAuth2RefreshToken()) {
                     //console.log('getAccessToken getting new access token, access token got void');

@@ -74,6 +74,7 @@ import {
     passwordlessStart,
     passwordlessLogin,
     doLoginBasicLogin,
+    clearAccessToken,
 } from './components/security/methods';
 
 import {getCurrentUserLanguage} from './utils/methods';
@@ -157,4 +158,5 @@ export {
     doLoginBasicLogin,
     updateUserInfo,
     getCurrentHref,
+    clearAccessToken,
 };
