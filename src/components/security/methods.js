@@ -267,7 +267,6 @@ export const refreshAccessToken = async (refresh_token) => {
         return {access_token, refresh_token, expires_in}
     } catch (err) {
         console.log(err);
-        clearAuthInfo();
         throw err;
     }
 }
