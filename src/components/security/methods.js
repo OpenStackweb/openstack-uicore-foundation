@@ -200,7 +200,6 @@ export const clearAccessToken = async () => {
             await lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
         }
     }
-    throw Error("Lock acquire error.");
 }
 
 export const getAccessToken = async () => {
