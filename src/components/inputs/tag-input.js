@@ -73,6 +73,7 @@ export default class TagInput extends React.Component {
                     loadOptions={this.getTags}
                     getOptionLabel={option => option.tag}
                     getOptionValue={option => option.tag}
+                    {...rest}
                 />
                 {has_error &&
                 <p className="error-label">{error}</p>
