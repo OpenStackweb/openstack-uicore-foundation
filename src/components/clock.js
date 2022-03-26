@@ -13,7 +13,7 @@
 
 import React from 'react';
 import moment from "moment-timezone";
-import FragmentParser from "./fragmen-parser";
+import FragmentParser from "./fragment-parser";
 
 class Clock extends React.Component {
 

@@ -41,7 +41,7 @@ import FreeMultiTextInput from "./components/inputs/free-multi-text-input";
 import OPSessionChecker from "./components/security/session-checker/op-session-checker";
 import AbstractAuthorizationCallbackRoute from  "./components/security/abstract-auth-callback-route";
 import Exclusive from "./components/exclusive-wrapper";
-import FragmentParser from "./components/fragmen-parser";
+import FragmentParser from "./components/fragment-parser";
 import Clock from "./components/clock";
 import CircleButton from "./components/circle-button";
 import VideoStream from "./components/video-stream";

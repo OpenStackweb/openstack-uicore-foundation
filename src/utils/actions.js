@@ -16,8 +16,9 @@ import URI from "urijs";
 let http = request;
 import Swal from 'sweetalert2';
 import T from "i18n-react/dist/i18n-react";
-import {objectToQueryString, isClearingSessionState, setSessionClearingState, getCurrentPathName} from './methods';
-import {doLogin, initLogOut, CLEAR_SESSION_STATE, LOGOUT_USER} from '../components/security/actions';
+import { isClearingSessionState, setSessionClearingState, getCurrentPathName } from './methods';
+import { CLEAR_SESSION_STATE } from '../components/security/actions';
+import { doLogin, initLogOut } from '../components/security/methods';
 
 export const GENERIC_ERROR  = "Yikes. Something seems to be broken. Our web team has been notified, and we apologize for the inconvenience.";
 export const RESET_LOADING  = 'RESET_LOADING';
