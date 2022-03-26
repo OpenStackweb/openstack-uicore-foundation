@@ -6,7 +6,8 @@ module.exports = {
     entry: {
         // security
         'security/actions':'./src/components/security/actions.js',
-        'security/methods':'./src/components/security/methods.js',
+        'crypto' : { import : 'crypto', runtime: 'runtime'},
+        'security/methods':{ import: './src/components/security/methods.js', dependOn: 'crypto'},
         'security/reducers':'./src/components/security/reducers.js',
         'security/session-checker':'./src/components/security/session-checker/op-session-checker.js',
         'security/abstract-auth-callback-route' : './src/components/security/abstract-auth-callback-route.js',
@@ -81,7 +82,10 @@ module.exports = {
         }),
     ],
     resolve: {
-        fallback: { "fs": false }
+        fallback: {
+            fs: false,
+            crypto: require.resolve('crypto-browserify'),
+        }
     },
     module: {
         rules: [
