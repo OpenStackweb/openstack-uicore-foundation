@@ -72,6 +72,12 @@ export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null, pr
         query['prompt'] = prompt;
     }
 
+    if(scopes && scopes.includes('offline_access')){
+        // then we need to force prompt=consent bc we are requesting an offline access
+        // and we need to let the user know
+        query['prompt'] = 'consent';
+    }
+
     if (tokenIdHint) {
         query['id_token_hint'] = tokenIdHint;
     }

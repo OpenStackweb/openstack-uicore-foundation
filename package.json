@@ -5,7 +5,8 @@
   "main": "lib/openstack-uicore-foundation.js",
   "scripts": {
     "build-dev": "./node_modules/.bin/webpack --config webpack.dev.js",
-    "build": "./node_modules/.bin/webpack --config webpack.prod.js"
+    "build": "./node_modules/.bin/webpack --config webpack.prod.js",
+    "clean": "cd ./lib && rm -R *"
   },
   "author": "smarcet@gmail.com",
   "license": "APACHE 2.0",
