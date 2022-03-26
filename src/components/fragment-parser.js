@@ -1,5 +1,5 @@
 
-class FragmentParser {
+export default class FragmentParser {
 
     constructor(){
         this.originalHash = '';
@@ -91,5 +91,3 @@ class FragmentParser {
         return res;
     }
 }
-
-export default FragmentParser;
