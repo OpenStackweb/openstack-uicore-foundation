@@ -17,25 +17,14 @@ module.exports = {
         umdNamedDefine: true,
         globalObject: 'this'
     },
-    node: {fs: 'empty'},
     plugins: [
         new MiniCssExtractPlugin({
             filename: 'css/[name].css',
         }),
     ],
-    /*optimization: {
-        splitChunks: {
-            cacheGroups: {
-                vendor: {
-                    test: /node_modules/,
-                    chunks: "async",
-                    name: "vendor",
-                    priority: 10,
-                    enforce: true
-                }
-            }
-        }
-    },*/
+    resolve: {
+        fallback: { "fs": false }
+    },
     module: {
         rules: [
             {
