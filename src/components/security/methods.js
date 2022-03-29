@@ -9,10 +9,8 @@ import {
     putOnLocalStorage,
     retryPromise,
     setSessionClearingState,
-    sha256
 } from "../../utils/methods";
 import request from 'superagent';
-import {randomBytes} from "crypto";
 import Lock from 'browser-tabs-lock';
 let http = request;
 
@@ -33,6 +31,7 @@ const PKCE = 'pkce';
 import URI from "urijs";
 import IdTokenVerifier from "idtoken-verifier";
 import {SET_LOGGED_USER} from "./actions";
+import {getRandomBytes, getSHA256} from "../../utils/crypto";
 
 export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null, provider = null) => {
 
@@ -132,8 +131,8 @@ export const doLoginBasicLogin = (backUrl = null) => {
 }
 
 const createPKCECodes = () => {
-    const codeVerifier = base64URLEncode(randomBytes(64))
-    const codeChallenge = base64URLEncode(sha256(Buffer.from(codeVerifier)))
+    const codeVerifier = base64URLEncode(getRandomBytes(64))
+    const codeChallenge = getSHA256(codeVerifier, 'Base64url')
     const createdAt = new Date()
     const codePair = {
         codeVerifier,

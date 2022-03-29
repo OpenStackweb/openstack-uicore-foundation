@@ -13,7 +13,6 @@
 
 import moment from 'moment-timezone';
 import URI from "urijs";
-import { createHash } from 'crypto'
 
 export const findElementPos = (obj) => {
     var curtop = -70;
@@ -209,10 +208,6 @@ export const base64URLEncode = (str) => {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=/g, '')
-}
-
-export const sha256 = (buffer) => {
-    return createHash('sha256').update(buffer).digest()
 }
 
 export const retryPromise = async (

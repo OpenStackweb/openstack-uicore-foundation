@@ -77,12 +77,6 @@ module.exports = {
             filename: 'css/[name].css',
         }),
     ],
-    resolve: {
-        fallback: {
-            fs: false,
-            crypto: require.resolve('crypto-browserify'),
-        }
-    },
     module: {
         rules: [
             {
@@ -166,6 +160,5 @@ module.exports = {
             }
         ]
     },
-    target: 'node',
     externals: [nodeExternals()]
 };
