@@ -162,6 +162,22 @@ export const queryEvents = _.debounce((summitId, input, onlyPublished = false, c
 }, callDelay);
 
 
+export const queryEventTypes = _.debounce((summitId, input, callback) => {
+
+    let accessToken = getAccessToken();
+    input = escapeFilterValue(input);
+    let filter = input ? encodeURIComponent(`filter=name=@${input}`) : '';
+
+    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/event-types?order=name&access_token=${accessToken}&${filter}`))
+        .then(fetchResponseHandler)
+        .then((json) => {
+            let options = [...json.data];
+
+            callback(options);
+        })
+        .catch(fetchErrorHandler);
+}, callDelay);
+
 
 export const queryGroups = _.debounce((input, callback) => {
 
