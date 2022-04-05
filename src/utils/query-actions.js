@@ -166,9 +166,9 @@ export const queryEventTypes = _.debounce((summitId, input, callback) => {
 
     let accessToken = getAccessToken();
     input = escapeFilterValue(input);
-    let filter = input ? encodeURIComponent(`filter=name=@${input}`) : '';
+    let filter = input ? encodeURIComponent(`name=@${input}`) : '';
 
-    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/event-types?order=name&access_token=${accessToken}&${filter}`))
+    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/event-types?order=name&access_token=${accessToken}&filter=${filter}`))
         .then(fetchResponseHandler)
         .then((json) => {
             let options = [...json.data];
