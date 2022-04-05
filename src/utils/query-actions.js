@@ -163,6 +163,22 @@ export const queryEvents = _.debounce(async (summitId, input, onlyPublished = fa
 }, callDelay);
 
 
+export const queryEventTypes = _.debounce(async (summitId, input, callback) => {
+
+    const accessToken = await getAccessToken();
+    input = escapeFilterValue(input);
+    let filter = input ? encodeURIComponent(`filter=name=@${input}`) : '';
+
+    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/event-types?order=name&access_token=${accessToken}&${filter}`))
+        .then(fetchResponseHandler)
+        .then((json) => {
+            let options = [...json.data];
+
+            callback(options);
+        })
+        .catch(fetchErrorHandler);
+}, callDelay);
+
 
 export const queryGroups = _.debounce(async (input, callback) => {
 
