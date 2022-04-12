@@ -165,21 +165,18 @@ export const queryEvents = _.debounce((summitId, input, onlyPublished = false, c
 export const queryEventTypes = _.debounce((summitId, input, callback, eventTypeClassName = null) => {
 
     let accessToken = getAccessToken();
-    const filters = [];
     input = escapeFilterValue(input);
-
-    if (input) {
-        filters.push(`name=@${input}`);
-    }
-
-    if (eventTypeClassName) {
-        filters.push(`class_name==${eventTypeClassName}`);
-    }
 
     let url = `/api/v1/summits/${summitId}/event-types?order=name&access_token=${accessToken}`;
 
-    if(filters.length > 0) {
-        url = `${url}&filter=${encodeURIComponent(filters.join(','))}`
+    if (input) {
+        const filter = encodeURIComponent(`name=@${input}`);
+        url += `&filter[]=${filter}`
+    }
+
+    if (eventTypeClassName) {
+        const filter = encodeURIComponent(`class_name==${eventTypeClassName}`);
+        url += `&filter[]=${filter}`
     }
 
     fetch(buildAPIBaseUrl(url))
