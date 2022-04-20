@@ -78,6 +78,12 @@ module.exports = {
             filename: 'css/[name].css',
         }),
     ],
+    resolve: {
+        fallback: {
+            "fs": false,
+            "crypto": false,
+        }
+    },
     module: {
         rules: [
             {
