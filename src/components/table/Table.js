@@ -27,7 +27,7 @@ const createRow = (row, columns, actions) => {
             );
 
         return (
-            <TableCell key={'cell_'+i} >
+            <TableCell key={'cell_'+i} title={col.hasOwnProperty("title") ? row[col.columnKey] : null}>
                 {row[col.columnKey]}
             </TableCell>
         );
