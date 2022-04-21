@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 import { DndProvider } from 'react-dnd'
@@ -9,7 +9,6 @@ import SortableActionsTableCell from './SortableActionsTableCell';
 import SortableTableRow from './SortableTableRow';
 import T from 'i18n-react/dist/i18n-react';
 import './table-sortable.css';
-import { shallowEqual } from "../../utils/methods";
 
 const defaults = {
     colWidth: ''
@@ -17,7 +16,6 @@ const defaults = {
 
 const createRow = (row, columns, actions) => {
 
-    var action_buttons = '';
     var cells = columns.map((col, i) => {
         return (
         <SortableTableCell key={i}>
@@ -34,30 +32,26 @@ const createRow = (row, columns, actions) => {
 };
 
 
-const SortableTable = ({ data,
-    options,
-    columns,
-    dropCallback,
-    orderField }) => {
+const SortableTable = ({ data, options, columns, dropCallback }) => {
 
     const [rows, setRows] = useState(data)
 
-    const renderRow = useCallback((row, columns, options, index) => {        
+    const renderRow = (row, columns, options, index) => {
         return (
             <SortableTableRow even={index % 2 === 0} key={row.id} index={index} id={row.id} moveCard={moveRow} dropItem={onDropItem}>
                 {createRow(row, columns, options.actions)}
             </SortableTableRow>
         )
-    }, []);
+    };
 
-    const moveRow = useCallback((dragIndex, hoverIndex, id) => {
+    const moveRow = (dragIndex, hoverIndex, id) => {
         setRows((prevCards) => update(prevCards, {
             $splice: [
                 [dragIndex, 1],
                 [hoverIndex, 0, prevCards[dragIndex]],
             ],
         }));
-    }, []);
+    };
     
     const onDropItem = (id, newOrder) => {
         dropCallback(rows, id, newOrder)
@@ -114,7 +108,6 @@ SortableTable.propTypes = {
         columnKey: PropTypes.string.isRequired,
         value: PropTypes.any.isRequired
     })).isRequired,
-    orderField: PropTypes.string.isRequired,
     dropCallback: PropTypes.func.isRequired
 }
 
