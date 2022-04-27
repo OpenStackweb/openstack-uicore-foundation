@@ -22,7 +22,8 @@ export default class RegistrationCompanyInput extends React.Component {
 
         this.state = {
             freeInput: false,
-            inputValue: ''
+            inputValue: '',
+            noOptions: false,
         }
 
         this.handleChange = this.handleChange.bind(this);
@@ -70,6 +71,9 @@ export default class RegistrationCompanyInput extends React.Component {
         // https://github.com/JedWatson/react-select/issues/2998
 
         const translateOptions = (options) => {
+            if (options.length === 0) {
+                this.setState({ noOptions: true })
+            }
             const otherOption = { value: null, label: 'Other' };
             let newOptions = [...options.map(c => ({ value: c.id.toString(), label: c.name })), otherOption];
             callback(newOptions);
@@ -79,8 +83,8 @@ export default class RegistrationCompanyInput extends React.Component {
     }
 
     render() {
-        let { error, value, onChange, id, multi, ...rest } = this.props;
-        let { freeInput, inputValue } = this.state;
+        let { error, value, onChange, id, multi, className, ...rest } = this.props;
+        let { freeInput, inputValue, noOptions } = this.state;
         let has_error = (this.props.hasOwnProperty('error') && error != '');
         let isMulti = (this.props.hasOwnProperty('multi') || this.props.hasOwnProperty('isMulti'));
 
@@ -97,17 +101,20 @@ export default class RegistrationCompanyInput extends React.Component {
 
         return (
             <div>
-                {freeInput ?
+                {freeInput || noOptions ?
                     <>
                         <input
                             value={inputValue}
                             placeholder="Enter your company"
                             onChange={this.handleInputChange}
                             className="form-control"
+                            style={{ paddingRight: 25 }}
                             {...rest}
                         />
-                        <i aria-label='Clear' style={{ position: 'absolute', bottom: 10, right: 20, cursor: 'pointer' }}
-                            onClick={() => this.setState({ freeInput: !freeInput, inputValue: '' })} className='fa fa-close'></i>
+                        {!noOptions &&
+                            <i aria-label='Clear' style={{ position: 'absolute', bottom: 10, right: 25, cursor: 'pointer', opacity: '65%' }}
+                                onClick={() => this.setState({ freeInput: !freeInput, inputValue: '' })} className='fa fa-close'></i>
+                        }
                     </>
                     :
                     <AsyncSelect
@@ -116,6 +123,7 @@ export default class RegistrationCompanyInput extends React.Component {
                         defaultOptions={true}
                         loadOptions={this.getCompanies}
                         isMulti={isMulti}
+                        className={className}
                         {...rest}
                     />
                 }
