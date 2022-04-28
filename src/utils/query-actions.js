@@ -198,8 +198,14 @@ export const queryCompanies = _.debounce(async (input, callback) => {
 }, callDelay);
 
 export const queryRegistrationCompanies = _.debounce(async (summitId, input, callback) => {
-
-    const accessToken = await getAccessToken();
+    
+    let accessToken;
+    try {
+        accessToken = await getAccessToken();
+    } catch (e) {
+        callback(e);
+        return;
+    }
     input = escapeFilterValue(input);
     let apiUrl = `/api/v1/summits/${summitId}/registration-companies`
     let filters = encodeURIComponent(`name=@${input}`);

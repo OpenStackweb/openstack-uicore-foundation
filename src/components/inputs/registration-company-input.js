@@ -70,7 +70,10 @@ export default class RegistrationCompanyInput extends React.Component {
         // we need to map into value/label because of a bug in react-select 2
         // https://github.com/JedWatson/react-select/issues/2998
 
-        const translateOptions = (options) => {
+        const translateOptions = (options) => {            
+            if (options instanceof Error) {
+                this.props.onError(options);
+            }
             if (options.length === 0) {
                 this.setState({ noOptions: true })
             }
