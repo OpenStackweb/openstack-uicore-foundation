@@ -197,6 +197,35 @@ export const queryCompanies = _.debounce(async (input, callback) => {
         .catch(fetchErrorHandler);
 }, callDelay);
 
+export const queryRegistrationCompanies = _.debounce(async (summitId, input, callback) => {
+    
+    let accessToken;
+    try {
+        accessToken = await getAccessToken();
+    } catch (e) {
+        callback(e);
+        return;
+    }
+    input = escapeFilterValue(input);
+    let apiUrl = `/api/v1/summits/${summitId}/registration-companies`
+    let filters = encodeURIComponent(`name=@${input}`);
+    
+    if(input) {
+        apiUrl += `?filter=${filters}&access_token=${accessToken}`
+    } else {
+        apiUrl += `?access_token=${accessToken}`
+    }
+
+    fetch(buildAPIBaseUrl(`${apiUrl}`))
+        .then(fetchResponseHandler)
+        .then((json) => {
+            let options = [...json.data];
+
+            callback(options);
+        })
+        .catch(fetchErrorHandler);
+}, callDelay);
+
 
 export const querySponsors = _.debounce(async (summitId, input, callback) => {
 

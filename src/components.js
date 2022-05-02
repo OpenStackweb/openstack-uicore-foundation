@@ -49,6 +49,7 @@ import AttendanceTracker from "./components/attendance-tracker";
 import {getCurrentUserLanguage} from './utils/methods';
 import useFitText from './components/use-fit-text';
 import AccessLevelsInput from './components/inputs/access-levels-input';
+import RegistrationCompanyInput from './components/inputs/registration-company-input';
 let language = getCurrentUserLanguage();
 
 // language would be something like es-ES or es_ES
@@ -113,5 +114,6 @@ export {
     AttendanceTracker,
     SelectableTable,
     useFitText,
-    AccessLevelsInput
+    AccessLevelsInput,
+    RegistrationCompanyInput
 };
