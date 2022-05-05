@@ -20,7 +20,6 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
 
     const [theValue, setTheValue] = useState({ value: null, label: '' });
     const [freeInput, setFreeInput] = useState(false);
-    const [noOptions, setNoOptions] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [isMultiOptional, setIsMultiOptional] = useState(multi || isMulti);
     const [hasError, setHasError] = useState(error);
@@ -87,7 +86,7 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                 onError(options);
             }
             if (options.length === 0) {
-                setNoOptions(true);
+                callback([]);
             }
             // we need to map into value/label because of a bug in react-select 2
             // https://github.com/JedWatson/react-select/issues/2998
@@ -101,7 +100,7 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
 
     return (
         <div>
-            {freeInput || noOptions ?
+            {freeInput ?
                 <>
                     <input
                         value={inputValue}
@@ -111,10 +110,9 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                         style={{ paddingRight: 25 }}
                         {...rest}
                     />
-                    {!noOptions &&
-                        <i aria-label='Clear' style={{ position: 'absolute', bottom: 10, right: 25, cursor: 'pointer', opacity: '65%' }}
-                            onClick={handleInputClear} className='fa fa-close'></i>
-                    }
+                    <i aria-label='Clear' style={{ position: 'absolute', bottom: 10, right: 25, cursor: 'pointer', opacity: '65%' }}
+                        onClick={handleInputClear} className='fa fa-close'></i>
+                    
                 </>
                 :
                 <AsyncSelect
