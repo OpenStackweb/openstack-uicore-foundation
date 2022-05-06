@@ -42,13 +42,25 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
     }, [value])
 
     const handleChange = (eventValue) => {
+        if (eventValue.value === null) {
+            setFreeInput(true);
+            const newValueState = isMultiOptional ? eventValue.map(v => ({ value: v.value, label: '' })) : { value: eventValue.value, label: '' };
+            setTheValue(newValueState);
+            let ev = {
+                target: {
+                    id: id,
+                    value: newValueState,
+                    type: 'companyinput'
+                }
+            };
+            onChange(ev);
+            return;
+        }
+
         const newValue = isMultiOptional ? eventValue.map(v => ({ id: v.value, name: v.label })) : { id: eventValue.value, name: eventValue.label };
         const newValueState = isMultiOptional ? eventValue.map(v => ({ value: v.value, label: v.label })) : { value: eventValue.value, label: eventValue.label };
         setTheValue(newValueState);
 
-        if (eventValue.value === null) {
-            setFreeInput(true);
-        }
 
         let ev = {
             target: {
@@ -63,7 +75,15 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
     const handleInputClear = () => {
         setFreeInput(!freeInput);
         setInputValue('');
-        setTheValue({ value: null, label: '' })
+        setTheValue({ value: null, label: '' });
+        let ev = {
+            target: {
+                id: id,
+                value: { id: null, name: '' },
+                type: 'companyinput'
+            }
+        };
+        onChange(ev);
     }
 
     const handleInputChange = (evt) => {
