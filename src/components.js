@@ -50,6 +50,9 @@ import {getCurrentUserLanguage} from './utils/methods';
 import useFitText from './components/use-fit-text';
 import AccessLevelsInput from './components/inputs/access-levels-input';
 import RegistrationCompanyInput from './components/inputs/registration-company-input';
+import TicketTypesInput from './components/inputs/ticket-types-input';
+import ExtraQuestionsForm from './components/extra-questions';
+
 let language = getCurrentUserLanguage();
 
 // language would be something like es-ES or es_ES
@@ -115,5 +118,7 @@ export {
     SelectableTable,
     useFitText,
     AccessLevelsInput,
-    RegistrationCompanyInput
+    RegistrationCompanyInput,
+    TicketTypesInput,
+    ExtraQuestionsForm,
 };
