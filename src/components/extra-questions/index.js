@@ -22,7 +22,7 @@ import CheckboxList from '../inputs/checkbox-list'
 
 import { Form, Field } from "react-final-form";
 
-const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, className }) => {
+const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, className, debug = false, buttonText = 'Submit' }) => {
 
   let submit = null;
 
@@ -233,7 +233,6 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
     }
     if (q.type === "CheckBoxList") {
       questionValues = questionValues.map(val => ({ ...val, value: val.id }));
-      // const answerValue = getAnswer(question) ? getAnswer(question).split(',').map(ansVal => parseInt(ansVal)) : [];
       return (
         <>
           <div key={q.id} ref={el => questionRef.current[q.id] = el}>
@@ -301,7 +300,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
           return (
             <form onSubmit={handleSubmit}>
               {extraQuestions.map((q) => renderQuestion(q, questionRef[q.id]))}
-              <pre>{JSON.stringify(values, 0, 2)}</pre>
+              {debug && <pre>{JSON.stringify(values, 0, 2)}</pre>}
             </form>
           );
         }}
@@ -313,7 +312,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
         }}
         style={{ marginTop: 10 }}
       >
-        Submit
+        {buttonText}
       </button>
     </div>
   )
