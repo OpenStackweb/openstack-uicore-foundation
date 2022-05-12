@@ -22,7 +22,7 @@ import CheckboxList from '../inputs/checkbox-list'
 
 import { Form, Field } from "react-final-form";
 
-const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, className, formRef, debug = false, buttonText = 'Submit' }) => {
+const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, className, formRef = null, debug = false, buttonText = 'Submit' }) => {
 
   let submit = null;
 
@@ -323,6 +323,14 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
 ExtraQuestionsForm.propTypes = {
   extraQuestions: PropTypes.array.isRequired,
   userAnswers: PropTypes.array.isRequired,
+  onAnswerChanges: PropTypes.func.isRequired,
+  className: PropTypes.string,
+  formRef: PropTypes.oneOfType([
+    PropTypes.func,
+    PropTypes.shape({ current: PropTypes.elementType })
+  ]),
+  debug: PropTypes.bool,
+  buttonText: PropTypes.string
 };
 
 export default ExtraQuestionsForm;
