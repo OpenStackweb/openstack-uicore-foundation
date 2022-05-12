@@ -102,7 +102,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
     }
   };
 
-  const renderQuestion = (q, ref) => {
+  const renderQuestion = (q) => {
     let questionValues = q.values;
     // @see https://codesandbox.io/s/vg05y?file=/index.js
     if (q.type === "Text") {
@@ -299,7 +299,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
           submit = handleSubmit;
           return (
             <form onSubmit={handleSubmit} ref={formRef}>
-              {extraQuestions.map((q) => renderQuestion(q, questionRef[q.id]))}
+              {extraQuestions.map((q) => renderQuestion(q))}
               {debug && <pre>{JSON.stringify(values, 0, 2)}</pre>}
             </form>
           );
