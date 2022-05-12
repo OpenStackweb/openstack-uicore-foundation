@@ -11,9 +11,10 @@
  * limitations under the License.
  **/
 
-import {fetchErrorHandler, fetchResponseHandler, escapeFilterValue } from "./actions";
-import {getAccessToken} from '../components/security/methods';
-import {  buildAPIBaseUrl } from "./methods";
+import { fetchErrorHandler, fetchResponseHandler, escapeFilterValue } from "./actions";
+import { getAccessToken } from '../components/security/methods';
+import { buildAPIBaseUrl } from "./methods";
+import URI from "urijs";
 import _ from 'lodash';
 export const RECEIVE_COUNTRIES  = 'RECEIVE_COUNTRIES';
 const callDelay = 500; //miliseconds
@@ -224,25 +225,26 @@ export const queryCompanies = _.debounce(async (input, callback) => {
 }, callDelay);
 
 export const queryRegistrationCompanies = _.debounce(async (summitId, input, callback) => {
-    
+
     let accessToken;
+
     try {
         accessToken = await getAccessToken();
     } catch (e) {
         callback(e);
         return;
     }
-    input = escapeFilterValue(input);
-    let apiUrl = `/api/v1/summits/${summitId}/registration-companies`
-    let filters = encodeURIComponent(`name=@${input}`);
-    
+
+    let apiUrl = URI(`/api/v1/summits/${summitId}/registration-companies`);
+    apiUrl.addQuery('access_token', accessToken);
+    apiUrl.addQuery('order','name')
+
     if(input) {
-        apiUrl += `?filter=${filters}&access_token=${accessToken}`
-    } else {
-        apiUrl += `?access_token=${accessToken}`
+        input = escapeFilterValue(input);
+        apiUrl.addQuery('filter[]', `name=@${input}`);
     }
 
-    fetch(buildAPIBaseUrl(`${apiUrl}`))
+    fetch(buildAPIBaseUrl(apiUrl.toString()))
         .then(fetchResponseHandler)
         .then((json) => {
             let options = [...json.data];
@@ -360,5 +362,4 @@ export const geoCodeLatLng = (lat, lng) => {
         });
     });
 };
-
 
