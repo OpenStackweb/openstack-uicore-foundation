@@ -108,7 +108,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
     if (q.type === "Text") {
       return (
         <>
-          <div key={q.id} ref={el => questionRef.current[q.id] = el}>
+          <div key={q.name} ref={el => questionRef.current[q.id] = el}>
             <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
             <Field name={q.name}>
               {props => (
@@ -136,7 +136,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
     if (q.type === "TextArea") {
       return (
         <>
-          <div key={q.id} ref={el => questionRef.current[q.id] = el}>
+          <div key={q.name} ref={el => questionRef.current[q.id] = el}>
             <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
             <Field name={q.name} component="textarea" />
             <Error name={q.name} />
@@ -155,7 +155,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
     if (q.type === "CheckBox") {
       return (
         <>
-          <div key={q.id} ref={el => questionRef.current[q.id] = el}>
+          <div key={q.name} ref={el => questionRef.current[q.id] = el}>
             <Field name={q.name} component="input" type="checkbox" />
             <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
             <Error name={q.name} />
@@ -175,13 +175,13 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
       questionValues = questionValues.map(val => ({ ...val, value: val.id }));
       return (
         <>
-          <div key={q.id} ref={el => questionRef.current[q.id] = el}>
+          <div key={q.name} ref={el => questionRef.current[q.id] = el}>
             <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
             <div>
               <Field name={q.name}>
                 {props => (
-                  <Dropdown
-                    id={q.id}
+                  <RadioList
+                    id={`${q.id}`}
                     overrideCSS={true}
                     value={props.input.value}
                     options={questionValues}
@@ -206,7 +206,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
       questionValues = questionValues.map(val => ({ ...val, value: val.id }));
       return (
         <>
-          <div key={q.id} ref={el => questionRef.current[q.id] = el}>
+          <div key={q.name} ref={el => questionRef.current[q.id] = el}>
             <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
             <Field name={q.name}>
               {props => (
@@ -235,7 +235,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
       questionValues = questionValues.map(val => ({ ...val, value: val.id }));
       return (
         <>
-          <div key={q.id} ref={el => questionRef.current[q.id] = el}>
+          <div key={q.name} ref={el => questionRef.current[q.id] = el}>
             <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
             <Field name={q.name}>
               {props => (
@@ -327,7 +327,7 @@ ExtraQuestionsForm.propTypes = {
   className: PropTypes.string,
   formRef: PropTypes.oneOfType([
     PropTypes.func,
-    PropTypes.shape({ current: PropTypes.elementType })
+    PropTypes.shape({ current: PropTypes.any })
   ]),
   debug: PropTypes.bool,
   buttonText: PropTypes.string
