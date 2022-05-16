@@ -66,6 +66,7 @@ export default class TagInput extends React.Component {
         return (
             <div>
                 <AsyncSelect
+                    {...rest}
                     className={className + ' ' + (has_error ? 'error' : '')}
                     isMulti
                     value={orderedTags}
