@@ -66,6 +66,7 @@ export default class TagInput extends React.Component {
         return (
             <div>
                 <AsyncSelect
+                    {...rest}
                     className={className + ' ' + (has_error ? 'error' : '')}
                     isMulti
                     value={orderedTags}
@@ -73,7 +74,6 @@ export default class TagInput extends React.Component {
                     loadOptions={this.getTags}
                     getOptionLabel={option => option.tag}
                     getOptionValue={option => option.tag}
-                    {...rest}
                 />
                 {has_error &&
                 <p className="error-label">{error}</p>
