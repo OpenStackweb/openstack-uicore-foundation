@@ -6,7 +6,8 @@
   "scripts": {
     "build-dev": "./node_modules/.bin/webpack --config webpack.dev.js",
     "build": "./node_modules/.bin/webpack --config webpack.prod.js",
-    "clean": "cd ./lib && rm -R *"
+    "clean": "cd ./lib && rm -R *",
+    "test": "jest"
   },
   "author": "smarcet@gmail.com",
   "license": "APACHE 2.0",
@@ -20,6 +21,7 @@
     "@babel/preset-react": "^7.7.4",
     "awesome-bootstrap-checkbox": "^1.0.1",
     "babel-cli": "^6.26.0",
+    "babel-jest": "^28.1.0",
     "babel-loader": "^8.2.4",
     "browser-tabs-lock": "^1.2.15",
     "buffer": "^6.0.3",
@@ -33,6 +35,7 @@
     "i18n-react": "^0.6.4",
     "idtoken-verifier": "^2.2.2",
     "immutability-helper": "^2.7.1",
+    "jest": "^28.1.0",
     "js-yaml": "^4.1.0",
     "js-yaml-loader": "^1.2.2",
     "less": "^4.1.2",
@@ -74,7 +77,8 @@
     "webpack-cli": "^4.9.2",
     "webpack-dev-server": "^4.7.4",
     "webpack-merge": "^5.8.0",
-    "webpack-node-externals": "^3.0.0"
+    "webpack-node-externals": "^3.0.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2"
   },
   "peerDependencies": {
     "awesome-bootstrap-checkbox": "^1.0.1",
@@ -111,5 +115,30 @@
     "urijs": "^1.19.1",
     "validator": "^9.4.1",
     "video.js": "^7.8.2"
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,mjs}"
+    ],
+    "testMatch": [
+      "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
+      "<rootDir>/src/**/?(*.)(spec|test).{js,jsx,mjs}"
+    ],
+    "transform": {
+      "\\.[jt]sx?$": "babel-jest"
+    },
+    "moduleDirectories": [
+      "node_modules",
+      "src"
+    ],
+    "moduleFileExtensions": [
+      "web.js",
+      "js",
+      "json",
+      "web.jsx",
+      "jsx",
+      "node",
+      "mjs"
+    ]
   }
 }

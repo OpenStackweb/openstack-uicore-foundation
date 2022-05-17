@@ -66,6 +66,7 @@ module.exports = {
         'utils/query-actions': './src/utils/query-actions.js',
         'utils/reducers': './src/utils/reducers.js',
         'i18n': './src/i18n/i18n.js',
+        'utils/questions-set': './src/utils/questions-set.js'
     },
     output: {
         path: path.resolve(__dirname, 'lib'),
