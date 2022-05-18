@@ -8,6 +8,7 @@ module.exports = {
         'methods': './src/methods.js',
         'actions': './src/actions.js',
         'reducers': './src/reducers.js',
+        'utils/questions-set':'./src/utils/questions-set',
     },
     output: {
         path: path.resolve(__dirname, 'lib'),
