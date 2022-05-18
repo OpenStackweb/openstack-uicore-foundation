@@ -37,7 +37,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
   const formatUserAnswers = () => {
     let formattedAnswers = {}
     extraQuestions.forEach(question => {
-      question.sub_question_rules.forEach(({ sub_question }) => {
+      question.sub_question_rules?.forEach(({ sub_question }) => {
         let userAnswer = userAnswers.find(a => a.question_id === sub_question.id).value;
         if (sub_question.type === 'RadioButtonList' || sub_question.type === 'ComboBox') userAnswer = parseInt(userAnswer);
         if (sub_question.type === 'CheckBoxList') userAnswer = userAnswer.split(',').map(ansVal => parseInt(ansVal)) || [];
@@ -240,7 +240,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
             <Field name={q.name}>
               {props => (
                 <CheckboxList
-                  id={q.id}
+                  id={`${q.id}`}
                   value={props.input.value}
                   options={questionValues}
                   onChange={props.input.onChange}
