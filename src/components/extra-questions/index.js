@@ -38,12 +38,12 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
     let formattedAnswers = {}
     extraQuestions.forEach(question => {
       question.sub_question_rules?.forEach(({ sub_question }) => {
-        let userAnswer = userAnswers.find(a => a.question_id === sub_question.id).value;
+        let userAnswer = userAnswers.find(a => a.question_id === sub_question.id)?.value;
         if (sub_question.type === 'RadioButtonList' || sub_question.type === 'ComboBox') userAnswer = parseInt(userAnswer);
         if (sub_question.type === 'CheckBoxList') userAnswer = userAnswer.split(',').map(ansVal => parseInt(ansVal)) || [];
         formattedAnswers[`${sub_question.name}`] = userAnswer || '';
       })
-      let userAnswer = userAnswers.find(a => a.question_id === question.id).value;
+      let userAnswer = userAnswers.find(a => a.question_id === question.id)?.value;
       if (question.type === 'RadioButtonList' || question.type === 'ComboBox') userAnswer = parseInt(userAnswer);
       if (question.type === 'CheckBoxList') userAnswer = userAnswer.split(',').map(ansVal => parseInt(ansVal)) || [];
       formattedAnswers[`${question.name}`] = userAnswer || '';
