@@ -155,9 +155,11 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
     if (q.type === "CheckBox") {
       return (
         <>
-          <div key={q.name} ref={el => questionRef.current[q.id] = el}>
+          <div key={q.name} ref={el => questionRef.current[q.id] = el} style={{ display: 'flex' }}>
             <Field name={q.name} component="input" type="checkbox" />
-            <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+            <RawHTML className='eq-checkbox-label'>
+              {q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}
+            </RawHTML>
             <Error name={q.name} />
           </div>
           {q.sub_question_rules?.length > 0 &&
