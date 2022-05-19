@@ -19,7 +19,7 @@ import Input from '../inputs/text-input'
 import Dropdown from '../inputs/dropdown'
 import RadioList from '../inputs/radio-list'
 import CheckboxList from '../inputs/checkbox-list'
-
+import QuestionsSet from '../../utils/questions-set';
 import { Form, Field } from "react-final-form";
 
 const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, className, formRef = null, debug = false, buttonText = 'Submit' }) => {
@@ -35,20 +35,8 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
   }, [extraQuestions])
 
   const formatUserAnswers = () => {
-    let formattedAnswers = {}
-    extraQuestions.forEach(question => {
-      question.sub_question_rules.forEach(({ sub_question }) => {
-        let userAnswer = userAnswers.find(a => a.question_id === sub_question.id).value;
-        if (sub_question.type === 'RadioButtonList' || sub_question.type === 'ComboBox') userAnswer = parseInt(userAnswer);
-        if (sub_question.type === 'CheckBoxList') userAnswer = userAnswer.split(',').map(ansVal => parseInt(ansVal)) || [];
-        formattedAnswers[`${sub_question.name}`] = userAnswer || '';
-      })
-      let userAnswer = userAnswers.find(a => a.question_id === question.id).value;
-      if (question.type === 'RadioButtonList' || question.type === 'ComboBox') userAnswer = parseInt(userAnswer);
-      if (question.type === 'CheckBoxList') userAnswer = userAnswer.split(',').map(ansVal => parseInt(ansVal)) || [];
-      formattedAnswers[`${question.name}`] = userAnswer || '';
-    });
-    setAnswers(formattedAnswers);
+    const qs = new QuestionsSet(extraQuestions, userAnswers);
+    setAnswers(qs.formatAnswers());
   }
 
   const Condition = ({ when, rule, children }) => (

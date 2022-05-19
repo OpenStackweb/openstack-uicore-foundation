@@ -4,12 +4,11 @@
   "description": "ui reactjs components for openstack marketing site",
   "main": "lib/openstack-uicore-foundation.js",
   "scripts": {
+    "clean": "cd ./lib && rm -R * & find . -name \"node_modules\" -type d -prune -exec rm -rf '{}' + && yarn install",
     "build-dev": "./node_modules/.bin/webpack --config webpack.dev.js",
     "build": "./node_modules/.bin/webpack --config webpack.prod.js",
-    "clean": "cd ./lib && rm -R *",
     "test": "jest"
   },
-  "author": "smarcet@gmail.com",
   "license": "APACHE 2.0",
   "devDependencies": {
     "@babel/core": "^7.17.8",
@@ -23,7 +22,6 @@
     "babel-cli": "^6.26.0",
     "babel-jest": "^28.1.0",
     "babel-loader": "^8.2.4",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
     "browser-tabs-lock": "^1.2.15",
     "buffer": "^6.0.3",
     "crypto-js": "^4.1.1",

@@ -294,7 +294,7 @@ const questions = [
     }
 ];
 
-const answers = [
+const completeAnswers = [
     {
         "id": 431802,
         "created": 1651848786,
@@ -360,7 +360,7 @@ const answers = [
     }
 ];
 
-const answers2 = [
+const incompleteAnswers = [
     {
         "id": 431802,
         "created": 1651848786,
@@ -417,7 +417,7 @@ const answers2 = [
     },
 ];
 
-const answers3 = [
+const completeAnswers2 = [
     {
         "id": 431805,
         "created": 1651848786,
@@ -438,18 +438,24 @@ const answers3 = [
     },
 ];
 
+
 test('visible questions completed', () => {
-    const qs = new QuestionsSet(questions, answers);
+    const qs = new QuestionsSet(questions, completeAnswers);
     expect(qs.completed()).toBe(true);
 });
 
 test('visible questions not completed', () => {
-    const qs = new QuestionsSet(questions, answers2);
-
+    const qs = new QuestionsSet(questions, incompleteAnswers);
     expect(qs.completed()).toBe(false);
 });
 
 test('visible questions completed and mandatory', () => {
-    const qs = new QuestionsSet(questions, answers3);
+    const qs = new QuestionsSet(questions, completeAnswers2);
     expect(qs.completed()).toBe(true);
+});
+
+test('format answers', () => {
+    const qs = new QuestionsSet(questions, completeAnswers);
+    const expectedResult = '{"93":161,"94":164,"95":"test","96":171,"97":"test","98":[172,174],"99":"test"}';
+    expect(JSON.stringify(qs.formatAnswers())).toEqual(expectedResult);
 });
