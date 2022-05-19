@@ -12,33 +12,34 @@ export const MainQuestionClassType = 'MainQuestion';
 
 export default class QuestionsSet {
 
-    constructor(questions, answers) {
+    constructor(questions, answers = []) {
         this.questions = questions;
         this.originalAnswers = answers
         this.answers = [];
         // map answers to associate array
         for (let a of this.originalAnswers)
             this.answers[a.question_id] = a;
+        this.questionByName = {}
+        this.questionById = {}
         // associative array ( rule id , rule);
-        this.rules = this._getRules();
+        this.rules = {};
+        this._parseQuestions();
     }
 
-    _getRule = (q) => {
-        let res = [];
+    _parseQuestion = (q) => {
+        this.questionByName[q.name] = q;
+        this.questionById[parseInt(q.id)] = q;
         if(q.hasOwnProperty('sub_question_rules'))
             for (let r of q.sub_question_rules) {
-                res[r.id] = r;
-                res = {...res, ...this._getRule(r.sub_question)};
+                this.rules[parseInt(r.id)] = r;
+                this._parseQuestion(r.sub_question);
             }
-        return res;
     }
 
-    _getRules = () => {
-        let res = [];
+    _parseQuestions = () => {
         for (let q of this.questions) {
-            res = {...res, ...this._getRule(q)};
+            this._parseQuestion(q);
         }
-        return res;
     }
 
     _allowsValues = (q) => {
@@ -175,5 +176,13 @@ export default class QuestionsSet {
             res = res && this._checkQuestion(q);
         }
         return res;
+    }
+
+    getQuestionByName = (name) => {
+        return this.questionByName[name] || null;
+    }
+
+    getQuestionById = (id) => {
+        return this.questionById[parseInt(id)] || null;
     }
 }
