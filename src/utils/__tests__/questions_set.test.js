@@ -1155,7 +1155,7 @@ test('visible questions completed and mandatory', () => {
 
 test('format answers', () => {
     const qs = new QuestionsSet(questions, completeAnswers);
-    const expectedResult = '{"93":161,"94":164,"95":"test","96":171,"97":"test","98":[172,174],"99":"test"}';
+    const expectedResult = '{"delivery_method":161,"pickup_point":164,"other_pickup_point":"test","industry_market_segment":171,"other_industry_market_segment":"test","cloud_service_provider_market_sub_segment":[172,174],"other_cloud_service_provider_market_sub_segment":"test"}';
     expect(JSON.stringify(qs.formatAnswers())).toEqual(expectedResult);
 });
 

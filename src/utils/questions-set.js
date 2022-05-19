@@ -151,7 +151,7 @@ export default class QuestionsSet {
             if (question.type === CheckBoxListQuestionType) userAnswer = userAnswer.split(',').map(ansVal => parseInt(ansVal)) || [];
         }
 
-        res[question.id] =  userAnswer || '';
+        res[question.name] =  userAnswer || '';
         if(question.hasOwnProperty('sub_question_rules'))
             for (let rule of question.sub_question_rules) {
                 // check recursive all the tree till leaves ...
