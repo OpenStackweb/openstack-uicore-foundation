@@ -3,4 +3,4 @@ lib
 node_modules
 *.log
 .idea/
-
+package.json.lock

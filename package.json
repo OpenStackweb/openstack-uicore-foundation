@@ -4,6 +4,7 @@
   "description": "ui reactjs components for openstack marketing site",
   "main": "lib/openstack-uicore-foundation.js",
   "scripts": {
+    "clean": "find . -name \"node_modules\" -type d -prune -exec rm -rf '{}' + && yarn install",
     "build-dev": "./node_modules/.bin/webpack --config webpack.dev.js",
     "build": "./node_modules/.bin/webpack --config webpack.prod.js",
     "test": "NODE_ENV=test jest"
@@ -21,7 +22,6 @@
     "awesome-bootstrap-checkbox": "^1.0.1",
     "babel-cli": "^6.26.0",
     "babel-loader": "^8.0.6",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
     "browser-tabs-lock": "1.2.9",
     "css-loader": "^3.4.1",
     "dropzone": "^5.7.2",
