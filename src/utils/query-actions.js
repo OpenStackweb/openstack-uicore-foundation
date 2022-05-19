@@ -271,9 +271,9 @@ export const querySponsors = _.debounce(async (summitId, input, callback) => {
         .catch(fetchErrorHandler);
 }, callDelay);
 
-export const queryAccessLevels = _.debounce((summitId, input, callback) => {
+export const queryAccessLevels = _.debounce(async (summitId, input, callback) => {
 
-    let accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let filters = encodeURIComponent(`name=@${input}`);
 
@@ -363,9 +363,9 @@ export const geoCodeLatLng = (lat, lng) => {
     });
 };
 
-export const queryTicketTypes = _.debounce((summitId, input, callback) => {
+export const queryTicketTypes = _.debounce(async (summitId, input, callback) => {
 
-    let accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let filters = encodeURIComponent(`name=@${input}`);
 
