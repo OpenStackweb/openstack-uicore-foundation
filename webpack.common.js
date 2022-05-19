@@ -11,7 +11,7 @@ module.exports = {
         'security/session-checker': './src/components/security/session-checker/op-session-checker.js',
         'security/abstract-auth-callback-route': './src/components/security/abstract-auth-callback-route.js',
         // components
-        'components': './src/components/index.js',
+        'components/index': './src/components',
         'components/ajaxloader': './src/components/ajaxloader/index.js',
         'components/circle-button': './src/components/circle-button/index.js',
         'components/form-validation': './src/components/form-validation/index.js',
