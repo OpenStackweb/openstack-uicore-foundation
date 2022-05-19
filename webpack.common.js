@@ -84,8 +84,10 @@ module.exports = {
     ],
     resolve: {
         fallback: {
-            "fs": false,
-            "crypto": false,
+            "fs" : false,
+            "crypto" : false,
+            "react-google-maps" : false,
+            "react-final-form" : false,
         }
     },
     module: {

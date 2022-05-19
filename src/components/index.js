@@ -1,7 +1,6 @@
 export {default as AjaxLoader} from './ajaxloader';
 export {default as RawHTML} from './raw-html';
 export {default as FreeTextSearch} from './free-text-search';
-export {default as GMap} from './google-map';
 export {default as DateTimePicker} from './inputs/datetimepicker'
 export {default as GroupedDropdown} from './inputs/grouped-dropdown'
 export {default as UploadInput} from './inputs/upload-input'
@@ -43,4 +42,6 @@ export {default as AttendanceTracker} from "./attendance-tracker";
 export {default as AccessLevelsInput} from './inputs/access-levels-input';
 export {default as RegistrationCompanyInput} from './inputs/registration-company-input';
 export {default as TicketTypesInput} from './inputs/ticket-types-input.js'
+// this 2 includes 3rd party deps
 export {default as ExtraQuestionsForm } from './extra-questions/index.js';
+export {default as GMap} from './google-map';
