@@ -277,9 +277,7 @@ const ExtraQuestionsForm = ({
     };
 
     const isVisible = (q) => {
-        let res = !!questionRef.current[q.id];
-        console.log(`question ${q.id} is visible ? ${res}`);
-        return res;
+        return !!questionRef.current[q.id];
     };
 
     const validateQuestion = (q, values, errors) => {
@@ -295,22 +293,24 @@ const ExtraQuestionsForm = ({
     };
 
     const onSubmit = (values) => {
-        onAnswerChanges(values)
+        const errors = validate(values);
+        if(Object.keys(errors).length === 0)
+            onAnswerChanges(values)
     };
 
+    const validate = (values) => {
+        const errors = {};
+        extraQuestions.forEach( q => {
+            validateQuestion(q, values, errors);
+        });
+        return errors;
+    }
     return (
         <div className={className}>
             <Form
                 onSubmit={onSubmit}
                 initialValues={answers}
-                validate={(values) => {
-                    const errors = {};
-                    extraQuestions.forEach( q => {
-                      validateQuestion(q, values, errors);
-                    });
-                    console.log(`validate errors ${JSON.stringify(errors)}`);
-                    return errors;
-                }}
+                validate={validate}
             >
                 {({handleSubmit, form, submitting, pristine, values}) => {
                     submit = handleSubmit;
