@@ -60,9 +60,9 @@ const ExtraQuestionsForm = ({
     );
 
     const Error = ({name}) => (
-        <Field name={name} subscription={{error: true, touched: true}}>
-            {({meta: {error, touched}}) =>
-                error && touched ? <span className='extra-question-error'>{error}</span> : null
+        <Field name={name} subscription={{error: true}}>
+            {({meta: {error}}) =>
+                error ? <span className='extra-question-error'>{error}</span> : null
             }
         </Field>
     );
@@ -293,9 +293,7 @@ const ExtraQuestionsForm = ({
     };
 
     const onSubmit = (values) => {
-        const errors = validate(values);
-        if(Object.keys(errors).length === 0)
-            onAnswerChanges(values)
+       onAnswerChanges(values)
     };
 
     const validate = (values) => {
