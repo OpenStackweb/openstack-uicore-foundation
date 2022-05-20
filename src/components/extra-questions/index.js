@@ -50,7 +50,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
   const Error = ({ name }) => (
     <Field name={name} subscription={{ error: true, touched: true }}>
       {({ meta: { error, touched } }) =>
-        error && touched ? <span>{error}</span> : null
+        error && touched ? <span className='extra-question-error'>{error}</span> : null
       }
     </Field>
   );
@@ -63,10 +63,10 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
       let res = rule.anwer_values_operator === "And";
       values.forEach((v) => {
         if (rule.anwer_values_operator === "And") {
-          res = res && value.includes(v);
+          res = res && value.includes(parseInt(v));
         } else {
           // Or
-          res = res || value.includes(v);
+          res = res || value.includes(parseInt(v));
         }
       });
       return res;
@@ -101,7 +101,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
             <Field name={q.name}>
               {props => (
                 <Input
-                  id={q.id}
+                  id={`${q.id}`}
                   value={props.input.value}
                   onChange={props.input.onChange}
                   placeholder={q.placeholder}
@@ -126,7 +126,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
         <>
           <div key={q.name} ref={el => questionRef.current[q.id] = el}>
             <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-            <Field name={q.name} component="textarea" />
+            <Field name={q.name} id={`${q.id}`} component="textarea" />
             <Error name={q.name} />
           </div>
           {q.sub_question_rules?.length > 0 &&
@@ -144,7 +144,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
       return (
         <>
           <div key={q.name} ref={el => questionRef.current[q.id] = el} style={{ display: 'flex' }}>
-            <Field name={q.name} component="input" type="checkbox" />
+            <Field name={q.name} id={`${q.id}`} component="input" type="checkbox" />
             <RawHTML className='eq-checkbox-label'>
               {q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}
             </RawHTML>
@@ -179,6 +179,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
                   />
                 )}
               </Field>
+              <Error name={q.name} />
             </div>
           </div>
           {q.sub_question_rules?.length > 0 &&
@@ -201,7 +202,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
             <Field name={q.name}>
               {props => (
                 <Dropdown
-                  id={q.id}
+                  id={`${q.id}`}
                   overrideCSS={true}
                   value={props.input.value}
                   options={questionValues}
@@ -209,6 +210,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
                 />
               )}
             </Field>
+            <Error name={q.name} />
           </div>
           {q.sub_question_rules?.length > 0 &&
             q.sub_question_rules.map((r) => {
@@ -230,13 +232,14 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
             <Field name={q.name}>
               {props => (
                 <CheckboxList
-                  id={q.id}
+                  id={`${q.id}`}
                   value={props.input.value}
                   options={questionValues}
                   onChange={props.input.onChange}
                 />
               )}
             </Field>
+            <Error name={q.name} />
           </div>
           {q.sub_question_rules?.length > 0 &&
             q.sub_question_rules.map((r) => {
@@ -258,7 +261,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
 
   const validateQuestion = (q, values, errors) => {
     if (q.mandatory && isVisible(q)) {
-      if (!values.hasOwnProperty(q.name) || values[q.name] === "") {
+      if (!values.hasOwnProperty(q.name) || values[q.name] === "" || values[q.name].length === 0) {
         errors[q.name] = "Required";
       }
     }
