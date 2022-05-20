@@ -50,7 +50,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
   const Error = ({ name }) => (
     <Field name={name} subscription={{ error: true, touched: true }}>
       {({ meta: { error, touched } }) =>
-        error && touched ? <span>{error}</span> : null
+        error && touched ? <span className='extra-question-error'>{error}</span> : null
       }
     </Field>
   );
