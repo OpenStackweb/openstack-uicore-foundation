@@ -11,7 +11,7 @@
  * limitations under the License.
  **/
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 
 import RawHTML from '../raw-html'
@@ -20,316 +20,343 @@ import Dropdown from '../inputs/dropdown'
 import RadioList from '../inputs/radio-list'
 import CheckboxList from '../inputs/checkbox-list'
 import QuestionsSet from '../../utils/questions-set';
-import { Form, Field } from "react-final-form";
+import {Field, Form} from "react-final-form";
 
-const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, className, formRef = null, readOnly = false, debug = false, buttonText = 'Submit' }) => {
+const ExtraQuestionsForm = ({
+                                extraQuestions,
+                                userAnswers,
+                                onAnswerChanges,
+                                className = 'questions-form',
+                                questionContainerClassName = 'question-container',
+                                questionLabelContainerClassName = 'question-label-container',
+                                questionControlContainerClassName= 'question-control-container',
+                                formRef = null,
+                                readOnly = false,
+                                debug = false,
+                                buttonText = 'Submit'
+                            }) => {
 
-  let submit = null;
+    let submit = null;
 
-  const questionRef = useRef([]);
+    const questionRef = useRef({});
 
-  const [answers, setAnswers] = useState({});
+    const [answers, setAnswers] = useState({});
 
-  useEffect(() => {
-    formatUserAnswers();
-  }, [extraQuestions])
+    useEffect(() => {
+        formatUserAnswers();
+    }, [extraQuestions])
 
-  const formatUserAnswers = () => {
-    const qs = new QuestionsSet(extraQuestions, userAnswers);
-    setAnswers(qs.formatAnswers());
-  }
+    const formatUserAnswers = () => {
+        const qs = new QuestionsSet(extraQuestions, userAnswers);
+        setAnswers(qs.formatAnswers());
+    }
 
-  const Condition = ({ when, rule, children }) => (
-    <Field name={when} subscription={{ value: true }}>
-      {({ input: { value } }) =>
-        checkVisibility(rule, checkRule(value, rule), children)
-      }
-    </Field>
-  );
+    const Condition = ({when, rule, children}) => (
+        <Field name={when} subscription={{value: true}}>
+            {({input: {value}}) =>
+                checkVisibility(rule, checkRule(value, rule), children)
+            }
+        </Field>
+    );
 
-  const Error = ({ name }) => (
-    <Field name={name} subscription={{ error: true, touched: true }}>
-      {({ meta: { error, touched } }) =>
-        error && touched ? <span className='extra-question-error'>{error}</span> : null
-      }
-    </Field>
-  );
+    const Error = ({name}) => (
+        <Field name={name} subscription={{error: true, touched: true}}>
+            {({meta: {error, touched}}) =>
+                error && touched ? <span className='extra-question-error'>{error}</span> : null
+            }
+        </Field>
+    );
 
-  const checkRule = (value, rule) => {
-    let values = rule.answer_values;
+    const checkRule = (value, rule) => {
+        let values = rule.answer_values;
 
-    if (Array.isArray(value)) {
-      if (!value.length) return false;
-      let res = rule.anwer_values_operator === "And";
-      values.forEach((v) => {
-        if (rule.anwer_values_operator === "And") {
-          res = res && value.includes(parseInt(v));
-        } else {
-          // Or
-          res = res || value.includes(parseInt(v));
+        if (Array.isArray(value)) {
+            if (!value.length) return false;
+            let res = rule.anwer_values_operator === "And";
+            values.forEach((v) => {
+                if (rule.anwer_values_operator === "And") {
+                    res = res && value.includes(parseInt(v));
+                } else {
+                    // Or
+                    res = res || value.includes(parseInt(v));
+                }
+            });
+            return res;
         }
-      });
-      return res;
-    }
-    return values.includes(value.toString());
-  };
+        return values.includes(value.toString());
+    };
 
-  const checkVisibility = (rule, ruleResult, children) => {
-    if (rule.visibility === "Visible") {
-      if (rule.visibility_condition === "Equal") {
-        return ruleResult ? children : null;
-      } else {
-        return !ruleResult ? children : null;
-      }
-    }
-    // not visible
-    if (rule.visibility_condition === "Equal") {
-      return ruleResult ? null : children;
-    } else {
-      return !ruleResult ? null : children;
-    }
-  };
+    const checkVisibility = (rule, ruleResult, children) => {
+        if (rule.visibility === "Visible") {
+            if (rule.visibility_condition === "Equal") {
+                if(ruleResult) return children;
+                delete questionRef.current[rule.sub_question.id]
+                return null;
+            }
+            // Non Equal
+            if(!ruleResult){
+              return children;
+            }
+            delete questionRef.current[rule.sub_question.id]
+            return null;
+        }
+        // not visible
+        if (rule.visibility_condition === "Equal") {
+            if(!ruleResult) return children;
+            delete questionRef.current[rule.sub_question.id]
+            return null;
+        }
+        if(ruleResult) return children;
+        delete questionRef.current[rule.sub_question.id]
+        return null;
+    };
 
-  const renderQuestion = (q) => {
-    let questionValues = q.values;
-    // @see https://codesandbox.io/s/vg05y?file=/index.js
-    if (q.type === "Text") {
-      return (
-        <>
-          <div key={q.name} ref={el => questionRef.current[q.id] = el}>
-            <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-            <Field name={q.name}>
-              {props => (
-                <Input
-                  id={`${q.id}`}
-                  value={props.input.value}
-                  onChange={props.input.onChange}
-                  placeholder={q.placeholder}
-                />
-              )}
-            </Field>
-            <Error name={q.name} />
-          </div>
-          {q.sub_question_rules?.length > 0 &&
-            q.sub_question_rules.map((r) => {
-              return (
-                <Condition when={q.name} rule={r}>
-                  {renderQuestion(r.sub_question)}
-                </Condition>
-              );
-            })}
-        </>
-      );
-    }
-    if (q.type === "TextArea") {
-      return (
-        <>
-          <div key={q.name} ref={el => questionRef.current[q.id] = el}>
-            <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-            <Field name={q.name} id={`${q.id}`} component="textarea" />
-            <Error name={q.name} />
-          </div>
-          {q.sub_question_rules?.length > 0 &&
-            q.sub_question_rules.map((r) => {
-              return (
-                <Condition when={q.name} rule={r}>
-                  {renderQuestion(r.sub_question)}
-                </Condition>
-              );
-            })}
-        </>
-      );
-    }
-    if (q.type === "CheckBox") {
-      return (
-        <>
-          <div key={q.name} ref={el => questionRef.current[q.id] = el} style={{ display: 'flex' }}>
-            <Field name={q.name} id={`${q.id}`} component="input" type="checkbox" />
-            <RawHTML className='eq-checkbox-label'>
-              {q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}
-            </RawHTML>
-            <Error name={q.name} />
-          </div>
-          {q.sub_question_rules?.length > 0 &&
-            q.sub_question_rules.map((r) => {
-              return (
-                <Condition when={q.name} rule={r}>
-                  {renderQuestion(r.sub_question)}
-                </Condition>
-              );
-            })}
-        </>
-      );
-    }
-    if (q.type === "RadioButtonList") {
-      questionValues = questionValues.map(val => ({ ...val, value: val.id }));
-      return (
-        <>
-          <div key={q.name} ref={el => questionRef.current[q.id] = el}>
-            <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-            <div>
-              <Field name={q.name}>
-                {props => (
-                  <RadioList
-                    id={`${q.id}`}
-                    overrideCSS={true}
-                    value={props.input.value}
-                    options={questionValues}
-                    onChange={props.input.onChange}
-                  />
-                )}
-              </Field>
-              <Error name={q.name} />
-            </div>
-          </div>
-          {q.sub_question_rules?.length > 0 &&
-            q.sub_question_rules.map((r) => {
-              return (
-                <Condition when={q.name} rule={r}>
-                  {renderQuestion(r.sub_question)}
-                </Condition>
-              );
-            })}
-        </>
-      );
-    }
-    if (q.type === "ComboBox") {
-      questionValues = questionValues.map(val => ({ ...val, value: val.id }));
-      return (
-        <>
-          <div key={q.name} ref={el => questionRef.current[q.id] = el}>
-            <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-            <Field name={q.name}>
-              {props => (
-                <Dropdown
-                  id={`${q.id}`}
-                  overrideCSS={true}
-                  value={props.input.value}
-                  options={questionValues}
-                  onChange={props.input.onChange}
-                />
-              )}
-            </Field>
-            <Error name={q.name} />
-          </div>
-          {q.sub_question_rules?.length > 0 &&
-            q.sub_question_rules.map((r) => {
-              return (
-                <Condition when={q.name} rule={r}>
-                  {renderQuestion(r.sub_question)}
-                </Condition>
-              );
-            })}
-        </>
-      );
-    }
-    if (q.type === "CheckBoxList") {
-      questionValues = questionValues.map(val => ({ ...val, value: val.id }));
-      return (
-        <>
-          <div key={q.name} ref={el => questionRef.current[q.id] = el}>
-            <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-            <Field name={q.name}>
-              {props => (
-                <CheckboxList
-                  id={`${q.id}`}
-                  value={props.input.value}
-                  options={questionValues}
-                  onChange={props.input.onChange}
-                />
-              )}
-            </Field>
-            <Error name={q.name} />
-          </div>
-          {q.sub_question_rules?.length > 0 &&
-            q.sub_question_rules.map((r) => {
-              return (
-                <Condition when={q.name} rule={r}>
-                  {renderQuestion(r.sub_question)}
-                </Condition>
-              );
-            })}
-        </>
-      );
-    }
-    return null;
-  };
+    const renderQuestion = (q) => {
+        let questionValues = q.values;
+        // @see https://codesandbox.io/s/vg05y?file=/index.js
+        if (q.type === "Text") {
+            return (
+                <>
+                    <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+                        <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+                        <Field name={q.name} className={questionControlContainerClassName}>
+                            {props => (
+                                <Input
+                                    id={`${q.id}`}
+                                    value={props.input.value}
+                                    onChange={props.input.onChange}
+                                    placeholder={q.placeholder}
+                                />
+                            )}
+                        </Field>
+                        <Error name={q.name}/>
+                    </div>
+                    {q.sub_question_rules?.length > 0 &&
+                    q.sub_question_rules.map((r) => {
+                        return (
+                            <Condition when={q.name} rule={r}>
+                                {renderQuestion(r.sub_question)}
+                            </Condition>
+                        );
+                    })}
+                </>
+            );
+        }
+        if (q.type === "TextArea") {
+            return (
+                <>
+                    <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+                        <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+                        <Field className={questionControlContainerClassName} name={q.name} id={`${q.id}`} component="textarea"/>
+                        <Error name={q.name}/>
+                    </div>
+                    {q.sub_question_rules?.length > 0 &&
+                    q.sub_question_rules.map((r) => {
+                        return (
+                            <Condition when={q.name} rule={r}>
+                                {renderQuestion(r.sub_question)}
+                            </Condition>
+                        );
+                    })}
+                </>
+            );
+        }
+        if (q.type === "CheckBox") {
+            return (
+                <>
+                    <div key={q.name} ref={el => questionRef.current[q.id] = el} style={{display: 'flex'}} className={questionContainerClassName}>
+                        <Field className={questionControlContainerClassName} name={q.name} id={`${q.id}`} component="input" type="checkbox"/>
+                        <RawHTML className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
+                            {q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}
+                        </RawHTML>
+                        <Error name={q.name}/>
+                    </div>
+                    {q.sub_question_rules?.length > 0 &&
+                    q.sub_question_rules.map((r) => {
+                        return (
+                            <Condition when={q.name} rule={r}>
+                                {renderQuestion(r.sub_question)}
+                            </Condition>
+                        );
+                    })}
+                </>
+            );
+        }
+        if (q.type === "RadioButtonList") {
+            questionValues = questionValues.map(val => ({...val, value: val.id}));
+            return (
+                <>
+                    <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+                        <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+                        <div className={questionControlContainerClassName}>
+                            <Field name={q.name}>
+                                {props => (
+                                    <RadioList
+                                        id={`${q.id}`}
+                                        overrideCSS={true}
+                                        value={props.input.value}
+                                        options={questionValues}
+                                        onChange={props.input.onChange}
+                                    />
+                                )}
+                            </Field>
+                            <Error name={q.name}/>
+                        </div>
+                    </div>
+                    {q.sub_question_rules?.length > 0 &&
+                    q.sub_question_rules.map((r) => {
+                        return (
+                            <Condition when={q.name} rule={r}>
+                                {renderQuestion(r.sub_question)}
+                            </Condition>
+                        );
+                    })}
+                </>
+            );
+        }
+        if (q.type === "ComboBox") {
+            questionValues = questionValues.map(val => ({...val, value: val.id}));
+            return (
+                <>
+                    <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+                        <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+                        <Field name={q.name} className={questionControlContainerClassName}>
+                            {props => (
+                                <Dropdown
+                                    id={`${q.id}`}
+                                    overrideCSS={true}
+                                    value={props.input.value}
+                                    options={questionValues}
+                                    onChange={props.input.onChange}
+                                />
+                            )}
+                        </Field>
+                        <Error name={q.name}/>
+                    </div>
+                    {q.sub_question_rules?.length > 0 &&
+                    q.sub_question_rules.map((r) => {
+                        return (
+                            <Condition when={q.name} rule={r}>
+                                {renderQuestion(r.sub_question)}
+                            </Condition>
+                        );
+                    })}
+                </>
+            );
+        }
+        if (q.type === "CheckBoxList") {
+            questionValues = questionValues.map(val => ({...val, value: val.id}));
+            return (
+                <>
+                    <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+                        <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+                        <Field name={q.name} className={questionControlContainerClassName}>
+                            {props => (
+                                <CheckboxList
+                                    id={`${q.id}`}
+                                    value={props.input.value}
+                                    options={questionValues}
+                                    onChange={props.input.onChange}
+                                />
+                            )}
+                        </Field>
+                        <Error name={q.name}/>
+                    </div>
+                    {q.sub_question_rules?.length > 0 &&
+                    q.sub_question_rules.map((r) => {
+                        return (
+                            <Condition when={q.name} rule={r}>
+                                {renderQuestion(r.sub_question)}
+                            </Condition>
+                        );
+                    })}
+                </>
+            );
+        }
+        return null;
+    };
 
-  const isVisible = (q) => {
-    return !!questionRef.current[q.id];
-  };
+    const isVisible = (q) => {
+        let res = !!questionRef.current[q.id];
+        console.log(`question ${q.id} is visible ? ${res}`);
+        return res;
+    };
 
-  const validateQuestion = (q, values, errors) => {
-    if (q.mandatory && isVisible(q)) {
-      if (!values.hasOwnProperty(q.name) || values[q.name] === "" || values[q.name].length === 0) {
-        errors[q.name] = "Required";
-      }
-    }
-    // validate sub rules
-    q.sub_question_rules?.forEach((r) => {
-      validateQuestion(r.sub_question, values, errors);
-    });
-  };
+    const validateQuestion = (q, values, errors) => {
+        if (q.mandatory && isVisible(q)) {
+            if (!values.hasOwnProperty(q.name) || values[q.name] === "" || values[q.name].length === 0) {
+                errors[q.name] = "Required";
+            }
+        }
+        // validate sub rules
+        q.sub_question_rules?.forEach((r) => {
+            validateQuestion(r.sub_question, values, errors);
+        });
+    };
 
-  const onSubmit = (values) => {
-    onAnswerChanges(values)
-  };
+    const onSubmit = (values) => {
+        onAnswerChanges(values)
+    };
 
-  return (
-    <div className={className}>
-      <Form
-        onSubmit={onSubmit}
-        initialValues={answers}
-        validate={(values) => {
-          const errors = {};
-          extraQuestions.map((q) => {
-            validateQuestion(q, values, errors);
-          });
-          return errors;
-        }}
-      >
-        {({ handleSubmit, form, submitting, pristine, values }) => {
-          submit = handleSubmit;
-          return (
-            <form onSubmit={handleSubmit} ref={formRef}>
-              {readOnly ?
-                <fieldset disabled="disabled">
-                  {extraQuestions.map((q) => renderQuestion(q))}
-                </fieldset>
-                :
-                extraQuestions.map((q) => renderQuestion(q))
-              }
-              {debug && <pre>{JSON.stringify(values, 0, 2)}</pre>}
-            </form>
-          );
-        }}
-      </Form>
-      {!formRef &&
-        <button
-          type="submit"
-          onClick={(event) => {
-            submit(event);
-          }}
-          style={{ marginTop: 10 }}
-        >
-          {buttonText}
-        </button>
-      }
-    </div>
-  )
+    return (
+        <div className={className}>
+            <Form
+                onSubmit={onSubmit}
+                initialValues={answers}
+                validate={(values) => {
+                    const errors = {};
+                    extraQuestions.forEach( q => {
+                      validateQuestion(q, values, errors);
+                    });
+                    console.log(`validate errors ${JSON.stringify(erros)}`);
+                    return errors;
+                }}
+            >
+                {({handleSubmit, form, submitting, pristine, values}) => {
+                    submit = handleSubmit;
+                    return (
+                        <form onSubmit={handleSubmit} ref={formRef}>
+                            {readOnly ?
+                                <fieldset disabled="disabled">
+                                    {extraQuestions.map((q) => renderQuestion(q))}
+                                </fieldset>
+                                :
+                                extraQuestions.map((q) => renderQuestion(q))
+                            }
+                            {debug && <pre>{JSON.stringify(values, 0, 2)}</pre>}
+                        </form>
+                    );
+                }}
+            </Form>
+            {!formRef &&
+            <button
+                type="submit"
+                onClick={(event) => {
+                    submit(event);
+                }}
+                style={{marginTop: 10}}
+            >
+                {buttonText}
+            </button>
+            }
+        </div>
+    )
 }
 
 ExtraQuestionsForm.propTypes = {
-  extraQuestions: PropTypes.array.isRequired,
-  userAnswers: PropTypes.array.isRequired,
-  onAnswerChanges: PropTypes.func.isRequired,
-  className: PropTypes.string,
-  formRef: PropTypes.oneOfType([
-    PropTypes.func,
-    PropTypes.shape({ current: PropTypes.any })
-  ]),
-  debug: PropTypes.bool,
-  buttonText: PropTypes.string
+    extraQuestions: PropTypes.array.isRequired,
+    userAnswers: PropTypes.array.isRequired,
+    onAnswerChanges: PropTypes.func.isRequired,
+    className: PropTypes.string,
+    formRef: PropTypes.oneOfType([
+        PropTypes.func,
+        PropTypes.shape({current: PropTypes.any})
+    ]),
+    debug: PropTypes.bool,
+    buttonText: PropTypes.string,
+    questionContainerClassName: PropTypes.string,
+    questionLabelContainerClassName : PropTypes.string,
+   questionControlContainerClassName: PropTypes.string,
 };
 
 export default ExtraQuestionsForm;
