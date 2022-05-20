@@ -308,7 +308,7 @@ const ExtraQuestionsForm = ({
                     extraQuestions.forEach( q => {
                       validateQuestion(q, values, errors);
                     });
-                    console.log(`validate errors ${JSON.stringify(erros)}`);
+                    console.log(`validate errors ${JSON.stringify(errors)}`);
                     return errors;
                 }}
             >
@@ -356,7 +356,7 @@ ExtraQuestionsForm.propTypes = {
     buttonText: PropTypes.string,
     questionContainerClassName: PropTypes.string,
     questionLabelContainerClassName : PropTypes.string,
-   questionControlContainerClassName: PropTypes.string,
+    questionControlContainerClassName: PropTypes.string,
 };
 
 export default ExtraQuestionsForm;
