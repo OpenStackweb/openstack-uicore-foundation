@@ -33,7 +33,9 @@ const ExtraQuestionsForm = ({
                                 formRef = null,
                                 readOnly = false,
                                 debug = false,
-                                buttonText = 'Submit'
+                                buttonText = 'Submit',
+                                RequiredErrorMessage = 'Required',
+                                ValidationErrorClassName = 'extra-question-error'
                             }) => {
 
     let submit = null;
@@ -41,6 +43,7 @@ const ExtraQuestionsForm = ({
     const questionRef = useRef({});
 
     const [answers, setAnswers] = useState({});
+    const [formErrors, setFormErrors] = useState({});
 
     useEffect(() => {
         formatUserAnswers();
@@ -59,16 +62,10 @@ const ExtraQuestionsForm = ({
         </Field>
     );
 
-    const Error = ({name}) => (
-        <Field name={name} subscription={{error: true, submitError:true, invalid: true, touched: true}}>
-            {({meta: {error, submitError, invalid, touched}}) => {
-                console.log(`name ${name} error ${error} submitError ${submitError} invalid ${invalid} touched ${touched}`)
-                return invalid && (error || submitError || touched) ?
-                    <span className='extra-question-error'>{error ? error : submitError}</span> : null
-            }
-            }
-        </Field>
-    );
+    const Error = ({name}) => {
+        const error = formErrors[name] || '';
+        return error ? <span className={extra-question-error}>{error}</span> : null;
+    };
 
     const checkRule = (value, rule) => {
         let values = rule.answer_values;
@@ -287,7 +284,7 @@ const ExtraQuestionsForm = ({
     const validateQuestion = (q, values, errors) => {
         if (q.mandatory && isVisible(q)) {
             if (!values.hasOwnProperty(q.name) || values[q.name] === "" || values[q.name].length === 0) {
-                errors[q.name] = "Required";
+                errors[q.name] = RequiredErrorMessage;
             }
         }
         // validate sub rules
@@ -307,15 +304,14 @@ const ExtraQuestionsForm = ({
         extraQuestions.forEach( q => {
             validateQuestion(q, values, errors);
         });
+        setFormErrors({...errors})
         return errors;
     }
     return (
         <div className={className}>
             <Form
                 onSubmit={onSubmit}
-                initialValues={answers}
-                validate={validate}
-            >
+                initialValues={answers}>
                 {({handleSubmit, form, submitting, pristine, values}) => {
                     submit = handleSubmit;
                     return (
@@ -361,6 +357,8 @@ ExtraQuestionsForm.propTypes = {
     questionContainerClassName: PropTypes.string,
     questionLabelContainerClassName : PropTypes.string,
     questionControlContainerClassName: PropTypes.string,
+    RequiredErrorMessage: PropTypes.string,
+    ValidationErrorClassName: PropTypes.string,
 };
 
 export default ExtraQuestionsForm;
