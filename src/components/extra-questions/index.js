@@ -254,6 +254,7 @@ const ExtraQuestionsForm = ({
                             {props => (
                                 <CheckboxList
                                     id={`${q.id}`}
+                                    name={q.name}
                                     value={props.input.value}
                                     options={questionValues}
                                     onChange={props.input.onChange}
