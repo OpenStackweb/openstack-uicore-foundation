@@ -147,11 +147,12 @@ export default class QuestionsSet {
 
         if(userAnswer) {
             if (question.type === CheckBoxQuestionType) userAnswer = userAnswer === 'false' ? false : !!userAnswer;
-            //if (question.type === RadioButtonListQuestionType || question.type === ComboBoxQuestionType) userAnswer = userAnswer;
-            if (question.type === CheckBoxListQuestionType) userAnswer = userAnswer.split(',').map(ansVal => ansVal) || [];
+            if (question.type === RadioButtonListQuestionType || question.type === ComboBoxQuestionType) userAnswer = parseInt(userAnswer);
+            if (question.type === CheckBoxListQuestionType) userAnswer = userAnswer.split(',').map(ansVal => parseInt(ansVal)) || [];
         }
 
         res[question.name] =  userAnswer || '';
+        if(question.type === CheckBoxListQuestionType && res[question.name] === '') res[question.name] = []
         if(question.hasOwnProperty('sub_question_rules'))
             for (let rule of question.sub_question_rules) {
                 // check recursive all the tree till leaves ...
