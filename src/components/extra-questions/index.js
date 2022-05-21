@@ -293,7 +293,9 @@ const ExtraQuestionsForm = ({
     };
 
     const onSubmit = (values) => {
-       onAnswerChanges(values)
+       const errors = validate(values);
+       if(Object.keys(errors).length === 0)
+            onAnswerChanges(values)
     };
 
     const validate = (values) => {
