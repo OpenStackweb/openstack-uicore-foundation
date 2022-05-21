@@ -147,8 +147,8 @@ export default class QuestionsSet {
 
         if(userAnswer) {
             if (question.type === CheckBoxQuestionType) userAnswer = userAnswer === 'false' ? false : !!userAnswer;
-            if (question.type === RadioButtonListQuestionType || question.type === ComboBoxQuestionType) userAnswer = parseInt(userAnswer);
-            if (question.type === CheckBoxListQuestionType) userAnswer = userAnswer.split(',').map(ansVal => parseInt(ansVal)) || [];
+            //if (question.type === RadioButtonListQuestionType || question.type === ComboBoxQuestionType) userAnswer = userAnswer;
+            if (question.type === CheckBoxListQuestionType) userAnswer = userAnswer.split(',').map(ansVal => ansVal) || [];
         }
 
         res[question.name] =  userAnswer || '';

@@ -43,7 +43,6 @@ const ExtraQuestionsForm = ({
     const questionRef = useRef({});
 
     const [answers, setAnswers] = useState({});
-    const [formErrors, setFormErrors] = useState({});
 
     useEffect(() => {
         formatUserAnswers();
@@ -62,10 +61,13 @@ const ExtraQuestionsForm = ({
         </Field>
     );
 
-    const Error = ({name}) => {
-        const error = formErrors[name] || '';
-        return error ? <span className={ValidationErrorClassName}>{error}</span> : null;
-    };
+    const Error = ({ name }) => (
+        <Field name={name} subscription={{ error: true, touched: true }}>
+            {({ meta: { error, touched } }) =>
+                error && touched ? <span className={ValidationErrorClassName}>{error}</span> : null
+            }
+        </Field>
+    )
 
     const checkRule = (value, rule) => {
         let values = rule.answer_values;
@@ -119,9 +121,10 @@ const ExtraQuestionsForm = ({
                 <>
                     <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-                        <Field name={q.name} className={questionControlContainerClassName}>
+                        <Field name={q.name} className={questionControlContainerClassName} type="text">
                             {props => (
                                 <Input
+                                    name={q.name}
                                     id={`${q.id}`}
                                     value={props.input.value}
                                     onChange={props.input.onChange}
@@ -165,7 +168,7 @@ const ExtraQuestionsForm = ({
             return (
                 <>
                     <div key={q.name} ref={el => questionRef.current[q.id] = el} style={{display: 'flex'}} className={questionContainerClassName}>
-                        <Field className={questionControlContainerClassName} name={q.name} id={`${q.id}`} component="input" type="checkbox"/>
+                        <Field className={questionControlContainerClassName} name={q.name} id={`${q.id}`} type="checkbox" component="input" />
                         <RawHTML className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
                             {q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}
                         </RawHTML>
@@ -183,15 +186,16 @@ const ExtraQuestionsForm = ({
             );
         }
         if (q.type === "RadioButtonList") {
-            questionValues = questionValues.map(val => ({...val, value: val.id}));
+            questionValues = questionValues.map(val => ({...val, value: val.id.toString()}));
             return (
                 <>
                     <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
                         <div className={questionControlContainerClassName}>
-                            <Field name={q.name}>
+                            <Field name={q.name} type="radio">
                                 {props => (
                                     <RadioList
+                                        name={q.name}
                                         id={`${q.id}`}
                                         overrideCSS={true}
                                         value={props.input.value}
@@ -215,7 +219,7 @@ const ExtraQuestionsForm = ({
             );
         }
         if (q.type === "ComboBox") {
-            questionValues = questionValues.map(val => ({...val, value: val.id}));
+            questionValues = questionValues.map(val => ({...val, value: val.id.toString()}));
             return (
                 <>
                     <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
@@ -223,6 +227,7 @@ const ExtraQuestionsForm = ({
                         <Field name={q.name} className={questionControlContainerClassName}>
                             {props => (
                                 <Dropdown
+                                    name={q.name}
                                     id={`${q.id}`}
                                     overrideCSS={true}
                                     value={props.input.value}
@@ -245,12 +250,12 @@ const ExtraQuestionsForm = ({
             );
         }
         if (q.type === "CheckBoxList") {
-            questionValues = questionValues.map(val => ({...val, value: val.id}));
+            questionValues = questionValues.map(val => ({...val, value: val.id.toString()}));
             return (
                 <>
                     <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-                        <Field name={q.name} className={questionControlContainerClassName}>
+                        <Field name={q.name} className={questionControlContainerClassName} type="radio">
                             {props => (
                                 <CheckboxList
                                     id={`${q.id}`}
@@ -294,9 +299,7 @@ const ExtraQuestionsForm = ({
     };
 
     const onSubmit = (values) => {
-       const errors = validate(values);
-       if(Object.keys(errors).length === 0)
-            onAnswerChanges(values)
+          onAnswerChanges(values)
     };
 
     const validate = (values) => {
@@ -304,14 +307,16 @@ const ExtraQuestionsForm = ({
         extraQuestions.forEach( q => {
             validateQuestion(q, values, errors);
         });
-        setFormErrors({...errors})
         return errors;
     }
+
     return (
         <div className={className}>
             <Form
+                validate={validate}
                 onSubmit={onSubmit}
                 initialValues={answers}>
+
                 {({handleSubmit, form, submitting, pristine, values}) => {
                     submit = handleSubmit;
                     return (

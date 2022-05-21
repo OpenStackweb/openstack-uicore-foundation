@@ -70,7 +70,7 @@ export default class RadioList extends React.Component {
 
     render() {
 
-        let {onChange, value, className, error, disabled, options,id, ...rest} = this.props;
+        let {onChange, value, className, error, disabled, options,id, name,...rest} = this.props;
         let has_error = ( this.props.hasOwnProperty('error') && error != '' );
         let inline = ( this.props.hasOwnProperty('inline') );
         let simple = ( this.props.hasOwnProperty('simple') );
@@ -107,7 +107,7 @@ export default class RadioList extends React.Component {
                                 checked={checked}
                                 onChange={this.handleChange}
                                 disabled={isDisabled}
-                                name={`radio_${id}`}
+                                name={name ? name : `radio_${id}`}
                             />
                             {this.getLabel(op, id, inline, simple, html)}
                         </div>
