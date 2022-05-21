@@ -60,9 +60,9 @@ const ExtraQuestionsForm = ({
     );
 
     const Error = ({name}) => (
-        <Field name={name} subscription={{error: true, submitError:true}}>
-            {({meta: {error, submitError}}) =>
-                error ? <span className='extra-question-error'>{error ? error : submitError }</span> : null
+        <Field name={name} subscription={{error: true, submitError:true, invalid: true, touched: true}}>
+            {({meta: {error, submitError, invalid, touched}}) =>
+                invalid && ( error || submitError || touched)? <span className='extra-question-error'>{error ? error : submitError }</span> : null
             }
         </Field>
     );
