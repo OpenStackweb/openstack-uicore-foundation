@@ -64,7 +64,7 @@ const ExtraQuestionsForm = ({
 
     const Error = ({name}) => {
         const error = formErrors[name] || '';
-        return error ? <span className={extra-question-error}>{error}</span> : null;
+        return error ? <span className={ValidationErrorClassName}>{error}</span> : null;
     };
 
     const checkRule = (value, rule) => {
