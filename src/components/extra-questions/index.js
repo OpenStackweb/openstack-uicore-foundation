@@ -22,6 +22,62 @@ import CheckboxList from '../inputs/checkbox-list'
 import QuestionsSet from '../../utils/questions-set';
 import {Field, Form} from "react-final-form";
 
+const InputAdapter = ({ input, meta, question, className, ...rest }) => {
+    return (
+        <Input
+            {...input}
+            {...rest}
+            containerClassName={className}
+            name={question.name}
+            id={question.id}
+            value={input.value}
+            onChange={input.onChange}
+            placeholder={question.placeholder}
+        />
+    )
+}
+
+const RadioButtonListAdapter = ({ input, meta, question, ...rest }) => {
+    return (
+    <RadioList
+        {...input}
+        {...rest}
+        name={question.name}
+        id={question.id}
+        overrideCSS={true}
+        value={input.value}
+        onChange={input.onChange}
+    />
+)};
+
+const DropdownAdapter = ({ input, meta, question, ...rest }) => {
+    return (<Dropdown
+        {...input}
+        {...rest}
+        name={question.name}
+        id={question.id}
+        overrideCSS={true}
+        value={input.value}
+        onChange={input.onChange}
+    />)
+}
+
+const CheckBoxListAdapter = ({ input, meta, question, ...rest }) => {
+    return (
+        <CheckboxList
+            {...input}
+            {...rest}
+            id={question.id}
+            name={question.name}
+            value={input.value}
+            onChange={input.onChange}
+        />
+    )
+}
+
+const getValidator = isRequired =>
+    isRequired ? value => (value ? undefined : "Required") : () => {};
+
 const ExtraQuestionsForm = ({
                                 extraQuestions,
                                 userAnswers,
@@ -43,7 +99,6 @@ const ExtraQuestionsForm = ({
     const questionRef = useRef({});
 
     const [answers, setAnswers] = useState({});
-    const [formErrors, setFormErrors] = useState({});
 
     useEffect(() => {
         formatUserAnswers();
@@ -62,10 +117,13 @@ const ExtraQuestionsForm = ({
         </Field>
     );
 
-    const Error = ({name}) => {
-        const error = formErrors[name] || '';
-        return error ? <span className={ValidationErrorClassName}>{error}</span> : null;
-    };
+    const Error = ({ name }) => (
+        <Field name={name} subscription={{ error: true, touched: true }}>
+            {({ meta: { error, touched } }) =>
+                error && touched ? <span className={ValidationErrorClassName}>{error}</span> : null
+            }
+        </Field>
+    )
 
     const checkRule = (value, rule) => {
         let values = rule.answer_values;
@@ -119,16 +177,12 @@ const ExtraQuestionsForm = ({
                 <>
                     <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-                        <Field name={q.name} className={questionControlContainerClassName}>
-                            {props => (
-                                <Input
-                                    id={`${q.id}`}
-                                    value={props.input.value}
-                                    onChange={props.input.onChange}
-                                    placeholder={q.placeholder}
-                                />
-                            )}
-                        </Field>
+                        <Field name={q.name}
+                               className={questionControlContainerClassName}
+                               question={q}
+                               validate={getValidator(q.mandatory)}
+                               component={InputAdapter}
+                        />
                         <Error name={q.name}/>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
@@ -147,7 +201,11 @@ const ExtraQuestionsForm = ({
                 <>
                     <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-                        <Field className={questionControlContainerClassName} name={q.name} id={`${q.id}`} component="textarea"/>
+                        <Field className={questionControlContainerClassName}
+                               validate={getValidator(q.mandatory)}
+                               name={q.name}
+                               id={`${q.id}`}
+                               component="textarea"/>
                         <Error name={q.name}/>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
@@ -165,7 +223,12 @@ const ExtraQuestionsForm = ({
             return (
                 <>
                     <div key={q.name} ref={el => questionRef.current[q.id] = el} style={{display: 'flex'}} className={questionContainerClassName}>
-                        <Field className={questionControlContainerClassName} name={q.name} id={`${q.id}`} component="input" type="checkbox"/>
+                        <Field className={questionControlContainerClassName}
+                               name={q.name}
+                               id={`${q.id}`}
+                               validate={getValidator(q.mandatory)}
+                               type="checkbox"
+                               component="input" />
                         <RawHTML className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
                             {q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}
                         </RawHTML>
@@ -183,23 +246,17 @@ const ExtraQuestionsForm = ({
             );
         }
         if (q.type === "RadioButtonList") {
-            questionValues = questionValues.map(val => ({...val, value: val.id}));
+            const options = questionValues.map(val => ({label : val.label, value : val.id}));
             return (
                 <>
                     <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
                         <div className={questionControlContainerClassName}>
-                            <Field name={q.name}>
-                                {props => (
-                                    <RadioList
-                                        id={`${q.id}`}
-                                        overrideCSS={true}
-                                        value={props.input.value}
-                                        options={questionValues}
-                                        onChange={props.input.onChange}
-                                    />
-                                )}
-                            </Field>
+                            <Field name={q.name}
+                                   options={options}
+                                   question={q}
+                                   validate={getValidator(q.mandatory)}
+                                   component={RadioButtonListAdapter} />
                             <Error name={q.name}/>
                         </div>
                     </div>
@@ -215,22 +272,18 @@ const ExtraQuestionsForm = ({
             );
         }
         if (q.type === "ComboBox") {
-            questionValues = questionValues.map(val => ({...val, value: val.id}));
+            const options = questionValues.map(val => ({label : val.label, value : val.id}));
             return (
                 <>
                     <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-                        <Field name={q.name} className={questionControlContainerClassName}>
-                            {props => (
-                                <Dropdown
-                                    id={`${q.id}`}
-                                    overrideCSS={true}
-                                    value={props.input.value}
-                                    options={questionValues}
-                                    onChange={props.input.onChange}
-                                />
-                            )}
-                        </Field>
+                        <Field name={q.name}
+                               options={options}
+                               question={q}
+                               validate={getValidator(q.mandatory)}
+                               className={questionControlContainerClassName}
+                               component={DropdownAdapter}
+                        />
                         <Error name={q.name}/>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
@@ -245,22 +298,18 @@ const ExtraQuestionsForm = ({
             );
         }
         if (q.type === "CheckBoxList") {
-            questionValues = questionValues.map(val => ({...val, value: val.id}));
+            const options = questionValues.map(val => ({label : val.label, value : val.id}));
             return (
                 <>
                     <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-                        <Field name={q.name} className={questionControlContainerClassName}>
-                            {props => (
-                                <CheckboxList
-                                    id={`${q.id}`}
-                                    name={q.name}
-                                    value={props.input.value}
-                                    options={questionValues}
-                                    onChange={props.input.onChange}
-                                />
-                            )}
-                        </Field>
+                        <Field name={q.name}
+                               className={questionControlContainerClassName}
+                               validate={getValidator(q.mandatory)}
+                               options={options}
+                               question={q}
+                               component={CheckBoxListAdapter}
+                        />
                         <Error name={q.name}/>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
@@ -294,9 +343,7 @@ const ExtraQuestionsForm = ({
     };
 
     const onSubmit = (values) => {
-       const errors = validate(values);
-       if(Object.keys(errors).length === 0)
-            onAnswerChanges(values)
+          onAnswerChanges(values)
     };
 
     const validate = (values) => {
@@ -304,14 +351,18 @@ const ExtraQuestionsForm = ({
         extraQuestions.forEach( q => {
             validateQuestion(q, values, errors);
         });
-        setFormErrors({...errors})
         return errors;
     }
+
+    if(!Object.keys(answers).length) return null;
+
     return (
         <div className={className}>
             <Form
+                validate={validate}
                 onSubmit={onSubmit}
                 initialValues={answers}>
+
                 {({handleSubmit, form, submitting, pristine, values}) => {
                     submit = handleSubmit;
                     return (
