@@ -30,10 +30,10 @@ export default class RadioList extends React.Component {
     handleChange(selection) {
 
         let ev = {target: {
-            id: this.props.id,
-            value: selection.target.value,
-            type: 'radio'
-        }};
+                id: this.props.id,
+                value: selection.target.value,
+                type: 'radio'
+            }};
 
         this.props.onChange(ev);
     }
@@ -43,12 +43,12 @@ export default class RadioList extends React.Component {
             return (
                 <label className="form-check-label" htmlFor={`radio_${id}_${option.value}`} style={{display: 'inline-block'}}>
                     {html &&
-                        <RawHTML>
-                            {option.label}
-                        </RawHTML>
+                    <RawHTML>
+                        {option.label}
+                    </RawHTML>
                     }
                     {!html &&
-                        option.label
+                    option.label
                     }
                 </label>
             );
@@ -70,7 +70,7 @@ export default class RadioList extends React.Component {
 
     render() {
 
-        let {onChange, value, className, error, disabled, options,id, ...rest} = this.props;
+        let {onChange, value, className, error, disabled, options,id, name,...rest} = this.props;
         let has_error = ( this.props.hasOwnProperty('error') && error != '' );
         let inline = ( this.props.hasOwnProperty('inline') );
         let simple = ( this.props.hasOwnProperty('simple') );
@@ -107,7 +107,7 @@ export default class RadioList extends React.Component {
                                 checked={checked}
                                 onChange={this.handleChange}
                                 disabled={isDisabled}
-                                name={`radio_${id}`}
+                                name={name ? name : `radio_${id}`}
                             />
                             {this.getLabel(op, id, inline, simple, html)}
                         </div>

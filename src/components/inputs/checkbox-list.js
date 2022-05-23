@@ -61,7 +61,7 @@ export default class CheckboxList extends React.Component {
 
     render() {
 
-        let {onChange, value, className, options, id, children, error, disabled, ...rest} = this.props;
+        let {onChange, value, className, options, id, children, error, disabled,name, ...rest} = this.props;
         let { otherChecked } = this.state;
 
         let inline = ( this.props.hasOwnProperty('inline') );
@@ -80,8 +80,6 @@ export default class CheckboxList extends React.Component {
                 marginLeft: '20px',
                 float: 'left'
             };
-
-
         } else {
             style = {
                 paddingLeft: '22px',
@@ -96,14 +94,18 @@ export default class CheckboxList extends React.Component {
                         let checked = value ? value.includes(op.value) : false;
                         return (
                             <div className="form-check abc-checkbox" key={"radio_key_" + op.value} style={style}>
-                                <input type="checkbox" id={`cb_${id}_${op.value}`} checked={checked} disabled={isDisabled}
+                                <input type="checkbox"
+                                       id={`cb_${id}_${op.value}`}
+                                       name={name? name : id }
+                                       checked={checked}
+                                       disabled={isDisabled}
                                        onChange={this.handleChange} className="form-check-input" value={op.value} />
                                 <label className="form-check-label" htmlFor={`cb_${id}_${op.value}`  } >
                                     {html &&
-                                        <RawHTML>{op.label}</RawHTML>
+                                    <RawHTML>{op.label}</RawHTML>
                                     }
                                     {!html &&
-                                        op.label
+                                    op.label
                                     }
                                 </label>
                             </div>

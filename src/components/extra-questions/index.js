@@ -11,7 +11,7 @@
  * limitations under the License.
  **/
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 
 import RawHTML from '../raw-html'
@@ -20,13 +20,83 @@ import Dropdown from '../inputs/dropdown'
 import RadioList from '../inputs/radio-list'
 import CheckboxList from '../inputs/checkbox-list'
 import QuestionsSet from '../../utils/questions-set';
-import { Form, Field } from "react-final-form";
+import {Field, Form} from "react-final-form";
 
-const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, className, formRef = null, readOnly = false, debug = false, buttonText = 'Submit' }) => {
+const InputAdapter = ({ input, meta, question, className, ...rest }) => {
+  return (
+      <Input
+          {...input}
+          {...rest}
+          containerClassName={className}
+          name={question.name}
+          id={question.id}
+          value={input.value}
+          onChange={input.onChange}
+          placeholder={question.placeholder}
+      />
+  )
+}
+
+const RadioButtonListAdapter = ({ input, meta, question, ...rest }) => {
+  return (
+      <RadioList
+          {...input}
+          {...rest}
+          name={question.name}
+          id={question.id}
+          overrideCSS={true}
+          value={input.value}
+          onChange={input.onChange}
+      />
+  )};
+
+const DropdownAdapter = ({ input, meta, question, ...rest }) => {
+  return (<Dropdown
+      {...input}
+      {...rest}
+      name={question.name}
+      id={question.id}
+      overrideCSS={true}
+      value={input.value}
+      onChange={input.onChange}
+  />)
+}
+
+const CheckBoxListAdapter = ({ input, meta, question, ...rest }) => {
+  return (
+      <CheckboxList
+          {...input}
+          {...rest}
+          id={question.id}
+          name={question.name}
+          value={input.value}
+          onChange={input.onChange}
+      />
+  )
+}
+
+const getValidator = isRequired =>
+    isRequired ? value => (value ? undefined : "Required") : () => {};
+
+const ExtraQuestionsForm = ({
+                              extraQuestions,
+                              userAnswers,
+                              onAnswerChanges,
+                              className = 'questions-form',
+                              questionContainerClassName = 'question-container',
+                              questionLabelContainerClassName = 'question-label-container',
+                              questionControlContainerClassName= 'question-control-container',
+                              formRef = null,
+                              readOnly = false,
+                              debug = false,
+                              buttonText = 'Submit',
+                              RequiredErrorMessage = 'Required',
+                              ValidationErrorClassName = 'extra-question-error'
+                            }) => {
 
   let submit = null;
 
-  const questionRef = useRef([]);
+  const questionRef = useRef({});
 
   const [answers, setAnswers] = useState({});
 
@@ -39,9 +109,9 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
     setAnswers(qs.formatAnswers());
   }
 
-  const Condition = ({ when, rule, children }) => (
-      <Field name={when} subscription={{ value: true }}>
-        {({ input: { value } }) =>
+  const Condition = ({when, rule, children}) => (
+      <Field name={when} subscription={{value: true}}>
+        {({input: {value}}) =>
             checkVisibility(rule, checkRule(value, rule), children)
         }
       </Field>
@@ -50,10 +120,10 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
   const Error = ({ name }) => (
       <Field name={name} subscription={{ error: true, touched: true }}>
         {({ meta: { error, touched } }) =>
-            error && touched ? <span className='extra-question-error'>{error}</span> : null
+            error && touched ? <span className={ValidationErrorClassName}>{error}</span> : null
         }
       </Field>
-  );
+  )
 
   const checkRule = (value, rule) => {
     let values = rule.answer_values;
@@ -77,17 +147,26 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
   const checkVisibility = (rule, ruleResult, children) => {
     if (rule.visibility === "Visible") {
       if (rule.visibility_condition === "Equal") {
-        return ruleResult ? children : null;
-      } else {
-        return !ruleResult ? children : null;
+        if(ruleResult) return children;
+        delete questionRef.current[rule.sub_question.id]
+        return null;
       }
+      // Non Equal
+      if(!ruleResult){
+        return children;
+      }
+      delete questionRef.current[rule.sub_question.id]
+      return null;
     }
     // not visible
     if (rule.visibility_condition === "Equal") {
-      return ruleResult ? null : children;
-    } else {
-      return !ruleResult ? null : children;
+      if(!ruleResult) return children;
+      delete questionRef.current[rule.sub_question.id]
+      return null;
     }
+    if(ruleResult) return children;
+    delete questionRef.current[rule.sub_question.id]
+    return null;
   };
 
   const renderQuestion = (q) => {
@@ -96,19 +175,15 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
     if (q.type === "Text") {
       return (
           <>
-            <div key={q.name} ref={el => questionRef.current[q.id] = el}>
-              <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-              <Field name={q.name}>
-                {props => (
-                    <Input
-                        id={`${q.id}`}
-                        value={props.input.value}
-                        onChange={props.input.onChange}
-                        placeholder={q.placeholder}
-                    />
-                )}
-              </Field>
-              <Error name={q.name} />
+            <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+              <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+              <Field name={q.name}
+                     className={questionControlContainerClassName}
+                     question={q}
+                     validate={getValidator(q.mandatory)}
+                     component={InputAdapter}
+              />
+              <Error name={q.name}/>
             </div>
             {q.sub_question_rules?.length > 0 &&
             q.sub_question_rules.map((r) => {
@@ -124,10 +199,14 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
     if (q.type === "TextArea") {
       return (
           <>
-            <div key={q.name} ref={el => questionRef.current[q.id] = el}>
-              <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-              <Field name={q.name} id={`${q.id}`} component="textarea" />
-              <Error name={q.name} />
+            <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+              <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+              <Field className={questionControlContainerClassName}
+                     validate={getValidator(q.mandatory)}
+                     name={q.name}
+                     id={`${q.id}`}
+                     component="textarea"/>
+              <Error name={q.name}/>
             </div>
             {q.sub_question_rules?.length > 0 &&
             q.sub_question_rules.map((r) => {
@@ -143,12 +222,17 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
     if (q.type === "CheckBox") {
       return (
           <>
-            <div key={q.name} ref={el => questionRef.current[q.id] = el} style={{ display: 'flex' }}>
-              <Field name={q.name} id={`${q.id}`} component="input" type="checkbox" />
-              <RawHTML className='eq-checkbox-label'>
+            <div key={q.name} ref={el => questionRef.current[q.id] = el} style={{display: 'flex'}} className={questionContainerClassName}>
+              <Field className={questionControlContainerClassName}
+                     name={q.name}
+                     id={`${q.id}`}
+                     validate={getValidator(q.mandatory)}
+                     type="checkbox"
+                     component="input" />
+              <RawHTML className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
                 {q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}
               </RawHTML>
-              <Error name={q.name} />
+              <Error name={q.name}/>
             </div>
             {q.sub_question_rules?.length > 0 &&
             q.sub_question_rules.map((r) => {
@@ -162,24 +246,18 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
       );
     }
     if (q.type === "RadioButtonList") {
-      questionValues = questionValues.map(val => ({ ...val, value: val.id }));
+      const options = questionValues.map(val => ({label : val.label, value : val.id}));
       return (
           <>
-            <div key={q.name} ref={el => questionRef.current[q.id] = el}>
-              <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-              <div>
-                <Field name={q.name}>
-                  {props => (
-                      <RadioList
-                          id={`${q.id}`}
-                          overrideCSS={true}
-                          value={props.input.value}
-                          options={questionValues}
-                          onChange={props.input.onChange}
-                      />
-                  )}
-                </Field>
-                <Error name={q.name} />
+            <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+              <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+              <div className={questionControlContainerClassName}>
+                <Field name={q.name}
+                       options={options}
+                       question={q}
+                       validate={getValidator(q.mandatory)}
+                       component={RadioButtonListAdapter} />
+                <Error name={q.name}/>
               </div>
             </div>
             {q.sub_question_rules?.length > 0 &&
@@ -194,23 +272,19 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
       );
     }
     if (q.type === "ComboBox") {
-      questionValues = questionValues.map(val => ({ ...val, value: val.id }));
+      const options = questionValues.map(val => ({label : val.label, value : val.id}));
       return (
           <>
-            <div key={q.name} ref={el => questionRef.current[q.id] = el}>
-              <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-              <Field name={q.name}>
-                {props => (
-                    <Dropdown
-                        id={`${q.id}`}
-                        overrideCSS={true}
-                        value={props.input.value}
-                        options={questionValues}
-                        onChange={props.input.onChange}
-                    />
-                )}
-              </Field>
-              <Error name={q.name} />
+            <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+              <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+              <Field name={q.name}
+                     options={options}
+                     question={q}
+                     validate={getValidator(q.mandatory)}
+                     className={questionControlContainerClassName}
+                     component={DropdownAdapter}
+              />
+              <Error name={q.name}/>
             </div>
             {q.sub_question_rules?.length > 0 &&
             q.sub_question_rules.map((r) => {
@@ -224,22 +298,19 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
       );
     }
     if (q.type === "CheckBoxList") {
-      questionValues = questionValues.map(val => ({ ...val, value: val.id }));
+      const options = questionValues.map(val => ({label : val.label, value : val.id}));
       return (
           <>
-            <div key={q.name} ref={el => questionRef.current[q.id] = el}>
-              <RawHTML>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
-              <Field name={q.name}>
-                {props => (
-                    <CheckboxList
-                        id={`${q.id}`}
-                        value={props.input.value}
-                        options={questionValues}
-                        onChange={props.input.onChange}
-                    />
-                )}
-              </Field>
-              <Error name={q.name} />
+            <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+              <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+              <Field name={q.name}
+                     className={questionControlContainerClassName}
+                     validate={getValidator(q.mandatory)}
+                     options={options}
+                     question={q}
+                     component={CheckBoxListAdapter}
+              />
+              <Error name={q.name}/>
             </div>
             {q.sub_question_rules?.length > 0 &&
             q.sub_question_rules.map((r) => {
@@ -262,7 +333,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
   const validateQuestion = (q, values, errors) => {
     if (q.mandatory && isVisible(q)) {
       if (!values.hasOwnProperty(q.name) || values[q.name] === "" || values[q.name].length === 0) {
-        errors[q.name] = "Required";
+        errors[q.name] = RequiredErrorMessage;
       }
     }
     // validate sub rules
@@ -275,20 +346,24 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
     onAnswerChanges(values)
   };
 
+  const validate = (values) => {
+    const errors = {};
+    extraQuestions.forEach( q => {
+      validateQuestion(q, values, errors);
+    });
+    return errors;
+  }
+
+  if(!Object.keys(answers).length) return null;
+
   return (
       <div className={className}>
         <Form
+            validate={validate}
             onSubmit={onSubmit}
-            initialValues={answers}
-            validate={(values) => {
-              const errors = {};
-              extraQuestions.map((q) => {
-                validateQuestion(q, values, errors);
-              });
-              return errors;
-            }}
-        >
-          {({ handleSubmit, form, submitting, pristine, values }) => {
+            initialValues={answers}>
+
+          {({handleSubmit, form, submitting, pristine, values}) => {
             submit = handleSubmit;
             return (
                 <form onSubmit={handleSubmit} ref={formRef}>
@@ -310,7 +385,7 @@ const ExtraQuestionsForm = ({ extraQuestions, userAnswers, onAnswerChanges, clas
             onClick={(event) => {
               submit(event);
             }}
-            style={{ marginTop: 10 }}
+            style={{marginTop: 10}}
         >
           {buttonText}
         </button>
@@ -326,10 +401,15 @@ ExtraQuestionsForm.propTypes = {
   className: PropTypes.string,
   formRef: PropTypes.oneOfType([
     PropTypes.func,
-    PropTypes.shape({ current: PropTypes.any })
+    PropTypes.shape({current: PropTypes.any})
   ]),
   debug: PropTypes.bool,
-  buttonText: PropTypes.string
+  buttonText: PropTypes.string,
+  questionContainerClassName: PropTypes.string,
+  questionLabelContainerClassName : PropTypes.string,
+  questionControlContainerClassName: PropTypes.string,
+  RequiredErrorMessage: PropTypes.string,
+  ValidationErrorClassName: PropTypes.string,
 };
 
 export default ExtraQuestionsForm;
