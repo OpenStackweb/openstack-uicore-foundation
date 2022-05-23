@@ -22,7 +22,7 @@ import CheckboxList from '../inputs/checkbox-list'
 import QuestionsSet from '../../utils/questions-set';
 import {Field, Form} from "react-final-form";
 
-const InputAdapter = ({ input, meta, question, className, ...rest }) => {
+const InputAdapter = ({ input, meta, question, className, isDisabled, ...rest }) => {
     return (
         <Input
             {...input}
@@ -31,13 +31,14 @@ const InputAdapter = ({ input, meta, question, className, ...rest }) => {
             name={question.name}
             id={question.id}
             value={input.value}
+            disabled={isDisabled}
             onChange={input.onChange}
             placeholder={question.placeholder}
         />
     )
 }
 
-const RadioButtonListAdapter = ({ input, meta, question, ...rest }) => {
+const RadioButtonListAdapter = ({ input, meta, question, isDisabled, ...rest }) => {
     return (
     <RadioList
         {...input}
@@ -46,11 +47,12 @@ const RadioButtonListAdapter = ({ input, meta, question, ...rest }) => {
         id={question.id}
         overrideCSS={true}
         value={input.value}
+        disabled={isDisabled}
         onChange={input.onChange}
     />
 )};
 
-const DropdownAdapter = ({ input, meta, question, ...rest }) => {
+const DropdownAdapter = ({ input, meta, question, isDisabled, ...rest }) => {
     return (<Dropdown
         {...input}
         {...rest}
@@ -58,11 +60,12 @@ const DropdownAdapter = ({ input, meta, question, ...rest }) => {
         id={question.id}
         overrideCSS={true}
         value={input.value}
+        disabled={isDisabled}
         onChange={input.onChange}
     />)
 }
 
-const CheckBoxListAdapter = ({ input, meta, question, ...rest }) => {
+const CheckBoxListAdapter = ({ input, meta, question, isDisabled, ...rest }) => {
     return (
         <CheckboxList
             {...input}
@@ -70,6 +73,7 @@ const CheckBoxListAdapter = ({ input, meta, question, ...rest }) => {
             id={question.id}
             name={question.name}
             value={input.value}
+            disabled={isDisabled}
             onChange={input.onChange}
         />
     )
@@ -91,7 +95,9 @@ const ExtraQuestionsForm = ({
                                 debug = false,
                                 buttonText = 'Submit',
                                 RequiredErrorMessage = 'Required',
-                                ValidationErrorClassName = 'extra-question-error'
+                                ValidationErrorClassName = 'extra-question-error',
+                                allowExtraQuestionsEdit = true,
+                                onError = (e) => console.log('form errors: ', e)
                             }) => {
 
     let submit = null;
@@ -171,6 +177,8 @@ const ExtraQuestionsForm = ({
 
     const renderQuestion = (q) => {
         let questionValues = q.values;
+        // disable field if edit isn't allowed and the questions is answered
+        const isDisabled = !allowExtraQuestionsEdit && (answers[q.name] !== '' || answers[q.name].length > 0);
         // @see https://codesandbox.io/s/vg05y?file=/index.js
         if (q.type === "Text") {
             return (
@@ -180,6 +188,7 @@ const ExtraQuestionsForm = ({
                         <Field name={q.name}
                                className={questionControlContainerClassName}
                                question={q}
+                               isDisabled={isDisabled}
                                validate={getValidator(q.mandatory)}
                                component={InputAdapter}
                         />
@@ -205,6 +214,7 @@ const ExtraQuestionsForm = ({
                                validate={getValidator(q.mandatory)}
                                name={q.name}
                                id={`${q.id}`}
+                               disabled={isDisabled}
                                component="textarea"/>
                         <Error name={q.name}/>
                     </div>
@@ -227,6 +237,7 @@ const ExtraQuestionsForm = ({
                                name={q.name}
                                id={`${q.id}`}
                                validate={getValidator(q.mandatory)}
+                               disabled={isDisabled}
                                type="checkbox"
                                component="input" />
                         <RawHTML className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
@@ -256,6 +267,7 @@ const ExtraQuestionsForm = ({
                                    options={options}
                                    question={q}
                                    validate={getValidator(q.mandatory)}
+                                   isDisabled={isDisabled}
                                    component={RadioButtonListAdapter} />
                             <Error name={q.name}/>
                         </div>
@@ -282,6 +294,7 @@ const ExtraQuestionsForm = ({
                                question={q}
                                validate={getValidator(q.mandatory)}
                                className={questionControlContainerClassName}
+                               isDisabled={isDisabled}
                                component={DropdownAdapter}
                         />
                         <Error name={q.name}/>
@@ -308,6 +321,7 @@ const ExtraQuestionsForm = ({
                                validate={getValidator(q.mandatory)}
                                options={options}
                                question={q}
+                               isDisabled={isDisabled}
                                component={CheckBoxListAdapter}
                         />
                         <Error name={q.name}/>
@@ -351,6 +365,7 @@ const ExtraQuestionsForm = ({
         extraQuestions.forEach( q => {
             validateQuestion(q, values, errors);
         });
+        if(Object.keys(errors).length > 0) onError(errors)
         return errors;
     }
 
