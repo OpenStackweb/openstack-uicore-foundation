@@ -152,6 +152,7 @@ export default class QuestionsSet {
         }
 
         res[question.name] =  userAnswer || '';
+        if(question.type === CheckBoxListQuestionType && res[question.name] === '') res[question.name] = []
         if(question.hasOwnProperty('sub_question_rules'))
             for (let rule of question.sub_question_rules) {
                 // check recursive all the tree till leaves ...

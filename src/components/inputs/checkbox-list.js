@@ -61,7 +61,7 @@ export default class CheckboxList extends React.Component {
 
     render() {
 
-        let {onChange, value, className, options, id, children, error, ...rest} = this.props;
+        let {onChange, value, className, options, id, children, error, disabled,name, ...rest} = this.props;
         let { otherChecked } = this.state;
 
         let inline = ( this.props.hasOwnProperty('inline') );
@@ -69,6 +69,7 @@ export default class CheckboxList extends React.Component {
         let allowOther = ( this.props.hasOwnProperty('allowOther') );
         let otherValue = value ? value.find( v => !options.map(op => op.value).includes(v) ) : false ;
         let has_error = ( this.props.hasOwnProperty('error') && error !== '' );
+        let isDisabled = (this.props.hasOwnProperty('disabled') && disabled == true);
 
 
         let style, label;
@@ -79,8 +80,6 @@ export default class CheckboxList extends React.Component {
                 marginLeft: '20px',
                 float: 'left'
             };
-
-
         } else {
             style = {
                 paddingLeft: '22px',
@@ -95,14 +94,18 @@ export default class CheckboxList extends React.Component {
                         let checked = value ? value.includes(op.value) : false;
                         return (
                             <div className="form-check abc-checkbox" key={"radio_key_" + op.value} style={style}>
-                                <input type="checkbox" id={`cb_${id}_${op.value}`} checked={checked}
+                                <input type="checkbox"
+                                       id={`cb_${id}_${op.value}`}
+                                       name={name? name : id }
+                                       checked={checked}
+                                       disabled={isDisabled}
                                        onChange={this.handleChange} className="form-check-input" value={op.value} />
                                 <label className="form-check-label" htmlFor={`cb_${id}_${op.value}`  } >
                                     {html &&
-                                        <RawHTML>{op.label}</RawHTML>
+                                    <RawHTML>{op.label}</RawHTML>
                                     }
                                     {!html &&
-                                        op.label
+                                    op.label
                                     }
                                 </label>
                             </div>
@@ -111,7 +114,7 @@ export default class CheckboxList extends React.Component {
 
                     {allowOther &&
                     <div className="form-check abc-checkbox" style={style}>
-                        <input type="checkbox" id={"cb_other" + id} checked={otherChecked}
+                        <input type="checkbox" id={"cb_other" + id} checked={otherChecked} disabled={isDisabled}
                                onChange={this.handleOtherCBChange} className="form-check-input" value="other" />
                         <label className="form-check-label" htmlFor={"cb_other" + id}>
                             {T.translate("general.other")}
@@ -121,7 +124,7 @@ export default class CheckboxList extends React.Component {
 
                     {allowOther && otherChecked &&
                     <div style={{paddingLeft: '22px', width: '50%'}}>
-                        <input className="form-control" onChange={this.handleChange} value={otherValue} />
+                        <input className="form-control" disabled={isDisabled} onChange={this.handleChange} value={otherValue} />
                     </div>
                     }
 
