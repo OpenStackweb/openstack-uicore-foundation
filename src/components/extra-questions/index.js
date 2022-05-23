@@ -96,7 +96,8 @@ const ExtraQuestionsForm = ({
                                 buttonText = 'Submit',
                                 RequiredErrorMessage = 'Required',
                                 ValidationErrorClassName = 'extra-question-error',
-                                allowExtraQuestionsEdit = true
+                                allowExtraQuestionsEdit = true,
+                                onError = (e) => console.log('form errors: ', e)
                             }) => {
 
     let submit = null;
@@ -364,6 +365,7 @@ const ExtraQuestionsForm = ({
         extraQuestions.forEach( q => {
             validateQuestion(q, values, errors);
         });
+        if(Object.keys(errors).length > 0) onError(errors)
         return errors;
     }
 
