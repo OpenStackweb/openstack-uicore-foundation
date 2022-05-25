@@ -18,16 +18,12 @@ export default class Input extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state = {
-            value: props.value,
-        };
-
         this.handleChange = this.handleChange.bind(this);
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.props.value !== prevProps.value) {
-            this.setState({value: this.props.value})
+            this.input.value = this.props.value;
         }
     }
 
@@ -37,15 +33,16 @@ export default class Input extends React.Component {
 
     render() {
 
-        let {onChange, value, className, error, containerClassName, ...rest} = this.props;
+        let {onChange, value, className, error, containerClassName,...rest} = this.props;
         let has_error = ( this.props.hasOwnProperty('error') && error !== '' );
         let class_name = this.props.hasOwnProperty('className') ? className : 'form-control';
         let container_class_name = this.props.hasOwnProperty('containerClassName') ? containerClassName : 'container-form-control';
         return (
             <div className={container_class_name}>
                 <input
-                    className={class_name + ' ' + (has_error ? 'error' : '')}
-                    value={this.state.value}
+                    className={`${class_name} ${has_error ? 'error' : ''}`}
+                    ref={node => {this.input = node}}
+                    defaultValue={value}
                     onChange={this.handleChange}
                     {...rest}
                 />
