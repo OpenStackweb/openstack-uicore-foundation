@@ -315,6 +315,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                 <Fragment key={q.name}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+                        <div className={questionControlContainerClassName}>
                         <Field name={q.name}
                                className={questionControlContainerClassName}
                                validate={getValidator(q.mandatory)}
@@ -324,6 +325,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                                component={CheckBoxListAdapter}
                         />
                         <Error name={q.name}/>
+                        </div>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
                     q.sub_question_rules.map((r) =>
