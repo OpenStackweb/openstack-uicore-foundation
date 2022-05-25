@@ -22,10 +22,14 @@
     "awesome-bootstrap-checkbox": "^1.0.1",
     "babel-cli": "^6.26.0",
     "babel-loader": "^8.0.6",
+    "cheerio": "=1.0.0-rc.3",
     "css-loader": "^3.4.1",
     "dropzone": "5.7.2",
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.6",
     "extend": "^3.0.1",
     "file-loader": "^4.3.0",
+    "final-form": "^4.20.7",
     "font-awesome": "^4.7.0",
     "history": "^4.7.2",
     "i18n-react": "^0.6.4",
@@ -33,8 +37,11 @@
     "immutability-helper": "^2.7.1",
     "jest": "^28.1.0",
     "jest-babel": "^1.0.1",
+    "jest-environment-jsdom": "^28.1.0",
     "js-yaml": ">=3.13.1",
     "js-yaml-loader": "^1.2.2",
+    "jsdom": "^19.0.0",
+    "jsdom-global": "^3.0.2",
     "less": "^3.9.0",
     "less-loader": "^4.1.0",
     "lodash": "^4.17.14",
@@ -75,6 +82,9 @@
     "webpack-dev-server": "^3.11.0",
     "webpack-merge": "^4.2.1",
     "webpack-node-externals": "^1.7.2"
+  },
+  "resolutions": {
+    "cheerio": "1.0.0-rc.10"
   },
   "peerDependencies": {
     "awesome-bootstrap-checkbox": "^1.0.1",
