@@ -33,12 +33,12 @@ export default class Input extends React.Component {
 
     render() {
 
-        let {onChange, value, className, error, ...rest} = this.props;
+        let {onChange, value, className, error, containerClassName,...rest} = this.props;
         let has_error = ( this.props.hasOwnProperty('error') && error !== '' );
         let class_name = this.props.hasOwnProperty('className') ? className : 'form-control';
-
+        let container_class_name = this.props.hasOwnProperty('containerClassName') ? containerClassName : 'container-form-control';
         return (
-            <div>
+            <div className={container_class_name}>
                 <input
                     className={`${class_name} ${has_error ? 'error' : ''}`}
                     ref={node => {this.input = node}}
