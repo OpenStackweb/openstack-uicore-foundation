@@ -1,6 +1,6 @@
 {
   "name": "openstack-uicore-foundation",
-  "version": "4.0.26",
+  "version": "4.0.28",
   "description": "ui reactjs components for openstack marketing site",
   "main": "lib/openstack-uicore-foundation.js",
   "scripts": {
@@ -24,9 +24,12 @@
     "babel-loader": "^8.2.4",
     "browser-tabs-lock": "^1.2.15",
     "buffer": "^6.0.3",
+    "cheerio": "=1.0.0-rc.3",
     "crypto-js": "^4.1.1",
     "css-loader": "^6.7.1",
     "dropzone": "5.7.2",
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.6",
     "extend": "^3.0.1",
     "file-loader": "^6.2.0",
     "final-form": "^4.20.7",
@@ -36,8 +39,11 @@
     "idtoken-verifier": "^2.2.2",
     "immutability-helper": "^2.7.1",
     "jest": "^28.1.0",
+    "jest-environment-jsdom": "^28.1.0",
     "js-yaml": "^4.1.0",
     "js-yaml-loader": "^1.2.2",
+    "jsdom": "^19.0.0",
+    "jsdom-global": "^3.0.2",
     "less": "^4.1.2",
     "less-loader": "^10.2.0",
     "lodash": "^4.17.14",
@@ -77,13 +83,7 @@
     "webpack-cli": "^4.9.2",
     "webpack-dev-server": "^4.7.4",
     "webpack-merge": "^5.8.0",
-    "webpack-node-externals": "^3.0.0",
-    "enzyme": "^3.11.0",
-    "enzyme-adapter-react-16": "^1.15.6",
-    "cheerio": "=1.0.0-rc.3",
-    "jest-environment-jsdom": "^28.1.0",
-    "jsdom": "^19.0.0",
-    "jsdom-global": "^3.0.2"
+    "webpack-node-externals": "^3.0.0"
   },
   "resolutions": {
     "cheerio": "1.0.0-rc.10"
