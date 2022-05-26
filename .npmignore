@@ -5,3 +5,5 @@ webpack.common.js
 webpack.dev.js
 webpack.prod.js
 .idea
+babel.config.json
+.nvmrc
