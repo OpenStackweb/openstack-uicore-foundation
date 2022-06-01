@@ -29,7 +29,7 @@ const InputAdapter = ({ input, meta, question, className, isDisabled, ...rest })
             {...rest}
             containerClassName={className}
             name={question.name}
-            id={`${question.id}`}
+            id={question.name}
             value={input.value}
             disabled={isDisabled}
             onChange={input.onChange}
@@ -44,7 +44,7 @@ const RadioButtonListAdapter = ({ input, meta, question, isDisabled, ...rest }) 
             {...input}
             {...rest}
             name={question.name}
-            id={`${question.id}`}
+            id={question.name}
             overrideCSS={true}
             value={input.value}
             disabled={isDisabled}
@@ -57,7 +57,7 @@ const DropdownAdapter = ({ input, meta, question, isDisabled, ...rest }) => {
         {...input}
         {...rest}
         name={question.name}
-        id={`${question.id}`}
+        id={question.name}
         overrideCSS={true}
         value={input.value}
         disabled={isDisabled}
@@ -70,7 +70,7 @@ const CheckBoxListAdapter = ({ input, meta, question, isDisabled, ...rest }) => 
         <CheckboxList
             {...input}
             {...rest}
-            id={`${question.id}`}
+            id={question.name}
             name={question.name}
             value={input.value}
             disabled={isDisabled}
@@ -131,13 +131,14 @@ const ExtraQuestionsForm = React.forwardRef(({
     )
 
     const checkRule = (value, rule) => {
+        debugger;
         let values = rule.answer_values;
 
         if (Array.isArray(value)) {
             if (!value.length) return false;
-            let res = rule.anwer_values_operator === "And";
+            let res = rule.answer_values_operator === "And";
             values.forEach((v) => {
-                if (rule.anwer_values_operator === "And") {
+                if (rule.answer_values_operator === "And") {
                     res = res && value.includes(parseInt(v));
                 } else {
                     // Or
@@ -174,6 +175,10 @@ const ExtraQuestionsForm = React.forwardRef(({
         return null;
     };
 
+    const getLabel = (q) => {
+        return q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label;
+    }
+
     const renderQuestion = (q) => {
         let questionValues = q.values;
         // disable field if edit isn't allowed and the questions is answered
@@ -183,7 +188,7 @@ const ExtraQuestionsForm = React.forwardRef(({
             return (
                 <Fragment key={q.name}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
-                        <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+                        <RawHTML className={questionLabelContainerClassName}>{getLabel(q)}</RawHTML>
                         <Field name={q.name}
                                className={questionControlContainerClassName}
                                question={q}
@@ -208,11 +213,11 @@ const ExtraQuestionsForm = React.forwardRef(({
             return (
                 <Fragment key={q.name}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
-                        <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+                        <RawHTML className={questionLabelContainerClassName}>{getLabel(q)}</RawHTML>
                         <Field className={questionControlContainerClassName}
                                validate={getValidator(q.mandatory)}
                                name={q.name}
-                               id={`${q.id}`}
+                               id={q.name}
                                disabled={isDisabled}
                                component="textarea"/>
                         <Error name={q.name}/>
@@ -231,16 +236,17 @@ const ExtraQuestionsForm = React.forwardRef(({
         if (q.type === "CheckBox") {
             return (
                 <Fragment key={q.name}>
-                    <div ref={el => questionRef.current[q.id] = el} style={{display: 'flex'}} className={questionContainerClassName}>
+                    <div ref={el => questionRef.current[q.id] = el} style={{display: 'flex'}}
+                         className={questionContainerClassName}>
                         <Field className={questionControlContainerClassName}
                                name={q.name}
-                               id={`${q.id}`}
+                               id={q.name}
                                validate={getValidator(q.mandatory)}
                                disabled={isDisabled}
                                type="checkbox"
                                component="input" />
                         <RawHTML className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
-                            {q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}
+                            {getLabel(q)}
                         </RawHTML>
                         <Error name={q.name}/>
                     </div>
@@ -260,7 +266,9 @@ const ExtraQuestionsForm = React.forwardRef(({
             return (
                 <Fragment key={q.name}>
                     <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
-                        <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+                        <RawHTML className={questionLabelContainerClassName}>
+                            {getLabel(q)}
+                        </RawHTML>
                         <div className={questionControlContainerClassName}>
                             <Field name={q.name}
                                    options={options}
@@ -287,7 +295,9 @@ const ExtraQuestionsForm = React.forwardRef(({
             return (
                 <Fragment key={q.name}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
-                        <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+                        <RawHTML className={questionLabelContainerClassName}>
+                            {getLabel(q)}
+                        </RawHTML>
                         <Field name={q.name}
                                options={options}
                                question={q}
@@ -314,7 +324,9 @@ const ExtraQuestionsForm = React.forwardRef(({
             return (
                 <Fragment key={q.name}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
-                        <RawHTML className={questionLabelContainerClassName}>{q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label}</RawHTML>
+                        <RawHTML className={questionLabelContainerClassName}>
+                            {getLabel(q)}
+                        </RawHTML>
                         <div className={questionControlContainerClassName}>
                         <Field name={q.name}
                                className={questionControlContainerClassName}
