@@ -238,17 +238,19 @@ const ExtraQuestionsForm = React.forwardRef(({
                 <Fragment key={q.name}>
                     <div ref={el => questionRef.current[q.id] = el} style={{display: 'flex'}}
                          className={questionContainerClassName}>
-                        <Field className={questionControlContainerClassName}
-                               name={q.name}
-                               id={q.name}
-                               validate={getValidator(q.mandatory)}
-                               disabled={isDisabled}
-                               type="checkbox"
-                               component="input" />
                         <RawHTML className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
                             {getLabel(q)}
                         </RawHTML>
-                        <Error name={q.name}/>
+                        <div className={questionControlContainerClassName}>
+                            <Field
+                                   name={q.name}
+                                   id={q.name}
+                                   validate={getValidator(q.mandatory)}
+                                   disabled={isDisabled}
+                                   type="checkbox"
+                                   component="input" />
+                            <Error name={q.name}/>
+                        </div>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
                     q.sub_question_rules.map((r) =>
@@ -298,15 +300,16 @@ const ExtraQuestionsForm = React.forwardRef(({
                         <RawHTML className={questionLabelContainerClassName}>
                             {getLabel(q)}
                         </RawHTML>
-                        <Field name={q.name}
-                               options={options}
-                               question={q}
-                               validate={getValidator(q.mandatory)}
-                               className={questionControlContainerClassName}
-                               isDisabled={isDisabled}
-                               component={DropdownAdapter}
-                        />
-                        <Error name={q.name}/>
+                        <div className={questionControlContainerClassName}>
+                            <Field name={q.name}
+                                   options={options}
+                                   question={q}
+                                   validate={getValidator(q.mandatory)}
+                                   isDisabled={isDisabled}
+                                   component={DropdownAdapter}
+                            />
+                            <Error name={q.name}/>
+                        </div>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
                     q.sub_question_rules.map((r) =>
