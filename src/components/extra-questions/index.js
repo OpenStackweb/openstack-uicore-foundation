@@ -437,6 +437,7 @@ ExtraQuestionsForm.propTypes = {
     questionControlContainerClassName: PropTypes.string,
     RequiredErrorMessage: PropTypes.string,
     ValidationErrorClassName: PropTypes.string,
+    allowExtraQuestionsEdit: PropTypes.bool,
 };
 
 export default ExtraQuestionsForm;
