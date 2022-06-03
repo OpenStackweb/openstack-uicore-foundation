@@ -182,7 +182,7 @@ const ExtraQuestionsForm = React.forwardRef(({
     const renderQuestion = (q) => {
         let questionValues = q.values;
         // disable field if edit isn't allowed and the questions is answered
-        const isDisabled = !allowExtraQuestionsEdit && (answers[q.name] !== '' || answers[q.name].length > 0);
+        const isDisabled = !allowExtraQuestionsEdit && (answers[q.name].length > 0);
         // @see https://codesandbox.io/s/vg05y?file=/index.js
         if (q.type === "Text") {
             return (
