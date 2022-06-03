@@ -1094,3 +1094,144 @@ it('meat-type and values should show prefer', () => {
 
     expect(component.find('#prefer').exists()).toBeTruthy();
 })
+
+it('question should disabled', () => {
+
+    const testQuestions =[
+        {
+            "id": 98,
+            "created": 1651847553,
+            "last_edited": 1651847553,
+            "name": "cloud_service_provider_market_sub_segment",
+            "type": "CheckBoxList",
+            "label": "<p>If Cloud Service Provider is selected, provide the following Industry Market Sub-segment options (select all that apply):</p>",
+            "placeholder": null,
+            "order": 6,
+            "mandatory": true,
+            "max_selected_values": 0,
+            "class": "SubQuestion",
+            "usage": "Ticket",
+            "printable": false,
+            "summit_id": 13,
+            "sub_question_rules": [],
+            "values": [{
+                "id": 172,
+                "created": 1651847562,
+                "last_edited": 1651847562,
+                "label": "Hyperscale",
+                "value": "Hyperscale",
+                "order": 1,
+                "question_id": 98
+            }, {
+                "id": 173,
+                "created": 1651847570,
+                "last_edited": 1651847570,
+                "label": "Tier-2",
+                "value": "Tier-2",
+                "order": 2,
+                "question_id": 98
+            }, {
+                "id": 174,
+                "created": 1651847582,
+                "last_edited": 1651847582,
+                "label": "Other",
+                "value": "other",
+                "order": 3,
+                "question_id": 98
+            }],
+        }
+    ];
+    const testAnswers = [
+        {
+            "id": 431808,
+            "created": 1651848786,
+            "last_edited": 1651848786,
+            "value": "172",
+            "question_id": 98,
+            "order_id": 0,
+            "attendee_id": 131
+        }
+    ];
+
+    const component = mount(
+        <ExtraQuestionsForm
+            extraQuestions={testQuestions}
+            userAnswers={testAnswers}
+            onAnswerChanges={() => {
+            }}
+            ref={null}
+            className="extra-questions"
+            allowExtraQuestionsEdit={false}
+        />,
+    );
+
+    expect(component.find('#cloud_service_provider_market_sub_segment').exists()).toBeTruthy();
+    const input = component.find('#cloud_service_provider_market_sub_segment input').at(1);
+    expect(input.props().disabled === true).toBeTruthy();
+})
+
+it('question should be enabled', () => {
+
+    const testQuestions =[
+        {
+            "id": 98,
+            "created": 1651847553,
+            "last_edited": 1651847553,
+            "name": "cloud_service_provider_market_sub_segment",
+            "type": "CheckBoxList",
+            "label": "<p>If Cloud Service Provider is selected, provide the following Industry Market Sub-segment options (select all that apply):</p>",
+            "placeholder": null,
+            "order": 6,
+            "mandatory": true,
+            "max_selected_values": 0,
+            "class": "SubQuestion",
+            "usage": "Ticket",
+            "printable": false,
+            "summit_id": 13,
+            "sub_question_rules": [],
+            "values": [{
+                "id": 172,
+                "created": 1651847562,
+                "last_edited": 1651847562,
+                "label": "Hyperscale",
+                "value": "Hyperscale",
+                "order": 1,
+                "question_id": 98
+            }, {
+                "id": 173,
+                "created": 1651847570,
+                "last_edited": 1651847570,
+                "label": "Tier-2",
+                "value": "Tier-2",
+                "order": 2,
+                "question_id": 98
+            }, {
+                "id": 174,
+                "created": 1651847582,
+                "last_edited": 1651847582,
+                "label": "Other",
+                "value": "other",
+                "order": 3,
+                "question_id": 98
+            }],
+        }
+    ];
+
+    const component = mount(
+        <ExtraQuestionsForm
+            extraQuestions={testQuestions}
+            userAnswers={[]}
+            onAnswerChanges={() => {
+            }}
+            ref={null}
+            className="extra-questions"
+            allowExtraQuestionsEdit={false}
+        />,
+    );
+
+    expect(component.find('#cloud_service_provider_market_sub_segment').exists()).toBeTruthy();
+    const input = component.find('#cloud_service_provider_market_sub_segment input').at(1);
+    expect(input.props().disabled === true).toBeFalsy();
+})
+
+
