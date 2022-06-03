@@ -324,9 +324,6 @@ const ExtraQuestionsForm = React.forwardRef(({
         }
         if (q.type === "CheckBoxList") {
             const options = questionValues.map(val => ({label : val.label, value : val.id}));
-            console.log('answer uicore', answers, answers[q.name].length > 0);
-            console.log('is disabled?', isDisabled);
-            console.log('options checkbox', options);
             return (
                 <Fragment key={q.name}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
