@@ -182,7 +182,7 @@ const ExtraQuestionsForm = React.forwardRef(({
     const renderQuestion = (q) => {
         let questionValues = q.values;
         // disable field if edit isn't allowed and the questions is answered
-        const isDisabled = !allowExtraQuestionsEdit && (answers[q.name] !== '' || answers[q.name].length > 0);
+        const isDisabled = !allowExtraQuestionsEdit && (answers[q.name].length > 0);
         // @see https://codesandbox.io/s/vg05y?file=/index.js
         if (q.type === "Text") {
             return (
@@ -324,6 +324,9 @@ const ExtraQuestionsForm = React.forwardRef(({
         }
         if (q.type === "CheckBoxList") {
             const options = questionValues.map(val => ({label : val.label, value : val.id}));
+            console.log('answer uicore', answers, answers[q.name].length > 0);
+            console.log('is disabled?', isDisabled);
+            console.log('options checkbox', options);
             return (
                 <Fragment key={q.name}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
