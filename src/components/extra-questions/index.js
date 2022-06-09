@@ -21,7 +21,7 @@ import RadioList from '../inputs/radio-list'
 import CheckboxList from '../inputs/checkbox-list'
 import QuestionsSet from '../../utils/questions-set';
 import {Field, Form} from "react-final-form";
-import './index..scss';
+import './index.scss';
 
 const InputAdapter = ({ input, meta, question, className, isDisabled, isRequired, ...rest }) => {
     return (
