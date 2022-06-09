@@ -387,6 +387,30 @@ const ExtraQuestionsForm = React.forwardRef(({
 
     if(!Object.keys(answers).length) return null;
 
+    const getErrorFields = (q, invalidFormFields, errorFields) => {
+        if (invalidFormFields.includes(q.name)) {
+            errorFields.push(q);
+        }
+        // find errors on sub rules
+        q.sub_question_rules?.forEach((r) => {
+            getErrorFields(r.sub_question, invalidFormFields, errorFields);
+        });
+    }
+
+    const scrollToFirstError = (invalidFormFields) => {
+        const errorFields = [];
+        extraQuestions.forEach(q => {
+            getErrorFields(q, invalidFormFields, errorFields);
+        });
+        const firstError = errorFields.sort((a, b) => a.order > b.order)[0];
+        questionRef.current[firstError.id].scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+        })
+    }
+
+    if (!Object.keys(answers).length) return null;
+
     return (
         <div className={className}>
             <Form
@@ -397,7 +421,13 @@ const ExtraQuestionsForm = React.forwardRef(({
                 {({handleSubmit, form, submitting, pristine, values}) => {
                     submit = handleSubmit;
                     return (
-                        <form onSubmit={handleSubmit} ref={ref}>
+                        <form
+                            onSubmit={(event) => {
+                                const invalidFormFields = form.getRegisteredFields().filter(field => form.getFieldState(field).invalid);
+                                if (invalidFormFields.length > 0) scrollToFirstError(invalidFormFields)
+                                handleSubmit(event)
+                            }}
+                            ref={ref}>
                             {readOnly ?
                                 <fieldset disabled="disabled">
                                     {extraQuestions.map((q) => renderQuestion(q))}
@@ -433,7 +463,7 @@ ExtraQuestionsForm.propTypes = {
     debug: PropTypes.bool,
     buttonText: PropTypes.string,
     questionContainerClassName: PropTypes.string,
-    questionLabelContainerClassName : PropTypes.string,
+    questionLabelContainerClassName: PropTypes.string,
     questionControlContainerClassName: PropTypes.string,
     RequiredErrorMessage: PropTypes.string,
     ValidationErrorClassName: PropTypes.string,
