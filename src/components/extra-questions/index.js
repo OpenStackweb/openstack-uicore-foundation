@@ -22,7 +22,7 @@ import CheckboxList from '../inputs/checkbox-list'
 import QuestionsSet from '../../utils/questions-set';
 import {Field, Form} from "react-final-form";
 
-const InputAdapter = ({ input, meta, question, className, isDisabled, ...rest }) => {
+const InputAdapter = ({ input, meta, question, className, isDisabled, isRequired, ...rest }) => {
     return (
         <Input
             {...input}
@@ -32,13 +32,14 @@ const InputAdapter = ({ input, meta, question, className, isDisabled, ...rest })
             id={question.name}
             value={input.value}
             disabled={isDisabled}
+            required={isRequired}
             onChange={input.onChange}
             placeholder={question.placeholder}
         />
     )
 }
 
-const RadioButtonListAdapter = ({ input, meta, question, isDisabled, ...rest }) => {
+const RadioButtonListAdapter = ({ input, meta, question, isDisabled, isRequired, ...rest }) => {
     return (
         <RadioList
             {...input}
@@ -48,11 +49,12 @@ const RadioButtonListAdapter = ({ input, meta, question, isDisabled, ...rest }) 
             overrideCSS={true}
             value={input.value}
             disabled={isDisabled}
+            required={isRequired}
             onChange={input.onChange}
         />
     )};
 
-const DropdownAdapter = ({ input, meta, question, isDisabled, ...rest }) => {
+const DropdownAdapter = ({ input, meta, question, isDisabled, isRequired, ...rest }) => {
     return (<Dropdown
         {...input}
         {...rest}
@@ -61,11 +63,12 @@ const DropdownAdapter = ({ input, meta, question, isDisabled, ...rest }) => {
         overrideCSS={true}
         value={input.value}
         disabled={isDisabled}
+        required={isRequired}
         onChange={input.onChange}
     />)
 }
 
-const CheckBoxListAdapter = ({ input, meta, question, isDisabled, ...rest }) => {
+const CheckBoxListAdapter = ({ input, meta, question, isDisabled, isRequired, ...rest }) => {
     return (
         <CheckboxList
             {...input}
@@ -74,6 +77,7 @@ const CheckBoxListAdapter = ({ input, meta, question, isDisabled, ...rest }) => 
             name={question.name}
             value={input.value}
             disabled={isDisabled}
+            required={isRequired}
             onChange={input.onChange}
         />
     )
@@ -125,7 +129,7 @@ const ExtraQuestionsForm = React.forwardRef(({
     const Error = ({ name }) => (
         <Field name={name} subscription={{ error: true, touched: true }}>
             {({ meta: { error, touched } }) =>
-                error && touched ? <span className={ValidationErrorClassName}>{error}</span> : null
+                error && touched ? <div className={ValidationErrorClassName}>{error}</div> : null
             }
         </Field>
     )
@@ -189,14 +193,16 @@ const ExtraQuestionsForm = React.forwardRef(({
                 <Fragment key={q.name}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>{getLabel(q)}</RawHTML>
-                        <Field name={q.name}
-                               className={questionControlContainerClassName}
-                               question={q}
-                               isDisabled={isDisabled}
-                               validate={getValidator(q.mandatory)}
-                               component={InputAdapter}
-                        />
-                        <Error name={q.name}/>
+                        <div className={questionControlContainerClassName}>
+                            <Field name={q.name}
+                                   question={q}
+                                   isDisabled={isDisabled}
+                                   isRequired={q.mandatory}
+                                   validate={getValidator(q.mandatory)}
+                                   component={InputAdapter}
+                            />
+                            <Error name={q.name}/>
+                        </div>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
                     q.sub_question_rules.map((r) =>
@@ -214,13 +220,16 @@ const ExtraQuestionsForm = React.forwardRef(({
                 <Fragment key={q.name}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>{getLabel(q)}</RawHTML>
-                        <Field className={questionControlContainerClassName}
-                               validate={getValidator(q.mandatory)}
-                               name={q.name}
-                               id={q.name}
-                               disabled={isDisabled}
-                               component="textarea"/>
-                        <Error name={q.name}/>
+                        <div className={questionControlContainerClassName}>
+                            <Field
+                                   validate={getValidator(q.mandatory)}
+                                   name={q.name}
+                                   id={q.name}
+                                   disabled={isDisabled}
+                                   required={q.mandatory}
+                                   component="textarea"/>
+                            <Error name={q.name}/>
+                        </div>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
                     q.sub_question_rules.map((r) =>
@@ -247,6 +256,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                                    id={q.name}
                                    validate={getValidator(q.mandatory)}
                                    disabled={isDisabled}
+                                   required={q.mandatory}
                                    type="checkbox"
                                    component="input" />
                             <Error name={q.name}/>
@@ -277,6 +287,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                                    question={q}
                                    validate={getValidator(q.mandatory)}
                                    isDisabled={isDisabled}
+                                   isRequired={q.mandatory}
                                    component={RadioButtonListAdapter} />
                             <Error name={q.name}/>
                         </div>
@@ -306,6 +317,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                                    question={q}
                                    validate={getValidator(q.mandatory)}
                                    isDisabled={isDisabled}
+                                   isRequired={q.mandatory}
                                    component={DropdownAdapter}
                             />
                             <Error name={q.name}/>
@@ -331,15 +343,16 @@ const ExtraQuestionsForm = React.forwardRef(({
                             {getLabel(q)}
                         </RawHTML>
                         <div className={questionControlContainerClassName}>
-                        <Field name={q.name}
-                               className={questionControlContainerClassName}
-                               validate={getValidator(q.mandatory)}
-                               options={options}
-                               question={q}
-                               isDisabled={isDisabled}
-                               component={CheckBoxListAdapter}
-                        />
-                        <Error name={q.name}/>
+                            <Field name={q.name}
+                                   className={questionControlContainerClassName}
+                                   validate={getValidator(q.mandatory)}
+                                   options={options}
+                                   question={q}
+                                   isDisabled={isDisabled}
+                                   isRequired={q.mandatory}
+                                   component={CheckBoxListAdapter}
+                            />
+                            <Error name={q.name}/>
                         </div>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
