@@ -21,6 +21,7 @@ import RadioList from '../inputs/radio-list'
 import CheckboxList from '../inputs/checkbox-list'
 import QuestionsSet from '../../utils/questions-set';
 import {Field, Form} from "react-final-form";
+import './index..scss';
 
 const InputAdapter = ({ input, meta, question, className, isDisabled, isRequired, ...rest }) => {
     return (
@@ -251,15 +252,19 @@ const ExtraQuestionsForm = React.forwardRef(({
                             {getLabel(q)}
                         </RawHTML>
                         <div className={questionControlContainerClassName}>
-                            <Field
-                                   name={q.name}
-                                   id={q.name}
-                                   validate={getValidator(q.mandatory)}
-                                   disabled={isDisabled}
-                                   required={q.mandatory}
-                                   type="checkbox"
-                                   component="input" />
-                            <Error name={q.name}/>
+                            <div className="form-check abc-checkbox">
+                                <Field
+                                       name={q.name}
+                                       id={q.name}
+                                       validate={getValidator(q.mandatory)}
+                                       disabled={isDisabled}
+                                       required={q.mandatory}
+                                       type="checkbox"
+                                       className="form-check-input"
+                                       component="input" />
+                                <label className="form-check-label" htmlFor={q.name}/>
+                                <Error name={q.name}/>
+                            </div>
                         </div>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
