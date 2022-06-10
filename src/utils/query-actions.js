@@ -212,7 +212,7 @@ export const queryCompanies = _.debounce(async (input, callback) => {
 
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`name=@${input}`);
+    let filters = encodeURIComponent(`name@@${input}`);
 
     fetch(buildAPIBaseUrl(`/api/v1/companies?filter=${filters}&access_token=${accessToken}`))
         .then(fetchResponseHandler)

@@ -93,7 +93,6 @@ export default class CompanyInput extends React.Component {
                 <AsyncComponent
                     value={theValue}
                     onChange={this.handleChange}
-                    loadOptions={this.getCompanies}
                     onCreateOption={this.handleNew}
                     isMulti={isMulti}
                     {...rest}
