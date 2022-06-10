@@ -136,7 +136,6 @@ const ExtraQuestionsForm = React.forwardRef(({
     )
 
     const checkRule = (value, rule) => {
-        debugger;
         let values = rule.answer_values;
 
         if (Array.isArray(value)) {
@@ -184,10 +183,21 @@ const ExtraQuestionsForm = React.forwardRef(({
         return q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label;
     }
 
+    const isAnswered = (q, answers) => {
+        if(!answers.hasOwnProperty(q.name)) return false;
+        const answer = answers[q.name];
+        // check type
+        if(Array.isArray(answer)) return answer.length > 0;
+        if (typeof answer === 'string') return answer.length > 0;
+        if(typeof answer === 'number') return answer > 0;
+        if(typeof answer === 'boolean') return answer;
+        return false;
+    }
+
     const renderQuestion = (q) => {
         let questionValues = q.values;
         // disable field if edit isn't allowed and the questions is answered
-        const isDisabled = !allowExtraQuestionsEdit && (answers[q.name].length > 0);
+        const isDisabled = !allowExtraQuestionsEdit && isAnswered(q, answers);
         // @see https://codesandbox.io/s/vg05y?file=/index.js
         if (q.type === "Text") {
             return (
