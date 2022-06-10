@@ -212,7 +212,7 @@ export const queryCompanies = _.debounce(async (input, callback) => {
 
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`name@@${input}`);
+    let filters = encodeURIComponent(`name=@${input}`);
 
     fetch(buildAPIBaseUrl(`/api/v1/companies?filter=${filters}&access_token=${accessToken}`))
         .then(fetchResponseHandler)
@@ -241,7 +241,7 @@ export const queryRegistrationCompanies = _.debounce(async (summitId, input, cal
 
     if(input) {
         input = escapeFilterValue(input);
-        apiUrl.addQuery('filter[]', `name=@${input}`);
+        apiUrl.addQuery('filter[]', `name@@${input}`);
     }
 
     fetch(buildAPIBaseUrl(apiUrl.toString()))
