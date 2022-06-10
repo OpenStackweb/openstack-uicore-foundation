@@ -241,7 +241,7 @@ export const queryRegistrationCompanies = _.debounce(async (summitId, input, cal
 
     if(input) {
         input = escapeFilterValue(input);
-        apiUrl.addQuery('filter[]', `name=@${input}`);
+        apiUrl.addQuery('filter[]', `name@@${input}`);
     }
 
     fetch(buildAPIBaseUrl(apiUrl.toString()))
