@@ -69,7 +69,15 @@ const DropdownAdapter = ({ input, meta, question, isDisabled, isRequired, ...res
     />)
 }
 
-const CheckBoxListAdapter = ({ input, meta, question, isDisabled, isRequired, ...rest }) => {
+const CheckBoxListAdapter = ({ input, meta, question, isDisabled, isRequired, maxValues, ...rest }) => {
+    const shouldChange = (ev) => {
+        const question_answers = ev.target.value;
+        // if there's a max value of options checked and the value from the input is higher than the max, don't change the value
+        if (maxValues > 0 && question_answers.length > maxValues) {
+            return null
+        }
+        return input.onChange(ev)
+    }
     return (
         <CheckboxList
             {...input}
@@ -79,7 +87,7 @@ const CheckBoxListAdapter = ({ input, meta, question, isDisabled, isRequired, ..
             value={input.value}
             disabled={isDisabled}
             required={isRequired}
-            onChange={input.onChange}
+            onChange={shouldChange}
         />
     )
 }
@@ -353,6 +361,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                                    validate={getValidator(q.mandatory)}
                                    options={options}
                                    question={q}
+                                   maxValues={q.max_selected_values}
                                    isDisabled={isDisabled}
                                    isRequired={q.mandatory}
                                    component={CheckBoxListAdapter}
