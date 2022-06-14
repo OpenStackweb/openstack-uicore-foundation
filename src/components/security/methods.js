@@ -444,6 +444,10 @@ export const passwordlessStart = (params) => {
         payload["phone_number"] = encodeURIComponent(params.phone_number);
     }
 
+    if(params.hasOwnProperty('redirect_uri')){
+        payload["redirect_uri"] = encodeURIComponent(params.redirect_uri);
+    }
+
     let req = http.post(url.toString());
 
     return req.send(payload).then((res) => {
