@@ -16,7 +16,7 @@ import PropTypes from 'prop-types'
 import AsyncSelect from 'react-select/lib/Async';
 import { queryRegistrationCompanies } from '../../utils/query-actions';
 
-const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, className, summitId, onError, ...rest }) => {
+const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, className, summitId, onError, rawInput, ...rest }) => {
 
     const [theValue, setTheValue] = useState({ value: null, label: '' });
     const [freeInput, setFreeInput] = useState(false);
@@ -24,12 +24,21 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
     const [isMultiOptional, setIsMultiOptional] = useState(multi || isMulti);
     const [hasError, setHasError] = useState(error);
 
+    console.log('RegistrationCompanyInput', rawInput);
+
+    useEffect(() => {
+        console.log('raw input', rawInput)
+        if (rawInput) {
+            setFreeInput(true);
+        }
+    }, []);
+
     useEffect(() => {
         setHasError(error);
     }, [error]);
 
     useEffect(() => {
-        if (!value.id && value.name) {            
+        if (!value.id && value.name) {
             setFreeInput(true);
             setInputValue(value.name);
             setTheValue({ value: null, label: value.name })
@@ -131,9 +140,11 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                         style={{ paddingRight: 25 }}
                         {...rest}
                     />
-                    <i aria-label='Clear' style={{ position: 'absolute', top: 10, right: 25, cursor: 'pointer', opacity: '65%' }}
-                        onClick={handleInputClear} className='fa fa-close'></i>
-                    
+                    {!rawInput &&
+                        <i aria-label='Clear' style={{ position: 'absolute', top: 10, right: 25, cursor: 'pointer', opacity: '65%' }}
+                            onClick={handleInputClear} className='fa fa-close'></i>
+                    }
+
                 </>
                 :
                 <AsyncSelect
