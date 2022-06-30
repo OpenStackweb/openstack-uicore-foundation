@@ -24,10 +24,7 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
     const [isMultiOptional, setIsMultiOptional] = useState(multi || isMulti);
     const [hasError, setHasError] = useState(error);
 
-    console.log('RegistrationCompanyInput', rawInput);
-
     useEffect(() => {
-        console.log('raw input', rawInput)
         if (rawInput) {
             setFreeInput(true);
         }
