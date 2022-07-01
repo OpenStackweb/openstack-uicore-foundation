@@ -51,6 +51,7 @@ import useFitText from './components/use-fit-text';
 import AccessLevelsInput from './components/inputs/access-levels-input';
 import TicketTypesInput from './components/inputs/ticket-types-input';
 import ExtraQuestionsForm from './components/extra-questions';
+import RegistrationCompanyInput from './components/inputs/registration-company-input';
 
 let language = getCurrentUserLanguage();
 
@@ -119,4 +120,5 @@ export {
     AccessLevelsInput,
     TicketTypesInput,
     ExtraQuestionsForm,
+    RegistrationCompanyInput,
 };
