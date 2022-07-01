@@ -16,19 +16,14 @@ import PropTypes from 'prop-types'
 import AsyncSelect from 'react-select/lib/Async';
 import { queryRegistrationCompanies } from '../../utils/query-actions';
 
-const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, className, summitId, onError, rawInput, ...rest }) => {
+const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, className, summitId, onError, ...rest }) => {
 
     const [theValue, setTheValue] = useState({ value: null, label: '' });
     const [freeInput, setFreeInput] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [isMultiOptional, setIsMultiOptional] = useState(multi || isMulti);
     const [hasError, setHasError] = useState(error);
-
-    useEffect(() => {
-        if (rawInput) {
-            setFreeInput(true);
-        }
-    }, []);
+    const [noCompanies, setNoCompanies] = useState(false);
 
     useEffect(() => {
         setHasError(error);
@@ -109,6 +104,19 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
 
         const translateOptions = (options) => {
 
+            // if the summit has no companies, set the input only as text
+            if (!input) {
+                if (options.length === 0) {
+                    setNoCompanies(true);
+                    setFreeInput(true);
+                } else {
+                    // if the input is empty, set only this option as default value
+                    const defaultOption = { value: null, label: 'Other' };
+                    callback([defaultOption]);
+                }
+                return;
+            }
+
             if (options instanceof Error) {
                 onError(options);
             }
@@ -137,7 +145,7 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                         style={{ paddingRight: 25 }}
                         {...rest}
                     />
-                    {!rawInput &&
+                    {!noCompanies &&
                         <i aria-label='Clear' style={{ position: 'absolute', top: 10, right: 25, cursor: 'pointer', opacity: '65%' }}
                             onClick={handleInputClear} className='fa fa-close'></i>
                     }
@@ -149,7 +157,7 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                     value={theValue.label && theValue.value ? theValue : null}
                     placeholder='Select a company'
                     onChange={handleChange}
-                    defaultOptions={[{ value: null, label: 'Other' }]}
+                    defaultOptions={true}
                     loadOptions={getCompanies}
                     isMulti={isMultiOptional}
                     className={className}
