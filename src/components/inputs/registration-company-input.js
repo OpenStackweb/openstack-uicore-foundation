@@ -130,7 +130,11 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
             callback(newOptions);
         };
 
-        queryRegistrationCompanies(summitId, input, translateOptions);
+        const errorCallback = (error) => {
+            onError(error);
+        }
+
+        queryRegistrationCompanies(summitId, input, translateOptions, errorCallback);
     }
 
     return (

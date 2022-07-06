@@ -224,7 +224,7 @@ export const queryCompanies = _.debounce(async (input, callback) => {
         .catch(fetchErrorHandler);
 }, callDelay);
 
-export const queryRegistrationCompanies = _.debounce(async (summitId, input, callback) => {
+export const queryRegistrationCompanies = _.debounce(async (summitId, input, callback, errorCallback) => {
 
     let accessToken;
 
@@ -251,7 +251,9 @@ export const queryRegistrationCompanies = _.debounce(async (summitId, input, cal
 
             callback(options);
         })
-        .catch(fetchErrorHandler);
+        .catch(e => {
+            errorCallback(e)
+        });
 }, callDelay);
 
 
