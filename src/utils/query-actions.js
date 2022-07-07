@@ -14,10 +14,10 @@
 import {fetchErrorHandler, fetchResponseHandler, escapeFilterValue } from "./actions";
 import {getAccessToken} from '../components/security/methods';
 import {buildAPIBaseUrl} from "./methods";
-import URI from "urijs";
 import _ from 'lodash';
 export const RECEIVE_COUNTRIES  = 'RECEIVE_COUNTRIES';
 const callDelay = 500; //miliseconds
+import URI from "urijs";
 
 export const queryMembers = _.debounce(async (input, callback) => {
 
@@ -320,17 +320,28 @@ export const geoCodeLatLng = (lat, lng) => {
     });
 };
 
-export const queryTicketTypes = _.debounce((summitId, input, callback) => {
+export const queryTicketTypes = _.debounce((summitId, filters = {}, callback, version = 'v1') => {
 
     let accessToken = getAccessToken();
-    input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`name=@${input}`);
 
-    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/ticket-types?filter=${filters}&&access_token=${accessToken}`))
+    let apiUrl = URI(`/api/${version}/summits/${summitId}/ticket-types`);
+    apiUrl.addQuery('access_token', accessToken);
+    apiUrl.addQuery('order','name')
+
+    if(filters.hasOwnProperty('name')) {
+        const name = escapeFilterValue(filters.name);
+        apiUrl.addQuery('filter[]', `name@@${name}`);
+    }
+
+    if(filters.hasOwnProperty('audience')){
+        const audience = escapeFilterValue(filters.audience);
+        apiUrl.addQuery('filter[]', `audience==${audience}`);
+    }
+
+    fetch(buildAPIBaseUrl(apiUrl.toString()))
         .then(fetchResponseHandler)
         .then((json) => {
             let options = [...json.data];
-
             callback(options);
         })
         .catch(fetchErrorHandler);
