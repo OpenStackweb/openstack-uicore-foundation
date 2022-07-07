@@ -58,7 +58,7 @@ class TicketTypesInput extends React.Component {
     }
 
     getTicketTypes (input, callback) {
-        let {summitId} = this.props;
+        let { summitId, version } = this.props;
 
         if (!input) {
             return Promise.resolve({ options: [] });
@@ -69,7 +69,7 @@ class TicketTypesInput extends React.Component {
             filters['audience'] = this.props.audience;
         }
 
-        queryTicketTypes(summitId, filters , callback);
+        queryTicketTypes(summitId, filters , callback, version);
     }
 
     render() {
@@ -99,9 +99,13 @@ class TicketTypesInput extends React.Component {
     }
 }
 
+TicketTypesInput.defaultProps = {
+    version: 'v1',
+}
 
 TicketTypesInput.propTypes = {
     audience: PropTypes.string,
+    version: PropTypes.string,
 };
 
 

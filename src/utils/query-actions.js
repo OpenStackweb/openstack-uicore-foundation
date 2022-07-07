@@ -338,11 +338,11 @@ export const geoCodeLatLng = (lat, lng) => {
     });
 };
 
-export const queryTicketTypes = _.debounce((summitId, filters = {}, callback) => {
+export const queryTicketTypes = _.debounce((summitId, filters = {}, callback, version = 'v1') => {
 
     let accessToken = getAccessToken();
 
-    let apiUrl = URI(`/api/v1/summits/${summitId}/ticket-types`);
+    let apiUrl = URI(`/api/${version}/summits/${summitId}/ticket-types`);
     apiUrl.addQuery('access_token', accessToken);
     apiUrl.addQuery('order','name')
 
