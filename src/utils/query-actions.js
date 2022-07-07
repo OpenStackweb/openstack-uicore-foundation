@@ -363,13 +363,32 @@ export const geoCodeLatLng = (lat, lng) => {
     });
 };
 
-export const queryTicketTypes = _.debounce(async (summitId, input, callback) => {
+export const queryTicketTypes = _.debounce(async (summitId, filters = {}, callback, version = 'v1', onError = null) => {
 
-    const accessToken = await getAccessToken();
-    input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`name=@${input}`);
+    let accessToken;
+    try {
+        accessToken = await getAccessToken();
+    } catch (e) {
+        if(onError)
+            onError(e);
+        return;
+    }
 
-    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/ticket-types?filter=${filters}&&access_token=${accessToken}`))
+    let apiUrl = URI(`/api/${version}/summits/${summitId}/ticket-types`);
+    apiUrl.addQuery('access_token', accessToken);
+    apiUrl.addQuery('order','name')
+
+    if(filters.hasOwnProperty('name')) {
+        const name = escapeFilterValue(filters.name);
+        apiUrl.addQuery('filter[]', `name@@${name}`);
+    }
+
+    if(filters.hasOwnProperty('audience')){
+        const audience = escapeFilterValue(filters.audience);
+        apiUrl.addQuery('filter[]', `audience==${audience}`);
+    }
+
+    fetch(buildAPIBaseUrl(apiUrl.toString()))
         .then(fetchResponseHandler)
         .then((json) => {
             let options = [...json.data];
