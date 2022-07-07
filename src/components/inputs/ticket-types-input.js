@@ -13,9 +13,10 @@
 
 import React from 'react';
 import AsyncSelect from 'react-select/lib/Async';
-import {queryTicketTypes} from '../../utils/query-actions';
+import { queryTicketTypes } from '../../utils/query-actions';
+import PropTypes from 'prop-types';
 
-export default class TicketTypesInput extends React.Component {
+class TicketTypesInput extends React.Component {
 
     constructor(props) {
         super(props);
@@ -57,12 +58,18 @@ export default class TicketTypesInput extends React.Component {
     }
 
     getTicketTypes (input, callback) {
-        let {summitId} = this.props;
+        let { summitId, version } = this.props;
 
         if (!input) {
             return Promise.resolve({ options: [] });
         }
-        queryTicketTypes(summitId,input, callback);
+
+        let filters = { name : input };
+        if(this.props.hasOwnProperty('audience')){
+            filters['audience'] = this.props.audience;
+        }
+
+        queryTicketTypes(summitId, filters , callback, version);
     }
 
     render() {
@@ -92,3 +99,14 @@ export default class TicketTypesInput extends React.Component {
     }
 }
 
+TicketTypesInput.defaultProps = {
+    version: 'v1',
+}
+
+TicketTypesInput.propTypes = {
+    audience: PropTypes.string,
+    version: PropTypes.string,
+};
+
+
+export default TicketTypesInput;
