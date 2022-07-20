@@ -10,6 +10,7 @@ import SortableTableRow from './SortableTableRow';
 import T from 'i18n-react/dist/i18n-react';
 import './table-sortable.css';
 import {shallowEqual} from "../../utils/methods";
+import TableCell from "../table/TableCell";
 
 const defaults = {
     colWidth: ''
@@ -17,14 +18,22 @@ const defaults = {
 
 const createRow = (row, columns, actions) => {
 
-    var action_buttons = '';
-	var cells = columns.map((col,i) => {
-		return (
-		<SortableTableCell key={i}>
-            {row[col.columnKey]}
-		</SortableTableCell>
-		);
-	});
+    let action_buttons = '';
+
+    let cells = columns.map((col,i) => {
+        if(col.hasOwnProperty("render"))
+            return (
+                <TableCell key={'cell_'+i} title={col.hasOwnProperty("title") ? row[col.columnKey] : null}>
+                    {col.render(row, row[col.columnKey])}
+                </TableCell>
+            );
+
+        return (
+            <TableCell key={'cell_'+i} title={col.hasOwnProperty("title") ? row[col.columnKey] : null}>
+                {row[col.columnKey]}
+            </TableCell>
+        );
+    });
 
     if (actions) {
         cells.push(<SortableActionsTableCell key='actions' id={row['id']} actions={actions}/>);
