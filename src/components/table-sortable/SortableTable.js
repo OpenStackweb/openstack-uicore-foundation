@@ -9,6 +9,7 @@ import SortableActionsTableCell from './SortableActionsTableCell';
 import SortableTableRow from './SortableTableRow';
 import T from 'i18n-react/dist/i18n-react';
 import './table-sortable.css';
+import TableCell from "../table/TableCell";
 
 const defaults = {
     colWidth: ''
@@ -16,16 +17,23 @@ const defaults = {
 
 const createRow = (row, columns, actions) => {
 
-    var cells = columns.map((col, i) => {
+    let cells = columns.map((col,i) => {
+        if(col.hasOwnProperty("render"))
+            return (
+                <TableCell key={'cell_'+i} title={col.hasOwnProperty("title") ? row[col.columnKey] : null}>
+                    {col.render(row, row[col.columnKey])}
+                </TableCell>
+            );
+
         return (
-        <SortableTableCell key={i}>
-            {row[col.columnKey]}
-        </SortableTableCell>
+            <TableCell key={'cell_'+i} title={col.hasOwnProperty("title") ? row[col.columnKey] : null}>
+                {row[col.columnKey]}
+            </TableCell>
         );
     });
 
     if (actions) {
-        cells.push(<SortableActionsTableCell key='actions' id={row['id']} actions={actions} />);
+        cells.push(<SortableActionsTableCell key='actions' id={row['id']} actions={actions}/>);
     }
 
     return cells;
