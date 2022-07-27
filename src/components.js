@@ -21,6 +21,7 @@ import GroupInput from './components/inputs/group-input'
 import MemberInput from './components/inputs/member-input'
 import SummitInput from './components/inputs/summit-input'
 import SpeakerInput from './components/inputs/speaker-input'
+import SponsoredProjectInput from './components/inputs/sponsored-project-input'
 import TagInput from './components/inputs/tag-input'
 import Input from './components/inputs/text-input'
 import Panel from './components/sections/panel'
@@ -91,6 +92,7 @@ export {
     SummitInput,
     MemberInput,
     SpeakerInput,
+    SponsoredProjectInput,
     TagInput,
     TextEditor,
     TextArea,
