@@ -368,7 +368,6 @@ export const queryTicketTypes = _.debounce(async (summitId, filters = {}, callba
 
     const accessToken = await getAccessToken();
 
-
     let apiUrl = URI(`/api/${version}/summits/${summitId}/ticket-types`);
     apiUrl.addQuery('access_token', accessToken);
     apiUrl.addQuery('order','name')
@@ -392,3 +391,22 @@ export const queryTicketTypes = _.debounce(async (summitId, filters = {}, callba
         .catch(fetchErrorHandler);
 }, callDelay);
 
+
+export const querySponsoredProjects = _.debounce(async (input, callback) => {
+
+    const accessToken = await getAccessToken();
+    const apiUrl = URI(`/api/v1/sponsored-projects`);
+    apiUrl.addQuery('access_token', accessToken);
+    if(input) {
+        input = escapeFilterValue(input);
+        apiUrl.addQuery('filter[]', `name=@${input}`);
+    }
+
+    fetch(buildAPIBaseUrl(apiUrl.toString()))
+        .then(fetchResponseHandler)
+        .then((json) => {
+            let options = [...json.data];
+            callback(options);
+        })
+        .catch(fetchErrorHandler);
+}, callDelay);
