@@ -327,9 +327,14 @@ export const storeAuthInfo = (accessToken, expiresIn, refreshToken = null, idTok
 }
 
 export const getAuthInfo = () => {
-    let res = getFromLocalStorage(AUTH_INFO, false)
-    if(res === null) return null;
-    return JSON.parse(res);
+    try{
+        let res = getFromLocalStorage(AUTH_INFO, false)
+        if(!res) return null;
+        return JSON.parse(res);
+    }
+    catch (err){
+        return null;
+    }
 }
 
 export const clearAuthInfo = () => {
