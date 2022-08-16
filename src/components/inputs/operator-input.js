@@ -14,7 +14,7 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 
-const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, className, isDisabled, isClearable, options, selectStyles, ...rest }) => {
+const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, className, isDisabled, isClearable, options, selectStyles, customStyle, ...rest }) => {
 
     const [operatorValue, setOperatorValue] = useState({ value: null, label: '' });
     const [inputValue, setInputValue] = useState('');
@@ -36,7 +36,7 @@ const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, clas
     const handleOperatorChange = (eventValue) => {
         setInputValue('');
         setInputValueBetween('');
-        setOperatorValue({ value: eventValue.value, label: eventValue.label });        
+        setOperatorValue({ value: eventValue.value, label: eventValue.label });
     }
 
     const handleInputChange = (evt) => {
@@ -72,7 +72,7 @@ const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, clas
     }
 
     return (
-        <div className={className} style={defaultStyle}>
+        <div className={className} style={customStyle ? customStyle : defaultStyle}>
             <label>{label}</label>
             <Select
                 className={selectClassName}
