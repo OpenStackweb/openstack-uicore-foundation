@@ -40,23 +40,26 @@ const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, clas
     }
 
     const handleInputChange = (evt) => {
+        const onlyDigits = evt.target.value.replace(/\D/g, '');
         if (operatorValue.value === 'between') {
-            evt.target.id === 'operator-input' ? setInputValue(evt.target.value) : setInputValueBetween(evt.target.value);
+            evt.target.id === 'operator-input' ? setInputValue(onlyDigits) : setInputValueBetween(onlyDigits);
             let ev = {
                 target: {
                     id: id,
-                    value: `>=${inputValue},<=${inputValueBetween}`,
-                    type: 'operatorinput'
+                    value: [inputValue, inputValueBetween],
+                    type: 'operatorinput',
+                    operator: operatorValue.value
                 }
             };
             onChange(ev);
         } else {
-            setInputValue(evt.target.value);
+            setInputValue(onlyDigits);
             let ev = {
                 target: {
                     id: id,
-                    value: `${operatorValue.value}${evt.target.value}`,
-                    type: 'operatorinput'
+                    value: onlyDigits,
+                    type: 'operatorinput',
+                    operator: operatorValue.value
                 }
             };
             onChange(ev);
