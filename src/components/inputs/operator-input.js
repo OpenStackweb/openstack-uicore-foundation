@@ -46,7 +46,7 @@ const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, clas
             let ev = {
                 target: {
                     id: id,
-                    value: [inputValue, inputValueBetween],
+                    value: evt.target.id === 'operator-input' ? [onlyDigits, inputValueBetween] : [inputValue, onlyDigits],
                     type: 'operatorinput',
                     operator: operatorValue.value
                 }
