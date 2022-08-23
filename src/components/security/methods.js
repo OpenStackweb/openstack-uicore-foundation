@@ -33,6 +33,14 @@ import IdTokenVerifier from "idtoken-verifier";
 import {SET_LOGGED_USER} from "./actions";
 import {getRandomBytes, getSHA256} from "../../utils/crypto";
 
+import {
+    AUTH_ERROR_ACCESS_TOKEN_EXPIRED,
+    AUTH_ERROR_MISSING_AUTH_INFO,
+    AUTH_ERROR_MISSING_REFRESH_TOKEN,
+    AUTH_ERROR_LOCK_ACQUIRE_ERROR,
+    AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR, AUTH_ERROR_ID_TOKEN_INVALID, AUTH_ERROR_MISSING_OTP_PARAM,
+} from "./constants";
+
 export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null, provider = null) => {
 
     let oauth2ClientId = getOAuth2ClientId();
@@ -193,7 +201,7 @@ export const clearAccessToken = async () => {
             let authInfo =  getAuthInfo();
 
             if( !authInfo ) {
-                throw Error("Missing Auth info.");
+                throw Error(AUTH_ERROR_MISSING_AUTH_INFO);
             }
 
             let { accessToken, expiresIn, accessTokenUpdatedAt, refreshToken } = authInfo;
@@ -220,7 +228,7 @@ export const getAccessToken = async () => {
             let authInfo =  getAuthInfo();
 
             if( !authInfo ) {
-                throw Error("Missing Auth info.");
+                throw Error(AUTH_ERROR_MISSING_AUTH_INFO);
             }
 
             let { accessToken, expiresIn, accessTokenUpdatedAt, refreshToken } = authInfo;
@@ -237,7 +245,7 @@ export const getAccessToken = async () => {
                     //console.log('getAccessToken getting new access token, access token got void');
                     if (!refreshToken) {
                         clearAuthInfo();
-                        throw Error("missing Refresh Token");
+                        throw Error(AUTH_ERROR_MISSING_REFRESH_TOKEN);
                     }
                     let response = await refreshAccessToken(refreshToken);
                     let {access_token, expires_in, refresh_token} = response;
@@ -250,7 +258,7 @@ export const getAccessToken = async () => {
                     return access_token;
                 }
                 clearAuthInfo();
-                throw Error("Access Token Expired.");
+                throw Error(AUTH_ERROR_ACCESS_TOKEN_EXPIRED);
             }
             //console.log(`getAccessToken access_token ${accessToken} [CACHED]`);
             return accessToken;
@@ -259,7 +267,7 @@ export const getAccessToken = async () => {
             await lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
         }
     }
-    throw Error("Lock acquire error.");
+    throw Error(AUTH_ERROR_LOCK_ACQUIRE_ERROR);
 }
 
 export const refreshAccessToken = async (refresh_token) => {
@@ -285,12 +293,12 @@ export const refreshAccessToken = async (refresh_token) => {
             if (response.status === 400){
                 let currentLocation = getCurrentPathName();
                 setSessionClearingState(true);
-                throw Error(`${response.status} - ${response.statusText}`);
+                throw Error(`${AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR}: ${response.status} - ${response.statusText}`);
             }
             return response;
 
         }).catch(function(error) {
-            throw Error(`Request failed:  ${error.message}`);
+            throw Error(`${AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR}: ${error.message}`);
         });
 
         const json = await response.json();
@@ -472,7 +480,7 @@ export const passwordlessLogin = (params) => (dispatch) => {
     let url = URI(`${baseUrl}/oauth2/token`);
 
     if(!params.hasOwnProperty("otp")){
-        throw Error("otp param is mandatory.");
+        throw Error(AUTH_ERROR_MISSING_OTP_PARAM);
     }
 
     let payload = {
@@ -511,7 +519,7 @@ export const passwordlessLogin = (params) => (dispatch) => {
 
             if (id_token) {
                 if (!validateIdToken(id_token, baseUrl, oauth2ClientId)) {
-                    throw Error("id token is not valid.");
+                    throw Error(AUTH_ERROR_ID_TOKEN_INVALID);
                 }
             }
 

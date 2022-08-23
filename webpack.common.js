@@ -8,6 +8,7 @@ module.exports = {
         'security/actions': './src/components/security/actions.js',
         'security/methods': './src/components/security/methods.js',
         'security/reducers': './src/components/security/reducers.js',
+        'security/constants': './src/components/security/constants.js',
         'security/session-checker': './src/components/security/session-checker/op-session-checker.js',
         'security/abstract-auth-callback-route': './src/components/security/abstract-auth-callback-route.js',
         // components
