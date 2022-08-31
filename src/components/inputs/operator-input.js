@@ -17,8 +17,8 @@ import Select from 'react-select';
 const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, className, isDisabled, isClearable, options, selectStyles, customStyle, ...rest }) => {
 
     // Set intial valus from value property, if is an array operator as between, and extract the operator and digits is the value is a string
-    const [operatorValue, setOperatorValue] = useState(Array.isArray(value) ? { value: 'between', label: 'Between' } : options.find(e => e.value === value.replace(/\d/g, '')));
-    const [inputValue, setInputValue] = useState(Array.isArray(value) ? value[0] : value.replace(/\D/g, ''));
+    const [operatorValue, setOperatorValue] = useState(value ? Array.isArray(value) ? { value: 'between', label: 'Between' } : options.find(e => e.value === value.replace(/\d/g, '')) : ({ value: null, label: '' }));
+    const [inputValue, setInputValue] = useState(value ? Array.isArray(value) ? value[0] : value.replace(/\D/g, '') : '');
     const [inputValueBetween, setInputValueBetween] = useState(Array.isArray(value) ? value[1] : '');
     const [ddlStyles, setDDLStyles] = useState({
         control: (provided, state) => ({
