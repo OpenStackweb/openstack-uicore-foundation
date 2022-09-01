@@ -40,6 +40,7 @@ module.exports = {
         'components/inputs/access-levels-input': './src/components/inputs/access-levels-input.js',
         'components/inputs/checkbox-list': './src/components/inputs/checkbox-list.js',
         'components/inputs/company-input': './src/components/inputs/company-input.js',
+        'components/inputs/promocode-input': './src/components/inputs/promocode-input.js',
         'components/inputs/country-dropdown': './src/components/inputs/country-dropdown.js',
         'components/inputs/country-input': './src/components/inputs/country-input.js',
         'components/inputs/dropdown': './src/components/inputs/dropdown.js',

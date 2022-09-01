@@ -410,3 +410,19 @@ export const querySponsoredProjects = _.debounce(async (input, callback) => {
         })
         .catch(fetchErrorHandler);
 }, callDelay);
+
+
+export const queryPromocodes = _.debounce(async (summitId, input, callback) => {
+    const accessToken = await getAccessToken();
+    input = escapeFilterValue(input);
+    let filters = encodeURIComponent(`code=@${input}`);
+
+    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/promo-codes?filter=${filters}&access_token=${accessToken}`))
+        .then(fetchResponseHandler)
+        .then((json) => {
+            let options = [...json.data];
+
+            callback(options);
+        })
+        .catch(fetchErrorHandler);
+}, callDelay);
