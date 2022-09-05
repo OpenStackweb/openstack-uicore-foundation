@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 import { DndProvider } from 'react-dnd'
@@ -42,7 +42,11 @@ const createRow = (row, columns, actions) => {
 
 const SortableTable = ({ data, options, columns, dropCallback }) => {
 
-    const [rows, setRows] = useState(data)
+    const [rows, setRows] = useState(data);
+
+    useEffect(() => {
+        setRows(data);
+    }, [data])
 
     const renderRow = (row, columns, options, index) => {
         return (
@@ -95,7 +99,7 @@ const SortableTable = ({ data, options, columns, dropCallback }) => {
                             return <tr />
                         }
                         return (
-                            <DndProvider backend={HTML5Backend}>
+                            <DndProvider backend={HTML5Backend} key={i}>
                                 {renderRow(row, columns, options, i)}
                             </DndProvider>
                         );
