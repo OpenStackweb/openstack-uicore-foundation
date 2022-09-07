@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import SortableTableHeading from './SortableTableHeading';
-import SortableTableCell from './SortableTableCell';
 import SortableActionsTableCell from './SortableActionsTableCell';
 import SortableTableRow from './SortableTableRow';
 import T from 'i18n-react/dist/i18n-react';
@@ -40,7 +39,7 @@ const createRow = (row, columns, actions) => {
 };
 
 
-const SortableTable = ({ data, options, columns, dropCallback }) => {
+const SortableTable = ({ data, options, columns, dropCallback, orderField }) => {
 
     const [rows, setRows] = useState(data);
 
@@ -56,17 +55,40 @@ const SortableTable = ({ data, options, columns, dropCallback }) => {
         )
     };
 
-    const moveRow = (dragIndex, hoverIndex, id) => {
-        setRows((prevCards) => update(prevCards, {
-            $splice: [
-                [dragIndex, 1],
-                [hoverIndex, 0, prevCards[dragIndex]],
-            ],
-        }));
-    };
-    
+    const sortRows = (rows2Sort) => {
+        rows2Sort.sort(function(a, b) {
+            const x = a[orderField]; const y = b[orderField];
+            return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+        });
+        return rows2Sort;
+    }
+
+    const moveRow = useCallback(
+        (dragIndex, hoverIndex) => {
+
+            setRows((prevRows) => {
+
+                prevRows = update(prevRows, {
+                    $splice: [
+                        [dragIndex, 1],
+                        [hoverIndex, 0, prevRows[dragIndex]],
+                    ],
+                });
+
+                for(let i in prevRows) {
+                    prevRows[i][orderField] = parseInt(i) + 1;
+                }
+
+                return sortRows(prevRows)
+            });
+        },
+        [rows, setRows],
+    )
+
     const onDropItem = (id, newOrder) => {
-        dropCallback(rows, id, newOrder)
+        const sortedRows = sortRows(rows);
+        setRows(sortedRows);
+        dropCallback(sortedRows, id, newOrder)
     }
 
     let tableClass = options.hasOwnProperty('className') ? options.className : '';
@@ -120,7 +142,8 @@ SortableTable.propTypes = {
         columnKey: PropTypes.string.isRequired,
         value: PropTypes.any.isRequired
     })).isRequired,
-    dropCallback: PropTypes.func.isRequired
+    dropCallback: PropTypes.func.isRequired,
+    orderField: PropTypes.string.isRequired,
 }
 
 export default SortableTable;

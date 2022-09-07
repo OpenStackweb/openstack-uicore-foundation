@@ -64,7 +64,10 @@ const SortableTableRow = ({ text, even, id, index, moveCard, dropItem, children 
             return { id, index };
         },
         end:(_item, monitor) => {
-            return dropItem(id, index + 1)
+            const { id: droppedId, index } = _item;
+            const didDrop = monitor.didDrop()
+            if(didDrop)
+                return dropItem(droppedId, index + 1)
         },
         collect: (monitor) => ({
             isDragging: monitor.isDragging(),
