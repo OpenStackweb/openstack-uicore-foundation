@@ -20,9 +20,6 @@ const SortableTableRow = ({ text, even, id, index, moveCard, dropItem, children 
                 handlerId: monitor.getHandlerId(),
             };
         },
-        drop(_item, monitor) {
-            return dropItem(id, index + 1)
-        },
         hover(item, monitor) {
             if (!refRow.current) {
                 return;
@@ -65,6 +62,9 @@ const SortableTableRow = ({ text, even, id, index, moveCard, dropItem, children 
         type: 'row',
         item: () => {
             return { id, index };
+        },
+        end:(_item, monitor) => {
+            return dropItem(id, index + 1)
         },
         collect: (monitor) => ({
             isDragging: monitor.isDragging(),
