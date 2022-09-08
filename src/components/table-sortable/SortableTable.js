@@ -39,7 +39,7 @@ const createRow = (row, columns, actions) => {
 };
 
 
-const SortableTable = ({ data, options, columns, dropCallback, orderField }) => {
+const SortableTable = ({ data, options, columns, dropCallback, orderField, idField }) => {
 
     const [rows, setRows] = useState(data);
 
@@ -47,9 +47,13 @@ const SortableTable = ({ data, options, columns, dropCallback, orderField }) => 
         setRows(data);
     }, [data])
 
+
     const renderRow = (row, columns, options, index) => {
         return (
-            <SortableTableRow even={index % 2 === 0} key={row.id} index={index} id={row.id} moveCard={moveRow} dropItem={onDropItem}>
+            <SortableTableRow even={index % 2 === 0} key={row.id} index={index} id={row.id}
+                              moveCard={moveRow}
+                              findRow={findRow}
+                              dropItem={onDropItem}>
                 {createRow(row, columns, options.actions)}
             </SortableTableRow>
         )
@@ -62,6 +66,17 @@ const SortableTable = ({ data, options, columns, dropCallback, orderField }) => 
         });
         return rows2Sort;
     }
+
+    const findRow = useCallback(
+        (id) => {
+            const row = rows.filter((r) => r[idField] === id)[0]
+            return {
+                row,
+                index: rows.indexOf(row),
+            }
+        },
+        [rows],
+    )
 
     const moveRow = useCallback(
         (dragIndex, hoverIndex) => {
@@ -132,6 +147,10 @@ const SortableTable = ({ data, options, columns, dropCallback, orderField }) => 
     );
 };
 
+SortableTable.defaultProps = {
+    idField: 'id',
+}
+
 SortableTable.propTypes = {
     data: PropTypes.array.isRequired,
     options: PropTypes.shape({
@@ -144,6 +163,7 @@ SortableTable.propTypes = {
     })).isRequired,
     dropCallback: PropTypes.func.isRequired,
     orderField: PropTypes.string.isRequired,
+    idField: PropTypes.string,
 }
 
 export default SortableTable;

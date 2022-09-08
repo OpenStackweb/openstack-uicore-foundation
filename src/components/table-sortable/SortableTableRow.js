@@ -2,7 +2,8 @@ import React, { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import PropTypes from 'prop-types';
 
-const SortableTableRow = ({ text, even, id, index, moveCard, dropItem, children }) => {
+const SortableTableRow = ({ text, even, id, index, moveCard, dropItem, children, findRow }) => {
+    const originalIndex = findRow(id).index;
 
     const style = {
         border: '1px dashed gray',
@@ -68,6 +69,8 @@ const SortableTableRow = ({ text, even, id, index, moveCard, dropItem, children 
             const didDrop = monitor.didDrop()
             if(didDrop)
                 return dropItem(droppedId, index + 1)
+            // rollback
+            return moveCard(index, originalIndex);
         },
         collect: (monitor) => ({
             isDragging: monitor.isDragging(),
