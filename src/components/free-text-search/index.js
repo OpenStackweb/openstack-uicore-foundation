@@ -12,6 +12,8 @@
  **/
 import React from 'react';
 import T from "i18n-react/dist/i18n-react";
+import ExtraQuestionsForm from "../extra-questions";
+import PropTypes from 'prop-types';
 
 class FreeTextSearch extends React.Component {
 
@@ -27,11 +29,19 @@ class FreeTextSearch extends React.Component {
         };
     }
 
-    onSearchClick(){
+    onSearchClick(ev){
+        let { preventEvents } = this.props;
+        if(preventEvents){
+            ev.preventDefault();
+        }
         this.doFiltering(this.state.value);
     }
 
-    onClearClick(){
+    onClearClick(ev){
+        let { preventEvents } = this.props;
+        if(preventEvents){
+            ev.preventDefault();
+        }
         this.doFiltering('');
         this.setState({value: ''});
     }
@@ -81,5 +91,13 @@ class FreeTextSearch extends React.Component {
         )
     }
 }
+FreeTextSearch.defaultProps = {
+    preventEvents: false,
+}
+
+FreeTextSearch.propTypes = {
+    preventEvents: PropTypes.bool,
+};
+
 
 export default FreeTextSearch;
