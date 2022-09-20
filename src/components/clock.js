@@ -59,7 +59,7 @@ class Clock extends React.Component {
     }
 
     getServerTime = async () => {
-        let response = await fetch(`https://timeintervalsince1970.appspot.com/`)
+        let response = await fetch(`${process.env.TIMEINTERVALSINCE1970_API_URL}`)
             .catch(err => {
                 console.log(err);
                 return null;
