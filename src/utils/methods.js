@@ -252,7 +252,7 @@ export const isEmpty = (obj) => {
     return Object.keys(obj).length === 0;
 };
 
-export const getServerTime = () => {
+export const getTimeServiceUrl = () => {
     if(typeof window !== 'undefined') {
         return window.TIMEINTERVALSINCE1970_API_URL || process.env.TIMEINTERVALSINCE1970_API_URL;
     }
