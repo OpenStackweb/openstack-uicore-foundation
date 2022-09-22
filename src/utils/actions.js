@@ -38,9 +38,10 @@ export const startLoading = createAction(START_LOADING);
 export const stopLoading  = createAction(STOP_LOADING);
 
 const xhrs = {};
+const etagCache = {};
 
 const cancel = (key) => {
-    if(xhrs[key]) {
+    if(xhrs[keyf]) {
         xhrs[key].abort();
         console.log(`aborted request ${key}`);
         delete xhrs[key];
@@ -121,15 +122,20 @@ export const getRequest =(
     receiveActionCreator,
     endpoint,
     errorHandler = defaultErrorHandler,
-    requestActionPayload = {}
+    requestActionPayload = {},
+    useEtag = false
 ) => (params = {}) => (dispatch, state) => {
 
     let url = URI(endpoint);
-
-    if(!isObjectEmpty(params))
-        url = url.query(params);
-
     let key = url.toString();
+
+    if(!isObjectEmpty(params)) {
+        // remove the access token
+        const { access_token: _, ...newParams} = params;
+        // and generate new key
+        key = url.query(newParams).toString();
+        url = url.query(params);
+    }
 
     if(requestActionCreator && typeof requestActionCreator === 'function')
         dispatch(requestActionCreator(requestActionPayload));
@@ -137,12 +143,19 @@ export const getRequest =(
     cancel(key);
 
     return new Promise((resolve, reject) => {
-        let req = http.get(url.toString())
-        .timeout({
+        let req = http.get(url.toString());
+        if(useEtag && etagCache.hasOwnProperty(key)){
+            const { etag } = etagCache[key];
+            if(etag){
+                req.set('If-None-Match', etag)
+            }
+        }
+
+        req.timeout({
             response: 60000,
             deadline: 60000,
         })
-        .end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject))
+        .end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject, key, useEtag))
 
         schedule(key, req);
     });
@@ -311,16 +324,48 @@ export const defaultErrorHandler = (err, res) => (dispatch) => {
     Swal.fire(res.statusText, text, "error");
 }
 
-export const responseHandler =
-    ( dispatch, state, receiveActionCreator, errorHandler, resolve, reject ) =>
+const byLowerCase = toFind => value => toLowerCase(value) === toFind;
+const toLowerCase = value => value.toLowerCase();
+const getKeys = headers => Object.keys(headers);
+
+export const getHeaderCaseInsensitive = (headerName, headers = {}) => {
+    const key = getKeys(headers).find(byLowerCase(headerName));
+    return key ? headers[key] : undefined;
+};
+
+export const responseHandler = ( dispatch, state, receiveActionCreator, errorHandler, resolve, reject, key = null, useEtag= false ) =>
+
     (err, res) => {
+
     if (err || !res.ok) {
+        let code = err.status;
+
+        if(code === 304 && etagCache.hasOwnProperty(key) && useEtag){
+            const { body } = etagCache[key];
+
+            if(typeof receiveActionCreator === 'function') {
+                dispatch(receiveActionCreator({response: body}));
+                return resolve({response: body});
+            }
+
+            dispatch(receiveActionCreator);
+            return resolve({response: body});
+        }
         if(errorHandler) {
             errorHandler(err, res)(dispatch, state);
         }
         return reject({ err, res, dispatch, state })
     }
+
     let json = res.body;
+
+    if(useEtag) {
+        const responseETAG = getHeaderCaseInsensitive('etag', res.headers);
+        if (responseETAG) {
+            etagCache[key] = { etag: responseETAG, body: json};
+        }
+    }
+
     if(typeof receiveActionCreator === 'function') {
         dispatch(receiveActionCreator({response: json}));
         return resolve({response: json});
