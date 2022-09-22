@@ -14,7 +14,7 @@
 import React from 'react';
 import moment from "moment-timezone";
 import FragmentParser from "./fragmen-parser";
-import {getServerTime} from '../utils/methods';
+import { getTimeServiceUrl } from '../utils/methods';
 
 class Clock extends React.Component {
 
@@ -60,8 +60,8 @@ class Clock extends React.Component {
     }
 
     getServerTime = async () => {
-        const serverTimeUrl = getServerTime();
-        let response = await fetch(`${serverTimeUrl}`)
+        const timeServiceUrl = getTimeServiceUrl();
+        let response = await fetch(`${timeServiceUrl}`)
             .catch(err => {
                 console.log(err);
                 return null;
