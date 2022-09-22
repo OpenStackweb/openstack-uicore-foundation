@@ -14,6 +14,7 @@
 import React from 'react';
 import moment from "moment-timezone";
 import FragmentParser from "./fragmen-parser";
+import { getTimeServiceUrl } from '../utils/methods';
 
 class Clock extends React.Component {
 
@@ -59,7 +60,8 @@ class Clock extends React.Component {
     }
 
     getServerTime = async () => {
-        let response = await fetch(`https://timeintervalsince1970.appspot.com/`)
+        const timeServiceUrl = getTimeServiceUrl();
+        let response = await fetch(`${timeServiceUrl}`)
             .catch(err => {
                 console.log(err);
                 return null;
