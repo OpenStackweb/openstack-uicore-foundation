@@ -18,6 +18,13 @@ const createRow = (row, columns, actions) => {
 
     var action_buttons = '';
     var cells = columns.map((col,i) => {
+        if(col.hasOwnProperty("render"))
+            return (
+                <SelectableTableCell key={row['id'] + '_field' + i} name={col.columnKey} id={row.id} >
+                    {col.render(row, row[col.columnKey])}
+                </SelectableTableCell>
+            );
+
         return (
             <SelectableTableCell key={row['id'] + '_field' + i} name={col.columnKey} id={row.id}>
                 {row[col.columnKey]}
