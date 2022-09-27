@@ -35,7 +35,6 @@ const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, clas
 
 
     const handleOperatorChange = (eventValue) => {
-        setInputValue('');
         setInputValueBetween('');
         setOperatorValue({ value: eventValue.value, label: eventValue.label });
     }
