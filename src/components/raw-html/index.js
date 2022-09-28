@@ -1,7 +1,7 @@
 import React from 'react';
 
-const RawHTML = ({children, className = ""}) =>
+const RawHTML = ({children, replaceNewLine = false, className = ""}) =>
     <span className={className}
-          dangerouslySetInnerHTML={{ __html: children?.replace(/\n/g, '<br />')}} />
+          dangerouslySetInnerHTML={{ __html: replaceNewLine ? children?.replace(/\n/g, '<br />') : children}} />
 
 export default RawHTML;
