@@ -69,7 +69,6 @@ export default class TagInput extends React.Component {
     render() {
         let { className, error, allowCreate, ...rest  } = this.props;
         let has_error = (this.props.hasOwnProperty('error') && error != '');
-        l
         let orderedTags = this.state.value.sort((a, b) => (a.tag.toLowerCase() > b.tag.toLowerCase() ? 1 : (a.tag.toLowerCase() < b.tag.toLowerCase() ? -1 : 0)));
 
         const AsyncComponent = allowCreate
