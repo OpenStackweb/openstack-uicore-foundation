@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import AsyncSelect from 'react-select/lib/Async';
 import AsyncCreatableSelect from "react-select/lib/AsyncCreatable";
 import { queryTags } from '../../utils/query-actions';
@@ -96,4 +97,18 @@ export default class TagInput extends React.Component {
         );
 
     }
+}
+
+TagInput.propTypes = {
+    allowCreate: PropTypes.bool,
+    className: PropTypes.string,
+    summitId: PropTypes.number,    
+    id: PropTypes.string.isRequired,
+    value: PropTypes.array,
+    onCreate: PropTypes.func,
+    onChange: PropTypes.func.isRequired,
+};
+
+TagInput.defaultProps = {
+    allowCreate: false
 }
