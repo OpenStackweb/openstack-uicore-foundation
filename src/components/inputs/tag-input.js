@@ -12,9 +12,11 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import AsyncSelect from 'react-select/lib/Async';
-import {queryTags} from '../../utils/query-actions';
-import {shallowEqual} from "../../utils/methods";
+import AsyncCreatableSelect from "react-select/lib/AsyncCreatable";
+import { queryTags } from '../../utils/query-actions';
+import { shallowEqual } from "../../utils/methods";
 
 export default class TagInput extends React.Component {
 
@@ -22,32 +24,39 @@ export default class TagInput extends React.Component {
         super(props);
 
         this.state = {
-            value: props.value.map((t) => ({tag: t.tag}))
+            value: props.value.map((t) => ({ tag: t.tag }))
         };
 
         this.handleChange = this.handleChange.bind(this);
+        this.handleNew = this.handleNew.bind(this);
         this.getTags = this.getTags.bind(this);
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if(!shallowEqual(this.props.value, prevProps.value)) {
-            let nextValue = this.props.value.map((t) => ({tag: t.tag}));
-
-            this.setState({value: nextValue});
+        if (!shallowEqual(this.props.value, prevProps.value)) {
+            let nextValue = this.props.value.map((t) => ({ tag: t.tag }));
+            this.setState({ value: nextValue });
         }
     }
 
+    handleNew(ev) {
+        const newTag = { tag: ev }
+        this.props.onCreate(ev, this.setState({ value: [...this.state.value, newTag] }));
+    }
+
     handleChange(value) {
-        let ev = {target: {
+        let ev = {
+            target: {
                 id: this.props.id,
                 value: value,
                 type: 'taginput'
-            }};
+            }
+        };
 
         this.props.onChange(ev);
     }
 
-    getTags (input, callback) {
+    getTags(input, callback) {
         if (!input) {
             return Promise.resolve({ options: [] });
         }
@@ -58,28 +67,48 @@ export default class TagInput extends React.Component {
     }
 
     render() {
-        let {className, error, ...rest} = this.props;
-        let has_error = ( this.props.hasOwnProperty('error') && error != '' );
+        let { className, error, ...rest } = this.props;
+        let has_error = (this.props.hasOwnProperty('error') && error != '');
+        let allowCreate = this.props.hasOwnProperty('allowCreate');
 
         let orderedTags = this.state.value.sort((a, b) => (a.tag.toLowerCase() > b.tag.toLowerCase() ? 1 : (a.tag.toLowerCase() < b.tag.toLowerCase() ? -1 : 0)));
 
+        const AsyncComponent = allowCreate
+            ? AsyncCreatableSelect
+            : AsyncSelect;
+
         return (
             <div>
-                <AsyncSelect
+                <AsyncComponent
                     {...rest}
                     className={className + ' ' + (has_error ? 'error' : '')}
                     isMulti
                     value={orderedTags}
                     onChange={this.handleChange}
+                    onCreateOption={this.handleNew}
                     loadOptions={this.getTags}
-                    getOptionLabel={option => option.tag}
-                    getOptionValue={option => option.tag}
+                    getOptionLabel={option => option.__isNew__ ? option.label : option.tag}
+                    getOptionValue={option => option.__isNew__ ? option.value : option.tag}
                 />
                 {has_error &&
-                <p className="error-label">{error}</p>
+                    <p className="error-label">{error}</p>
                 }
             </div>
         );
 
     }
+}
+
+TagInput.propTypes = {
+    allowCreate: PropTypes.bool,
+    className: PropTypes.string,
+    summitId: PropTypes.number,    
+    id: PropTypes.string.isRequired,
+    value: PropTypes.array,
+    onCreate: PropTypes.func,
+    onChange: PropTypes.func.isRequired,
+};
+
+TagInput.defaultProps = {
+    allowCreate: false
 }
