@@ -40,11 +40,10 @@ export const stopLoading  = createAction(STOP_LOADING);
 const xhrs = {};
 const etagCache = {};
 
-const cancel = (key, dispatch) => {
+const cancel = (key) => {
     if(xhrs[key]) {
         xhrs[key].abort();
         console.log(`aborted request ${key}`);
-        dispatch(stopLoading());
         delete xhrs[key];
     }
 }
@@ -141,7 +140,7 @@ export const getRequest =(
     if(requestActionCreator && typeof requestActionCreator === 'function')
         dispatch(requestActionCreator(requestActionPayload));
 
-    cancel(key, dispatch);
+    cancel(key);
 
     return new Promise((resolve, reject) => {
         let req = http.get(url.toString());
