@@ -36,7 +36,16 @@ const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, clas
 
     const handleOperatorChange = (eventValue) => {
         setInputValueBetween('');
-        setOperatorValue({ value: eventValue.value, label: eventValue.label });
+        setOperatorValue({ value: eventValue.value, label: eventValue.label });        
+        let ev = {
+            target: {
+                id: id,
+                value: eventValue.value === 'between' ? [inputValue, inputValueBetween] : inputValue,
+                type: 'operatorinput',
+                operator: eventValue.value
+            }
+        };
+        onChange(ev);
     }
 
     const handleInputChange = (evt) => {
