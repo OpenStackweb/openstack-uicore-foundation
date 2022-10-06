@@ -27,7 +27,7 @@ export default class UploadInputV2 extends React.Component {
         let has_error = ( this.props.hasOwnProperty('error') && error !== '' );
         const allowedExt = mediaType && mediaType.type ? mediaType.type.allowed_extensions.map((ext) => `.${ext.toLowerCase()}`).join(",") : '';
         const maxSize = mediaType ? mediaType.max_size / 1024 : 100;
-        const canUpload = value.length < maxFiles;
+        const canUpload = !maxFiles || value.length < maxFiles;
 
         const djsConfigSet = {
             paramName: "file", // The name that will be used to transfer the file,
