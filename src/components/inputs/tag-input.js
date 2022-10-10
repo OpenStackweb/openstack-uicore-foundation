@@ -24,7 +24,7 @@ export default class TagInput extends React.Component {
         super(props);
 
         this.state = {
-            value: props.value.map((t) => ({ tag: t.tag }))
+            tagValue: props.value.map((t) => ({ tag: t.tag, id: t.id }))
         };
 
         this.handleChange = this.handleChange.bind(this);
@@ -34,14 +34,14 @@ export default class TagInput extends React.Component {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (!shallowEqual(this.props.value, prevProps.value)) {
-            let nextValue = this.props.value.map((t) => ({ tag: t.tag }));
-            this.setState({ value: nextValue });
+            let nextValue = this.props.value.map((t) => ({ tag: t.tag, id: t.id }));
+            this.setState({ tagValue: nextValue });
         }
     }
 
     handleNew(ev) {
         const newTag = { tag: ev }
-        this.props.onCreate(ev, this.setState({ value: [...this.state.value, newTag] }));
+        this.props.onCreate(ev, this.setState({ value: [...this.state.tagValue, newTag] }));
     }
 
     handleChange(value) {
@@ -68,8 +68,9 @@ export default class TagInput extends React.Component {
 
     render() {
         let { className, error, allowCreate, ...rest  } = this.props;
+        let { tagValue } = this.state;
         let has_error = (this.props.hasOwnProperty('error') && error != '');
-        let orderedTags = this.state.value.sort((a, b) => (a.tag.toLowerCase() > b.tag.toLowerCase() ? 1 : (a.tag.toLowerCase() < b.tag.toLowerCase() ? -1 : 0)));
+        let orderedTags = tagValue.sort((a, b) => (a.tag.toLowerCase() > b.tag.toLowerCase() ? 1 : (a.tag.toLowerCase() < b.tag.toLowerCase() ? -1 : 0)));
 
         const AsyncComponent = allowCreate
             ? AsyncCreatableSelect
