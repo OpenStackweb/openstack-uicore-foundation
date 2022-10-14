@@ -188,7 +188,7 @@ const ExtraQuestionsForm = React.forwardRef(({
     };
 
     const getLabel = (q) => {
-        return q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label;
+        return q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, "<b>*</b></p>") : `${q.label}<b>*</b>` : q.label;
     }
 
     const isAnswered = (q, answers) => {
