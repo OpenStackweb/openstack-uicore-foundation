@@ -135,6 +135,7 @@ class SimpleLinkList extends React.Component {
                 <AsyncCreatableSelect
                     className="link-select btn-group text-left"
                     value={this.state.value}
+                    key={JSON.stringify(values)}
                     getOptionValue={option => option[valueKey]}
                     getOptionLabel={option => option[labelKey]}
                     onChange={this.handleChange}
@@ -149,6 +150,7 @@ class SimpleLinkList extends React.Component {
                 <AsyncSelect
                     className="link-select btn-group text-left"
                     value={this.state.value}
+                    key={JSON.stringify(values)}
                     getOptionValue={option => option[valueKey]}
                     getOptionLabel={option => option[labelKey]}
                     onChange={this.handleChange}
