@@ -542,3 +542,28 @@ export const passwordlessLogin = (params) => (dispatch) => {
         return Promise.reject(err);
     });
 }
+
+export const isIdTokenAlive = (nowEpoch = null) => () => {
+
+    if(!nowEpoch){
+        nowEpoch = Math.floor(Date.now() / 1000);
+    }
+
+    const idToken = getIdToken();
+    if (!idToken)
+        throw Error('Id Token not set.');
+
+    const issuer = getOAuth2IDPBaseUrl();
+    const audience = getOAuth2ClientId();
+
+    let verifier = new IdTokenVerifier({
+        issuer: issuer,
+        audience: audience
+    });
+
+    const jwt = verifier.decode(idToken);
+    const exp = jwt.payload.exp;
+
+    // check life time
+    return exp - (nowEpoch + ACCESS_TOKEN_SKEW_TIME) > 0;
+}
