@@ -48,6 +48,7 @@ export {default as AttendanceTracker} from "./attendance-tracker";
 export {default as AccessLevelsInput} from './inputs/access-levels-input';
 export {default as RegistrationCompanyInput} from './inputs/registration-company-input';
 export {default as TicketTypesInput} from './inputs/ticket-types-input.js'
+export {default as SponsoredProjectInput} from './inputs/sponsored-project-input.js'
 // this 2 includes 3rd party deps
 // export {default as ExtraQuestionsForm } from './extra-questions/index.js';
 // export {default as GMap} from './google-map';
