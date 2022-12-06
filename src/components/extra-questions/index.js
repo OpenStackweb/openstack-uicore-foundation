@@ -109,6 +109,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                                                  RequiredErrorMessage = 'Required',
                                                  ValidationErrorClassName = 'extra-question-error',
                                                  allowExtraQuestionsEdit = true,
+                                                 whiteSpaceBeforeAsterisk = false,
                                                  onError = (e) => console.log('form errors: ', e)
                                              }, ref) => {
 
@@ -188,7 +189,8 @@ const ExtraQuestionsForm = React.forwardRef(({
     };
 
     const getLabel = (q) => {
-        return q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, " <b>*</b></p>") : `${q.label} <b>*</b>` : q.label;
+        const whiteSpace = whiteSpaceBeforeAsterisk ? ' ' : '';
+        return q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, `${whiteSpace}<b>*</b></p>`) : `${q.label}${whiteSpace}<b>*</b>` : q.label;
     }
 
     const isAnswered = (q, answers) => {
@@ -505,6 +507,7 @@ ExtraQuestionsForm.propTypes = {
     RequiredErrorMessage: PropTypes.string,
     ValidationErrorClassName: PropTypes.string,
     allowExtraQuestionsEdit: PropTypes.bool,
+    whiteSpaceBeforeAsterisk: PropTypes.bool,
 };
 
 export default ExtraQuestionsForm;
