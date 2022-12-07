@@ -159,13 +159,8 @@ module.exports = {
                 use: "file-loader?name=fonts/[name].[ext]"
             },
             {
-                test: /\.jpg|\.png|\.gif$/,
-                use: {
-                    loader: "url-loader",
-                    options: {
-                        limit: 25000,
-                    },
-                },
+                test: /\.(gif|png|jpg)$/i,
+                use: "url-loader"
             },
             {
                 test: /\.svg/,

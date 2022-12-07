@@ -21,6 +21,7 @@ import pdf_icon from './pdf.png';
 import mov_icon from './mov.png';
 import mp4_icon from './mp4.png';
 import jpg_icon from './jpg.png';
+import csv_icon from './csv.png';
 
 export default class UploadInput extends React.Component {
 
@@ -88,10 +89,12 @@ export default class UploadInput extends React.Component {
         if (file && file.hasOwnProperty("name") && file.name) {
             fileName = file.name;
         }
+
          // files without preview
         icon =  (fileName && fileName.endsWith('pdf') ? pdf_icon: icon);
         icon =  (fileName && fileName.endsWith('mov') ? mov_icon: icon);
         icon =  (fileName && fileName.endsWith('mp4') ? mp4_icon: icon);
+        icon =  (fileName && fileName.endsWith('csv') ? csv_icon: icon);
 
         // if file has preview ( already on data model)
         if(this.fileHasPreview(fileName) && value){
