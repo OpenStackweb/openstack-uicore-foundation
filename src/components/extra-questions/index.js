@@ -24,13 +24,20 @@ import {Field, Form} from "react-final-form";
 import './index.scss';
 
 const InputAdapter = ({ input, meta, question, className, isDisabled, isRequired, ...rest }) => {
+
+    // Using browser parser isntead of regex to avoid possible issues
+    const div = document.createElement("div");
+    div.innerHTML = question.label;
+    const label = div.textContent || div.innerText || "";
+
     return (
         <Input
             {...input}
             {...rest}
             containerClassName={className}
-            name={question.name}
-            id={question.name}
+            name={label}
+            aria-labelledby={`${label} label`}
+            id={question.id}
             value={input.value}
             disabled={isDisabled}
             required={isRequired}
@@ -41,12 +48,19 @@ const InputAdapter = ({ input, meta, question, className, isDisabled, isRequired
 }
 
 const RadioButtonListAdapter = ({ input, meta, question, isDisabled, isRequired, ...rest }) => {
+
+    // Using browser parser isntead of regex to avoid possible issues
+    const div = document.createElement("div");
+    div.innerHTML = question.label;
+    const label = div.textContent || div.innerText || "";
+
     return (
         <RadioList
             {...input}
             {...rest}
-            name={question.name}
-            id={question.name}
+            name={label}
+            aria-labelledby={`${label} label`}
+            id={question.id}
             overrideCSS={true}
             value={input.value}
             disabled={isDisabled}
@@ -56,11 +70,18 @@ const RadioButtonListAdapter = ({ input, meta, question, isDisabled, isRequired,
     )};
 
 const DropdownAdapter = ({ input, meta, question, isDisabled, isRequired, ...rest }) => {
+
+    // Using browser parser isntead of regex to avoid possible issues
+    const div = document.createElement("div");
+    div.innerHTML = question.label;
+    const label = div.textContent || div.innerText || "";
+
     return (<Dropdown
         {...input}
         {...rest}
-        name={question.name}
-        id={question.name}
+        name={label}
+        aria-labelledby={`${label} label`}
+        id={question.id}
         overrideCSS={true}
         value={input.value}
         disabled={isDisabled}
@@ -70,6 +91,12 @@ const DropdownAdapter = ({ input, meta, question, isDisabled, isRequired, ...res
 }
 
 const CheckBoxListAdapter = ({ input, meta, question, isDisabled, isRequired, maxValues, ...rest }) => {
+
+    // Using browser parser isntead of regex to avoid possible issues
+    const div = document.createElement("div");
+    div.innerHTML = question.label;
+    const label = div.textContent || div.innerText || "";
+
     const shouldChange = (ev) => {
         const question_answers = ev.target.value;
         // if there's a max value of options checked and the value from the input is higher than the max, don't change the value
@@ -82,8 +109,9 @@ const CheckBoxListAdapter = ({ input, meta, question, isDisabled, isRequired, ma
         <CheckboxList
             {...input}
             {...rest}
-            id={question.name}
-            name={question.name}
+            id={question.id}
+            name={label}
+            aria-labelledby={`${label} label`}
             value={input.value}
             disabled={isDisabled}
             required={isRequired}
@@ -190,7 +218,18 @@ const ExtraQuestionsForm = React.forwardRef(({
     const getLabel = (q) => {
         // Keep the last word and the required asterisk on the same line
         const nonBreakingSpace = String.fromCharCode(160); // equals to &nbsp;
-        return q.mandatory ? q.label?.endsWith('</p>') ? q.label.replace(/<\/p>$/g, `${nonBreakingSpace}<b>*</b></p>`) : `${q.label}${nonBreakingSpace}<b>*</b>` : q.label;
+        
+        // Using browser parser isntead of regex to avoid possible issues
+        const div = document.createElement("div");
+        div.innerHTML = q.label;
+        const label = div.textContent || div.innerText || "";
+
+        const labelText = q.mandatory ? `${label}${nonBreakingSpace}<b>*</b>` : label
+        const labelHTML = `<label id="${label} label" htmlFor="${q.id}">
+                                ${labelText}
+                           </label>`
+
+        return labelHTML;
     }
 
     const isAnswered = (q, answers) => {
