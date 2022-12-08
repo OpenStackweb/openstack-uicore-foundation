@@ -159,12 +159,8 @@ module.exports = {
                 use: "file-loader?name=fonts/[name].[ext]"
             },
             {
-                test: /\.(gif|png|jpg)$/i,
-                use: "url-loader"
-            },
-            {
-                test: /\.svg/,
-                use: "file-loader?name=svg/[name].[ext]!svgo-loader"
+                test: /\.(jpg|png|svg)$/,
+                type: 'asset/inline'
             },
             {
                 test: /\.yaml$/,

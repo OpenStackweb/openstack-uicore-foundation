@@ -20,7 +20,6 @@ import file_icon from './file.png';
 import pdf_icon from './pdf.png';
 import mov_icon from './mov.png';
 import mp4_icon from './mp4.png';
-import jpg_icon from './jpg.png';
 import csv_icon from './csv.png';
 
 export default class UploadInput extends React.Component {
@@ -47,7 +46,7 @@ export default class UploadInput extends React.Component {
                     ...this.state,
                     logo_preview:
                     {
-                        preview: file.preview,
+                        preview: this.fileHasPreview(file.name) ? file.preview: null,
                         name: file.name
                     }
                 })
@@ -73,7 +72,6 @@ export default class UploadInput extends React.Component {
         let pattern = /(.*)\.(gif|bmp|svg|jpe?g|png)/g
         return pattern.test(fileName);
     }
-
 
     render() {
         let {value, file, handleRemove, handleUpload, handleError, fileName, error, ...rest} = this.props;
