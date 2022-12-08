@@ -35,9 +35,9 @@ const InputAdapter = ({ input, meta, question, className, isDisabled, isRequired
             {...input}
             {...rest}
             containerClassName={className}
-            name={label}
-            aria-labelledby={`${label} label`}
-            id={question.id}
+            name={question.name}
+            ariaLabelledBy={`${question.name} label`}
+            id={question.name}
             value={input.value}
             disabled={isDisabled}
             required={isRequired}
@@ -58,9 +58,9 @@ const RadioButtonListAdapter = ({ input, meta, question, isDisabled, isRequired,
         <RadioList
             {...input}
             {...rest}
-            name={label}
-            aria-labelledby={`${label} label`}
-            id={question.id}
+            name={question.name}
+            ariaLabelledBy={`${question.name} label`}
+            id={question.name}
             overrideCSS={true}
             value={input.value}
             disabled={isDisabled}
@@ -79,9 +79,9 @@ const DropdownAdapter = ({ input, meta, question, isDisabled, isRequired, ...res
     return (<Dropdown
         {...input}
         {...rest}
-        name={label}
-        aria-labelledby={`${label} label`}
-        id={question.id}
+        name={question.name}
+        ariaLabelledBy={`${question.name} label`}
+        id={question.name}
         overrideCSS={true}
         value={input.value}
         disabled={isDisabled}
@@ -109,9 +109,9 @@ const CheckBoxListAdapter = ({ input, meta, question, isDisabled, isRequired, ma
         <CheckboxList
             {...input}
             {...rest}
-            id={question.id}
-            name={label}
-            aria-labelledby={`${label} label`}
+            id={question.name}
+            name={question.name}
+            ariaLabelledBy={`${question.name} label`}
             value={input.value}
             disabled={isDisabled}
             required={isRequired}
@@ -225,7 +225,7 @@ const ExtraQuestionsForm = React.forwardRef(({
         const label = div.textContent || div.innerText || "";
 
         const labelText = q.mandatory ? `${label}${nonBreakingSpace}<b>*</b>` : label
-        const labelHTML = `<label id="${label} label" htmlFor="${q.id}">
+        const labelHTML = `<label id="${q.name} label" htmlFor="${q.name}">
                                 ${labelText}
                            </label>`
 
