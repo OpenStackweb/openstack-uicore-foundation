@@ -25,11 +25,6 @@ import './index.scss';
 
 const InputAdapter = ({ input, meta, question, className, isDisabled, isRequired, ...rest }) => {
 
-    // Using browser parser isntead of regex to avoid possible issues
-    const div = document.createElement("div");
-    div.innerHTML = question.label;
-    const label = div.textContent || div.innerText || "";
-
     return (
         <Input
             {...input}
@@ -49,11 +44,6 @@ const InputAdapter = ({ input, meta, question, className, isDisabled, isRequired
 
 const RadioButtonListAdapter = ({ input, meta, question, isDisabled, isRequired, ...rest }) => {
 
-    // Using browser parser isntead of regex to avoid possible issues
-    const div = document.createElement("div");
-    div.innerHTML = question.label;
-    const label = div.textContent || div.innerText || "";
-
     return (
         <RadioList
             {...input}
@@ -71,11 +61,6 @@ const RadioButtonListAdapter = ({ input, meta, question, isDisabled, isRequired,
 
 const DropdownAdapter = ({ input, meta, question, isDisabled, isRequired, ...rest }) => {
 
-    // Using browser parser isntead of regex to avoid possible issues
-    const div = document.createElement("div");
-    div.innerHTML = question.label;
-    const label = div.textContent || div.innerText || "";
-
     return (<Dropdown
         {...input}
         {...rest}
@@ -91,11 +76,6 @@ const DropdownAdapter = ({ input, meta, question, isDisabled, isRequired, ...res
 }
 
 const CheckBoxListAdapter = ({ input, meta, question, isDisabled, isRequired, maxValues, ...rest }) => {
-
-    // Using browser parser isntead of regex to avoid possible issues
-    const div = document.createElement("div");
-    div.innerHTML = question.label;
-    const label = div.textContent || div.innerText || "";
 
     const shouldChange = (ev) => {
         const question_answers = ev.target.value;
