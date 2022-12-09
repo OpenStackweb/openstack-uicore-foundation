@@ -33,7 +33,7 @@ export default class Input extends React.Component {
 
     render() {
 
-        let {onChange, value, className, error, containerClassName,...rest} = this.props;
+        let {onChange, value, className, error, ariaLabelledBy, containerClassName,...rest} = this.props;
         let has_error = ( this.props.hasOwnProperty('error') && error !== '' );
         let class_name = this.props.hasOwnProperty('className') ? className : 'form-control';
         let container_class_name = this.props.hasOwnProperty('containerClassName') ? containerClassName : 'container-form-control';
@@ -43,6 +43,7 @@ export default class Input extends React.Component {
                     className={`${class_name} ${has_error ? 'error' : ''}`}
                     ref={node => {this.input = node}}
                     defaultValue={value}
+                    aria-labelledby={ariaLabelledBy}
                     onChange={this.handleChange}
                     {...rest}
                 />
@@ -53,4 +54,8 @@ export default class Input extends React.Component {
         );
 
     }
+}
+
+Input.defaultProps = {
+    ariaLabelledBy : null,
 }

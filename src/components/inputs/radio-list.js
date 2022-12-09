@@ -70,7 +70,7 @@ export default class RadioList extends React.Component {
 
     render() {
 
-        let {onChange, value, className, error, disabled, options,id, name,...rest} = this.props;
+        let {onChange, value, className, error, ariaLabelledBy, disabled, options,id, name,...rest} = this.props;
         let has_error = ( this.props.hasOwnProperty('error') && error != '' );
         let inline = ( this.props.hasOwnProperty('inline') );
         let simple = ( this.props.hasOwnProperty('simple') );
@@ -94,7 +94,7 @@ export default class RadioList extends React.Component {
         }
 
         return (
-            <div id={`rl_wrapper_${id}`}>
+            <div id={`rl_wrapper_${id}`} aria-labelledby={ariaLabelledBy}>
                 { options.map(op => {
                     let checked = (op.value == value);
                     return (
@@ -121,6 +121,10 @@ export default class RadioList extends React.Component {
         );
 
     }
+}
+
+RadioList.defaultProps = {
+    ariaLabelledBy : null,
 }
 
 RadioList.propTypes = {

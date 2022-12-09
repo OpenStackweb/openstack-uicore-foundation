@@ -42,7 +42,7 @@ export default class Dropdown extends React.Component {
 
     render() {
 
-        let {onChange, value, className, error, clearable, disabled, overrideCSS, ...rest} = this.props;
+        let {onChange, value, className, error, clearable, disabled, overrideCSS, ariaLabelledBy, ...rest} = this.props;
         let has_error = ( this.props.hasOwnProperty('error') && error != '' );
         let isClearable = (this.props.hasOwnProperty('clearable'));
         let isDisabled = (this.props.hasOwnProperty('disabled') && disabled == true);
@@ -71,6 +71,7 @@ export default class Dropdown extends React.Component {
                     isClearable={isClearable}
                     isDisabled={isDisabled}
                     styles={selectStyles}
+                    aria-labelledby={ariaLabelledBy}
                     {...rest}
                 />
                 {has_error &&
@@ -80,4 +81,8 @@ export default class Dropdown extends React.Component {
         );
 
     }
+}
+
+Dropdown.defaultProps = {
+    ariaLabelledBy : null,
 }

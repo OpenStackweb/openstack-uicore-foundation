@@ -61,7 +61,7 @@ export default class CheckboxList extends React.Component {
 
     render() {
 
-        let {onChange, value, className, options, id, children, error, disabled,name, ...rest} = this.props;
+        let {onChange, value, className, options, id, children, error, disabled,name, ariaLabelledBy, ...rest} = this.props;
         let { otherChecked } = this.state;
 
         let inline = ( this.props.hasOwnProperty('inline') );
@@ -88,7 +88,7 @@ export default class CheckboxList extends React.Component {
         }
 
         return (
-            <div id={`chl_wrapper_${id}`}>
+            <div id={`chl_wrapper_${id}`} aria-labelledby={ariaLabelledBy}>
                 <div className={"checkboxes-div" + (has_error ? ' error' : '') }>
                     { options.map(op => {
                         let checked = value ? value.includes(op.value) : false;
@@ -136,6 +136,10 @@ export default class CheckboxList extends React.Component {
         );
 
     }
+}
+
+CheckboxList.defaultProps = {
+    ariaLabelledBy : null,
 }
 
 
