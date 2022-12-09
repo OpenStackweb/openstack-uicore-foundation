@@ -1,6 +1,6 @@
 {
   "name": "openstack-uicore-foundation",
-  "version": "4.0.77",
+  "version": "4.0.78",
   "description": "ui reactjs components for openstack marketing site",
   "main": "lib/openstack-uicore-foundation.js",
   "scripts": {
@@ -40,6 +40,7 @@
     "immutability-helper": "^2.7.1",
     "jest": "^28.1.0",
     "jest-environment-jsdom": "^28.1.0",
+    "jest-transform-stub": "^2.0.0",
     "js-yaml": "^4.1.0",
     "js-yaml-loader": "^1.2.2",
     "jsdom": "^19.0.0",
@@ -83,8 +84,7 @@
     "webpack-cli": "^4.9.2",
     "webpack-dev-server": "^4.7.4",
     "webpack-merge": "^5.8.0",
-    "webpack-node-externals": "^3.0.0",
-    "jest-transform-stub": "^2.0.0"
+    "webpack-node-externals": "^3.0.0"
   },
   "resolutions": {
     "cheerio": "1.0.0-rc.10"
