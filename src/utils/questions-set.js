@@ -9,6 +9,7 @@ export const VisibilityCondition_Equal = 'Equal';
 export const VisibilityCondition_NotEqual = 'NotEqual';
 export const Visibility_Visible = 'Visible';
 export const MainQuestionClassType = 'MainQuestion';
+import {toSlug} from "./methods";
 
 export default class QuestionsSet {
 
@@ -27,7 +28,7 @@ export default class QuestionsSet {
     }
 
     _parseQuestion = (q) => {
-        this.questionByName[q.name] = q;
+        this.questionByName[toSlug(q.name)] = q;
         this.questionById[parseInt(q.id)] = q;
         if(q.hasOwnProperty('sub_question_rules'))
             for (let r of q.sub_question_rules) {
@@ -143,6 +144,7 @@ export default class QuestionsSet {
 
     _formatQuestionAnswer = (question) => {
         let res = {};
+        const slug = toSlug(question.name);
         let userAnswer = this.originalAnswers.find(a => a.question_id === question.id)?.value;
 
         if(userAnswer) {
@@ -151,8 +153,8 @@ export default class QuestionsSet {
             if (question.type === CheckBoxListQuestionType) userAnswer = userAnswer.split(',').map(ansVal => parseInt(ansVal)) || [];
         }
 
-        res[question.name] =  userAnswer || '';
-        if(question.type === CheckBoxListQuestionType && res[question.name] === '') res[question.name] = []
+        res[slug] =  userAnswer || '';
+        if(question.type === CheckBoxListQuestionType && res[slug] === '') res[slug] = []
         if(question.hasOwnProperty('sub_question_rules'))
             for (let rule of question.sub_question_rules) {
                 // check recursive all the tree till leaves ...
@@ -180,7 +182,8 @@ export default class QuestionsSet {
     }
 
     getQuestionByName = (name) => {
-        return this.questionByName[name] || null;
+        const slug = toSlug(name)
+        return this.questionByName[name] || this.questionByName[slug]  || null;
     }
 
     getQuestionById = (id) => {

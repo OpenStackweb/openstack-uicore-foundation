@@ -22,6 +22,7 @@ import CheckboxList from '../inputs/checkbox-list'
 import QuestionsSet from '../../utils/questions-set';
 import {Field, Form} from "react-final-form";
 import './index.scss';
+import {toSlug} from "../../utils/methods";
 
 const InputAdapter = ({ input, meta, question, className, isDisabled, isRequired, ...rest }) => {
 
@@ -30,9 +31,9 @@ const InputAdapter = ({ input, meta, question, className, isDisabled, isRequired
             {...input}
             {...rest}
             containerClassName={className}
-            name={question.name}
-            ariaLabelledBy={`${question.name} label`}
-            id={question.name}
+            name={toSlug(question.name)}
+            ariaLabelledBy={`${toSlug(question.name)} label`}
+            id={toSlug(question.name)}
             value={input.value}
             disabled={isDisabled}
             required={isRequired}
@@ -48,9 +49,9 @@ const RadioButtonListAdapter = ({ input, meta, question, isDisabled, isRequired,
         <RadioList
             {...input}
             {...rest}
-            name={question.name}
-            ariaLabelledBy={`${question.name} label`}
-            id={question.name}
+            name={toSlug(question.name)}
+            ariaLabelledBy={`${toSlug(question.name)} label`}
+            id={toSlug(question.name)}
             overrideCSS={true}
             value={input.value}
             disabled={isDisabled}
@@ -64,9 +65,9 @@ const DropdownAdapter = ({ input, meta, question, isDisabled, isRequired, ...res
     return (<Dropdown
         {...input}
         {...rest}
-        name={question.name}
-        ariaLabelledBy={`${question.name} label`}
-        id={question.name}
+        name={toSlug(question.name)}
+        ariaLabelledBy={`${toSlug(question.name)} label`}
+        id={toSlug(question.name)}
         overrideCSS={true}
         value={input.value}
         disabled={isDisabled}
@@ -89,9 +90,9 @@ const CheckBoxListAdapter = ({ input, meta, question, isDisabled, isRequired, ma
         <CheckboxList
             {...input}
             {...rest}
-            id={question.name}
-            name={question.name}
-            ariaLabelledBy={`${question.name} label`}
+            id={toSlug(question.name)}
+            name={toSlug(question.name)}
+            ariaLabelledBy={`${toSlug(question.name)} label`}
             value={input.value}
             disabled={isDisabled}
             required={isRequired}
@@ -205,7 +206,7 @@ const ExtraQuestionsForm = React.forwardRef(({
         const label = div.textContent || div.innerText || "";
 
         const labelText = q.mandatory ? `${label}${nonBreakingSpace}<b>*</b>` : label
-        const labelHTML = `<label id="${q.name} label" htmlFor="${q.name}">
+        const labelHTML = `<label id="${toSlug(q.name)} label" htmlFor="${toSlug(q.name)}">
                                 ${labelText}
                            </label>`
 
@@ -213,8 +214,9 @@ const ExtraQuestionsForm = React.forwardRef(({
     }
 
     const isAnswered = (q, answers) => {
-        if(!answers.hasOwnProperty(q.name)) return false;
-        const answer = answers[q.name];
+        const slug = toSlug(q.name);
+        if(!answers.hasOwnProperty(slug)) return false;
+        const answer = answers[slug];
         // check type
         if(Array.isArray(answer)) return answer.length > 0;
         if (typeof answer === 'string') return answer.length > 0;
@@ -230,24 +232,24 @@ const ExtraQuestionsForm = React.forwardRef(({
         // @see https://codesandbox.io/s/vg05y?file=/index.js
         if (q.type === "Text") {
             return (
-                <Fragment key={q.name}>
+                <Fragment key={toSlug(q.name)}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>{getLabel(q)}</RawHTML>
                         <div className={questionControlContainerClassName}>
-                            <Field name={q.name}
+                            <Field name={toSlug(q.name)}
                                    question={q}
                                    isDisabled={isDisabled}
                                    isRequired={q.mandatory}
                                    validate={getValidator(q.mandatory)}
                                    component={InputAdapter}
                             />
-                            <Error name={q.name}/>
+                            <Error name={toSlug(q.name)}/>
                         </div>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
                     q.sub_question_rules.map((r) =>
                         (
-                            <Condition key={r.id} when={q.name} rule={r}>
+                            <Condition key={r.id} when={toSlug(q.name)} rule={r}>
                                 {renderQuestion(r.sub_question)}
                             </Condition>
                         )
@@ -257,24 +259,24 @@ const ExtraQuestionsForm = React.forwardRef(({
         }
         if (q.type === "TextArea") {
             return (
-                <Fragment key={q.name}>
+                <Fragment key={toSlug(q.name)}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>{getLabel(q)}</RawHTML>
                         <div className={questionControlContainerClassName}>
                             <Field
                                    validate={getValidator(q.mandatory)}
-                                   name={q.name}
-                                   id={q.name}
+                                   name={toSlug(q.name)}
+                                   id={toSlug(q.name)}
                                    disabled={isDisabled}
                                    required={q.mandatory}
                                    component="textarea"/>
-                            <Error name={q.name}/>
+                            <Error name={toSlug(q.name)}/>
                         </div>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
                     q.sub_question_rules.map((r) =>
                         (
-                            <Condition key={r.id} when={q.name} rule={r}>
+                            <Condition key={r.id} when={toSlug(q.name)} rule={r}>
                                 {renderQuestion(r.sub_question)}
                             </Condition>
                         )
@@ -284,7 +286,7 @@ const ExtraQuestionsForm = React.forwardRef(({
         }
         if (q.type === "CheckBox") {
             return (
-                <Fragment key={q.name}>
+                <Fragment key={toSlug(q.name)}>
                     <div ref={el => questionRef.current[q.id] = el} style={{display: 'flex'}}
                          className={questionContainerClassName}>
                         <RawHTML className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
@@ -293,23 +295,23 @@ const ExtraQuestionsForm = React.forwardRef(({
                         <div className={questionControlContainerClassName}>
                             <div className="form-check abc-checkbox">
                                 <Field
-                                       name={q.name}
-                                       id={q.name}
+                                       name={toSlug(q.name)}
+                                       id={toSlug(q.name)}
                                        validate={getValidator(q.mandatory)}
                                        disabled={isDisabled}
                                        required={q.mandatory}
                                        type="checkbox"
                                        className="form-check-input"
                                        component="input" />
-                                <label className="form-check-label" htmlFor={q.name}/>
-                                <Error name={q.name}/>
+                                <label className="form-check-label" htmlFor={toSlug(q.name)}/>
+                                <Error name={toSlug(q.name)}/>
                             </div>
                         </div>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
                     q.sub_question_rules.map((r) =>
                         (
-                            <Condition key={r.id} when={q.name} rule={r}>
+                            <Condition key={r.id} when={toSlug(q.name)} rule={r}>
                                 {renderQuestion(r.sub_question)}
                             </Condition>
                         )
@@ -320,26 +322,26 @@ const ExtraQuestionsForm = React.forwardRef(({
         if (q.type === "RadioButtonList") {
             const options = questionValues.map(val => ({label : val.label, value : val.id}));
             return (
-                <Fragment key={q.name}>
-                    <div key={q.name} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+                <Fragment key={toSlug(q.name)}>
+                    <div key={toSlug(q.name)} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>
                             {getLabel(q)}
                         </RawHTML>
                         <div className={questionControlContainerClassName}>
-                            <Field name={q.name}
+                            <Field name={toSlug(q.name)}
                                    options={options}
                                    question={q}
                                    validate={getValidator(q.mandatory)}
                                    isDisabled={isDisabled}
                                    isRequired={q.mandatory}
                                    component={RadioButtonListAdapter} />
-                            <Error name={q.name}/>
+                            <Error name={toSlug(q.name)}/>
                         </div>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
                     q.sub_question_rules.map((r) =>
                         (
-                            <Condition key={r.id} when={q.name} rule={r}>
+                            <Condition key={r.id} when={toSlug(q.name)} rule={r}>
                                 {renderQuestion(r.sub_question)}
                             </Condition>
                         )
@@ -350,13 +352,13 @@ const ExtraQuestionsForm = React.forwardRef(({
         if (q.type === "ComboBox") {
             const options = questionValues.map(val => ({label : val.label, value : val.id}));
             return (
-                <Fragment key={q.name}>
+                <Fragment key={toSlug(q.name)}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>
                             {getLabel(q)}
                         </RawHTML>
                         <div className={questionControlContainerClassName}>
-                            <Field name={q.name}
+                            <Field name={toSlug(q.name)}
                                    options={options}
                                    question={q}
                                    validate={getValidator(q.mandatory)}
@@ -364,13 +366,13 @@ const ExtraQuestionsForm = React.forwardRef(({
                                    isRequired={q.mandatory}
                                    component={DropdownAdapter}
                             />
-                            <Error name={q.name}/>
+                            <Error name={toSlug(q.name)}/>
                         </div>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
                     q.sub_question_rules.map((r) =>
                         (
-                            <Condition key={r.id} when={q.name} rule={r}>
+                            <Condition key={r.id} when={toSlug(q.name)} rule={r}>
                                 {renderQuestion(r.sub_question)}
                             </Condition>
                         )
@@ -381,13 +383,13 @@ const ExtraQuestionsForm = React.forwardRef(({
         if (q.type === "CheckBoxList") {
             const options = questionValues.map(val => ({label : val.label, value : val.id}));
             return (
-                <Fragment key={q.name}>
+                <Fragment key={toSlug(q.name)}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
                         <RawHTML className={questionLabelContainerClassName}>
                             {getLabel(q)}
                         </RawHTML>
                         <div className={questionControlContainerClassName}>
-                            <Field name={q.name}
+                            <Field name={toSlug(q.name)}
                                    className={questionControlContainerClassName}
                                    validate={getValidator(q.mandatory)}
                                    options={options}
@@ -397,13 +399,13 @@ const ExtraQuestionsForm = React.forwardRef(({
                                    isRequired={q.mandatory}
                                    component={CheckBoxListAdapter}
                             />
-                            <Error name={q.name}/>
+                            <Error name={toSlug(q.name)}/>
                         </div>
                     </div>
                     {q.sub_question_rules?.length > 0 &&
                     q.sub_question_rules.map((r) =>
                         (
-                            <Condition key={r.id} when={q.name} rule={r}>
+                            <Condition key={r.id} when={toSlug(q.name)} rule={r}>
                                 {renderQuestion(r.sub_question)}
                             </Condition>
                         )
@@ -420,8 +422,9 @@ const ExtraQuestionsForm = React.forwardRef(({
 
     const validateQuestion = (q, values, errors) => {
         if (q.mandatory && isVisible(q)) {
-            if (!values.hasOwnProperty(q.name) || values[q.name] === "" || values[q.name].length === 0) {
-                errors[q.name] = RequiredErrorMessage;
+            const slug = toSlug(q.name);
+            if (!values.hasOwnProperty(toSlug(slug)) || values[toSlug(slug)] === "" || values[slug].length === 0) {
+                errors[slug] = RequiredErrorMessage;
             }
         }
         // validate sub rules
@@ -439,6 +442,7 @@ const ExtraQuestionsForm = React.forwardRef(({
         extraQuestions.forEach( q => {
             validateQuestion(q, values, errors);
         });
+
         if(Object.keys(errors).length > 0) onError(errors)
         return errors;
     }
@@ -446,7 +450,7 @@ const ExtraQuestionsForm = React.forwardRef(({
     if(!Object.keys(answers).length) return null;
 
     const getErrorFields = (q, invalidFormFields, errorFields) => {
-        if (invalidFormFields.includes(q.name)) {
+        if (invalidFormFields.includes(toSlug(q.name))) {
             errorFields.push(q);
         }
         // find errors on sub rules

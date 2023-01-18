@@ -7,6 +7,7 @@ import Enzyme, {mount} from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 import Input from '../../inputs/text-input';
 import Dropdown from '../../inputs/dropdown';
+import {toSlug} from '../../../utils/methods';
 
 Enzyme.configure({adapter: new Adapter()});
 
@@ -1165,8 +1166,9 @@ it('question should disabled', () => {
         />,
     );
 
-    expect(component.find('#cloud_service_provider_market_sub_segment').exists()).toBeTruthy();
-    const input = component.find('#cloud_service_provider_market_sub_segment input').at(1);
+    const slug = toSlug('cloud_service_provider_market_sub_segment');
+    expect(component.find('#'+slug).exists()).toBeTruthy();
+    const input = component.find('#'+slug+' input').at(1);
     expect(input.props().disabled === true).toBeTruthy();
 })
 
@@ -1229,8 +1231,9 @@ it('question should be enabled', () => {
         />,
     );
 
-    expect(component.find('#cloud_service_provider_market_sub_segment').exists()).toBeTruthy();
-    const input = component.find('#cloud_service_provider_market_sub_segment input').at(1);
+    const slug = toSlug('cloud_service_provider_market_sub_segment');
+    expect(component.find(`#${slug}`).exists()).toBeTruthy();
+    const input = component.find(`#${slug} input`).at(1);
     expect(input.props().disabled === true).toBeFalsy();
 })
 

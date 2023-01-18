@@ -64,6 +64,10 @@ export const getBackURL = () => {
     return backUrl;
 };
 
+export const toSlug = (text) =>{
+    text = text.toLowerCase();
+    return text.replace(/[^a-zA-Z0-9]+/g,'_');
+}
 
 export const getAuthCallback = () => {
     if(typeof window !== 'undefined') {

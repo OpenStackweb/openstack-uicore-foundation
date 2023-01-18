@@ -25,6 +25,9 @@
         font-weight: normal !important;
     }
     padding-bottom: 5em;
+    .abc-radio label{
+        max-width: 90%;
+    }
 }
 
 input:invalid {
