@@ -16,7 +16,7 @@ import PropTypes from 'prop-types'
 import AsyncSelect from 'react-select/lib/Async';
 import { queryRegistrationCompanies } from '../../utils/query-actions';
 
-const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, className, summitId, onError, ...rest }) => {
+const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, className, summitId, onError, inputPlaceholder, DDLPlaceholder, ...rest }) => {
 
     const [theValue, setTheValue] = useState({ value: null, label: '' });
     const [freeInput, setFreeInput] = useState(false);
@@ -139,7 +139,7 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                 <>
                     <input
                         value={inputValue}
-                        placeholder="Enter your company"
+                        placeholder={inputPlaceholder}
                         onChange={handleInputChange}
                         className="form-control"
                         style={{ paddingRight: 25 }}
@@ -155,7 +155,7 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                 <AsyncSelect
                     // Passing null if no label and value to show the placeholder
                     value={theValue.label && theValue.value ? theValue : null}
-                    placeholder='Select a company'
+                    placeholder={DDLPlaceholder}
                     onChange={handleChange}
                     defaultOptions={true}
                     loadOptions={getCompanies}
@@ -173,6 +173,11 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
 }
 
 export default RegistrationCompanyInput;
+
+RegistrationCompanyInput.defaultProps = {
+    inputPlaceholder: 'Enter your company',
+    DDLPlaceholder: 'Select a company',
+}
 
 RegistrationCompanyInput.propTypes = {
     onError: PropTypes.func.isRequired
