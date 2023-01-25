@@ -12,6 +12,7 @@ import {
 } from "../../utils/methods";
 import request from 'superagent';
 import Lock from 'browser-tabs-lock';
+
 let http = request;
 
 /**
@@ -41,7 +42,23 @@ import {
     AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR, AUTH_ERROR_ID_TOKEN_INVALID, AUTH_ERROR_MISSING_OTP_PARAM,
 } from "./constants";
 
-export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null, provider = null) => {
+/**
+ *
+ * @param backUrl
+ * @param prompt
+ * @param tokenIdHint
+ * @param provider
+ * @param loginHint
+ * @param otpLoginHint
+ * @returns {*}
+ */
+export const getAuthUrl = (
+    backUrl = null,
+    prompt = null,
+    tokenIdHint = null,
+    provider = null,
+    loginHint = null,
+    otpLoginHint = null) => {
 
     let oauth2ClientId = getOAuth2ClientId();
     let redirectUri = getAuthCallback();
@@ -62,12 +79,12 @@ export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null, pr
         "response_type": encodeURI(flow),
         "scope": encodeURI(scopes),
         "nonce": nonce,
-        "response_mode" : 'fragment',
+        "response_mode": 'fragment',
         "client_id": encodeURI(oauth2ClientId),
         "redirect_uri": encodeURI(redirectUri)
     };
 
-    if(flow === RESPONSE_TYPE_CODE){
+    if (flow === RESPONSE_TYPE_CODE) {
         const pkce = createPKCECodes()
         putOnLocalStorage(PKCE, JSON.stringify(pkce));
         query['code_challenge'] = pkce.codeChallenge;
@@ -79,7 +96,7 @@ export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null, pr
         query['prompt'] = prompt;
     }
 
-    if(scopes && scopes.includes('offline_access')){
+    if (scopes && scopes.includes('offline_access')) {
         // then we need to force prompt=consent bc we are requesting an offline access
         // and we need to let the user know
         query['prompt'] = 'consent';
@@ -91,6 +108,14 @@ export const getAuthUrl = (backUrl = null, prompt = null, tokenIdHint = null, pr
 
     if (provider) {
         query['provider'] = provider;
+    }
+
+    if (otpLoginHint) {
+        query['otp_login_hint'] = otpLoginHint;
+    }
+
+    if (loginHint) {
+        query['login_hint'] = encodeURI(loginHint);
     }
 
     url = url.query(query);
@@ -128,14 +153,34 @@ const createNonce = (len) => {
     return nonce;
 }
 
-export const doLogin = (backUrl = null, provider = null, prompt = null) => {
-    let url = getAuthUrl(backUrl, prompt ,null, provider);
+/**
+ *
+ * @param backUrl
+ * @param provider
+ * @param prompt
+ * @param loginHint
+ * @param otpLoginHint
+ */
+export const doLogin = (
+    backUrl = null,
+    provider = null,
+    prompt = null,
+    loginHint = null,
+    otpLoginHint = null
+) => {
+    let url = getAuthUrl(backUrl, prompt, null, provider, loginHint, otpLoginHint);
     let location = getCurrentLocation()
     location.replace(url.toString());
 }
 
-export const doLoginBasicLogin = (backUrl = null) => {
-    doLogin(backUrl, null, null);
+/**
+ *
+ * @param backUrl
+ * @param loginHint
+ * @param otpLoginHint
+ */
+export const doLoginBasicLogin = (backUrl = null, loginHint = null, otpLoginHint = null) => {
+    doLogin(backUrl, null, null, loginHint, otpLoginHint);
 }
 
 const createPKCECodes = () => {
@@ -161,9 +206,9 @@ export const emitAccessToken = async (code, backUrl = null) => {
         redirectUri += `?BackUrl=${encodeURI(backUrl)}`;
 
     const payload = {
-        'code' :  code,
-        'grant_type' : 'authorization_code',
-        'code_verifier' : pkce.codeVerifier,
+        'code': code,
+        'grant_type': 'authorization_code',
+        'code_verifier': pkce.codeVerifier,
         "client_id": encodeURI(oauth2ClientId),
         "redirect_uri": encodeURI(redirectUri)
     };
@@ -178,7 +223,7 @@ export const emitAccessToken = async (code, backUrl = null) => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
-        }).catch(function(error) {
+        }).catch(function (error) {
             console.log('Request failed:', error.message);
         });
         const json = await response.json();
@@ -198,18 +243,17 @@ export const clearAccessToken = async () => {
     ) {
         try {
 
-            let authInfo =  getAuthInfo();
+            let authInfo = getAuthInfo();
 
-            if( !authInfo ) {
+            if (!authInfo) {
                 throw Error(AUTH_ERROR_MISSING_AUTH_INFO);
             }
 
-            let { accessToken, expiresIn, accessTokenUpdatedAt, refreshToken } = authInfo;
+            let {accessToken, expiresIn, accessTokenUpdatedAt, refreshToken} = authInfo;
 
-            storeAuthInfo(null, 0 , refreshToken )
+            storeAuthInfo(null, 0, refreshToken)
 
-        }
-        finally {
+        } finally {
             await lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
         }
     }
@@ -225,13 +269,13 @@ export const getAccessToken = async () => {
     ) {
         try {
 
-            let authInfo =  getAuthInfo();
+            let authInfo = getAuthInfo();
 
-            if( !authInfo ) {
+            if (!authInfo) {
                 throw Error(AUTH_ERROR_MISSING_AUTH_INFO);
             }
 
-            let { accessToken, expiresIn, accessTokenUpdatedAt, refreshToken } = authInfo;
+            let {accessToken, expiresIn, accessTokenUpdatedAt, refreshToken} = authInfo;
             let flow = getOAuth2Flow();
             // check life time
             let now = Math.floor(Date.now() / 1000);
@@ -241,7 +285,7 @@ export const getAccessToken = async () => {
 
             if (timeElapsedSecs > expiresIn || accessToken == null) {
                 console.log(`getAccessToken access token expired`)
-                if(flow === RESPONSE_TYPE_CODE && useOAuth2RefreshToken()) {
+                if (flow === RESPONSE_TYPE_CODE && useOAuth2RefreshToken()) {
                     //console.log('getAccessToken getting new access token, access token got void');
                     if (!refreshToken) {
                         clearAuthInfo();
@@ -262,8 +306,7 @@ export const getAccessToken = async () => {
             }
             //console.log(`getAccessToken access_token ${accessToken} [CACHED]`);
             return accessToken;
-        }
-        finally {
+        } finally {
             await lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
         }
     }
@@ -276,7 +319,7 @@ export const refreshAccessToken = async (refresh_token) => {
     let oauth2ClientId = getOAuth2ClientId();
 
     const payload = {
-        'grant_type' : 'refresh_token',
+        'grant_type': 'refresh_token',
         "client_id": encodeURI(oauth2ClientId),
         "refresh_token": refresh_token
     };
@@ -290,14 +333,14 @@ export const refreshAccessToken = async (refresh_token) => {
             },
             body: JSON.stringify(payload)
         }).then((response) => {
-            if (response.status === 400){
+            if (response.status === 400) {
                 let currentLocation = getCurrentPathName();
                 setSessionClearingState(true);
                 throw Error(`${AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR}: ${response.status} - ${response.statusText}`);
             }
             return response;
 
-        }).catch(function(error) {
+        }).catch(function (error) {
             throw Error(`${AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR}: ${error.message}`);
         });
 
@@ -315,24 +358,24 @@ export const storeAuthInfo = (accessToken, expiresIn, refreshToken = null, idTok
     let formerAuthInfo = getAuthInfo();
 
     let authInfo = {
-        accessToken : accessToken,
+        accessToken: accessToken,
         expiresIn: expiresIn,
-        accessTokenUpdatedAt : Math.floor(Date.now() / 1000),
+        accessTokenUpdatedAt: Math.floor(Date.now() / 1000),
     };
 
-    if(refreshToken === null && formerAuthInfo){
+    if (refreshToken === null && formerAuthInfo) {
         refreshToken = formerAuthInfo.refreshToken;
     }
 
-    if(idToken === null && formerAuthInfo){
+    if (idToken === null && formerAuthInfo) {
         idToken = formerAuthInfo.idToken;
     }
 
-    if(refreshToken){
+    if (refreshToken) {
         authInfo['refreshToken'] = refreshToken;
     }
 
-    if(idToken){
+    if (idToken) {
         authInfo['idToken'] = idToken;
     }
 
@@ -340,18 +383,17 @@ export const storeAuthInfo = (accessToken, expiresIn, refreshToken = null, idTok
 }
 
 export const getAuthInfo = () => {
-    try{
+    try {
         let res = getFromLocalStorage(AUTH_INFO, false)
-        if(!res) return null;
+        if (!res) return null;
         return JSON.parse(res);
-    }
-    catch (err){
+    } catch (err) {
         return null;
     }
 }
 
 export const clearAuthInfo = () => {
-    if(typeof window !== 'undefined'){
+    if (typeof window !== 'undefined') {
         removeFromLocalStorage(AUTH_INFO);
         removeFromLocalStorage(NONCE);
         removeFromLocalStorage(PKCE);
@@ -360,9 +402,9 @@ export const clearAuthInfo = () => {
 };
 
 export const getIdToken = () => {
-    if(typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
         const authInfo = getAuthInfo();
-        if(authInfo){
+        if (authInfo) {
             return authInfo.idToken;
         }
         return null;
@@ -371,35 +413,35 @@ export const getIdToken = () => {
 };
 
 export const getOAuth2ClientId = () => {
-    if(typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
         return window.OAUTH2_CLIENT_ID;
     }
     return null;
 };
 
 export const getOAuth2Flow = () => {
-    if(typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
         return window.OAUTH2_FLOW || "token id_token";
     }
     return "token id_token";
 }
 
 export const useOAuth2RefreshToken = () => {
-    if(typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
         return new Boolean(window.OAUTH2_USE_REFRESH_TOKEN || true);
     }
     return true;
 }
 
 export const getOAuth2IDPBaseUrl = () => {
-    if(typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
         return window.IDP_BASE_URL;
     }
     return null;
 };
 
 export const getOAuth2Scopes = () => {
-    if(typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
         return window.SCOPES;
     }
     return null;
@@ -449,15 +491,15 @@ export const passwordlessStart = (params) => {
         "send": params.send || "code",
     };
 
-    if(params.hasOwnProperty('email')){
+    if (params.hasOwnProperty('email')) {
         payload["email"] = encodeURIComponent(params.email);
     }
 
-    if(params.hasOwnProperty('phone_number')){
+    if (params.hasOwnProperty('phone_number')) {
         payload["phone_number"] = encodeURIComponent(params.phone_number);
     }
 
-    if(params.hasOwnProperty('redirect_uri')){
+    if (params.hasOwnProperty('redirect_uri')) {
         payload["redirect_uri"] = encodeURIComponent(params.redirect_uri);
     }
 
@@ -465,7 +507,7 @@ export const passwordlessStart = (params) => {
 
     return req.send(payload).then((res) => {
         let json = res.body;
-        return Promise.resolve({response:json});
+        return Promise.resolve({response: json});
     }).catch((err) => {
         return Promise.reject(err);
     });
@@ -479,7 +521,7 @@ export const passwordlessLogin = (params) => (dispatch) => {
     let baseUrl = getOAuth2IDPBaseUrl();
     let url = URI(`${baseUrl}/oauth2/token`);
 
-    if(!params.hasOwnProperty("otp")){
+    if (!params.hasOwnProperty("otp")) {
         throw Error(AUTH_ERROR_MISSING_OTP_PARAM);
     }
 
@@ -491,11 +533,11 @@ export const passwordlessLogin = (params) => (dispatch) => {
         "otp": params.otp
     };
 
-    if(params.hasOwnProperty('email')){
+    if (params.hasOwnProperty('email')) {
         payload["email"] = encodeURIComponent(params.email);
     }
 
-    if(params.hasOwnProperty('phone_number')){
+    if (params.hasOwnProperty('phone_number')) {
         payload["phone_number"] = encodeURIComponent(params.phone_number);
     }
 
@@ -533,8 +575,7 @@ export const passwordlessLogin = (params) => (dispatch) => {
             }
 
             return Promise.resolve({response: json});
-        }
-        catch(e){
+        } catch (e) {
             console.log(e);
             return Promise.reject(e);
         }
@@ -545,7 +586,7 @@ export const passwordlessLogin = (params) => (dispatch) => {
 
 export const isIdTokenAlive = (nowEpoch = null) => () => {
 
-    if(!nowEpoch){
+    if (!nowEpoch) {
         nowEpoch = Math.floor(Date.now() / 1000);
     }
 
