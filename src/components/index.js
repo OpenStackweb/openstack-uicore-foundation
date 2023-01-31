@@ -49,6 +49,11 @@ export {default as AccessLevelsInput} from './inputs/access-levels-input';
 export {default as RegistrationCompanyInput} from './inputs/registration-company-input';
 export {default as TicketTypesInput} from './inputs/ticket-types-input.js'
 export {default as SponsoredProjectInput} from './inputs/sponsored-project-input.js'
+export {default as SteppedSelect} from './inputs/stepped-select/index.jsx'
+export {default as SummitDaysSelect} from './inputs/summit-days-select'
+export {default as SummitVenuesSelect} from './inputs/summit-venues-select'
+export {default as BulkActionsSelector} from './bulk-actions-selector'
+export {default as ScheduleBuilderView} from './schedule-builder-view'
 // this 2 includes 3rd party deps
 // export {default as ExtraQuestionsForm } from './extra-questions/index.js';
 // export {default as GMap} from './google-map';

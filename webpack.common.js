@@ -63,6 +63,16 @@ module.exports = {
         'components/inputs/ticket-types-input':'./src/components/inputs/ticket-types-input.js',
         'components/extra-questions': './src/components/extra-questions/index.js',
         'components/sponsored-project-input' : './src/components/inputs/sponsored-project-input.js',
+        'components/schedule-builder-view' : './src/components/schedule-builder-view/index.js',
+        'components/schedule-builder-constants' : './src/components/schedule-builder-view/constants.js',
+        'components/inputs/summit-days-select' : './src/components/inputs/summit-days-select.js',
+        'components/inputs/summit-venues-select' : './src/components/inputs/summit-venues-select.js',
+        'components/inputs/stepped-select' : './src/components/inputs/stepped-select/index.jsx',
+        'components/bulk-actions-selector' : './src/components/bulk-actions-selector/index.js',
+        // models
+        'models/index': './src/models',
+        'models/summit-event' : './src/models/summit-event.js',
+        //utils
         'utils/fragment-parser': './src/components/fragment-parser.js',
         'utils/use-fit-text': './src/components/use-fit-text.js',
         'utils/actions': './src/utils/actions.js',
