@@ -69,6 +69,7 @@ module.exports = {
         'components/inputs/summit-venues-select' : './src/components/inputs/summit-venues-select.js',
         'components/inputs/stepped-select' : './src/components/inputs/stepped-select/index.jsx',
         'components/bulk-actions-selector' : './src/components/bulk-actions-selector/index.js',
+        'components/progressive-img': './src/components/progressive-img/index.js',
         // models
         'models/index': './src/models',
         'models/summit-event' : './src/models/summit-event.js',

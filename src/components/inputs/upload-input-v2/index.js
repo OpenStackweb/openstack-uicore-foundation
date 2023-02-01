@@ -15,10 +15,7 @@ import React from 'react'
 import DropzoneJS from './dropzone'
 import './index.less';
 import file_icon from '../upload-input/file.png';
-import pdf_icon from '../upload-input/pdf.png';
-import mov_icon from '../upload-input/mov.png';
-import mp4_icon from '../upload-input/mp4.png';
-import csv_icon from '../upload-input/csv.png';
+import ProgressiveImg from "../../progressive-img";
 const FileNameMaxLen = 20;
 
 export default class UploadInputV2 extends React.Component {
@@ -103,23 +100,11 @@ export default class UploadInputV2 extends React.Component {
                                     <li key={`uploaded-${i}`}>
                                         <span className="file-preview">
                                             <a href={src} target="_blank" title="See Preview">
-                                                <img alt={v.filename}
+                                                <ProgressiveImg
+                                                     alt={v.filename}
                                                      src={src}
-                                                     onError={({ currentTarget }) => {
-                                                    currentTarget.onerror = null;
-
-                                                    if(ext === 'pdf')
-                                                        currentTarget.src = pdf_icon
-                                                    else if(ext === 'mov')
-                                                        currentTarget.src=mov_icon;
-                                                    else if(ext === 'mp4')
-                                                        currentTarget.src=mp4_icon;
-                                                    else if(ext === 'csv')
-                                                        currentTarget.src=csv_icon;
-                                                    else
-                                                        currentTarget.src=file_icon;
-
-                                                }}/>
+                                                     placeholderSrc={file_icon}
+                                                 />
                                             </a>
                                         </span>
                                         <span className="file-name"><a href={src} target="_blank" title="See Preview">{`${path}.${ext}`}</a></span>
