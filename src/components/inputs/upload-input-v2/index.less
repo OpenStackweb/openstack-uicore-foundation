@@ -79,3 +79,32 @@ div.filepicker.disabled {
   border-style: solid;
   border-color: white transparent transparent #920035;
 }
+.upload-input-v2-preview-container{
+  list-style: none;
+  li {
+    display: grid;
+    grid-template-columns: 25% 70% 5%;
+    align-items: center;
+    border: 1px solid #E1E1E1;
+    margin: 1em;
+
+    .file-preview {
+      img {
+        max-width: 150px;
+        max-height: 100px;
+        width: auto;
+        height: 100px;
+        padding: 1em;
+      }
+    }
+
+    .file-name {
+      margin-left: 2em;
+      text-align: left;
+    }
+
+    .file-delete {
+      text-align: center;
+    }
+  }
+}
