@@ -15,7 +15,7 @@ import React from 'react';
 import Select from 'react-select';
 
 const SummitVenuesSelect = ({venues, currentValue, placeholder, onVenueChanged}) => {
-    const parsedValue = venues.find(v => v.value.id === currentValue.id) || null;
+    const parsedValue = venues.find(v => v.value.id === currentValue?.id) || null;
     const renderOption = (option) => {
         let location = option.value;
         if (location.class_name === 'SummitVenue')
