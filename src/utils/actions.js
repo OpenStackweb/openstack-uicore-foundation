@@ -11,7 +11,7 @@
  * limitations under the License.
  **/
 
-import request from 'superagent';
+import request from 'superagent/lib/client';
 import URI from "urijs";
 let http = request;
 import Swal from 'sweetalert2';

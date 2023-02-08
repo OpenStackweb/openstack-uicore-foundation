@@ -10,7 +10,7 @@ import {
     retryPromise,
     setSessionClearingState,
 } from "../../utils/methods";
-import request from 'superagent';
+import request from 'superagent/lib/client';
 import Lock from 'browser-tabs-lock';
 
 let http = request;

@@ -13,7 +13,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import http from 'superagent';
+import http from 'superagent/lib/client';
 import {getAccessToken} from './security/methods';
 
 // SCOPES NEEDED
