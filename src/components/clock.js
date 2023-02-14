@@ -10,12 +10,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 import React from 'react';
 import moment from "moment-timezone";
 import FragmentParser from "./fragment-parser";
-import { getTimeServiceUrl } from '../utils/methods';
+import {getTimeServiceUrl} from '../utils/methods';
 
+/**
+ * class Clock
+ */
 class Clock extends React.Component {
 
     constructor(props) {
@@ -25,56 +27,91 @@ class Clock extends React.Component {
         this.state = {
             timestamp: null
         }
+        this._isMounted = false;
+        this.onVisibilityChange = this.onVisibilityChange.bind(this);
     }
 
-    async componentDidMount() {
+    /**
+     * @param response
+     * @param localBefore
+     */
+    processServerTimeResponse = (response, localBefore) => {
+        const localAfter = moment().unix();
+        let timestamp = localAfter;
+        if (response) {
+            timestamp = response.timestamp + (localAfter - localBefore);
+        }
+        if(this._isMounted) {
+            console.log(`Clock::processServerTimeResponse setting timestamp ${timestamp}`)
+            this.setState({timestamp});
+        }
+        if(this.props.onTick)
+            this.props.onTick(timestamp);
+    }
+
+    componentDidMount() {
+        this._isMounted = true;
         const {timezone = 'UTC', now} = this.props;
         const nowQS = this.fragmentParser.getParam('now');
         const momentQS = moment.tz(nowQS, 'YYYY-MM-DD,hh:mm:ss', timezone);
-        let timestamp;
-
+        let timestamp = null;
         if (momentQS.isValid()) {
             timestamp = momentQS.valueOf() / 1000;
         } else if (now) {
             timestamp = now
         } else {
-            const local = moment().unix();
-            const serverTime =  await this.getServerTime();
-            const localAfter = moment().unix();
-
-            if (serverTime) {
-                timestamp = serverTime.timestamp + (localAfter - local);
-            } else {
-                timestamp = localAfter;
-            }
+            const localBefore = moment().unix();
+            this.getServerTime().then((response) => this.processServerTimeResponse(response, localBefore));
         }
 
-        this.setState({timestamp});
-        this.props.onTick(timestamp);
+        if(timestamp) {
+            this.setState({timestamp});
+            if(this.props.onTick)
+                this.props.onTick(timestamp);
+        }
 
         this.interval = setInterval(this.tick, 1000);
+        document.addEventListener("visibilitychange", this.onVisibilityChange, false)
+    }
+
+    onVisibilityChange() {
+        const visibilityState = document.visibilityState;
+
+        if (visibilityState === "visible") {
+            console.log(`Clock::onVisibilityChange`)
+            const localBefore = moment().unix();
+            this.getServerTime().then((response) => this.processServerTimeResponse(response, localBefore));
+        }
     }
 
     componentWillUnmount() {
+        this._isMounted = false;
         clearInterval(this.interval);
+        document.removeEventListener("visibilitychange", this.onVisibilityChange)
+        this.interval = null;
     }
 
-    getServerTime = async () => {
+    getServerTime = () => {
         const timeServiceUrl = getTimeServiceUrl();
-        let response = await fetch(`${timeServiceUrl}`)
-            .catch(err => {
-                console.log(err);
-                return null;
-            });
-
-        return await response.json();
+        return fetch(`${timeServiceUrl}`).then(async (response) => {
+            if (response.status === 200) {
+                return response.json();
+            }
+            return Promise.reject(null);
+        })
+        .catch(err => {
+            console.log(err);
+            return Promise.reject(err);
+        });
     };
 
     tick = () => {
         const {timestamp} = this.state;
-        if (timestamp !== null) {   
-            this.props.onTick(timestamp + 1);
-            this.setState({timestamp: timestamp + 1})
+        if (timestamp !== null) {
+            if(this.props.onTick)
+                this.props.onTick(timestamp + 1);
+            if(this._isMounted)
+                this.setState({timestamp: timestamp + 1})
         }
     };
 
@@ -91,7 +128,7 @@ class Clock extends React.Component {
 
         return (
             <div style={{marginTop: '50px', textAlign: 'center', fontSize: '20px'}}>
-                {moment.tz(timestamp*1000, timezone).format('YYYY-MM-DD hh:mm:ss')}
+                {moment.tz(timestamp * 1000, timezone).format('YYYY-MM-DD hh:mm:ss')}
             </div>
         );
     }
