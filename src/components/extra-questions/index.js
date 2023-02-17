@@ -11,7 +11,7 @@
  * limitations under the License.
  **/
 
-import React, {Fragment, useEffect, useRef, useState} from 'react';
+import React, {Fragment, useEffect, useRef, useState, useImperativeHandle} from 'react';
 import PropTypes from 'prop-types';
 
 import RawHTML from '../raw-html'
@@ -118,18 +118,27 @@ const ExtraQuestionsForm = React.forwardRef(({
                                                  RequiredErrorMessage = 'Required',
                                                  ValidationErrorClassName = 'extra-question-error',
                                                  allowExtraQuestionsEdit = true,
-                                                 onError = (e) => console.log('form errors: ', e)
+                                                 onError = (e) => console.log('form errors: ', e),
+                                                 shouldScroll2FirstError = true
                                              }, ref) => {
 
     let submit = null;
 
     const questionRef = useRef({});
-
+    const formRef = useRef(null);
     const [answers, setAnswers] = useState({});
 
     useEffect(() => {
         formatUserAnswers();
     }, [extraQuestions])
+
+
+    // @see https://beta.reactjs.org/reference/react/useImperativeHandle
+    useImperativeHandle(ref, () => ({
+        doSubmit() {
+            formRef.current.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+        }
+    }));
 
     const formatUserAnswers = () => {
         const qs = new QuestionsSet(extraQuestions, userAnswers);
@@ -442,8 +451,6 @@ const ExtraQuestionsForm = React.forwardRef(({
         extraQuestions.forEach( q => {
             validateQuestion(q, values, errors);
         });
-
-        if(Object.keys(errors).length > 0) onError(errors)
         return errors;
     }
 
@@ -459,12 +466,16 @@ const ExtraQuestionsForm = React.forwardRef(({
         });
     }
 
-    const scrollToFirstError = (invalidFormFields) => {
+    const getFirstError = (invalidFormFields) => {
         const errorFields = [];
         extraQuestions.forEach(q => {
             getErrorFields(q, invalidFormFields, errorFields);
         });
-        const firstError = errorFields.sort((a, b) => a.order > b.order)[0];
+        return errorFields.sort((a, b) => a.order > b.order)[0];
+    }
+
+    const scrollToFirstError = (invalidFormFields) => {
+        const firstError = getFirstError(invalidFormFields)
         questionRef.current[firstError.id].scrollIntoView({
             behavior: 'smooth',
             block: 'center',
@@ -486,10 +497,15 @@ const ExtraQuestionsForm = React.forwardRef(({
                         <form
                             onSubmit={(event) => {
                                 const invalidFormFields = form.getRegisteredFields().filter(field => form.getFieldState(field).invalid);
-                                if (invalidFormFields.length > 0) scrollToFirstError(invalidFormFields)
+                                if (invalidFormFields.length > 0) {
+                                    const firstError = getFirstError(invalidFormFields);
+                                    onError(invalidFormFields, questionRef.current[firstError.id])
+                                    if(shouldScroll2FirstError)
+                                        scrollToFirstError(invalidFormFields)
+                                }
                                 handleSubmit(event)
                             }}
-                            ref={ref}>
+                            ref={formRef}>
                             {readOnly ?
                                 <fieldset disabled="disabled">
                                     {extraQuestions.map((q) => renderQuestion(q))}
@@ -530,6 +546,7 @@ ExtraQuestionsForm.propTypes = {
     RequiredErrorMessage: PropTypes.string,
     ValidationErrorClassName: PropTypes.string,
     allowExtraQuestionsEdit: PropTypes.bool,
+    shouldScroll2FirstError: PropTypes.bool,
 };
 
 export default ExtraQuestionsForm;
