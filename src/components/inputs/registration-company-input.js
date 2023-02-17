@@ -16,12 +16,13 @@ import PropTypes from 'prop-types'
 import AsyncSelect from 'react-select/lib/Async';
 import { queryRegistrationCompanies } from '../../utils/query-actions';
 
-const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, className, summitId, onError, inputPlaceholder, DDLPlaceholder, ...rest }) => {
+const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, disabled, isDisabled, className, summitId, onError, inputPlaceholder, DDLPlaceholder, ...rest }) => {
 
     const [theValue, setTheValue] = useState({ value: null, label: '' });
     const [freeInput, setFreeInput] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [isMultiOptional, setIsMultiOptional] = useState(multi || isMulti);
+    const [inputDisabled, setInputDisabled] = useState(disabled || isDisabled)
     const [hasError, setHasError] = useState(error);
     const [noCompanies, setNoCompanies] = useState(false);
 
@@ -143,9 +144,10 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                         onChange={handleInputChange}
                         className="form-control"
                         style={{ paddingRight: 25 }}
+                        disabled={inputDisabled}
                         {...rest}
                     />
-                    {!noCompanies &&
+                    {inputDisabled || !noCompanies && 
                         <i aria-label='Clear' style={{ position: 'absolute', top: 10, right: 25, cursor: 'pointer', opacity: '65%' }}
                             onClick={handleInputClear} className='fa fa-close'></i>
                     }
