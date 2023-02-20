@@ -135,7 +135,7 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
     }
 
     return (
-        <div>
+        <div style={{ position: 'relative' }}>
             {freeInput ?
                 <>
                     <input
@@ -147,8 +147,8 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                         disabled={inputDisabled}
                         {...rest}
                     />
-                    {inputDisabled || !noCompanies && 
-                        <i aria-label='Clear' style={{ position: 'absolute', top: 10, right: 25, cursor: 'pointer', opacity: '65%' }}
+                    {inputDisabled || !noCompanies &&
+                        <i aria-label='Clear' style={{ position: 'absolute', top: 10, right: 10, cursor: 'pointer', opacity: '65%' }}
                             onClick={handleInputClear} className='fa fa-close'></i>
                     }
 
