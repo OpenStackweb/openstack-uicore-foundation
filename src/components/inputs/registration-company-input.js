@@ -16,12 +16,13 @@ import PropTypes from 'prop-types'
 import AsyncSelect from 'react-select/lib/Async';
 import { queryRegistrationCompanies } from '../../utils/query-actions';
 
-const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, className, summitId, onError, inputPlaceholder, DDLPlaceholder, ...rest }) => {
+const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, disabled, className, summitId, onError, inputPlaceholder, DDLPlaceholder, ...rest }) => {
 
     const [theValue, setTheValue] = useState({ value: null, label: '' });
     const [freeInput, setFreeInput] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [isMultiOptional, setIsMultiOptional] = useState(multi || isMulti);
+    const [inputDisabled, setInputDisabled] = useState(disabled)
     const [hasError, setHasError] = useState(error);
     const [noCompanies, setNoCompanies] = useState(false);
 
@@ -134,7 +135,7 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
     }
 
     return (
-        <div>
+        <div style={{ position: 'relative' }}>
             {freeInput ?
                 <>
                     <input
@@ -143,10 +144,11 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                         onChange={handleInputChange}
                         className="form-control"
                         style={{ paddingRight: 25 }}
+                        disabled={inputDisabled}
                         {...rest}
                     />
-                    {!noCompanies &&
-                        <i aria-label='Clear' style={{ position: 'absolute', top: 10, right: 25, cursor: 'pointer', opacity: '65%' }}
+                    {inputDisabled || !noCompanies &&
+                        <i aria-label='Clear' style={{ position: 'absolute', top: 10, right: 10, cursor: 'pointer', opacity: '65%' }}
                             onClick={handleInputClear} className='fa fa-close'></i>
                     }
 
@@ -177,6 +179,7 @@ export default RegistrationCompanyInput;
 RegistrationCompanyInput.defaultProps = {
     inputPlaceholder: 'Enter your company',
     DDLPlaceholder: 'Select a company',
+    disabled: false,
 }
 
 RegistrationCompanyInput.propTypes = {
