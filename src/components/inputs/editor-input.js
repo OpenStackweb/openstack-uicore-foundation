@@ -87,6 +87,7 @@ export default class TextEditor extends React.Component {
                         className={className + ' ' + (has_error ? 'error' : '')}
                         value={this.state.editorValue}
                         onChange={this.handleChange}
+                        {...rest}
                     />
                 }
                 {has_error &&
