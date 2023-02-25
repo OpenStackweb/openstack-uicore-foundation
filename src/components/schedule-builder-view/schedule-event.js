@@ -39,11 +39,14 @@ const ScheduleEvent = ({
     item: {id: event.id, title: event.title, is_published: event.is_published, start_date: event.start_date, end_date: event.end_date, duration: event.duration},
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
-    })
+    }),
+    canDrag: !event.static
   }), [event.id, event.duration, event.start_date, event.end_date]);
   const [resizeInfo, setResizeInfo] = useState({resizing: false, type: null, lastYPos: null});
   const [size, setSize] = useState({top: initialTop, height: initialHeight});
   const isSelected = selectedPublishedEvents?.includes(event.id) || false;
+  const canEdit = !event.static;
+  const allowResize = canEdit && size.height > 15;
 
   const popoverHoverFocus = () =>
     <Popover id="popover-trigger-focus" title={event.title}>
@@ -187,7 +190,7 @@ const ScheduleEvent = ({
 
   return (
     <div
-      className={`row schedule-event ${size.height > 15 ? 'is-resizable' : ''}`}
+      className={`row schedule-event ${allowResize ? 'is-resizable' : ''} ${canEdit ? '' : 'is-static'}`}
       data-resizable={true}
       id={`event_${event.id}`}
       onMouseDown={onMouseDown}
@@ -214,11 +217,21 @@ const ScheduleEvent = ({
         {eventTitleBlock()}
       </div>
       <div className="event-actions">
-        <i className="fa fa-minus-circle unpublish-event-btn" aria-hidden="true" title="unpublish event"
-           onClick={() => onUnPublishEvent(event)}/>
+          {!event.static &&
+              <i
+                  className="fa fa-minus-circle unpublish-event-btn"
+                  aria-hidden="true"
+                  title="unpublish event"
+                  onClick={() => onUnPublishEvent(event)}
+              />
+          }
         {onEditEvent &&
-        <i className="fa fa-pencil-square-o edit-published-event-btn" title="edit event" aria-hidden="true"
-           onClick={() => onEditEvent(event)}/>
+            <i
+                className="fa fa-pencil-square-o edit-published-event-btn"
+                title="edit event"
+                aria-hidden="true"
+                onClick={() => onEditEvent(event)}
+            />
         }
       </div>
     </div>

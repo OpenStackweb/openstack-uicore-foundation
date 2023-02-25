@@ -59,6 +59,12 @@
   }
 }
 
+.is-static {
+  background: repeating-linear-gradient( -45deg, #e1e1e1 0px, #e1e1e1 2px, #ffffff 2px, #ffffff 20px);
+  color: gray;
+  cursor: not-allowed !important;
+}
+
 .is-resizable {
   overflow: hidden;
   /*transition: height 50ms linear;*/
@@ -246,7 +252,7 @@
 }
 
 .ajax-loader-container{
-  z-index: @event_z_index + 10 !important;
+  z-index: @event_z_index + 15 !important;
 }
 .bulk-actions-editor-container {
   margin: 1em;

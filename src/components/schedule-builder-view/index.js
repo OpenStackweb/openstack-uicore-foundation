@@ -59,7 +59,7 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
                 onDayChanged={props.onDayChanged}
                 days={days}
                 currentValue={currentDay}
-                placeholder={T.translate("schedule.placeholders.select_day")}
+                placeholder="Select Day"
             />
             <div className="row">
                 <div className="col-md-8">
@@ -67,7 +67,7 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
                         onVenueChanged={props.onVenueChanged}
                         venues={venues}
                         currentValue={currentVenue}
-                        placeholder={T.translate("schedule.placeholders.select_venue")}
+                        placeholder="Select Room"
                     />
                 </div>
                 <div className="col-md-4">
