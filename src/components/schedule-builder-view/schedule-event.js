@@ -43,7 +43,7 @@ const ScheduleEvent = ({
   }), [event.id, event.duration, event.start_date, event.end_date]);
   const [resizeInfo, setResizeInfo] = useState({resizing: false, type: null, lastYPos: null});
   const [size, setSize] = useState({top: initialTop, height: initialHeight});
-  const isSelected = selectedPublishedEvents.includes(event.id);
+  const isSelected = selectedPublishedEvents?.includes(event.id) || false;
 
   const popoverHoverFocus = () =>
     <Popover id="popover-trigger-focus" title={event.title}>
@@ -145,6 +145,24 @@ const ScheduleEvent = ({
     evt.preventDefault();
     setResizeInfo({type: null, lastYPos: null, resizing: false});
   };
+  
+  const eventTitleBlock = () => {
+    let block = null;
+    
+    if (event.description) {
+      block = (<OverlayTrigger trigger={['hover']} placement="bottom" overlay={popoverHoverFocus()}>
+        <div className="event-content">
+          <span className="event-title withTooltip">{event.title}</span>
+        </div>
+      </OverlayTrigger>);
+    } else {
+      block = (<div className="event-content">
+        <span className="event-title">{event.title}</span>
+      </div>);
+    }
+    
+    return block;
+  }
 
   // end resize behavior
 
@@ -181,6 +199,7 @@ const ScheduleEvent = ({
         cursor: 'move',
       }}
     >
+      {onClickSelected &&
       <div className="event-select-wrapper">
         <input
           className="select-event-btn"
@@ -190,18 +209,17 @@ const ScheduleEvent = ({
           onChange={() => onClickSelected(event)}
         />
       </div>
+      }
       <div className="col-md-12 event-container">
-        <OverlayTrigger trigger={['hover']} placement="bottom" overlay={popoverHoverFocus()}>
-          <div className="event-content">
-            <span className="event-title">{event.title}</span>
-          </div>
-        </OverlayTrigger>
+        {eventTitleBlock()}
       </div>
       <div className="event-actions">
         <i className="fa fa-minus-circle unpublish-event-btn" aria-hidden="true" title="unpublish event"
            onClick={() => onUnPublishEvent(event)}/>
+        {onEditEvent &&
         <i className="fa fa-pencil-square-o edit-published-event-btn" title="edit event" aria-hidden="true"
            onClick={() => onEditEvent(event)}/>
+        }
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 @event_initial_height: 30px;
 @event_spacing: 5px;
-@event_z_index: 999999999;
-@time_slot_overlay_z_index: 1000;
+@event_z_index: 10;
+@time_slot_overlay_z_index: 100;
 @schedule_border_color : #000000;
 @schedule_event_background_color: #b3d6ed;
 @unschedule_event_background_color: #f37878;
@@ -75,7 +75,7 @@
     visibility: hidden;
     cursor: ns-resize;
     background-color: white;
-    z-index: @event_z_index+1;
+    z-index: @event_z_index + 1;
   }
 
   &:before {
@@ -183,6 +183,7 @@
 
 .venues-selector, .day-selector, .event-type-selector {
   padding-bottom: 10px;
+  z-index: @event_z_index + 11;
 }
 
 .outer-schedule-events-container{
@@ -235,7 +236,7 @@
 }
 
 .event-title {
-  &:hover{
+  &.withTooltip:hover{
     cursor: pointer;
   }
 }

@@ -30,7 +30,7 @@ const TimeSlot = ({timeLabel, id}) => {
 }
 
 const TimeSlotContainer = ( props ) => {
-  const {currentDay, currentSummit, events, timeSlot, pixelsPerMinute, interval, onDroppedEvent} = props;
+  const {currentDay, currentSummit, events, timeSlot, pixelsPerMinute, interval, canDropEvent, onDroppedEvent} = props;
   const divId = `time_slot_container_${timeSlot.format('HH_mm')}`;
   const [collectedProps, drop] = useDrop(() => ({
     accept: [DraggableItemTypes.UNSCHEDULEEVENT, DraggableItemTypes.SCHEDULEEVENT],
@@ -39,6 +39,7 @@ const TimeSlotContainer = ( props ) => {
       canDrop: monitor.canDrop()
     }),
     canDrop: (item, monitor) => {
+      if (canDropEvent) return canDropEvent(item, monitor);
       const eventModel = new SummitEvent(item, currentSummit);
       return eventModel.canMove(events, currentDay, timeSlot, interval);
     },
@@ -143,7 +144,7 @@ const ScheduleEventList = (props) => {
     let startDateTime = moment.tz(currentDay + ' ' + startTime, 'YYYY-MM-DD HH:mm', currentSummit.time_zone.name);
     startDateTime = startDateTime.add(minutes, 'minutes');
 
-    props.onScheduleEventWithDuration(event, currentDay, moment(startDateTime.format('HH:mm'), 'HH:mm'), duration);
+    props.onScheduleEvent(event, currentDay, moment(startDateTime.format('HH:mm'), 'HH:mm'), duration);
   }
 
   const getMaxHeight = () => {
@@ -195,6 +196,7 @@ const ScheduleEventList = (props) => {
     pixelsPerMinute,
     currentDay,
     currentSummit,
+    canDropEvent,
     onEditEvent,
     onUnPublishEvent,
     onClickSelected,
@@ -218,6 +220,7 @@ const ScheduleEventList = (props) => {
           timeSlotsList.map((slot, idx) => (
             <TimeSlotContainer
               timeSlot={slot}
+              canDropEvent={canDropEvent}
               onDroppedEvent={onDroppedEvent}
               key={`timeslot-${idx}`}
               events={events}

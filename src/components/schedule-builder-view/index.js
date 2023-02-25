@@ -48,7 +48,7 @@ const getVenuesOptions = (summit) => {
     return venues;
 };
 
-const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay, currentVenue, slotSize, ...props}) => {
+const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay, currentVenue, slotSize, hideBulkSelect, ...props}) => {
     const days = useMemo(() => getDaysOptions(summit), [summit.start_date, summit.end_date]);
     const venues = useMemo(() => getVenuesOptions(summit), [summit.locations]);
     const slotSizeOptions = SlotSizeOptions.map(op => ({value: op, label: `${op} min.`}));
@@ -80,7 +80,7 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
                     />
                 </div>
             </div>
-            {scheduleEvents.length > 0 &&
+            {!hideBulkSelect && scheduleEvents.length > 0 &&
                 <BulkActionsSelector
                     bulkOptions={bulkOptions}
                     onSelectAll={props.onSelectAll}
@@ -95,8 +95,8 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
                     interval={slotSize}
                     currentDay={currentDay}
                     pixelsPerMinute={PixelsPerMinute}
+                    canDropEvent={props.canDropEvent}
                     onScheduleEvent={props.onScheduleEvent}
-                    onScheduleEventWithDuration={props.onScheduleEventWithDuration}
                     events={scheduleEvents}
                     onUnPublishEvent={props.onUnPublishEvent}
                     onEditEvent={props.onEditEvent}
