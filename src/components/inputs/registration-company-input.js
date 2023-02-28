@@ -157,6 +157,8 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                 <AsyncSelect
                     // Passing null if no label and value to show the placeholder
                     value={theValue.label && theValue.value ? theValue : null}
+                    inputId={id}
+                    tabSelectsValue={rest.tabSelectsValue || false}
                     placeholder={DDLPlaceholder}
                     onChange={handleChange}
                     defaultOptions={true}
