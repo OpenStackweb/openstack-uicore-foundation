@@ -16,7 +16,7 @@ import PropTypes from 'prop-types'
 import AsyncSelect from 'react-select/lib/Async';
 import { queryRegistrationCompanies } from '../../utils/query-actions';
 
-const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, disabled, className, summitId, onError, inputPlaceholder, DDLPlaceholder, ...rest }) => {
+const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, disabled, className, summitId, onError, inputPlaceholder, DDLPlaceholder, tabSelectsValue, ...rest }) => {
 
     const [theValue, setTheValue] = useState({ value: null, label: '' });
     const [freeInput, setFreeInput] = useState(false);
@@ -158,7 +158,7 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                     // Passing null if no label and value to show the placeholder
                     value={theValue.label && theValue.value ? theValue : null}
                     inputId={id}
-                    tabSelectsValue={rest.tabSelectsValue || false}
+                    tabSelectsValue={tabSelectsValue}
                     placeholder={DDLPlaceholder}
                     onChange={handleChange}
                     defaultOptions={true}
@@ -182,6 +182,7 @@ RegistrationCompanyInput.defaultProps = {
     inputPlaceholder: 'Enter your company',
     DDLPlaceholder: 'Select a company',
     disabled: false,
+    tabSelectsValue: false
 }
 
 RegistrationCompanyInput.propTypes = {
