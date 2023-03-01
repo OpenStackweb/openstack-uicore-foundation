@@ -11,49 +11,37 @@
  * limitations under the License.
  **/
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-export default class TextArea extends React.Component {
+const TextArea = ({ onChange, value, className, error, ...rest }) => {
 
-    constructor(props) {
-        super(props);
+    const [inputValue, setInputValue] = useState(value);
 
-        this.state = {
-            value: props.value,
-        };
+    useEffect(() => {
+        setInputValue(value);
+    }, [value]);
 
-        this.handleChange = this.handleChange.bind(this);
+    let has_error = error && error != '';
+    let class_name = className ? className : 'form-control';
+
+    const handleInputChange = (evt) => {
+        setInputValue(evt.target.value);
+        onChange(evt);
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.props.value !== prevProps.value) {
-            this.setState({value: this.props.value})
-        }
-    }
-
-    handleChange(ev) {
-        this.props.onChange(ev);
-    }
-
-    render() {
-
-        let {onChange, value, className, error, ...rest} = this.props;
-        let has_error = ( this.props.hasOwnProperty('error') && error != '' );
-        let class_name = this.props.hasOwnProperty('className') ? className : 'form-control';
-
-        return (
-            <div>
-                <textarea
-                    className={class_name + ' ' + (has_error ? 'error' : '')}
-                    value={this.state.value}
-                    onChange={this.handleChange}
-                    {...rest}
-                />
-                {has_error &&
+    return (
+        <div>
+            <textarea
+                className={class_name + ' ' + (has_error ? 'error' : '')}                
+                value={inputValue}
+                onChange={handleInputChange}
+                {...rest}
+            />
+            {has_error &&
                 <p className="error-label">{error}</p>
-                }
-            </div>
-        );
-
-    }
+            }
+        </div>
+    );
 }
+
+export default TextArea;
