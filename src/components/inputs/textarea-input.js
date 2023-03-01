@@ -11,15 +11,11 @@
  * limitations under the License.
  **/
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 const TextArea = ({ onChange, value, className, error, ...rest }) => {
 
     const [inputValue, setInputValue] = useState(value);
-
-    useEffect(() => {
-        setInputValue(value);
-    }, [value]);
 
     let has_error = error && error != '';
     let class_name = className ? className : 'form-control';
