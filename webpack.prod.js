@@ -3,12 +3,21 @@ const OptimizeCSSAssetsPlugin   = require('optimize-css-assets-webpack-plugin');
 const { merge}                  = require('webpack-merge');
 const common                    = require('./webpack.common.js');
 
-
 module.exports = merge(common, {
     mode: 'production',
+    devtool: 'source-map',
     optimization: {
         minimizer: [
-            new TerserJSPlugin({terserOptions: {compress: {inline: false}}}),
+            new TerserJSPlugin({
+                extractComments: false,
+                parallel: true,
+                terserOptions: {
+                    compress: {inline: false},
+                    sourceMap: {
+                        file: '[name].map'
+                    }
+                }
+            }),
             new OptimizeCSSAssetsPlugin({})
         ],
     }
