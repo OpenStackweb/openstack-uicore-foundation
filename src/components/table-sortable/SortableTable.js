@@ -9,6 +9,7 @@ import SortableTableRow from './SortableTableRow';
 import T from 'i18n-react/dist/i18n-react';
 import './table-sortable.css';
 import TableCell from "../table/TableCell";
+import _ from 'lodash';
 
 const defaults = {
     colWidth: ''
@@ -122,7 +123,7 @@ const SortableTable = ({ data, options, columns, dropCallback, orderField, idFie
                                 </SortableTableHeading>
                             );
                         })}
-                        {options.actions &&
+                        {options.actions && !_.isEmpty(options.actions) &&
                         <SortableTableHeading key='actions' >
                             Actions
                         </SortableTableHeading>
