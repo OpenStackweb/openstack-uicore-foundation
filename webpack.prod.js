@@ -5,19 +5,9 @@ const common                    = require('./webpack.common.js');
 
 module.exports = merge(common, {
     mode: 'production',
-    devtool: 'source-map',
     optimization: {
         minimizer: [
-            new TerserJSPlugin({
-                extractComments: false,
-                parallel: true,
-                terserOptions: {
-                    compress: {inline: false},
-                    sourceMap: {
-                        file: '[name].map'
-                    }
-                }
-            }),
+            new TerserJSPlugin({terserOptions: {compress: {inline: false}}}),
             new OptimizeCSSAssetsPlugin({})
         ],
     }
