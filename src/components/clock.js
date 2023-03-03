@@ -49,6 +49,17 @@ class Clock extends React.Component {
             this.props.onTick(timestamp);
     }
 
+    processServerTimeResponseError = () => {
+        const localAfter = moment().unix();
+        let timestamp = localAfter;
+        if(this._isMounted) {
+            console.log(`Clock::processServerTimeResponseError setting timestamp ${timestamp}`)
+            this.setState({timestamp});
+        }
+        if(this.props.onTick)
+            this.props.onTick(timestamp);
+    }
+
     componentDidMount() {
         this._isMounted = true;
         const {timezone = 'UTC', now} = this.props;
@@ -61,7 +72,9 @@ class Clock extends React.Component {
             timestamp = now
         } else {
             const localBefore = moment().unix();
-            this.getServerTime().then((response) => this.processServerTimeResponse(response, localBefore));
+            this.getServerTime()
+                .then((response) => this.processServerTimeResponse(response, localBefore))
+                .catch(() => this.processServerTimeResponseError())
         }
 
         if(timestamp) {
@@ -80,7 +93,9 @@ class Clock extends React.Component {
         if (visibilityState === "visible") {
             console.log(`Clock::onVisibilityChange`)
             const localBefore = moment().unix();
-            this.getServerTime().then((response) => this.processServerTimeResponse(response, localBefore));
+            this.getServerTime()
+                .then((response) => this.processServerTimeResponse(response, localBefore))
+                .catch(() => this.processServerTimeResponseError());
         }
     }
 
