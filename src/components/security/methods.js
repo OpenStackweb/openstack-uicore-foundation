@@ -21,6 +21,7 @@ let http = request;
 const Lock = new SuperTokensLock();
 
 const GET_TOKEN_SILENTLY_LOCK_KEY = 'openstackuicore.lock.getTokenSilently';
+const GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT = 6000;
 const NONCE_LEN = 16;
 export const ACCESS_TOKEN_SKEW_TIME = 20;
 export const RESPONSE_TYPE_IMPLICIT = "token id_token";
@@ -237,7 +238,7 @@ export const emitAccessToken = async (code, backUrl = null) => {
 export const clearAccessToken = async () => {
     if (
         await retryPromise(
-            () => Lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, 5000),
+            () => Lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT),
             10
         )
     ) {
@@ -261,62 +262,59 @@ export const clearAccessToken = async () => {
 
 const processRefreshToken = async (flow, refreshToken) => {
 
-    console.log(`refreshAccessToken access token expired`)
+    if (flow === RESPONSE_TYPE_CODE && useOAuth2RefreshToken()) {
+        //console.log('getAccessToken getting new access token, access token got void');
+        if (!refreshToken) {
+            clearAuthInfo();
+            throw Error(AUTH_ERROR_MISSING_REFRESH_TOKEN);
+        }
+
+        let response = await refreshAccessToken(refreshToken);
+        let {access_token, expires_in, refresh_token} = response;
+        //console.log(`getAccessToken access_token ${access_token} expires_in ${expires_in} refresh_token ${refresh_token}`);
+        if (typeof refresh_token === 'undefined') {
+            refresh_token = null; // not using rotate policy
+        }
+        storeAuthInfo(access_token, expires_in, refresh_token);
+        //console.log(`getAccessToken access_token ${access_token} [NEW]`);
+        return access_token;
+    }
+    clearAuthInfo();
+    throw Error(AUTH_ERROR_ACCESS_TOKEN_EXPIRED);
+}
+
+export const getAccessToken = async () => {
     if (
         await retryPromise(
-            () => Lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, 5000),
+            () => Lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT),
             10
         )
-    ){
+    ) {
         try {
-            if (flow === RESPONSE_TYPE_CODE && useOAuth2RefreshToken()) {
-                //console.log('getAccessToken getting new access token, access token got void');
-                if (!refreshToken) {
-                    clearAuthInfo();
-                    throw Error(AUTH_ERROR_MISSING_REFRESH_TOKEN);
-                }
+            let authInfo = getAuthInfo();
 
-                let response = await refreshAccessToken(refreshToken);
-                let {access_token, expires_in, refresh_token} = response;
-                //console.log(`getAccessToken access_token ${access_token} expires_in ${expires_in} refresh_token ${refresh_token}`);
-                if (typeof refresh_token === 'undefined') {
-                    refresh_token = null; // not using rotate policy
-                }
-                storeAuthInfo(access_token, expires_in, refresh_token);
-                //console.log(`getAccessToken access_token ${access_token} [NEW]`);
-                return access_token;
+            if (!authInfo) {
+                throw Error(AUTH_ERROR_MISSING_AUTH_INFO);
             }
-            clearAuthInfo();
-            throw Error(AUTH_ERROR_ACCESS_TOKEN_EXPIRED);
+
+            let {accessToken, expiresIn, accessTokenUpdatedAt, refreshToken} = authInfo;
+            let flow = getOAuth2Flow();
+            // check life time
+            let now = Math.floor(Date.now() / 1000);
+            let timeElapsedSecs = (now - accessTokenUpdatedAt);
+            expiresIn = (expiresIn - ACCESS_TOKEN_SKEW_TIME);
+
+            if (timeElapsedSecs > expiresIn || accessToken == null) {
+                console.log(`getAccessToken access token expired`)
+                return processRefreshToken(flow, refreshToken);
+            }
+            return accessToken;
         } finally {
             await Lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
         }
     }
     // error on locking
     throw Error(AUTH_ERROR_LOCK_ACQUIRE_ERROR);
-}
-
-export const getAccessToken = async () => {
-
-    let authInfo = getAuthInfo();
-
-    if (!authInfo) {
-        throw Error(AUTH_ERROR_MISSING_AUTH_INFO);
-    }
-
-    let {accessToken, expiresIn, accessTokenUpdatedAt, refreshToken} = authInfo;
-    let flow = getOAuth2Flow();
-    // check life time
-    let now = Math.floor(Date.now() / 1000);
-    let timeElapsedSecs = (now - accessTokenUpdatedAt);
-    expiresIn = (expiresIn - ACCESS_TOKEN_SKEW_TIME);
-
-    if (timeElapsedSecs > expiresIn || accessToken == null) {
-        console.log(`getAccessToken access token expired`)
-        return processRefreshToken(flow, refreshToken);
-    }
-
-    return accessToken;
 }
 
 export const refreshAccessToken = async (refresh_token) => {
