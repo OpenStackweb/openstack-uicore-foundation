@@ -40,7 +40,11 @@ import {
     AUTH_ERROR_MISSING_AUTH_INFO,
     AUTH_ERROR_MISSING_REFRESH_TOKEN,
     AUTH_ERROR_LOCK_ACQUIRE_ERROR,
-    AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR, AUTH_ERROR_ID_TOKEN_INVALID, AUTH_ERROR_MISSING_OTP_PARAM,
+    AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR,
+    AUTH_ERROR_ID_TOKEN_INVALID,
+    AUTH_ERROR_MISSING_OTP_PARAM,
+    AUTH_ERROR_MISSING_PKCE_PARAM,
+    AUTH_ERROR_MISSING_NONCE_PARAM,
 } from "./constants";
 
 /**
@@ -202,6 +206,9 @@ export const emitAccessToken = async (code, backUrl = null) => {
     let oauth2ClientId = getOAuth2ClientId();
     let redirectUri = getAuthCallback();
     let pkce = JSON.parse(getFromLocalStorage(PKCE, true));
+
+    if(!pkce)
+        throw Error(AUTH_ERROR_MISSING_PKCE_PARAM);
 
     if (backUrl != null)
         redirectUri += `?BackUrl=${encodeURI(backUrl)}`;
@@ -399,9 +406,6 @@ export const getAuthInfo = () => {
 export const clearAuthInfo = () => {
     if (typeof window !== 'undefined') {
         removeFromLocalStorage(AUTH_INFO);
-        removeFromLocalStorage(NONCE);
-        removeFromLocalStorage(PKCE);
-        return;
     }
 };
 
@@ -464,6 +468,9 @@ export const validateIdToken = (idToken, issuer, audience) => {
     });
 
     let storedNonce = getFromLocalStorage(NONCE, true);
+    if(!storedNonce)
+        throw Error(AUTH_ERROR_MISSING_NONCE_PARAM);
+
     let jwt = verifier.decode(idToken);
     let alg = jwt.header.alg;
     let kid = jwt.header.kid;

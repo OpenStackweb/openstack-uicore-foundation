@@ -165,7 +165,11 @@ class AbstractAuthorizationCallbackRoute extends React.Component {
                     }
                 }
             }
-        });
+        }).catch((e) => {
+            console.log(e);
+            // re start flow
+            doLogin(getCurrentPathName());
+        })
     }
 
     componentDidMount() {
