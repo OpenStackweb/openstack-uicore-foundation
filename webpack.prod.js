@@ -1,5 +1,5 @@
 const TerserJSPlugin            = require('terser-webpack-plugin');
-const OptimizeCSSAssetsPlugin   = require('optimize-css-assets-webpack-plugin');
+const CssMinimizerPlugin        = require("css-minimizer-webpack-plugin");
 const { merge}                  = require('webpack-merge');
 const common                    = require('./webpack.common.js');
 
@@ -15,10 +15,11 @@ module.exports = merge(common, {
                     compress: {inline: false},
                     sourceMap: {
                         file: '[name].map'
-                    }
+                    },
+                    mangle: { reserved: ['Lock','SuperTokensLock','GET_TOKEN_SILENTLY_LOCK_KEY'] }
                 }
             }),
-            new OptimizeCSSAssetsPlugin({})
+            new CssMinimizerPlugin(),
         ],
     }
 });
