@@ -23,7 +23,7 @@ export const queryMembers = _.debounce(async (input, callback) => {
 
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`full_name=@${input},first_name=@${input},last_name=@${input},email=@${input}`);
+    let filters = encodeURIComponent(`full_name@@${input},first_name@@${input},last_name@@${input},email@@${input}`);
     let expand = `tickets,rsvp,schedule_summit_events,all_affiliations`
 
     fetch(buildAPIBaseUrl(`/api/v1/members?filter=${filters}&expand=${expand}&access_token=${accessToken}`))
@@ -41,7 +41,7 @@ export const querySummits = _.debounce(async (input, callback) => {
 
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`name=@${input}`);
+    let filters = encodeURIComponent(`name@@${input}`);
 
     fetch(buildAPIBaseUrl(`/api/v1/summits/all?filter=${filters}&access_token=${accessToken}`))
         .then(fetchResponseHandler)
@@ -58,7 +58,7 @@ export const querySpeakers = _.debounce(async (summitId, input, callback) => {
 
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`full_name=@${input},first_name=@${input},last_name=@${input},email=@${input}`);
+    let filters = encodeURIComponent(`full_name@@${input},first_name@@${input},last_name@@${input},email@@${input}`);
     let apiUrl = `/api/v1`;
 
     if (summitId) {
@@ -84,7 +84,7 @@ export const queryTags = _.debounce(async (summitId, input, callback) => {
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let apiUrl = `/api/v1`;
-    let filter = encodeURIComponent(`tag=@${input}`);
+    let filter = encodeURIComponent(`tag@@${input}`);
 
     if (summitId) {
         apiUrl += `/summits/${summitId}/track-tag-groups/all/allowed-tags?filter=${filter}&expand=tag,track_tag_group`;
@@ -114,7 +114,7 @@ export const queryTracks = _.debounce(async (summitId, input, callback) => {
 
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
-    let filter = encodeURIComponent(`name=@${input}`);
+    let filter = encodeURIComponent(`name@@${input}`);
 
     fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/tracks?filter=${filter}&order=name&access_token=${accessToken}`))
         .then(fetchResponseHandler)
@@ -132,7 +132,7 @@ export const queryTrackGroups = _.debounce(async (summitId, input, callback) => 
 
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
-    let filter = input ? encodeURIComponent(`filter=name=@${input}`) : '';
+    let filter = input ? encodeURIComponent(`filter=name@@${input}`) : '';
 
     fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/track-groups?order=name&access_token=${accessToken}&${filter}`))
         .then(fetchResponseHandler)
@@ -151,7 +151,7 @@ export const queryEvents = _.debounce(async (summitId, input, onlyPublished = fa
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
     let baseUrl = `/api/v1/summits/${summitId}/events` + (onlyPublished ? '/published' : '');
-    let filter = encodeURIComponent(`title=@${input}`);
+    let filter = encodeURIComponent(`title@@${input}`);
 
     fetch(buildAPIBaseUrl(`${baseUrl}?filter=${filter}&order=title&access_token=${accessToken}`))
         .then(fetchResponseHandler)
@@ -171,7 +171,7 @@ export const queryEventTypes = _.debounce(async (summitId, input, callback, even
     let url = `/api/v1/summits/${summitId}/event-types?order=name&access_token=${accessToken}`;
 
     if (input) {
-        const filter = encodeURIComponent(`name=@${input}`);
+        const filter = encodeURIComponent(`name@@${input}`);
         url += `&filter[]=${filter}`
     }
 
@@ -194,7 +194,7 @@ export const queryEventTypes = _.debounce(async (summitId, input, callback, even
 export const queryGroups = _.debounce(async (input, callback) => {
 
     const accessToken = await getAccessToken();
-    let filters = encodeURIComponent(`title=@${input},code=@${input}`);
+    let filters = encodeURIComponent(`title@@${input},code@@${input}`);
 
     fetch(buildAPIBaseUrl(`/api/v1/groups?filter=${filters}&access_token=${accessToken}`))
         .then(fetchResponseHandler)
@@ -212,7 +212,7 @@ export const queryCompanies = _.debounce(async (input, callback) => {
 
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`name=@${input}`);
+    let filters = encodeURIComponent(`name@@${input}`);
 
     fetch(buildAPIBaseUrl(`/api/v1/companies?filter=${filters}&access_token=${accessToken}`))
         .then(fetchResponseHandler)
@@ -259,7 +259,7 @@ export const querySponsors = _.debounce(async (summitId, input, callback) => {
 
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`company_name=@${input}`);
+    let filters = encodeURIComponent(`company_name@@${input}`);
 
     fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/sponsors?filter=${filters}&expand=company,sponsorship&access_token=${accessToken}`))
         .then(fetchResponseHandler)
@@ -275,7 +275,7 @@ export const queryAccessLevels = _.debounce(async (summitId, input, callback) =>
 
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`name=@${input}`);
+    let filters = encodeURIComponent(`name@@${input}`);
 
     fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/access-level-types?filter=${filters}&&access_token=${accessToken}`))
         .then(fetchResponseHandler)
@@ -291,7 +291,7 @@ export const queryOrganizations = _.debounce(async (input, callback) => {
 
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`name=@${input}`);
+    let filters = encodeURIComponent(`name@@${input}`);
 
     fetch(buildAPIBaseUrl(`/api/v1/organizations?filter=${filters}&access_token=${accessToken}`))
         .then(fetchResponseHandler)
@@ -399,7 +399,7 @@ export const querySponsoredProjects = _.debounce(async (input, callback) => {
     apiUrl.addQuery('access_token', accessToken);
     if(input) {
         input = escapeFilterValue(input);
-        apiUrl.addQuery('filter[]', `name=@${input}`);
+        apiUrl.addQuery('filter[]', `name@@${input}`);
     }
 
     fetch(buildAPIBaseUrl(apiUrl.toString()))
@@ -415,7 +415,7 @@ export const querySponsoredProjects = _.debounce(async (input, callback) => {
 export const queryPromocodes = _.debounce(async (summitId, input, callback) => {
     const accessToken = await getAccessToken();
     input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`code=@${input}`);
+    let filters = encodeURIComponent(`code@@${input}`);
 
     fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/promo-codes?filter=${filters}&access_token=${accessToken}`))
         .then(fetchResponseHandler)
