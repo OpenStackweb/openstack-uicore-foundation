@@ -63,8 +63,12 @@ export default class DateTimePicker extends React.Component {
 
         if (after == '<')
             return (currentDate.isBefore(moment.tz(before * 1000, timezone)));
+        else if(after == '<=')
+            return (currentDate.isSameOrBefore(moment.tz(before * 1000, timezone)));
         else if(after == '>')
             return (currentDate.isAfter(moment.tz(before * 1000, timezone)));
+        else if(after == '>=')
+            return (currentDate.isSameOrAfter(moment.tz(before * 1000, timezone)));
         else {
             let afterDate = moment.tz(after * 1000, timezone).subtract(1, 'day');
             let beforeDate = moment.tz(before * 1000, timezone);
