@@ -36,7 +36,6 @@ export const queryMembers = _.debounce(async (input, callback) => {
         .catch(fetchErrorHandler);
 }, callDelay);
 
-
 export const querySummits = _.debounce(async (input, callback) => {
 
     const accessToken = await getAccessToken();
@@ -52,7 +51,6 @@ export const querySummits = _.debounce(async (input, callback) => {
         })
         .catch(fetchErrorHandler);
 }, callDelay);
-
 
 export const querySpeakers = _.debounce(async (summitId, input, callback) => {
 
@@ -76,8 +74,6 @@ export const querySpeakers = _.debounce(async (summitId, input, callback) => {
         })
         .catch(fetchErrorHandler);
 }, callDelay);
-
-
 
 export const queryTags = _.debounce(async (summitId, input, callback) => {
 
@@ -108,8 +104,6 @@ export const queryTags = _.debounce(async (summitId, input, callback) => {
         .catch(fetchErrorHandler);
 }, callDelay);
 
-
-
 export const queryTracks = _.debounce(async (summitId, input, callback) => {
 
     const accessToken = await getAccessToken();
@@ -126,8 +120,6 @@ export const queryTracks = _.debounce(async (summitId, input, callback) => {
         .catch(fetchErrorHandler);
 }, callDelay);
 
-
-
 export const queryTrackGroups = _.debounce(async (summitId, input, callback) => {
 
     const accessToken = await getAccessToken();
@@ -143,8 +135,6 @@ export const queryTrackGroups = _.debounce(async (summitId, input, callback) => 
         })
         .catch(fetchErrorHandler);
 }, callDelay);
-
-
 
 export const queryEvents = _.debounce(async (summitId, input, onlyPublished = false, callback) => {
 
@@ -190,7 +180,6 @@ export const queryEventTypes = _.debounce(async (summitId, input, callback, even
         .catch(fetchErrorHandler);
 }, callDelay);
 
-
 export const queryGroups = _.debounce(async (input, callback) => {
 
     const accessToken = await getAccessToken();
@@ -205,8 +194,6 @@ export const queryGroups = _.debounce(async (input, callback) => {
         })
         .catch(fetchErrorHandler);
 }, callDelay);
-
-
 
 export const queryCompanies = _.debounce(async (input, callback) => {
 
@@ -253,7 +240,6 @@ export const queryRegistrationCompanies = _.debounce(async (summitId, input, cal
         })
         .catch(fetchErrorHandler);
 }, callDelay);
-
 
 export const querySponsors = _.debounce(async (summitId, input, callback) => {
 
@@ -303,7 +289,6 @@ export const queryOrganizations = _.debounce(async (input, callback) => {
         .catch(fetchErrorHandler);
 }, callDelay);
 
-
 export const getLanguageList = (callback, signal) => {
     return fetch(buildAPIBaseUrl(`/api/public/v1/languages`), {signal})
         .then(fetchResponseHandler)
@@ -312,7 +297,6 @@ export const getLanguageList = (callback, signal) => {
         })
         .catch(fetchErrorHandler);
 };
-
 
 export const getCountryList = (callback, signal) => {
 
@@ -363,7 +347,6 @@ export const geoCodeLatLng = (lat, lng) => {
     });
 };
 
-
 export const queryTicketTypes = _.debounce(async (summitId, filters = {}, callback, version = 'v1') => {
 
     const accessToken = await getAccessToken();
@@ -391,7 +374,6 @@ export const queryTicketTypes = _.debounce(async (summitId, filters = {}, callba
         .catch(fetchErrorHandler);
 }, callDelay);
 
-
 export const querySponsoredProjects = _.debounce(async (input, callback) => {
 
     const accessToken = await getAccessToken();
@@ -410,7 +392,6 @@ export const querySponsoredProjects = _.debounce(async (input, callback) => {
         })
         .catch(fetchErrorHandler);
 }, callDelay);
-
 
 export const queryPromocodes = _.debounce(async (summitId, input, callback) => {
     const accessToken = await getAccessToken();
