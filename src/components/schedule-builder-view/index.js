@@ -48,9 +48,6 @@ const getVenuesOptions = (summit) => {
     return venues;
 };
 
-const mapSlotSizeOptions = (options) => {
-    return options.map(op => ({value: op, label: `${op} min.`}));
-}
 
 const ScheduleBuilderView = ({summit, slotOptions, scheduleEvents, selectedEvents, currentDay, currentVenue, slotSize, hideBulkSelect, ...props}) => {
     const days = useMemo(() => getDaysOptions(summit), [summit.start_date, summit.end_date]);
