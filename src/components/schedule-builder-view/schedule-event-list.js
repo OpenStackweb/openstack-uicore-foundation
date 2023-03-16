@@ -244,12 +244,15 @@ const ScheduleEventList = (props) => {
                 initialTop={calculateInitialTop(event)}
                 initialHeight={calculateInitialHeight(event)}
                 canResize={canResize}
+                allowResize={props.allowResize}
+                allowDrag={props.allowDrag}
                 onResized={onResized}
                 maxHeight={getMaxHeight}
                 onUnPublishEvent={onUnPublishEvent}
                 onEditEvent={onEditEvent}
                 onClickSelected={onClickSelected}
-                currentDay={currentDay}>
+                currentDay={currentDay}
+              >
               </ScheduleEvent>)
           })
         }

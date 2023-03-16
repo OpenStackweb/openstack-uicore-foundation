@@ -44,7 +44,7 @@
   .event-container{
     float: left;
     margin: 5px 10px;
-    width: 90%;
+    width: 85%;
     height: calc(100% - 10px);
     overflow: hidden;
     .no-padding;
@@ -52,6 +52,7 @@
   .event-actions {
     float: right;
     margin: 0 5px 0 0;
+    display: flex;
   }
   .event-select-wrapper {
     margin: 5px 0 0 5px;
@@ -192,6 +193,10 @@
   z-index: @event_z_index + 11;
 }
 
+.track-selector {
+  z-index: @event_z_index + 12;
+}
+
 .outer-schedule-events-container{
   border-top: 1px solid @schedule_border_color;
   max-height: 800px;
@@ -220,19 +225,10 @@
   cursor: pointer;
 }
 
-.unpublish-event-btn{
-  position: absolute;
-  right:5%;
+.event-action-btn{
   cursor: pointer;
   padding-top: 10px;
-  z-index: @event_z_index + 1;
-}
-
-.edit-published-event-btn{
-  position: absolute;
-  right:8%;
-  cursor: pointer;
-  padding-top: 10px;
+  margin-left: 10px;
   z-index: @event_z_index + 1;
 }
 

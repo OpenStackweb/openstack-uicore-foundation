@@ -28,6 +28,8 @@ const ScheduleEvent = ({
                          minHeight,
                          maxHeight,
                          canResize,
+                         allowResize,
+                         allowDrag,
                          onResized,
                          onUnPublishEvent,
                          onEditEvent,
@@ -40,13 +42,13 @@ const ScheduleEvent = ({
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
-    canDrag: !event.static
+    canDrag: allowDrag && !event.static
   }), [event.id, event.duration, event.start_date, event.end_date]);
   const [resizeInfo, setResizeInfo] = useState({resizing: false, type: null, lastYPos: null});
   const [size, setSize] = useState({top: initialTop, height: initialHeight});
   const isSelected = selectedPublishedEvents?.includes(event.id) || false;
   const canEdit = !event.static;
-  const allowResize = canEdit && size.height > 15;
+  const isResizable = allowResize && canEdit && size.height > 15;
 
   const popoverHoverFocus = () =>
     <Popover id="popover-trigger-focus" title={event.title}>
@@ -190,7 +192,7 @@ const ScheduleEvent = ({
 
   return (
     <div
-      className={`row schedule-event ${allowResize ? 'is-resizable' : ''} ${canEdit ? '' : 'is-static'}`}
+      className={`row schedule-event ${isResizable ? 'is-resizable' : ''} ${canEdit ? '' : 'is-static'}`}
       data-resizable={true}
       id={`event_${event.id}`}
       onMouseDown={onMouseDown}
@@ -217,17 +219,17 @@ const ScheduleEvent = ({
         {eventTitleBlock()}
       </div>
       <div className="event-actions">
-          {!event.static &&
-              <i
-                  className="fa fa-minus-circle unpublish-event-btn"
-                  aria-hidden="true"
-                  title="unpublish event"
-                  onClick={() => onUnPublishEvent(event)}
-              />
-          }
+        {!event.static && onUnPublishEvent &&
+            <i
+                className="fa fa-minus-circle event-action-btn"
+                aria-hidden="true"
+                title="unpublish event"
+                onClick={() => onUnPublishEvent(event)}
+            />
+        }
         {onEditEvent &&
             <i
-                className="fa fa-pencil-square-o edit-published-event-btn"
+                className="fa fa-pencil-square-o event-action-btn"
                 title="edit event"
                 aria-hidden="true"
                 onClick={() => onEditEvent(event)}
