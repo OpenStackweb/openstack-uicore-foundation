@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-import React,{ useState, useEffect } from "react";
+import React,{ useState, useEffect, useRef } from "react";
 import styles from './index.module.scss';
 import pdf_icon from "../inputs/upload-input/pdf.png";
 import mov_icon from "../inputs/upload-input/mov.png";
@@ -26,30 +26,39 @@ import file_icon from "../inputs/upload-input/file.png";
  * @constructor
  */
 const ProgressiveImg = ({ placeholderSrc, src, ...props }) => {
+    const isCancelled = useRef(false);
     const [imgSrc, setImgSrc] = useState(placeholderSrc || src);
     const [customClass, setCustomClass] = useState(styles.loading);
 
     useEffect(() => {
         const img = new Image();
-        const ext =  src.split('.').pop();
+        const ext =  src ? src.split('.').pop() : null;
         img.src = src;
+
         img.onload = () => {
+            if (isCancelled.current) return
             setImgSrc(src)
             setCustomClass(styles.loaded)
         };
+
         img.onerror = () => {
+            if (isCancelled.current) return
             img.onerror = null;
-            if(ext.includes('pdf'))
+            if(ext && ext.toString().toLowerCase().includes('pdf'))
                 setImgSrc(pdf_icon)
-            else if(ext.includes('mov'))
+            else if(ext && ext.toString().toLowerCase().includes('mov'))
                 setImgSrc(mov_icon);
-            else if(ext.includes('mp4'))
+            else if(ext && ext.toString().toLowerCase().includes('mp4'))
                 setImgSrc(mp4_icon);
-            else if(ext.includes('csv'))
+            else if(ext && ext.toString().toLowerCase().includes('csv'))
                 setImgSrc(csv_icon);
             else
                 setImgSrc(file_icon);
             setCustomClass(styles.loaded)
+        };
+
+        return () => {
+            isCancelled.current = true;
         };
     }, [src]);
 

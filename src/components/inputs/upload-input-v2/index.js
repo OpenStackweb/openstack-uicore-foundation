@@ -85,11 +85,11 @@ export default class UploadInputV2 extends React.Component {
                     {value.length > 0 &&
                         <ul className="upload-input-v2-preview-container">
                             {value.map((v,i) => {
-
-                                let src = v.private_url || v.public_url;
+                                let src = v?.private_url || v?.public_url;
+                                if(src === '#') src = v?.public_url;
                                 // custom replace for dropbox case ( download vs raw)
-                                src = src.replace("?dl=0","?raw=1")
                                 let filename = v.filename;
+                                src = src ? src.replace("?dl=0","?raw=1") : filename;
                                 let ext =  filename.split('.').pop();
                                 let path = filename.replace(`.${ext}`, '');
                                 if (path.length > FileNameMaxLen) {
