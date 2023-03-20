@@ -56,21 +56,8 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
     
     return (
         <>
-            <SummitDaysSelect
-                onDayChanged={props.onDayChanged}
-                days={days}
-                currentValue={currentDay}
-                placeholder="Select Day"
-            />
-            <div className="row">
-                <div className="col-md-8">
-                    <SummitVenuesSelect
-                        onVenueChanged={props.onVenueChanged}
-                        venues={venues}
-                        currentValue={currentVenue}
-                        placeholder="Select Room"
-                    />
-                </div>
+            {props.onSlotSizeChange &&
+            <div className="row" style={{marginBottom: 12, marginTop: 2}}>
                 <div className="col-md-4">
                     <span>Slot size: </span>
                     <SteppedSelect
@@ -78,6 +65,25 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
                         onChange={props.onSlotSizeChange}
                         options={slotSizeOptions}
                         style={{display: 'inline-block', marginLeft: 10}}
+                    />
+                </div>
+            </div>
+            }
+            <div className="row">
+                <div className="col-md-6">
+                    <SummitDaysSelect
+                        onDayChanged={props.onDayChanged}
+                        days={days}
+                        currentValue={currentDay}
+                        placeholder="Select Day"
+                    />
+                </div>
+                <div className="col-md-6">
+                    <SummitVenuesSelect
+                        onVenueChanged={props.onVenueChanged}
+                        venues={venues}
+                        currentValue={currentVenue}
+                        placeholder="Select Room"
                     />
                 </div>
             </div>
