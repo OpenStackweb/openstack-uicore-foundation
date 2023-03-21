@@ -34,7 +34,8 @@ const ScheduleEvent = ({
                          onUnPublishEvent,
                          onEditEvent,
                          onClickSelected,
-                         selectedPublishedEvents
+                         selectedPublishedEvents,
+                         onMoveEvent
                        }) => {
   const [collected, drag] = useDrag(() => ({
     type: DraggableItemTypes.SCHEDULEEVENT,
@@ -234,6 +235,14 @@ const ScheduleEvent = ({
                 aria-hidden="true"
                 onClick={() => onEditEvent(event)}
             />
+        }
+        {onMoveEvent &&
+          <i
+              className="fa fa-arrow-circle-right event-action-btn"
+              title="move event"
+              aria-hidden="true"
+              onClick={() => onMoveEvent(event)}
+          />
         }
       </div>
     </div>

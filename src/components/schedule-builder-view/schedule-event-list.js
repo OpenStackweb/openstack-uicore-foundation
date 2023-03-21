@@ -252,6 +252,7 @@ const ScheduleEventList = (props) => {
                 onEditEvent={onEditEvent}
                 onClickSelected={onClickSelected}
                 currentDay={currentDay}
+                onMoveEvent={props.onMoveEvent}
               >
               </ScheduleEvent>)
           })

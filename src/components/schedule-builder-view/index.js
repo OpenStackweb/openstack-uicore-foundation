@@ -111,6 +111,7 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
                     onEditEvent={props.onEditEvent}
                     onClickSelected={props.onClickSelected}
                     selectedPublishedEvents={selectedEvents}
+                    onMoveEvent={props.onMoveSingleEvent}
                 />
             }
         </>
