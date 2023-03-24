@@ -23,25 +23,29 @@ class ScheduleAdminsBulkActionsSelector extends React.Component {
     }
 
     render(){
-        let { onSelectAll, bulkOptions } = this.props;
+        let { onSelectAll, bulkOptions, show } = this.props;
         return (
-            <div className="row bulk-actions-selector-container">
-                <div className="col-md-8">
-                    <input type="checkbox" onClick={onSelectAll}/>
-                    <select ref={(select) => { this.actionTypeSelect = select; }}>
-                        <option value="">{T.translate("published_bulk_actions_selector.options.default")}</option>
-                        {
-                            bulkOptions.map((option, idx) => (
-                                <option key={idx} value={option.value}>{option.label}</option>
-                            ))
-                        }
-                    </select>
+            <div className="bulk-actions-selector-container">
+                {show &&
+                <div className="row">
+                    <div className="col-md-8">
+                        <input type="checkbox" onClick={onSelectAll}/>
+                        <select ref={(select) => { this.actionTypeSelect = select; }}>
+                            <option value="">{T.translate("published_bulk_actions_selector.options.default")}</option>
+                            {
+                                bulkOptions.map((option, idx) => (
+                                    <option key={idx} value={option.value}>{option.label}</option>
+                                ))
+                            }
+                        </select>
+                    </div>
+                    <div className="col-md-4">
+                        <button onClick={this.onPerformBulkAction.bind(this)} title={ T.translate("published_bulk_actions_selector.titles.go")} className="btn btn-default btn-sm">
+                            <i className="fa fa-play">&nbsp;{T.translate("published_bulk_actions_selector.buttons.go")}</i>
+                        </button>
+                    </div>
                 </div>
-                <div className="col-md-4">
-                    <button onClick={this.onPerformBulkAction.bind(this)} title={ T.translate("published_bulk_actions_selector.titles.go")} className="btn btn-default btn-sm">
-                        <i className="fa fa-play">&nbsp;{T.translate("published_bulk_actions_selector.buttons.go")}</i>
-                    </button>
-                </div>
+                }
             </div>
         )
     }

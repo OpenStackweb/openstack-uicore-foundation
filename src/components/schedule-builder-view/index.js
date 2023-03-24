@@ -87,13 +87,13 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
                     />
                 </div>
             </div>
-            {!hideBulkSelect && scheduleEvents.length > 0 &&
-                <BulkActionsSelector
-                    bulkOptions={props.customBulkOptions || bulkOptions}
-                    onSelectAll={props.onSelectAll}
-                    onSelectedBulkAction={props.onSelectedBulkAction}
-                />
-            }
+            <BulkActionsSelector
+                bulkOptions={props.customBulkOptions || bulkOptions}
+                onSelectAll={props.onSelectAll}
+                onSelectedBulkAction={props.onSelectedBulkAction}
+                show={!hideBulkSelect && scheduleEvents.length > 0}
+            />
+            
             {currentDay && currentVenue &&
                 <ScheduleEventList
                     startTime="00:00"
