@@ -14,7 +14,7 @@
 import React from 'react';
 import Select from 'react-select';
 
-const SummitVenuesSelect = ({venues, currentValue, placeholder, onVenueChanged}) => {
+const SummitVenuesSelect = ({venues, currentValue, placeholder, onVenueChanged, ...rest}) => {
     const parsedValue = venues.find(v => v.value.id === currentValue?.id) || null;
     const renderOption = (option) => {
         let location = option.value;
@@ -36,6 +36,7 @@ const SummitVenuesSelect = ({venues, currentValue, placeholder, onVenueChanged})
             onChange={onChange}
             options={venues}
             optionRenderer={renderOption}
+            {...rest}
         />
     );
 }
