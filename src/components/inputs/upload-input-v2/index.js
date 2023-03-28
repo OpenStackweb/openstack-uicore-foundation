@@ -89,7 +89,7 @@ export default class UploadInputV2 extends React.Component {
                                 if(src === '#') src = v?.public_url;
                                 // custom replace for dropbox case ( download vs raw)
                                 let filename = v.filename;
-                                src = src ? src.replace("?dl=0","?raw=1") : filename;
+                                let previewSrc = src ? src.replace("?dl=0","?raw=1") : filename;
                                 let ext =  filename.split('.').pop();
                                 let path = filename.replace(`.${ext}`, '');
                                 if (path.length > FileNameMaxLen) {
@@ -102,7 +102,7 @@ export default class UploadInputV2 extends React.Component {
                                             <a href={src} target="_blank" title="See Preview">
                                                 <ProgressiveImg
                                                      alt={v.filename}
-                                                     src={src}
+                                                     src={previewSrc}
                                                      placeholderSrc={file_icon}
                                                  />
                                             </a>
