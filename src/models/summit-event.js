@@ -83,19 +83,25 @@ class SummitEvent {
     }
 
     isValidEndDate(endDate){
-        if(endDate == null) return true;
-        let startDate       = moment.tz(this._event.start_date * 1000, this._summit.time_zone.name);
-        endDate             = moment.tz(endDate * 1000, this._summit.time_zone.name);
-        let summitEndDate   = moment.tz(this._summit.end_date * 1000, this._summit.time_zone.name);
-        return endDate.isAfter(startDate) && (endDate.isBefore(summitEndDate) || endDate.isSame(summitEndDate));
+        if(!endDate) return true;
+        const _endDate        = moment.tz(endDate * 1000, this._summit.time_zone.name);
+        const summitEndDate   = moment.tz(this._summit.end_date * 1000, this._summit.time_zone.name);
+        const startDate       = moment.tz(this._event.start_date * 1000, this._summit.time_zone.name);
+        return _endDate.isSameOrBefore(summitEndDate) && _endDate.isAfter(startDate);
     }
 
     isValidStartDate(startDate){
-        if(startDate == null) return true;
-        startDate           = moment.tz(startDate* 1000, this._summit.time_zone.name);
-        let endDate         = moment.tz(this._event.end_date * 1000, this._summit.time_zone.name);
-        let summitStartDate = moment.tz(this._summit.start_date * 1000, this._summit.time_zone.name);
-        return moment.isMoment(startDate) && startDate.isAfter(summitStartDate) && startDate.isBefore(endDate);
+        if(!startDate) return true;
+        const _startDate  = moment.tz(startDate * 1000, this._summit.time_zone.name);
+        // if we have set duration , end date is optional
+        const durationInMinutes = this._event.hasOwnProperty('duration') && this._event.duration > 0 ?
+            parseInt( this._event.duration / 60 ) : 0;
+        const summitStartDate = moment.tz(this._summit.start_date * 1000, this._summit.time_zone.name);
+        const endDate         = this._event.end_date ?
+            moment.tz(this._event.end_date * 1000, this._summit.time_zone.name):
+            ( durationInMinutes > 0 ? moment.tz(startDate * 1000, this._summit.time_zone.name).add(durationInMinutes, 'minutes'): null);
+
+        return _startDate.isSameOrAfter(summitStartDate) && moment.isMoment(endDate) && _startDate.isBefore(endDate);
     }
 
     isValidTitle(title){
