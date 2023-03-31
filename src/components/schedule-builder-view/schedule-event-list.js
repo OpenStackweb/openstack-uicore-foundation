@@ -89,14 +89,27 @@ const TimeSlotContainer = ( props ) => {
   );
 };
 
-
-
 const ScheduleEventList = (props) => {
+  const listRef = useRef();
+  const prevIntervalRef = useRef();
   const [timeSlotsList, setTimeSlotsList] = useState([]);
+  const [newScrollTop, setNewScrollTop] = useState(null);
   const scheduleEventContainer = useRef(null);
+  
+  // sets scrollbar position after interval change and render
+  useEffect(() => {
+      if (newScrollTop) {
+          listRef.current.scrollTop = newScrollTop;
+          setNewScrollTop(null);
+      }
+  }, [newScrollTop]);
 
   useEffect(() => {
+    const slotChangeRatio = prevIntervalRef.current / props.interval;
+    // set scroll pos to set scrollbar after render
+    setNewScrollTop(listRef.current.scrollTop * slotChangeRatio);
     createSlots();
+    prevIntervalRef.current = props.interval;
   }, [props.interval]);
 
   const onDroppedEvent = (event, startTime) => {
@@ -204,7 +217,7 @@ const ScheduleEventList = (props) => {
   } = props;
 
   return (
-    <div className="row outer-schedule-events-container">
+    <div className="row outer-schedule-events-container" ref={listRef}>
       <div className="col-md-2 no-margin no-padding">
         {
           timeSlotsList.map((slot, idx) => (
