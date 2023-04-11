@@ -347,13 +347,14 @@ export const geoCodeLatLng = (lat, lng) => {
     });
 };
 
-export const queryTicketTypes = _.debounce(async (summitId, filters = {}, callback, version = 'v1') => {
+export const queryTicketTypes = _.debounce(async (summitId, filters = {}, callback, version = 'v1', per_page = 5) => {
 
     const accessToken = await getAccessToken();
 
     let apiUrl = URI(`/api/${version}/summits/${summitId}/ticket-types`);
     apiUrl.addQuery('access_token', accessToken);
-    apiUrl.addQuery('order','name')
+    apiUrl.addQuery('order','name');
+    apiUrl.addQuery('per_page', per_page);
 
     if(filters.hasOwnProperty('name')) {
         const name = escapeFilterValue(filters.name);
