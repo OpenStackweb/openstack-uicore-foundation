@@ -48,11 +48,22 @@ const getVenuesOptions = (summit) => {
     return venues;
 };
 
+const parseLocationHour = (hour) => {
+    let parsedHour = hour.toString();
+    if(parsedHour.length < 4) parsedHour = `0${parsedHour}`;
+    parsedHour = parsedHour.match(/.{2}/g);
+    parsedHour = parsedHour.join(':');
+    return parsedHour;
+}
+
 const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay, currentVenue, slotSize, hideBulkSelect, ...props}) => {
     const days = useMemo(() => getDaysOptions(summit), [summit.start_date, summit.end_date]);
     const venues = useMemo(() => getVenuesOptions(summit), [summit.locations]);
     const slotSizeOptions = SlotSizeOptions.map(op => ({value: op, label: `${op} min.`}));
     const {allowResize = true, allowDrag = true} = props;
+
+    const opening_hour = currentVenue?.opening_hour ? parseLocationHour(currentVenue.opening_hour) : "00:00";
+    const closing_hour = currentVenue?.closing_hour ? parseLocationHour(currentVenue.closing_hour) : "23:50";
     
     return (
         <>
@@ -96,8 +107,8 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
             
             {currentDay && currentVenue &&
                 <ScheduleEventList
-                    startTime="00:00"
-                    endTime="23:50"
+                    startTime={opening_hour}
+                    endTime={closing_hour}
                     currentSummit={summit}
                     interval={slotSize}
                     currentDay={currentDay}
