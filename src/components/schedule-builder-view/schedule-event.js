@@ -158,12 +158,12 @@ const ScheduleEvent = ({
     if (event.description) {
       block = (<OverlayTrigger trigger={['hover']} placement="bottom" overlay={popoverHoverFocus()}>
         <div className="event-content">
-          <span className="event-title withTooltip">{event.title}</span>
+          <span className="event-title withTooltip">{`${event.id} - ${event.title}${event.duration ? ` - ${event.duration/60} minutes` : ''}`}</span>
         </div>
       </OverlayTrigger>);
     } else {
       block = (<div className="event-content">
-        <span className="event-title">{event.title}</span>
+        <span className="event-title">{`${event.id} - ${event.title}${event.duration ? ` - ${event.duration/60} minutes` : ''}`}</span>
       </div>);
     }
     
