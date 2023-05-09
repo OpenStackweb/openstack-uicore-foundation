@@ -49,7 +49,7 @@ const getVenuesOptions = (summit) => {
 };
 
 const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay, currentVenue, 
-    slotSize, hideBulkSelect, openingHour = "00:00", closingHour = "23:50", ...props}) => {
+    slotSize, hideBulkSelect, openingHour, closingHour, ...props}) => {
     const days = useMemo(() => getDaysOptions(summit), [summit.start_date, summit.end_date]);
     const venues = useMemo(() => getVenuesOptions(summit), [summit.locations]);
     const slotSizeOptions = SlotSizeOptions.map(op => ({value: op, label: `${op} min.`}));
@@ -118,5 +118,15 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
         </>
     );
 }
+
+ScheduleBuilderView.propTypes = {
+    openingHour: PropTypes.string,
+    closingHour: PropTypes.string,    
+};
+
+ScheduleBuilderView.defaultProps = {
+    openingHour: "00:00",
+    closingHour: "23:50"
+};
 
 export default ScheduleBuilderView;
