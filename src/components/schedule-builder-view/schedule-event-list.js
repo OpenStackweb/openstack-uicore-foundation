@@ -110,7 +110,7 @@ const ScheduleEventList = (props) => {
     setNewScrollTop(listRef.current.scrollTop * slotChangeRatio);
     createSlots();
     prevIntervalRef.current = props.interval;
-  }, [props.interval]);
+  }, [props.interval, props.startTime, props.endTime]);
 
   const onDroppedEvent = (event, startTime) => {
     props.onScheduleEvent(event, props.currentDay, startTime);

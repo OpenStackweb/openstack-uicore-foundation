@@ -41,6 +41,14 @@ export const formatEpoch = (atime, format = 'M/D/YYYY h:mm a') => {
     return epochToMoment(atime).format(format);
 };
 
+export const parseLocationHour = (hour) => {
+    let parsedHour = hour.toString();
+    if(parsedHour.length < 4) parsedHour = `0${parsedHour}`;
+    parsedHour = parsedHour.match(/.{2}/g);
+    parsedHour = parsedHour.join(':');
+    return parsedHour;
+}
+
 export const objectToQueryString = (obj) => {
     var str = "";
     for (var key in obj) {
