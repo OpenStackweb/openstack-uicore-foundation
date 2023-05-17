@@ -1,24 +1,36 @@
-import React, {useMemo} from 'react';
-import PropTypes from 'prop-types';
+import React, {useEffect, useMemo} from 'react';
 import SummitDaysSelect from "../inputs/summit-days-select";
 import SummitVenuesSelect from "../inputs/summit-venues-select";
 import SteppedSelect from "../inputs/stepped-select/index.jsx";
 import ScheduleEventList from "./schedule-event-list";
 import {epochToMomentTimeZone} from "../../utils/methods";
 import BulkActionsSelector from "../bulk-actions-selector/index.js";
-import {TBALocation, SlotSizeOptions, PixelsPerMinute, bulkOptions} from "./constants";
+import {bulkOptions, PixelsPerMinute, SlotSizeOptions, TBALocation} from "./constants";
+import {parseLocationHour} from '../../utils/methods'
 
 import './schedule-builder-view.less';
 
-const getDaysOptions = (summit) => {
+const getDaysOptions = (summit, trackSpaceTime, currentLocation) => {
     const days = [];
     const summitLocalStartDate = epochToMomentTimeZone(summit.start_date, summit.time_zone_id);
     const summitLocalEndDate = epochToMomentTimeZone(summit.end_date, summit.time_zone_id);
     let currentAuxDay = summitLocalStartDate.clone();
+    const allowedDays =
+        trackSpaceTime
+            ?.find(sp => sp.location_id === currentLocation?.id)
+            ?.allowed_timeframes?.map(
+                at => epochToMomentTimeZone(at.day, summit.time_zone_id).format("YYYY-MM-DD")
+        ) || null;
     
     do {
-        const option = {value: currentAuxDay.format("YYYY-MM-DD"), label: currentAuxDay.format('dddd Do , MMMM YYYY')};
-        days.push(option);
+        const option = {
+            value: currentAuxDay.format("YYYY-MM-DD"),
+            label: currentAuxDay.format('dddd Do , MMMM YYYY')
+        };
+        
+        if (!allowedDays || allowedDays.includes(option.value)) {
+            days.push(option);
+        }
         currentAuxDay = currentAuxDay.clone();
         currentAuxDay.add(1, 'day');
     } while (!currentAuxDay.isAfter(summitLocalEndDate));
@@ -26,49 +38,83 @@ const getDaysOptions = (summit) => {
     return days;
 };
 
-const getVenuesOptions = (summit) => {
-    const venues = [
-        { value: TBALocation, label: TBALocation.name}
-    ];
+const getVenuesOptions = (summit, trackSpaceTime) => {
+    const venues = [{value: TBALocation, label: TBALocation.name}];
+    const allowedLocationIds = trackSpaceTime?.map(st => st.location_id) || null;
     
-    for (let i = 0; i < summit.locations.length; i++) {
-        const location = summit.locations[i];
-        if (location.class_name !== "SummitVenue") continue;
-        const option = {value: location, label: location.name};
-        
+    const locations = summit.locations.filter(loc => {
+        const isNotVenue = loc.class_name !== "SummitVenue";
+        const isAllowed = allowedLocationIds ? allowedLocationIds.includes(loc.id) : true;
+        return isNotVenue && isAllowed;
+    })
+    
+    locations.forEach(loc => {
+        const option = {value: loc, label: loc.name};
         venues.push(option);
-        
-        if (!location.hasOwnProperty('rooms')) continue;
-        for (let j = 0; j < location.rooms.length; j++) {
-            let subOption = {value: location.rooms[j], label: location.rooms[j].name};
-            venues.push(subOption);
+        if (loc.hasOwnProperty('rooms')) {
+            loc.rooms.forEach(r => {
+                const subOption = {value: r, label: r.name};
+                venues.push(subOption);
+            })
         }
-    }
+    })
     
     return venues;
 };
 
-const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay, currentVenue, 
-    slotSize, hideBulkSelect, openingHour, closingHour, ...props}) => {
-    const days = useMemo(() => getDaysOptions(summit), [summit.start_date, summit.end_date]);
-    const venues = useMemo(() => getVenuesOptions(summit), [summit.locations]);
+const getTimeframe = (currentDay, currentLocation, trackSpaceTime, summitTZ) => {
+    if (currentDay && currentLocation && trackSpaceTime) {
+        const allowedDays = trackSpaceTime.find(st => st.location_id === currentLocation.id)?.allowed_timeframes;
+        const allowedTimeFrame = allowedDays?.find(tf => epochToMomentTimeZone(tf.day, summitTZ).format("YYYY-MM-DD") === currentDay);
+        
+        if (allowedTimeFrame) {
+            return {open: parseLocationHour(allowedTimeFrame.opening_hour), close: parseLocationHour(allowedTimeFrame.closing_hour)};
+        }
+    } else if (currentLocation?.opening_hour && currentLocation?.closing_hour) {
+        return {open: parseLocationHour(currentLocation.opening_hour), close: parseLocationHour(currentLocation.closing_hour)};
+    }
+    
+    return {open: "00:00", close: "23:50"};
+};
+
+const ScheduleBuilderView = ({
+                                 summit,
+                                 trackSpaceTime,
+                                 scheduleEvents,
+                                 selectedEvents,
+                                 currentDay,
+                                 currentVenue,
+                                 slotSize,
+                                 hideBulkSelect,
+                                 ...props
+                             }) => {
+    const days = useMemo(() => getDaysOptions(summit, trackSpaceTime, currentVenue), [summit.start_date, summit.end_date, trackSpaceTime, currentVenue]);
+    const venues = useMemo(() => getVenuesOptions(summit, trackSpaceTime), [summit.locations, trackSpaceTime]);
     const slotSizeOptions = SlotSizeOptions.map(op => ({value: op, label: `${op} min.`}));
     const {allowResize = true, allowDrag = true} = props;
+    const {open, close} = useMemo(() => getTimeframe(currentDay, currentVenue, trackSpaceTime, summit.time_zone_id), [currentDay, currentVenue, trackSpaceTime]);
+    
+    useEffect(() => {
+        // if new location doesn't allow currentDay value, reset
+        if (currentDay && !days.find(op => op.value === currentDay)) {
+            props.onDayChanged(null);
+        }
+    }, [currentVenue])
     
     return (
         <div className="schedule-view-wrapper">
             {props.onSlotSizeChange &&
-            <div className="row" style={{marginBottom: 12, marginTop: 2}}>
-                <div className="col-md-4">
-                    <span>Slot size: </span>
-                    <SteppedSelect
-                        value={slotSize}
-                        onChange={props.onSlotSizeChange}
-                        options={slotSizeOptions}
-                        style={{display: 'inline-block', marginLeft: 10}}
-                    />
+                <div className="row" style={{marginBottom: 12, marginTop: 2}}>
+                    <div className="col-md-4">
+                        <span>Slot size: </span>
+                        <SteppedSelect
+                            value={slotSize}
+                            onChange={props.onSlotSizeChange}
+                            options={slotSizeOptions}
+                            style={{display: 'inline-block', marginLeft: 10}}
+                        />
+                    </div>
                 </div>
-            </div>
             }
             <div className="row">
                 <div className="col-md-6">
@@ -97,8 +143,8 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
             
             {currentDay && currentVenue &&
                 <ScheduleEventList
-                    startTime={openingHour}
-                    endTime={closingHour}
+                    startTime={open}
+                    endTime={close}
                     currentSummit={summit}
                     interval={slotSize}
                     currentDay={currentDay}
@@ -118,15 +164,5 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
         </div>
     );
 }
-
-ScheduleBuilderView.propTypes = {
-    openingHour: PropTypes.string,
-    closingHour: PropTypes.string,    
-};
-
-ScheduleBuilderView.defaultProps = {
-    openingHour: "00:00",
-    closingHour: "23:50"
-};
 
 export default ScheduleBuilderView;
