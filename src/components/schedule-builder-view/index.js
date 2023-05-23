@@ -56,7 +56,7 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
     const {allowResize = true, allowDrag = true} = props;
     
     return (
-        <>
+        <div className="schedule-view-wrapper">
             {props.onSlotSizeChange &&
             <div className="row" style={{marginBottom: 12, marginTop: 2}}>
                 <div className="col-md-4">
@@ -115,7 +115,7 @@ const ScheduleBuilderView = ({summit, scheduleEvents, selectedEvents, currentDay
                     onMoveEvent={props.onMoveSingleEvent}
                 />
             }
-        </>
+        </div>
     );
 }
 
