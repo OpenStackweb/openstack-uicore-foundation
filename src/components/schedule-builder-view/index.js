@@ -1,4 +1,5 @@
 import React, {useMemo} from 'react';
+import PropTypes from 'prop-types';
 import SummitDaysSelect from "../inputs/summit-days-select";
 import SummitVenuesSelect from "../inputs/summit-venues-select";
 import SteppedSelect from "../inputs/stepped-select/index.jsx";
@@ -6,7 +7,6 @@ import ScheduleEventList from "./schedule-event-list";
 import {epochToMomentTimeZone} from "../../utils/methods";
 import BulkActionsSelector from "../bulk-actions-selector/index.js";
 import {TBALocation, SlotSizeOptions, PixelsPerMinute, bulkOptions} from "./constants";
-import T from 'i18n-react';
 
 import './schedule-builder-view.less';
 
