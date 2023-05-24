@@ -28,7 +28,7 @@ const getDaysOptions = (summit, trackSpaceTime, currentLocation) => {
             label: currentAuxDay.format('dddd Do , MMMM YYYY')
         };
         
-        if (!allowedDays || allowedDays.includes(option.value)) {
+        if (!allowedDays || allowedDays.length === 0 || allowedDays.includes(option.value)) {
             days.push(option);
         }
         currentAuxDay = currentAuxDay.clone();
@@ -65,12 +65,16 @@ const getVenuesOptions = (summit, trackSpaceTime) => {
 const getTimeframe = (currentDay, currentLocation, trackSpaceTime, summitTZ) => {
     if (currentDay && currentLocation && trackSpaceTime) {
         const allowedDays = trackSpaceTime.find(st => st.location_id === currentLocation.id)?.allowed_timeframes;
-        const allowedTimeFrame = allowedDays?.find(tf => epochToMomentTimeZone(tf.day, summitTZ).format("YYYY-MM-DD") === currentDay);
         
-        if (allowedTimeFrame) {
-            return {open: parseLocationHour(allowedTimeFrame.opening_hour), close: parseLocationHour(allowedTimeFrame.closing_hour)};
+        if (allowedDays?.length > 0) {
+            const allowedTimeFrame = allowedDays?.find(tf => epochToMomentTimeZone(tf.day, summitTZ).format("YYYY-MM-DD") === currentDay);
+            if (allowedTimeFrame) {
+                return {open: parseLocationHour(allowedTimeFrame.opening_hour), close: parseLocationHour(allowedTimeFrame.closing_hour)};
+            }
         }
-    } else if (currentLocation?.opening_hour && currentLocation?.closing_hour) {
+    }
+    
+    if (currentLocation?.opening_hour && currentLocation?.closing_hour) {
         return {open: parseLocationHour(currentLocation.opening_hour), close: parseLocationHour(currentLocation.closing_hour)};
     }
     
@@ -118,19 +122,19 @@ const ScheduleBuilderView = ({
             }
             <div className="row">
                 <div className="col-md-6">
-                    <SummitDaysSelect
-                        onDayChanged={props.onDayChanged}
-                        days={days}
-                        currentValue={currentDay}
-                        placeholder="Select Day"
-                    />
-                </div>
-                <div className="col-md-6">
                     <SummitVenuesSelect
                         onVenueChanged={props.onVenueChanged}
                         venues={venues}
                         currentValue={currentVenue}
                         placeholder="Select Room"
+                    />
+                </div>
+                <div className="col-md-6">
+                    <SummitDaysSelect
+                        onDayChanged={props.onDayChanged}
+                        days={days}
+                        currentValue={currentDay}
+                        placeholder="Select Day"
                     />
                 </div>
             </div>
