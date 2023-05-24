@@ -15,7 +15,7 @@ import React from 'react';
 import Select from 'react-select';
 
 const SummitDaysSelect = ({ days, currentValue, placeholder, onDayChanged }) => {
-    const theValue = days.find(op => op.value === currentValue);
+    const theValue = days.find(op => op.value === currentValue) || null;
 
     const onChange = (selectedOption) => {
         onDayChanged(selectedOption?.value || null);
