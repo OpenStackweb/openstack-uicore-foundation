@@ -141,4 +141,10 @@ table.sortableTable .actions a .fa:hover {
     margin-top: 20px;
 }
 
+.checkbox-cell{
+    text-align: center;
+    /* center checkbox horizontally */
+    vertical-align: middle;
+    /* center checkbox vertically */
+}
 
