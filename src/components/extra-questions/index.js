@@ -358,7 +358,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                 </Fragment>
             );
         }
-        if (q.type === "ComboBox") {
+        if (q.type === "ComboBox" || q.type === "CountryComboBox") {
             const options = questionValues.map(val => ({label : val.label, value : val.id}));
             return (
                 <Fragment key={toSlug(q.name)}>
