@@ -23,6 +23,12 @@ import QuestionsSet from '../../utils/questions-set';
 import {Field, Form} from "react-final-form";
 import './index.scss';
 import {toSlug} from "../../utils/methods";
+import {
+    QuestionType_Checkbox, QuestionType_CheckBoxList, QuestionType_ComboBox, QuestionType_CountryComboBox,
+    QuestionType_RadioButtonList,
+    QuestionType_Text,
+    QuestionType_TextArea
+} from "./constants";
 
 const InputAdapter = ({ input, meta, question, className, isDisabled, isRequired, ...rest }) => {
 
@@ -239,7 +245,7 @@ const ExtraQuestionsForm = React.forwardRef(({
         // disable field if edit isn't allowed and the questions is answered
         const isDisabled = !allowExtraQuestionsEdit && isAnswered(q, answers);
         // @see https://codesandbox.io/s/vg05y?file=/index.js
-        if (q.type === "Text") {
+        if (q.type === QuestionType_Text) {
             return (
                 <Fragment key={toSlug(q.name)}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
@@ -266,7 +272,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                 </Fragment>
             );
         }
-        if (q.type === "TextArea") {
+        if (q.type === QuestionType_TextArea) {
             return (
                 <Fragment key={toSlug(q.name)}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
@@ -293,7 +299,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                 </Fragment>
             );
         }
-        if (q.type === "CheckBox") {
+        if (q.type === QuestionType_Checkbox) {
             return (
                 <Fragment key={toSlug(q.name)}>
                     <div ref={el => questionRef.current[q.id] = el} style={{display: 'flex'}}
@@ -328,7 +334,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                 </Fragment>
             );
         }
-        if (q.type === "RadioButtonList") {
+        if (q.type === QuestionType_RadioButtonList) {
             const options = questionValues.map(val => ({label : val.label, value : val.id}));
             return (
                 <Fragment key={toSlug(q.name)}>
@@ -358,7 +364,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                 </Fragment>
             );
         }
-        if (q.type === "ComboBox" || q.type === "CountryComboBox") {
+        if (q.type === QuestionType_ComboBox || q.type === QuestionType_CountryComboBox) {
             const options = questionValues.map(val => ({label : val.label, value : val.id}));
             return (
                 <Fragment key={toSlug(q.name)}>
@@ -389,7 +395,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                 </Fragment>
             );
         }
-        if (q.type === "CheckBoxList") {
+        if (q.type === QuestionType_CheckBoxList) {
             const options = questionValues.map(val => ({label : val.label, value : val.id}));
             return (
                 <Fragment key={toSlug(q.name)}>
@@ -482,7 +488,34 @@ const ExtraQuestionsForm = React.forwardRef(({
         })
     }
 
+
+
     if (!Object.keys(answers).length) return null;
+
+    // try to set default values , if they exists ..
+    Object.keys(answers).forEach((key) => {
+        let currentVal = answers[key];
+        let question = extraQuestions.find((q) => q.name === key);
+        if (question) {
+
+            if (question.type === QuestionType_CheckBoxList && currentVal.length === 0) {
+                let defaultVal = question.values.find((v) => v.is_default);
+                currentVal = defaultVal ? [defaultVal.id] : currentVal;
+            }
+
+            if (question.type === QuestionType_RadioButtonList && currentVal.length === 0) {
+                let defaultVal = question.values.find((v) => v.is_default);
+                currentVal = defaultVal ? [defaultVal.id] : currentVal;
+            }
+
+            if ((question.type === QuestionType_ComboBox || question.type === QuestionType_CountryComboBox) && !currentVal) {
+                let defaultVal = question.values.find((v) => v.is_default);
+                currentVal = defaultVal ? defaultVal.id : currentVal;
+            }
+
+            answers[key] = currentVal;
+        }
+    });
 
     return (
         <div className={className}>
