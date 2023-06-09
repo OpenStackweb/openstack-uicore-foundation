@@ -488,14 +488,13 @@ const ExtraQuestionsForm = React.forwardRef(({
         })
     }
 
-
-
     if (!Object.keys(answers).length) return null;
 
     // try to set default values , if they exists ..
     Object.keys(answers).forEach((key) => {
         let currentVal = answers[key];
-        let question = extraQuestions.find((q) => q.name === key);
+        let question = extraQuestions.find((q) => toSlug(q.name) === key);
+
         if (question) {
 
             if (question.type === QuestionType_CheckBoxList && currentVal.length === 0) {
