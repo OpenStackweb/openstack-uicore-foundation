@@ -109,7 +109,7 @@ const ScheduleBuilderView = ({
         <div className="schedule-view-wrapper">
             {props.onSlotSizeChange &&
                 <div className="row" style={{marginBottom: 12, marginTop: 2}}>
-                    <div className="col-md-4">
+                    <div className="col-md-12">
                         <span>Slot size: </span>
                         <SteppedSelect
                             value={slotSize}
