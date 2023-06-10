@@ -490,32 +490,6 @@ const ExtraQuestionsForm = React.forwardRef(({
 
     if (!Object.keys(answers).length) return null;
 
-    // try to set default values , if they exists ..
-    Object.keys(answers).forEach((key) => {
-        let currentVal = answers[key];
-        let question = extraQuestions.find((q) => toSlug(q.name) === key);
-
-        if (question) {
-
-            if (question.type === QuestionType_CheckBoxList && currentVal.length === 0) {
-                let defaultVal = question.values.find((v) => v.is_default);
-                currentVal = defaultVal ? [defaultVal.id] : currentVal;
-            }
-
-            if (question.type === QuestionType_RadioButtonList && currentVal.length === 0) {
-                let defaultVal = question.values.find((v) => v.is_default);
-                currentVal = defaultVal ? [defaultVal.id] : currentVal;
-            }
-
-            if ((question.type === QuestionType_ComboBox || question.type === QuestionType_CountryComboBox) && !currentVal) {
-                let defaultVal = question.values.find((v) => v.is_default);
-                currentVal = defaultVal ? defaultVal.id : currentVal;
-            }
-
-            answers[key] = currentVal;
-        }
-    });
-
     return (
         <div className={className}>
             <Form

@@ -146,7 +146,11 @@ export default class QuestionsSet {
         let res = {};
         const slug = toSlug(question.name);
         let userAnswer = this.originalAnswers.find(a => a.question_id === question.id)?.value;
-
+        if(!userAnswer && question?.values?.length > 0){
+            // check default value
+            const defaultVal = question.values.find(v => v.is_default);
+            if(defaultVal) userAnswer = defaultVal.id.toString();
+        }
         if(userAnswer) {
             if (question.type === CheckBoxQuestionType) userAnswer = userAnswer === 'false' ? false : !!userAnswer;
             if (question.type === RadioButtonListQuestionType || question.type === ComboBoxQuestionType) userAnswer = parseInt(userAnswer);
