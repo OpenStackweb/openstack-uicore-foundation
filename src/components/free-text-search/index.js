@@ -61,6 +61,7 @@ class FreeTextSearch extends React.Component {
         this.setState({
             value: event.target.value
         });
+        this.props.onChange(event.target.value)
     }
 
     render(){
