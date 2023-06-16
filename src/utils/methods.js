@@ -242,3 +242,55 @@ export const getTimeServiceUrl = () => {
     }
     return null;
 };
+
+export const getEventLocation = (event, summitVenueCount, summitShowLocDate = null, nowUtc = null) => {
+    const shouldShowVenues = summitShowLocDate && nowUtc ? summitShowLocDate * 1000 < nowUtc : true;
+    const locationName = [];
+    const { location } = event;
+    
+    if (!shouldShowVenues) return 'TBA';
+    
+    if (!location) return 'TBA';
+    
+    if (summitVenueCount > 1 && location.venue?.name) locationName.push(location.venue.name);
+    if (location.floor?.name) locationName.push(location.floor.name);
+    if (location.name) locationName.push(location.name);
+    
+    return locationName.length > 0 ? locationName.join(' - ') : 'TBA';
+};
+
+export const getEventHosts = (event) => {
+    let hosts = [];
+    if (event.speakers?.length > 0) {
+        hosts = [...event.speakers];
+    }
+    if (event.moderator) hosts.push(event.moderator);
+    
+    return hosts;
+};
+
+const loadImage = async url => {
+    const img = document.createElement('img')
+    img.src = url
+    img.crossOrigin = 'anonymous'
+    
+    return new Promise((resolve, reject) => {
+        img.onload = () => resolve(img)
+        img.onerror = reject
+    })
+}
+
+export const convertSVGtoImg = async (svgUrl) => {
+    const img = await loadImage(svgUrl)
+    const newWidth = 100
+    const newHeight = Math.floor(img.naturalHeight * 100 / img.naturalWidth)
+    
+    const canvas = document.createElement('canvas')
+    canvas.width = newWidth
+    canvas.height = newHeight
+    canvas.getContext('2d').drawImage(img, 0, 0, newWidth, newHeight)
+    
+    const url = await canvas.toDataURL(`image/png`, 1.0)
+    console.log(url, newWidth, newHeight);
+    return {url, width: newWidth, height: newHeight}
+}

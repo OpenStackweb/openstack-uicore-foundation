@@ -3,10 +3,10 @@ import SummitDaysSelect from "../inputs/summit-days-select";
 import SummitVenuesSelect from "../inputs/summit-venues-select";
 import SteppedSelect from "../inputs/stepped-select/index.jsx";
 import ScheduleEventList from "./schedule-event-list";
-import {epochToMomentTimeZone} from "../../utils/methods";
+import {epochToMomentTimeZone, parseLocationHour} from "../../utils/methods";
 import BulkActionsSelector from "../bulk-actions-selector/index.js";
 import {bulkOptions, PixelsPerMinute, SlotSizeOptions, TBALocation} from "./constants";
-import {parseLocationHour} from '../../utils/methods'
+import SchedulePrintButton from "../schedule-print/schedule-print-button";
 
 import './schedule-builder-view.less';
 
@@ -107,17 +107,24 @@ const ScheduleBuilderView = ({
     
     return (
         <div className="schedule-view-wrapper">
-            {props.onSlotSizeChange &&
+            {(props.onSlotSizeChange || props.showPrint) &&
                 <div className="row" style={{marginBottom: 12, marginTop: 2}}>
-                    <div className="col-md-12">
-                        <span>Slot size: </span>
-                        <SteppedSelect
-                            value={slotSize}
-                            onChange={props.onSlotSizeChange}
-                            options={slotSizeOptions}
-                            style={{display: 'inline-block', marginLeft: 10}}
-                        />
-                    </div>
+                    {props.onSlotSizeChange &&
+                        <div className="col-md-6">
+                            <span>Slot size: </span>
+                            <SteppedSelect
+                                value={slotSize}
+                                onChange={props.onSlotSizeChange}
+                                options={slotSizeOptions}
+                                style={{display: 'inline-block', marginLeft: 10}}
+                            />
+                        </div>
+                    }
+                    {props.showPrint &&
+                        <div className="col-md-6 pull-right">
+                            <SchedulePrintButton summit={summit} events={scheduleEvents} />
+                        </div>
+                    }
                 </div>
             }
             <div className="row">
