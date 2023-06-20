@@ -236,7 +236,7 @@ const ScheduleEvent = ({
                 onClick={() => onEditEvent(event)}
             />
         }
-        {onMoveEvent &&
+        {!event.static && onMoveEvent &&
           <i
               className="fa fa-arrow-circle-right event-action-btn"
               title="move event"
