@@ -46,7 +46,7 @@ const TimeSlotContainer = ( props ) => {
     drop: (item, monitor, component) => {
       onDroppedEvent(item, timeSlot);
     }
-  }), [interval, timeSlot]);
+  }), [interval, timeSlot, currentDay]);
   const {isOver, canDrop} = collectedProps;
 
   const renderMinutesContainer = (interval, pixelsPerMinute) => {
