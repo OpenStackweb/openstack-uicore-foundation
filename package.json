@@ -95,6 +95,7 @@
     "cheerio": "1.0.0-rc.10"
   },
   "peerDependencies": {
+    "@react-pdf/renderer": "^3.1.11",
     "awesome-bootstrap-checkbox": "^1.0.1",
     "browser-tabs-lock": "^1.2.15",
     "crypto-js": "^4.1.1",
