@@ -248,8 +248,6 @@ export const getEventLocation = (event, summitVenueCount, summitShowLocDate = nu
     const locationName = [];
     const { location } = event;
     
-    console.log(shouldShowVenues, summitShowLocDate, nowUtc, location);
-    
     if (!shouldShowVenues) return 'TBA';
     
     if (!location) return 'TBA';
