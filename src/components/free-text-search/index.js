@@ -61,6 +61,7 @@ class FreeTextSearch extends React.Component {
         this.setState({
             value: event.target.value
         });
+        if (this.props.onChange) this.props.onChange(event.target.value)
     }
 
     render(){
@@ -93,10 +94,12 @@ class FreeTextSearch extends React.Component {
 }
 FreeTextSearch.defaultProps = {
     preventEvents: false,
+    onChange: null,
 }
 
 FreeTextSearch.propTypes = {
     preventEvents: PropTypes.bool,
+    onChange: PropTypes.func,
 };
 
 
