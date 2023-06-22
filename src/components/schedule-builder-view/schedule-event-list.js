@@ -250,7 +250,7 @@ const ScheduleEventList = (props) => {
               <ScheduleEvent
                 event={event}
                 selectedPublishedEvents={selectedPublishedEvents}
-                key={`event-${event.id}-${event.start_date}-${event.end_date}-${interval}`}
+                key={`event-${event.id}-${event.last_edited}-${interval}`}
                 type={"MAIN"}
                 step={pixelsPerMinute * 5}
                 minHeight={(pixelsPerMinute * 10)}
