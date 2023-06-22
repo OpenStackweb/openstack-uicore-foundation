@@ -127,10 +127,11 @@ const SchedulePrintView = ({ events, summit, nowUtc }) => {
     return null;
   };
 
+  const sortedEvents = events.sort((a,b) => a.start_date - b.start_date);
   const venue = summit.locations.find(l => l.class_name === 'SummitVenue');
   const summitStart = epochToMomentTimeZone(summit.start_date, summit.time_zone_id).format('MMMM Do YYYY');
   const summitEnd = epochToMomentTimeZone(summit.end_date, summit.time_zone_id).format('MMMM Do YYYY');
-
+  
   useEffect(() => {
     if (summit.logo) {
       const getPngLogo = async () => {
@@ -164,7 +165,7 @@ const SchedulePrintView = ({ events, summit, nowUtc }) => {
             </View>
           </View>
         </View>
-        {events.map(event => {
+        {sortedEvents.map(event => {
           const eventDate = epochToMomentTimeZone(event.start_date, summit.time_zone_id).format('ddd, MMMM D');
           const eventStartTime = epochToMomentTimeZone(event.start_date, summit.time_zone_id).format('h:mma');
           const eventEndTime = epochToMomentTimeZone(event.end_date, summit.time_zone_id).format('h:mma');

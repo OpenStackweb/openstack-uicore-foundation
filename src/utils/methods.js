@@ -244,9 +244,11 @@ export const getTimeServiceUrl = () => {
 };
 
 export const getEventLocation = (event, summitVenueCount, summitShowLocDate = null, nowUtc = null) => {
-    const shouldShowVenues = summitShowLocDate && nowUtc ? summitShowLocDate * 1000 < nowUtc : true;
+    const shouldShowVenues = (summitShowLocDate && nowUtc) ? summitShowLocDate * 1000 < nowUtc : true;
     const locationName = [];
     const { location } = event;
+    
+    console.log(shouldShowVenues, summitShowLocDate, nowUtc, location);
     
     if (!shouldShowVenues) return 'TBA';
     
