@@ -11,26 +11,18 @@
  * limitations under the License.
  **/
 
-import React, { useState } from 'react';
+import React from 'react';
 
 const TextArea = ({ onChange, value, className, error, ...rest }) => {
-
-    const [inputValue, setInputValue] = useState(value);
-
-    let has_error = error && error != '';
-    let class_name = className ? className : 'form-control';
-
-    const handleInputChange = (evt) => {
-        setInputValue(evt.target.value);
-        onChange(evt);
-    }
+    const has_error = error && error !== '';
+    const class_name = className ? className : 'form-control';
 
     return (
         <div>
             <textarea
                 className={class_name + ' ' + (has_error ? 'error' : '')}                
-                value={inputValue}
-                onChange={handleInputChange}
+                value={value}
+                onChange={onChange}
                 {...rest}
             />
             {has_error &&
