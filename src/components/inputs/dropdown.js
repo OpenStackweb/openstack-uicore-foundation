@@ -72,6 +72,7 @@ export default class Dropdown extends React.Component {
                     isDisabled={isDisabled}
                     styles={selectStyles}
                     aria-labelledby={ariaLabelledBy}
+                    formatOptionLabel={(data) => <span dangerouslySetInnerHTML={{ __html: data.label }} />}
                     {...rest}
                 />
                 {has_error &&
