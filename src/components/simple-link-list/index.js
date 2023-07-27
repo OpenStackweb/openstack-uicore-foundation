@@ -165,7 +165,7 @@ class SimpleLinkList extends React.Component {
                 <div className="col-md-4 simple-link-list-title">
                     <h4>{title}</h4>
                 </div>
-                <div className="col-md pull-right btn-group">
+                <div className="col-md simple-link-list-buttons">
                     {AsyncComponent}
                     <button type="button" className="btn btn-default add-button" onClick={this.handleLink} disabled={disabledAdd}>
                         {T.translate("general.add")}
