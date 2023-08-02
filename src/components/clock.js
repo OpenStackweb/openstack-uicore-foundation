@@ -25,7 +25,8 @@ class Clock extends React.Component {
         this.fragmentParser = new FragmentParser();
         this.interval = null;
         this.state = {
-            timestamp: null
+            timestamp: null,
+            manualSet : false,
         }
         this._isMounted = false;
         this.onVisibilityChange = this.onVisibilityChange.bind(this);
@@ -66,8 +67,11 @@ class Clock extends React.Component {
         const nowQS = this.fragmentParser.getParam('now');
         const momentQS = moment.tz(nowQS, 'YYYY-MM-DD,hh:mm:ss', timezone);
         let timestamp = null;
+        let manualSet = false;
         if (momentQS.isValid()) {
             timestamp = momentQS.valueOf() / 1000;
+            console.log(`Clock::componentDidMount nowQS ${nowQS} is valid setting timestamp ${timestamp}`);
+            manualSet  = true;
         } else if (now) {
             timestamp = now
         } else {
@@ -78,7 +82,7 @@ class Clock extends React.Component {
         }
 
         if(timestamp) {
-            this.setState({timestamp});
+            this.setState({timestamp, manualSet});
             if(this.props.onTick)
                 this.props.onTick(timestamp);
         }
@@ -89,9 +93,10 @@ class Clock extends React.Component {
 
     onVisibilityChange() {
         const visibilityState = document.visibilityState;
-
+        const {manualSet} = this.state;
         if (visibilityState === "visible") {
-            console.log(`Clock::onVisibilityChange`)
+            console.log(`Clock::onVisibilityChange manualSet ${manualSet}`)
+            if(manualSet) return;
             const localBefore = moment().unix();
             this.getServerTime()
                 .then((response) => this.processServerTimeResponse(response, localBefore))
