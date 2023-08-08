@@ -13,18 +13,16 @@
 
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types'
-import AsyncSelect from 'react-select/lib/Async';
+import AsyncCreatableSelect from "react-select/lib/AsyncCreatable";
 import { queryRegistrationCompanies } from '../../utils/query-actions';
 
-const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, disabled, className, summitId, onError, inputPlaceholder, DDLPlaceholder, tabSelectsValue, selectStyles, ...rest }) => {
+const RegistrationCompanyInput = ({ 
+        error, value, onChange, id, multi,isMulti, disabled, className, summitId, onError, 
+        DDLPlaceholder, tabSelectsValue, selectStyles, createLabel, ...rest }) => {
 
     const [theValue, setTheValue] = useState({ value: null, label: '' });
-    const [freeInput, setFreeInput] = useState(false);
-    const [inputValue, setInputValue] = useState('');
     const [isMultiOptional, setIsMultiOptional] = useState(multi || isMulti);
-    const [inputDisabled, setInputDisabled] = useState(disabled)
     const [hasError, setHasError] = useState(error);
-    const [noCompanies, setNoCompanies] = useState(false);
 
     useEffect(() => {
         setHasError(error);
@@ -32,8 +30,6 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
 
     useEffect(() => {
         if (!value.id && value.name) {
-            setFreeInput(true);
-            setInputValue(value.name);
             setTheValue({ value: null, label: value.name })
         } else {
             if (isMulti && value.length > 0) {
@@ -42,28 +38,12 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                 setTheValue({ value: value.id, label: value.name });
             }
         }
-    }, [value])
+    }, [value]);
 
     const handleChange = (eventValue) => {
-        if (eventValue.value === null) {
-            setFreeInput(true);
-            const newValueState = isMultiOptional ? eventValue.map(v => ({ value: v.value, label: '' })) : { value: eventValue.value, label: '' };
-            setTheValue(newValueState);
-            let ev = {
-                target: {
-                    id: id,
-                    value: newValueState,
-                    type: 'companyinput'
-                }
-            };
-            onChange(ev);
-            return;
-        }
-
         const newValue = isMultiOptional ? eventValue.map(v => ({ id: v.value, name: v.label })) : { id: eventValue.value, name: eventValue.label };
         const newValueState = isMultiOptional ? eventValue.map(v => ({ value: v.value, label: v.label })) : { value: eventValue.value, label: eventValue.label };
         setTheValue(newValueState);
-
 
         let ev = {
             target: {
@@ -72,51 +52,13 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
                 type: 'companyinput'
             }
         };
-        onChange(ev);
-    }
 
-    const handleInputClear = () => {
-        setFreeInput(!freeInput);
-        setInputValue('');
-        setTheValue({ value: null, label: '' });
-        let ev = {
-            target: {
-                id: id,
-                value: { id: null, name: '' },
-                type: 'companyinput'
-            }
-        };
-        onChange(ev);
-    }
-
-    const handleInputChange = (evt) => {
-        setInputValue(evt.target.value);
-        let ev = {
-            target: {
-                id: id,
-                value: { id: null, name: evt.target.value },
-                type: 'companyinput'
-            }
-        };
         onChange(ev);
     }
 
     const getCompanies = (input, callback) => {
 
         const translateOptions = (options) => {
-
-            // if the summit has no companies, set the input only as text
-            if (!input) {
-                if (options.length === 0) {
-                    setNoCompanies(true);
-                    setFreeInput(true);
-                } else {
-                    // if the input is empty, set only this option as default value
-                    const defaultOption = { value: null, label: 'Other' };
-                    callback([defaultOption]);
-                }
-                return;
-            }
 
             if (options instanceof Error) {
                 onError(options);
@@ -126,49 +68,38 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
             }
             // we need to map into value/label because of a bug in react-select 2
             // https://github.com/JedWatson/react-select/issues/2998
-            const otherOption = { value: null, label: 'Other' };
-            let newOptions = [...options.map(c => ({ value: c.id.toString(), label: c.name })), otherOption];
+            let newOptions = [...options.map(c => ({ value: c.id.toString(), label: c.name }))];
             callback(newOptions);
         };
 
         queryRegistrationCompanies(summitId, input, translateOptions);
     }
 
+    const handleNewOption = (newOption) => {
+        // we need to map into value/label because of a bug in react-select 2
+        // https://github.com/JedWatson/react-select/issues/2998        
+        handleChange({value: 0, label: newOption});
+    }
+
     return (
         <div style={{ position: 'relative' }}>
-            {freeInput ?
-                <>
-                    <input
-                        value={inputValue}
-                        placeholder={inputPlaceholder}
-                        onChange={handleInputChange}
-                        className="form-control"
-                        style={{ paddingRight: 25 }}
-                        disabled={inputDisabled}
-                        {...rest}
-                    />
-                    {inputDisabled || !noCompanies &&
-                        <i aria-label='Clear' style={{ position: 'absolute', top: 10, right: 10, cursor: 'pointer', opacity: '65%' }}
-                            onClick={handleInputClear} className='fa fa-close'></i>
-                    }
-
-                </>
-                :
-                <AsyncSelect
-                    // Passing null if no label and value to show the placeholder
-                    value={theValue.label && theValue.value ? theValue : null}
-                    inputId={id}
-                    tabSelectsValue={tabSelectsValue}
-                    placeholder={DDLPlaceholder}
-                    onChange={handleChange}
-                    defaultOptions={true}
-                    loadOptions={getCompanies}
-                    isMulti={isMultiOptional}
-                    className={className}
-                    styles={selectStyles}
-                    {...rest}
-                />
-            }
+            <AsyncCreatableSelect
+                // Passing null if no label and no value property to show the placeholder
+                value={theValue.label && theValue.hasOwnProperty("value") ? theValue : null}
+                inputId={id}
+                tabSelectsValue={tabSelectsValue}
+                placeholder={DDLPlaceholder}
+                onChange={handleChange}
+                defaultOptions={true}
+                loadOptions={getCompanies}
+                isMulti={isMultiOptional}
+                className={className}
+                styles={selectStyles}
+                onCreateOption={handleNewOption}
+                formatCreateLabel={(value) => `${createLabel} ${value}`}
+                isDisabled={disabled}
+                {...rest}
+            />
             {hasError &&
                 <p className="error-label">{error}</p>
             }
@@ -180,10 +111,10 @@ const RegistrationCompanyInput = ({ error, value, onChange, id, multi, isMulti, 
 export default RegistrationCompanyInput;
 
 RegistrationCompanyInput.defaultProps = {
-    inputPlaceholder: 'Enter your company',
     DDLPlaceholder: 'Select a company',
     disabled: false,
-    tabSelectsValue: false
+    tabSelectsValue: false,
+    createLabel: 'Select '
 }
 
 RegistrationCompanyInput.propTypes = {
