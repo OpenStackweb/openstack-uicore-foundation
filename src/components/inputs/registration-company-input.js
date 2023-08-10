@@ -81,6 +81,8 @@ const RegistrationCompanyInput = ({
         handleChange({value: 0, label: newOption});
     }
 
+    const classNamPrefix =`${className}_prefix`;
+
     return (
         <div style={{ position: 'relative' }}>
             <AsyncCreatableSelect
@@ -94,6 +96,7 @@ const RegistrationCompanyInput = ({
                 loadOptions={getCompanies}
                 isMulti={isMultiOptional}
                 className={className}
+                classNamePrefix={classNamPrefix}
                 styles={selectStyles}
                 onCreateOption={handleNewOption}
                 formatCreateLabel={(value) => `${createLabel} ${value}`}
@@ -114,7 +117,8 @@ RegistrationCompanyInput.defaultProps = {
     DDLPlaceholder: 'Select a company',
     disabled: false,
     tabSelectsValue: false,
-    createLabel: 'Select '
+    createLabel: 'Select ',
+    className:'registration_company_dll',
 }
 
 RegistrationCompanyInput.propTypes = {
