@@ -13,6 +13,8 @@
 
 .simple-link-list {
   margin-top: 40px;
+  display: flex;
+  flex-direction: column;
   .link-select {
     width: 200px;
     .Select-control {
@@ -39,5 +41,9 @@
 .panel .simple-link-list {
   .simple-link-list-title {
     display: none;
+  }
+  .simple-link-list-buttons {
+    display: flex;
+    justify-content: flex-end;
   }
 }
