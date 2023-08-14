@@ -11,45 +11,23 @@
  * limitations under the License.
  **/
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types'
 import AsyncCreatableSelect from "react-select/lib/AsyncCreatable";
 import { queryRegistrationCompanies } from '../../utils/query-actions';
 
 const RegistrationCompanyInput = ({ 
-        error, value, onChange, id, multi,isMulti, disabled, className, summitId, onError, 
-        DDLPlaceholder, tabSelectsValue, selectStyles, createLabel, ...rest }) => {
-
-    const [theValue, setTheValue] = useState({ value: null, label: '' });
-    const [isMultiOptional, setIsMultiOptional] = useState(multi || isMulti);
-    const [hasError, setHasError] = useState(error);
-
-    useEffect(() => {
-        setHasError(error);
-    }, [error]);
-
-    useEffect(() => {
-        if (!value.id && value.name) {
-            setTheValue({ value: null, label: value.name })
-        } else {
-            if (isMulti && value.length > 0) {
-                setTheValue(value.map(v => ({ value: v.id, label: v.name })));
-            } else if (!isMulti && value.id) {
-                setTheValue({ value: value.id, label: value.name });
-            }
-        }
-    }, [value]);
+        error, onChange, id, disabled, className, summitId, onError,
+                                      value, DDLPlaceholder, tabSelectsValue, selectStyles, createLabel, ...rest }) => {
 
     const handleChange = (eventValue) => {
-        const newValue = isMultiOptional ? eventValue.map(v => ({ id: v.value, name: v.label })) : { id: eventValue.value, name: eventValue.label };
-        const newValueState = isMultiOptional ? eventValue.map(v => ({ value: v.value, label: v.label })) : { value: eventValue.value, label: eventValue.label };
-        setTheValue(newValueState);
-
+        if(!eventValue) eventValue = { value: null, label: '' };
+        const newValue = { id: eventValue.value, name: eventValue.label };
         let ev = {
             target: {
                 id: id,
                 value: newValue,
-                type: 'companyinput'
+                type: 'registration_company_input'
             }
         };
 
@@ -83,18 +61,24 @@ const RegistrationCompanyInput = ({
 
     const classNamPrefix =`${className}_prefix`;
 
+    // default value ( no selection )
+    let theValue =  { value: null, label: '' };
+
+    if (value && value.id != null) {
+        theValue = {value: value.id.toString(), label: value.name};
+    }
+
     return (
         <div style={{ position: 'relative' }}>
             <AsyncCreatableSelect
                 // Passing null if no label and no value property to show the placeholder
-                value={theValue.label && theValue.hasOwnProperty("value") ? theValue : null}
+                value={theValue}
                 inputId={id}
                 tabSelectsValue={tabSelectsValue}
                 placeholder={DDLPlaceholder}
                 onChange={handleChange}
                 defaultOptions={true}
                 loadOptions={getCompanies}
-                isMulti={isMultiOptional}
                 className={className}
                 classNamePrefix={classNamPrefix}
                 styles={selectStyles}
@@ -103,7 +87,7 @@ const RegistrationCompanyInput = ({
                 isDisabled={disabled}
                 {...rest}
             />
-            {hasError &&
+            {error &&
                 <p className="error-label">{error}</p>
             }
         </div>
