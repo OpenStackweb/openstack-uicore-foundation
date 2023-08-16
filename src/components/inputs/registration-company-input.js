@@ -15,13 +15,18 @@ import React from 'react';
 import PropTypes from 'prop-types'
 import AsyncCreatableSelect from "react-select/lib/AsyncCreatable";
 import { queryRegistrationCompanies } from '../../utils/query-actions';
+import _ from 'lodash';
+const NullValue = { value: null, label: '' };
+const NewId = 0;
 
 const RegistrationCompanyInput = ({ 
         error, onChange, id, disabled, className, summitId, onError,
-                                      value, DDLPlaceholder, tabSelectsValue, selectStyles, createLabel, ...rest }) => {
+                                      value, placeholder, tabSelectsValue, selectStyles, createLabel, ...rest }) => {
+
+    const isNullValue = (val) => _.isEqual(val, {id: null, name: ''})
 
     const handleChange = (eventValue) => {
-        if(!eventValue) eventValue = { value: null, label: '' };
+        if(!eventValue) eventValue = NullValue;
         const newValue = { id: eventValue.value, name: eventValue.label };
         let ev = {
             target: {
@@ -56,16 +61,16 @@ const RegistrationCompanyInput = ({
     const handleNewOption = (newOption) => {
         // we need to map into value/label because of a bug in react-select 2
         // https://github.com/JedWatson/react-select/issues/2998        
-        handleChange({value: 0, label: newOption});
+        handleChange({value: NewId, label: newOption});
     }
 
     const classNamPrefix =`${className}_prefix`;
 
     // default value ( no selection )
-    let theValue =  { value: null, label: '' };
+    let theValue = null;
 
-    if (value && value.id != null) {
-        theValue = {value: value.id.toString(), label: value.name};
+    if (value && !isNullValue(value)) {
+        theValue = {value: value.id, label: value.name};
     }
 
     return (
@@ -75,7 +80,7 @@ const RegistrationCompanyInput = ({
                 value={theValue}
                 inputId={id}
                 tabSelectsValue={tabSelectsValue}
-                placeholder={DDLPlaceholder}
+                placeholder={placeholder}
                 onChange={handleChange}
                 defaultOptions={true}
                 loadOptions={getCompanies}
@@ -83,7 +88,7 @@ const RegistrationCompanyInput = ({
                 classNamePrefix={classNamPrefix}
                 styles={selectStyles}
                 onCreateOption={handleNewOption}
-                formatCreateLabel={(value) => `${createLabel} ${value}`}
+                formatCreateLabel={(value) => `${createLabel} "${value}"`}
                 isDisabled={disabled}
                 {...rest}
             />
@@ -98,7 +103,7 @@ const RegistrationCompanyInput = ({
 export default RegistrationCompanyInput;
 
 RegistrationCompanyInput.defaultProps = {
-    DDLPlaceholder: 'Select a company',
+    placeholder: 'Select a company',
     disabled: false,
     tabSelectsValue: false,
     createLabel: 'Select ',
@@ -106,5 +111,6 @@ RegistrationCompanyInput.defaultProps = {
 }
 
 RegistrationCompanyInput.propTypes = {
-    onError: PropTypes.func.isRequired
+    onError: PropTypes.func.isRequired,
+    placeholder: PropTypes.String,
 };
