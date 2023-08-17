@@ -307,9 +307,6 @@ const ExtraQuestionsForm = React.forwardRef(({
                 <Fragment key={toSlug(q.name)}>
                     <div ref={el => questionRef.current[q.id] = el} style={{display: 'flex'}}
                          className={questionContainerClassName}>
-                        <RawHTML replaceNewLine={true} className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
-                            {getLabel(q)}
-                        </RawHTML>
                         <div className={questionControlContainerClassName}>
                             <div className="form-check abc-checkbox">
                                 <Field
@@ -322,10 +319,13 @@ const ExtraQuestionsForm = React.forwardRef(({
                                        className="form-check-input"
                                        component="input" />
                                 <label className="form-check-label" htmlFor={toSlug(q.name)}/>
-                                <Error name={toSlug(q.name)}/>
                             </div>
                         </div>
+                        <RawHTML replaceNewLine={true} className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
+                            {getLabel(q)}
+                        </RawHTML>
                     </div>
+                    <Error name={toSlug(q.name)}/>
                     {q.sub_question_rules?.length > 0 &&
                     q.sub_question_rules.map((r) =>
                         (
