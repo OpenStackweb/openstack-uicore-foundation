@@ -15,6 +15,8 @@ import React from 'react';
 import RawHTML from '../raw-html';
 import PropTypes from 'prop-types'
 
+import "awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css";
+
 export default class RadioList extends React.Component {
 
     constructor(props) {

@@ -15,6 +15,8 @@ import React from 'react';
 import T from 'i18n-react/dist/i18n-react';
 import RawHTML from '../raw-html';
 
+import "awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css";
+
 export default class CheckboxList extends React.Component {
 
     constructor(props) {

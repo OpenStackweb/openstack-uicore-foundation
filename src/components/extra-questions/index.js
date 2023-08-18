@@ -21,7 +21,6 @@ import RadioList from '../inputs/radio-list'
 import CheckboxList from '../inputs/checkbox-list'
 import QuestionsSet from '../../utils/questions-set';
 import {Field, Form} from "react-final-form";
-import './index.scss';
 import {toSlug} from "../../utils/methods";
 import {
     QuestionType_Checkbox, QuestionType_CheckBoxList, QuestionType_ComboBox, QuestionType_CountryComboBox,
@@ -29,6 +28,9 @@ import {
     QuestionType_Text,
     QuestionType_TextArea
 } from "./constants";
+
+import "awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css";
+import './index.scss';
 
 const InputAdapter = ({ input, meta, question, className, isDisabled, isRequired, ...rest }) => {
 
