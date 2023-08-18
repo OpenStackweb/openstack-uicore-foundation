@@ -558,6 +558,7 @@ ExtraQuestionsForm.propTypes = {
     ValidationErrorClassName: PropTypes.string,
     allowExtraQuestionsEdit: PropTypes.bool,
     shouldScroll2FirstError: PropTypes.bool,
+    readOnly: PropTypes.bool
 };
 
 export default ExtraQuestionsForm;
