@@ -123,10 +123,18 @@ export const queryTracks = _.debounce(async (summitId, input, callback) => {
 export const queryTrackGroups = _.debounce(async (summitId, input, callback) => {
 
     const accessToken = await getAccessToken();
-    input = escapeFilterValue(input);
-    let filter = input ? encodeURIComponent(`name@@${input}`) : '';
 
-    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/track-groups?order=name&access_token=${accessToken}&filter[]=${filter}`))
+    let apiUrl = URI(`/api/v1/summits/${summitId}/track-groups`);
+    apiUrl.addQuery('access_token', accessToken);
+    apiUrl.addQuery('order','name');
+    apiUrl.addQuery('per_page', 10);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        apiUrl.addQuery('filter[]', `name@@${input}`);
+    }
+
+    fetch(buildAPIBaseUrl(apiUrl.toString()))
         .then(fetchResponseHandler)
         .then((json) => {
             let options = [...json.data];
@@ -134,6 +142,7 @@ export const queryTrackGroups = _.debounce(async (summitId, input, callback) => 
             callback(options);
         })
         .catch(fetchErrorHandler);
+
 }, callDelay);
 
 export const queryEvents = _.debounce(async (summitId, input, onlyPublished = false, callback) => {
