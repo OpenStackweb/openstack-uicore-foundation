@@ -367,12 +367,14 @@ export const queryTicketTypes = _.debounce(async (summitId, filters = {}, callba
 
     if(filters.hasOwnProperty('name')) {
         const name = escapeFilterValue(filters.name);
-        apiUrl.addQuery('filter[]', `name@@${name}`);
+        if(name && name != '')
+            apiUrl.addQuery('filter[]', `name@@${name}`);
     }
 
     if(filters.hasOwnProperty('audience')){
         const audience = escapeFilterValue(filters.audience);
-        apiUrl.addQuery('filter[]', `audience==${audience}`);
+        if(audience && audience != '')
+            apiUrl.addQuery('filter[]', `audience==${audience}`);
     }
 
     fetch(buildAPIBaseUrl(apiUrl.toString()))
