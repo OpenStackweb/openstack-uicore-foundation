@@ -60,10 +60,6 @@ class TicketTypesInput extends React.Component {
     getTicketTypes (input, callback) {
         let { summitId, version, optionsLimit } = this.props;
 
-        if (!input) {
-            return Promise.resolve({ options: [] });
-        }
-
         let filters = { name : input };
         if(this.props.hasOwnProperty('audience')){
             filters['audience'] = this.props.audience;
