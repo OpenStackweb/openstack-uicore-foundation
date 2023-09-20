@@ -58,7 +58,6 @@ class SelectableTable extends React.Component {
 
     render() {
         let {options, columns} = this.props;
-        let selectedIds = options.hasOwnProperty('selectedIds') ? options.selectedIds : [];
         let tableClass = options.hasOwnProperty('className') ? options.className : '';
         tableClass += (options.actions.hasOwnProperty('edit')) ? ' table-hover' : '';
 
@@ -111,7 +110,7 @@ class SelectableTable extends React.Component {
                         }
 
                         return (
-                            <SelectableTableRow checked={options.selectedAll || selectedIds.includes(row['id'])} even={i%2 === 0} key={'row_'+row['id']} id={row['id']} actions={options.actions}>
+                            <SelectableTableRow checked={row.checked} even={i%2 === 0} key={'row_'+row['id']} id={row['id']} actions={options.actions}>
                                 {createRow(row, columns, options.actions)}
                             </SelectableTableRow>
                         );

@@ -377,7 +377,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                         <RawHTML replaceNewLine={true} className={questionLabelContainerClassName}>
                             {getLabel(q)}
                         </RawHTML>
-                        <div className={questionControlContainerClassName}>
+                        <div className={`${questionControlContainerClassName} reactSelectDropdown`}>
                             <Field name={toSlug(q.name)}
                                    options={options}
                                    question={q}

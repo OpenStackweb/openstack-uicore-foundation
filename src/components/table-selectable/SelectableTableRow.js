@@ -39,9 +39,15 @@ export default class SelectableTableRow extends React.Component {
         if (canEdit) {
             return (
                 <tr role="row" className={rowClass + " can-edit"} onClick={this.handleEdit.bind(this, id)}>
-                    <td key={id + '_select'}><input type="checkbox" id={id + '_select'} name={id + '_select'}
-                               checked={checked}
-                               onChange={this.handleSelect.bind(this, id)}/></td>
+                    <td key={id + '_select'}>
+                        <input
+                            type="checkbox"
+                            id={id + '_select'}
+                            name={id + '_select'}
+                            checked={checked}
+                            onChange={this.handleSelect.bind(this, id)}
+                        />
+                    </td>
                     {children}
                 </tr>
             );
@@ -49,9 +55,15 @@ export default class SelectableTableRow extends React.Component {
 
         return (
                 <tr role="row" className={rowClass}>
-                    <td key={id + '_select'} ><input type="checkbox" id={id + '_select'} name={id + '_select'}
-                               checked={checked}
-                               onChange={this.handleSelect.bind(this, id)}/></td>
+                    <td key={id + '_select'} >
+                        <input
+                            type="checkbox"
+                            id={id + '_select'}
+                            name={id + '_select'}
+                            checked={checked}
+                            onChange={this.handleSelect.bind(this, id)}
+                        />
+                    </td>
                     {children}
                 </tr>
         );
