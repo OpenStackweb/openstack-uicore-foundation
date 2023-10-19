@@ -82,7 +82,6 @@ const RegistrationCompanyInput = ({
                 tabSelectsValue={tabSelectsValue}
                 placeholder={placeholder}
                 onChange={handleChange}
-                defaultOptions={true}
                 loadOptions={getCompanies}
                 className={className}
                 classNamePrefix={classNamPrefix}
