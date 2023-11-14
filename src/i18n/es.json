@@ -1,5 +1,6 @@
 {
   "errors": {
+    "user_not_auth"             : "Hold on. Your user is not authenticated!.",
     "user_not_authz"            : "Hold on. Your user is not authorized!.",
     "session_expired"           : "Hold on. Your session expired!.",
     "server_error"              : "There was a problem with our server, please contact admin."

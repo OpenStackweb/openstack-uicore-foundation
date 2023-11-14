@@ -57,63 +57,63 @@ const isObjectEmpty = (obj) => {
     return Object.keys(obj).length === 0 && obj.constructor === Object ;
 }
 
-export const authErrorHandler = (err, res) => (dispatch, state) => {
-    let code = err.status;
-    let msg = '';
+export const authErrorHandler = (
+    err,
+    res,
+    notifyErrorHandler = showMessage
+) => (dispatch, state) => {
+
+    let msg = "";
+    const code = err.status;
+
+    const notifyError = (title, html, type, callback) => {
+        const errorPayload = { httpCode: code, title, html, type };
+        notifyErrorHandler(errorPayload, callback);
+    };
 
     dispatch(stopLoading());
 
     switch (code) {
-        case 403:
-            let error_message = {
-                title: 'ERROR',
-                html: T.translate("errors.user_not_authz"),
-                type: 'error'
-            };
-
-            dispatch(showMessage( error_message, initLogOut ));
-            break;
         case 401:
-            let currentLocation = getCurrentPathName();
-            let clearing_session_state = isClearingSessionState();
-
-            dispatch({
-                type: CLEAR_SESSION_STATE,
-                payload: {}
-            });
-
-            if(!clearing_session_state) {
-                setSessionClearingState(true);
-                console.log('authErrorHandler 401 - re login');
-                doLogin(currentLocation);
+            const initLogin = () => {
+                const currentLocation = getCurrentPathName();
+                const clearingSessionState = isClearingSessionState();
+                dispatch({
+                    type: CLEAR_SESSION_STATE,
+                    payload: {}
+                });
+                if (!clearingSessionState) {
+                    setSessionClearingState(true);
+                    console.log("authErrorHandler 401 - re login");
+                    doLogin(currentLocation);
+                }
+            } 
+            if (notifyErrorHandler !== showMessage) {
+                notifyError("ERROR", T.translate("errors.user_not_auth"), "error", initLogin);
+            } else {
+                initLogin();
             }
+            break;
+        case 403:
+            notifyError("ERROR", T.translate("errors.user_not_authz"), "error", initLogOut);
             break;
         case 404:
-            msg = "";
-
-            if (err.response.body && err.response.body.message) msg = err.response.body.message;
-            else if (err.response.error && err.response.error.message) msg = err.response.error.message;
-            else msg = err.message;
-
-            Swal.fire("Not Found", msg, "warning");
-
+            msg = err.response.body?.message || err.response.error?.message || err.message;
+            notifyError("Not Found", msg, "warning");
             break;
         case 412:
-            for (var [key, value] of Object.entries(err.response.body.errors)) {
-                if (isNaN(key)) {
-                    msg += key + ': ';
-                }
-
-                msg += value + '<br>';
+            for (const [key, value] of Object.entries(err.response.body.errors)) {
+                msg += isNaN(key) ? `${key}: ` : "";
+                msg += `${value}<br>`;
             }
-            Swal.fire("Validation error", msg, "warning");
             dispatch({
                 type: VALIDATE,
-                payload: {errors: err.response.body.errors}
+                payload: { errors: err.response.body.errors }
             });
+            notifyError("Validation error", msg, "warning");
             break;
         default:
-            Swal.fire("ERROR", T.translate("errors.server_error"), "error");
+            notifyError("ERROR", T.translate("errors.server_error"), "error");
     }
 }
 
@@ -401,9 +401,8 @@ export const fetchResponseHandler = (response) => {
     }
 }
 
-export const showMessage = (settings, callback = {}) => (dispatch) => {
+export const showMessage = (settings, callback) => (dispatch) => {
     dispatch(stopLoading());
-
     Swal.fire(settings).then((result) => {
         if (result.value && typeof callback === 'function') {
             callback();

@@ -1,5 +1,6 @@
 {
   "errors": {
+    "user_not_auth"             : "坚持，稍等。您的用户没有经过身份验证！",
     "user_not_authz"            : "坚持，稍等。您的用户未经授权！",
     "session_expired"           : "坚持，稍等。你的会话已经过期了！",
     "server_error"              : "我们的服务器出现问题，请联系管理员。"
