@@ -57,49 +57,52 @@ const isObjectEmpty = (obj) => {
     return Object.keys(obj).length === 0 && obj.constructor === Object ;
 }
 
+const buildNotifyHandlerPayload = (httpCode, title, content, type) => ({ httpcode, title, html: content, type });
+const buildNotifyHandlerErrorPayload = (httpCode, title, content) => buildNotifyHandlerPayload(httpcode,title,content, "error");
+const buildNotifyHandlerWarningPayload = (httpCode, title, content) => buildNotifyHandlerPayload(httpcode,title,content, "warning");
+
+const initLogin = () => (dispatch) {
+    const currentLocation = getCurrentPathName();
+    const clearingSessionState = isClearingSessionState();
+    dispatch({
+        type: CLEAR_SESSION_STATE,
+        payload: {}
+    });
+    if (!clearingSessionState) {
+        setSessionClearingState(true);
+        console.log("authErrorHandler 401 - re login");
+        doLogin(currentLocation);
+    }
+};
+
 export const authErrorHandler = (
     err,
     res,
     notifyErrorHandler = showMessage
 ) => (dispatch, state) => {
 
-    let msg = "";
     const code = err.status;
-
-    const notifyError = (title, html, type, callback) => {
-        const errorPayload = { httpCode: code, title, html, type };
-        notifyErrorHandler(errorPayload, callback);
-    };
+    let msg = "";
+    let payload, callback;
 
     dispatch(stopLoading());
 
     switch (code) {
         case 401:
-            const initLogin = () => {
-                const currentLocation = getCurrentPathName();
-                const clearingSessionState = isClearingSessionState();
-                dispatch({
-                    type: CLEAR_SESSION_STATE,
-                    payload: {}
-                });
-                if (!clearingSessionState) {
-                    setSessionClearingState(true);
-                    console.log("authErrorHandler 401 - re login");
-                    doLogin(currentLocation);
-                }
-            } 
             if (notifyErrorHandler !== showMessage) {
-                notifyError("ERROR", T.translate("errors.user_not_auth"), "error", initLogin);
+                payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.user_not_auth");
+                callback = () => initLogin()(dispatch);
             } else {
                 initLogin();
             }
             break;
         case 403:
-            notifyError("ERROR", T.translate("errors.user_not_authz"), "error", initLogOut);
+            payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.user_not_authz"));
+            callback = initLogOut;
             break;
         case 404:
             msg = err.response.body?.message || err.response.error?.message || err.message;
-            notifyError("Not Found", msg, "warning");
+            payload = buildNotifyHandlerWarningPayload(code, "Not Found", msg);
             break;
         case 412:
             for (const [key, value] of Object.entries(err.response.body.errors)) {
@@ -110,11 +113,13 @@ export const authErrorHandler = (
                 type: VALIDATE,
                 payload: { errors: err.response.body.errors }
             });
-            notifyError("Validation error", msg, "warning");
+            payload = buildNotifyHandlerWarningPayload(code, "Validation error", msg);
             break;
         default:
-            notifyError("ERROR", T.translate("errors.server_error"), "error");
+            payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.server_error"));
     }
+
+    if (payload) notifyError(payload, callback);
 }
 
 export const getRequest =(
@@ -401,7 +406,7 @@ export const fetchResponseHandler = (response) => {
     }
 }
 
-export const showMessage = (settings, callback) => (dispatch) => {
+export const showMessage = (settings, callback = null) => (dispatch) => {
     dispatch(stopLoading());
     Swal.fire(settings).then((result) => {
         if (result.value && typeof callback === 'function') {
