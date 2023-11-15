@@ -63,7 +63,14 @@ export default class TagInput extends React.Component {
 
         let summitId = (this.props.hasOwnProperty('summitId')) ? this.props.summitId : null;
 
-        queryTags(summitId, input, callback);
+        const _callback = (options) => {
+            if (summitId) {
+                options = options.map(t => t.tag);
+            }
+            callback(options);
+        };
+
+        queryTags(summitId, input, _callback);
     }
 
     render() {
@@ -101,7 +108,7 @@ export default class TagInput extends React.Component {
 TagInput.propTypes = {
     allowCreate: PropTypes.bool,
     className: PropTypes.string,
-    summitId: PropTypes.number,    
+    summitId: PropTypes.number,
     id: PropTypes.string.isRequired,
     value: PropTypes.array,
     onCreate: PropTypes.func,

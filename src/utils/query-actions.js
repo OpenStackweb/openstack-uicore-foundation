@@ -16,308 +16,340 @@ import { getAccessToken } from '../components/security/methods';
 import { buildAPIBaseUrl } from "./methods";
 import _ from 'lodash';
 export const RECEIVE_COUNTRIES  = 'RECEIVE_COUNTRIES';
-const callDelay = 500; //miliseconds
+const callDelay = 500; // milliseconds
 import URI from "urijs";
+const DEFAULT_PAGE_SIZE = 10;
 
-export const queryMembers = _.debounce(async (input, callback) => {
-
-    const accessToken = await getAccessToken();
-    input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`full_name@@${input},first_name@@${input},last_name@@${input},email@@${input}`);
-    let expand = `tickets,rsvp,schedule_summit_events,all_affiliations`
-
-    fetch(buildAPIBaseUrl(`/api/v1/members?filter=${filters}&expand=${expand}&access_token=${accessToken}`))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
-}, callDelay);
-
-export const querySummits = _.debounce(async (input, callback) => {
-
-    const accessToken = await getAccessToken();
-    input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`name@@${input}`);
-
-    fetch(buildAPIBaseUrl(`/api/v1/summits/all?filter=${filters}&access_token=${accessToken}`))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
-}, callDelay);
-
-export const querySpeakers = _.debounce(async (summitId, input, callback) => {
-
-    const accessToken = await getAccessToken();
-    input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`full_name@@${input},first_name@@${input},last_name@@${input},email@@${input}`);
-    let apiUrl = `/api/v1`;
-
-    if (summitId) {
-        apiUrl += `/summits/${summitId}`;
-    }
-
-    apiUrl += `/speakers?filter=${filters}&access_token=${accessToken}&expand=member,registration_request`;
-
-    fetch(buildAPIBaseUrl(apiUrl))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
-}, callDelay);
-
-export const queryTags = _.debounce(async (summitId, input, callback) => {
-
-    const accessToken = await getAccessToken();
-    input = escapeFilterValue(input);
-    let apiUrl = `/api/v1`;
-    let filter = encodeURIComponent(`tag@@${input}`);
-
-    if (summitId) {
-        apiUrl += `/summits/${summitId}/track-tag-groups/all/allowed-tags?filter=${filter}&expand=tag,track_tag_group`;
-    } else {
-        apiUrl += `/tags?filter=${filter}`;
-    }
-
-    apiUrl += `&order=tag&page=1&per_page=50&access_token=${accessToken}`;
-
-    fetch(buildAPIBaseUrl(apiUrl))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-
-            if (summitId) {
-                options = options.map(t => t.tag);
-            }
-
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
-}, callDelay);
-
-export const queryTracks = _.debounce(async (summitId, input, callback) => {
-
-    const accessToken = await getAccessToken();
-    input = escapeFilterValue(input);
-    let filter = encodeURIComponent(`name@@${input}`);
-
-    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/tracks?filter=${filter}&order=name&access_token=${accessToken}`))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
-}, callDelay);
-
-export const queryTrackGroups = _.debounce(async (summitId, input, callback) => {
-
-    const accessToken = await getAccessToken();
-
-    let apiUrl = URI(`/api/v1/summits/${summitId}/track-groups`);
-    apiUrl.addQuery('access_token', accessToken);
-    apiUrl.addQuery('order','name');
-    apiUrl.addQuery('per_page', 10);
-
-    if(input) {
-        input = escapeFilterValue(input);
-        apiUrl.addQuery('filter[]', `name@@${input}`);
-    }
-
-    fetch(buildAPIBaseUrl(apiUrl.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
-
-}, callDelay);
-
-export const queryEvents = _.debounce(async (summitId, input, onlyPublished = false, callback) => {
-
-    const accessToken = await getAccessToken();
-    input = escapeFilterValue(input);
-    let baseUrl = `/api/v1/summits/${summitId}/events` + (onlyPublished ? '/published' : '');
-    let filter = encodeURIComponent(`title@@${input}`);
-
-    fetch(buildAPIBaseUrl(`${baseUrl}?filter=${filter}&order=title&access_token=${accessToken}`))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
-}, callDelay);
-
-export const queryEventTypes = _.debounce(async (summitId, input, callback, eventTypeClassName = null) => {
-    const accessToken = await getAccessToken();
-
-    input = escapeFilterValue(input);
-
-    let url = `/api/v1/summits/${summitId}/event-types?order=name&access_token=${accessToken}`;
-
-    if (input) {
-        const filter = encodeURIComponent(`name@@${input}`);
-        url += `&filter[]=${filter}`
-    }
-
-    if (eventTypeClassName) {
-        const filter = encodeURIComponent(`class_name==${eventTypeClassName}`);
-        url += `&filter[]=${filter}`
-    }
-
-    fetch(buildAPIBaseUrl(url))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
-}, callDelay);
-
-export const queryGroups = _.debounce(async (input, callback) => {
-
-    const accessToken = await getAccessToken();
-    let filters = encodeURIComponent(`title@@${input},code@@${input}`);
-
-    fetch(buildAPIBaseUrl(`/api/v1/groups?filter=${filters}&access_token=${accessToken}`))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
-}, callDelay);
-
-export const queryCompanies = _.debounce(async (input, callback) => {
-
-    const accessToken = await getAccessToken();
-    input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`name@@${input}`);
-
-    fetch(buildAPIBaseUrl(`/api/v1/companies?filter=${filters}&access_token=${accessToken}`))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
-}, callDelay);
-
-export const queryRegistrationCompanies = _.debounce(async (summitId, input, callback) => {
+/**
+ * @param endpoint
+ * @param callback
+ * @param options
+ * @returns {Promise<Response | void>}
+ * @private
+ */
+const _fetch = async (endpoint, callback, options = {}) => {
 
     let accessToken;
 
     try {
         accessToken = await getAccessToken();
     } catch (e) {
-        callback(e);
-        return;
+        if(typeof callback === 'function')
+            callback(e);
+        return Promise.reject();
     }
 
-    let apiUrl = URI(`/api/v1/summits/${summitId}/registration-companies`);
-    apiUrl.addQuery('access_token', accessToken);
-    apiUrl.addQuery('order','name')
+    endpoint.addQuery('access_token', accessToken);
+
+    return fetch(buildAPIBaseUrl(endpoint.toString()), options)
+        .then(fetchResponseHandler)
+        .then((json) => {
+            if(typeof callback === 'function')
+                callback(json.data);
+        })
+        .catch(fetchErrorHandler);
+}
+/**
+ *
+ * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
+ */
+export const queryMembers = _.debounce(async (input, callback, per_page= DEFAULT_PAGE_SIZE) => {
+
+    let endpoint = URI(`/api/v1/members`);
+
+    endpoint.addQuery('expand', `tickets,rsvp,schedule_summit_events,all_affiliations`);
+    endpoint.addQuery('order','first_name,last_name');
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
 
     if(input) {
         input = escapeFilterValue(input);
-        apiUrl.addQuery('filter[]', `name@@${input}`);
+        endpoint.addQuery('filter[]', `full_name@@${input},first_name@@${input},last_name@@${input},email@@${input}`);
     }
 
-    fetch(buildAPIBaseUrl(apiUrl.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
+    _fetch(endpoint, callback);
 
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
 }, callDelay);
 
-export const querySponsors = _.debounce(async (summitId, input, callback) => {
+/**
+ * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
+ */
+export const querySummits = _.debounce(async (input, callback, per_page= DEFAULT_PAGE_SIZE) => {
 
-    const accessToken = await getAccessToken();
-    input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`company_name@@${input}`);
+    let endpoint = URI(`/api/v1/summits/all`);
 
-    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/sponsors?filter=${filters}&expand=company,sponsorship&access_token=${accessToken}`))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
+    endpoint.addQuery('expand', `tickets,rsvp,schedule_summit_events,all_affiliations`);
+    endpoint.addQuery('order','name');
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
 
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `name@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+
 }, callDelay);
 
-export const queryAccessLevels = _.debounce(async (summitId, input, callback) => {
+/**
+ * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
+ */
+export const querySpeakers = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE ) => {
 
-    const accessToken = await getAccessToken();
-    input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`name@@${input}`);
 
-    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/access-level-types?filter=${filters}&&access_token=${accessToken}`))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
+    let endpoint = URI(`/api/v1/${summitId ? `/summits/${summitId}`:``}/speakers`);
 
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
+    endpoint.addQuery('expand', `member,registration_request`);
+    endpoint.addQuery('order','first_name,last_name');
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `full_name@@${input},first_name@@${input},last_name@@${input},email@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+
 }, callDelay);
 
-export const queryOrganizations = _.debounce(async (input, callback) => {
+/**
+ * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
+ */
+export const queryTags = _.debounce(async (summitId, input, callback, per_page = 50) => {
 
-    const accessToken = await getAccessToken();
-    input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`name@@${input}`);
+    let endpoint = URI(`/api/v1/${summitId ? `/summits/${summitId}/track-tag-groups/all/allowed-tags`:`/tags`}`);
 
-    fetch(buildAPIBaseUrl(`/api/v1/organizations?filter=${filters}&access_token=${accessToken}`))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
+    if(summitId)
+        endpoint.addQuery('expand', `tag,track_tag_group`);
 
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
+    endpoint.addQuery('order','tag');
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `tag@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+
+}, callDelay);
+
+/**
+ * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
+ */
+export const queryTracks = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE) => {
+
+    let endpoint = URI(`/api/v1/summits/${summitId}/tracks`);
+
+    endpoint.addQuery('order','name');
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `name@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+}, callDelay);
+
+/**
+ * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
+ */
+export const queryTrackGroups = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE) => {
+
+    let endpoint = URI(`/api/v1/summits/${summitId}/track-groups`);
+
+    endpoint.addQuery('order','name');
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `name@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+
+}, callDelay);
+
+/**
+ * @type {DebouncedFunc<(function(*, *, *=, *): Promise<void>)|*>}
+ */
+export const queryEvents = _.debounce(async (summitId, input, onlyPublished = false, callback, per_page = DEFAULT_PAGE_SIZE) => {
+
+    let endpoint = URI(`/api/v1/summits/${summitId}/events` + (onlyPublished ? '/published' : ''));
+
+    endpoint.addQuery('order','title');
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `title@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+}, callDelay);
+
+/**
+ * @type {DebouncedFunc<(function(*, *, *, *=, *=): Promise<void>)|*>}
+ */
+export const queryEventTypes = _.debounce(async (summitId, input, callback, eventTypeClassName = null, per_page = DEFAULT_PAGE_SIZE) => {
+
+    let endpoint = URI(`/api/v1/summits/${summitId}/event-types`);
+
+    endpoint.addQuery('order','name');
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `name@@${input}`);
+    }
+
+    if (eventTypeClassName) {
+        eventTypeClassName = escapeFilterValue(eventTypeClassName);
+        endpoint.addQuery('filter[]', `class_name==${eventTypeClassName}`);
+    }
+
+    _fetch(endpoint, callback);
+
+}, callDelay);
+
+
+/**
+ * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
+ */
+export const queryGroups = _.debounce(async (input, callback, per_page = DEFAULT_PAGE_SIZE) => {
+
+    let endpoint = URI(`/api/v1/groups`);
+
+    endpoint.addQuery('order','title,code');
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `title@@${input},code@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+
+}, callDelay);
+
+/**
+ * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
+ */
+export const queryCompanies = _.debounce(async (input, callback, per_page = DEFAULT_PAGE_SIZE) => {
+
+    let endpoint = URI(`/api/v1/companies`);
+
+    endpoint.addQuery('order','name');
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `name@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+}, callDelay);
+
+/**
+ * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
+ */
+export const queryRegistrationCompanies = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE) => {
+
+    let endpoint = URI(`/api/v1/summits/${summitId}/registration-companies`);
+
+    endpoint.addQuery('order','name')
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `name@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+
+}, callDelay);
+
+/**
+ * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
+ */
+export const querySponsors = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE) => {
+
+    let endpoint = URI(`/api/v1/summits/${summitId}/sponsors`);
+
+    endpoint.addQuery('expand','company,sponsorship')
+    endpoint.addQuery('order','id')
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `company_name@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+
+}, callDelay);
+
+/**
+ * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
+ */
+export const queryAccessLevels = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE) => {
+
+    let endpoint = URI(`/api/v1/summits/${summitId}/access-level-types`);
+
+    endpoint.addQuery('order','name')
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `name@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+
+}, callDelay);
+
+/**
+ * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
+ */
+export const queryOrganizations = _.debounce(async (input, callback, per_page = DEFAULT_PAGE_SIZE) => {
+
+    let endpoint = URI(`/api/v1/organizations`);
+
+    endpoint.addQuery('order','name')
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `name@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+
 }, callDelay);
 
 export const getLanguageList = (callback, signal) => {
-    return fetch(buildAPIBaseUrl(`/api/public/v1/languages`), {signal})
-        .then(fetchResponseHandler)
-        .then((response) => {
-            callback(response.data);
-        })
-        .catch(fetchErrorHandler);
+    return _fetch(new URI(`/api/public/v1/languages`), callback, { signal });
 };
 
 export const getCountryList = (callback, signal) => {
-
-    return fetch(buildAPIBaseUrl(`/api/public/v1/countries`), {signal})
-        .then(fetchResponseHandler)
-        .then((response) => {
-            callback(response.data);
-        })
-        .catch(fetchErrorHandler);
+    return _fetch(new URI(`/api/public/v1/countries`), callback, { signal });
 };
 
-var geocoder;
+let geocoder;
 
 export const geoCodeAddress = (address) => {
 
@@ -341,7 +373,7 @@ export const geoCodeLatLng = (lat, lng) => {
 
     if (!geocoder) geocoder = new google.maps.Geocoder();
 
-    var latlng = {lat: parseFloat(lat), lng: parseFloat(lng)};
+    let latlng = {lat: parseFloat(lat), lng: parseFloat(lng)};
     // return a Promise
     return new Promise(function(resolve,reject) {
         geocoder.geocode( { 'location': latlng}, function(results, status) {
@@ -356,66 +388,71 @@ export const geoCodeLatLng = (lat, lng) => {
     });
 };
 
-export const queryTicketTypes = _.debounce(async (summitId, filters = {}, callback, version = 'v1', per_page = 5) => {
+/**
+ * @type {DebouncedFunc<(function(*, *=, *, *=, *=): Promise<void>)|*>}
+ */
+export const queryTicketTypes = _.debounce(async (summitId, filters = {}, callback, version = 'v1', per_page = DEFAULT_PAGE_SIZE) => {
 
-    const accessToken = await getAccessToken();
+    let endpoint = URI(`/api/${version}/summits/${summitId}/ticket-types`);
 
-    let apiUrl = URI(`/api/${version}/summits/${summitId}/ticket-types`);
-    apiUrl.addQuery('access_token', accessToken);
-    apiUrl.addQuery('order','name');
-    apiUrl.addQuery('per_page', per_page);
+    endpoint.addQuery('order','name');
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
 
     if(filters.hasOwnProperty('name')) {
         const name = escapeFilterValue(filters.name);
         if(name && name != '')
-            apiUrl.addQuery('filter[]', `name@@${name}`);
+            endpoint.addQuery('filter[]', `name@@${name}`);
     }
 
     if(filters.hasOwnProperty('audience')){
         const audience = escapeFilterValue(filters.audience);
         if(audience && audience != '')
-            apiUrl.addQuery('filter[]', `audience==${audience}`);
+            endpoint.addQuery('filter[]', `audience==${audience}`);
     }
 
-    fetch(buildAPIBaseUrl(apiUrl.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
+    _fetch(endpoint, callback);
+
 }, callDelay);
 
-export const querySponsoredProjects = _.debounce(async (input, callback) => {
+/**
+ * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
+ */
+export const querySponsoredProjects = _.debounce(async (input, callback, per_page = DEFAULT_PAGE_SIZE) => {
 
-    const accessToken = await getAccessToken();
-    const apiUrl = URI(`/api/v1/sponsored-projects`);
-    apiUrl.addQuery('access_token', accessToken);
+
+    const endpoint = URI(`/api/v1/sponsored-projects`);
+
+    endpoint.addQuery('order','name')
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
     if(input) {
         input = escapeFilterValue(input);
-        apiUrl.addQuery('filter[]', `name@@${input}`);
+        endpoint.addQuery('filter[]', `name@@${input}`);
     }
 
-    fetch(buildAPIBaseUrl(apiUrl.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
+    _fetch(endpoint, callback);
+
 }, callDelay);
 
-export const queryPromocodes = _.debounce(async (summitId, input, callback) => {
-    const accessToken = await getAccessToken();
-    input = escapeFilterValue(input);
-    let filters = encodeURIComponent(`code@@${input}`);
+/**
+ * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
+ */
+export const queryPromocodes = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE) => {
 
-    fetch(buildAPIBaseUrl(`/api/v1/summits/${summitId}/promo-codes?filter=${filters}&access_token=${accessToken}`))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
 
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
+    let endpoint = URI(`/api/v1/summits/${summitId}/promo-codes`);
+
+    endpoint.addQuery('order','code')
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `code@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+
 }, callDelay);
