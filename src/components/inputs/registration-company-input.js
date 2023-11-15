@@ -19,9 +19,9 @@ import _ from 'lodash';
 const NullValue = { value: null, label: '' };
 const NewId = 0;
 
-const RegistrationCompanyInput = ({ 
+const RegistrationCompanyInput = ({
         error, onChange, id, disabled, className, summitId, onError,
-                                      value, placeholder, tabSelectsValue, selectStyles, createLabel, ...rest }) => {
+        value, placeholder, tabSelectsValue, selectStyles, createLabel, options2Show, ...rest }) => {
 
     const isNullValue = (val) => _.isEqual(val, {id: null, name: ''})
 
@@ -55,12 +55,12 @@ const RegistrationCompanyInput = ({
             callback(newOptions);
         };
 
-        queryRegistrationCompanies(summitId, input, translateOptions);
+        queryRegistrationCompanies(summitId, input, translateOptions, options2Show);
     }
 
     const handleNewOption = (newOption) => {
         // we need to map into value/label because of a bug in react-select 2
-        // https://github.com/JedWatson/react-select/issues/2998        
+        // https://github.com/JedWatson/react-select/issues/2998
         handleChange({value: NewId, label: newOption});
     }
 
@@ -107,9 +107,11 @@ RegistrationCompanyInput.defaultProps = {
     tabSelectsValue: false,
     createLabel: 'Select ',
     className:'registration_company_dll',
+    options2Show: 20,
 }
 
 RegistrationCompanyInput.propTypes = {
     onError: PropTypes.func.isRequired,
-    placeholder: PropTypes.String,
+    placeholder: PropTypes.string,
+    options2Show: PropTypes.number,
 };
