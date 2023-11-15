@@ -58,8 +58,8 @@ const isObjectEmpty = (obj) => {
 }
 
 const buildNotifyHandlerPayload = (httpCode, title, content, type) => ({ httpcode, title, html: content, type });
-const buildNotifyHandlerErrorPayload = (httpCode, title, content) => buildNotifyHandlerPayload(httpcode,title,content, "error");
-const buildNotifyHandlerWarningPayload = (httpCode, title, content) => buildNotifyHandlerPayload(httpcode,title,content, "warning");
+const buildNotifyHandlerErrorPayload = (httpCode, title, content) => buildNotifyHandlerPayload(httpcode, title, content, "error");
+const buildNotifyHandlerWarningPayload = (httpCode, title, content) => buildNotifyHandlerPayload(httpcode, title, content, "warning");
 
 const initLogin = () => (dispatch) {
     const currentLocation = getCurrentPathName();
