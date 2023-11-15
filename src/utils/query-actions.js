@@ -21,6 +21,22 @@ import URI from "urijs";
 const DEFAULT_PAGE_SIZE = 10;
 
 /**
+ * @param endpoint
+ * @param callback
+ * @param options
+ * @returns {Promise<Response | void>}
+ * @private
+ */
+const _fetch = (endpoint, callback, options = {}) => {
+
+    return fetch(buildAPIBaseUrl(endpoint.toString()), options)
+        .then(fetchResponseHandler)
+        .then((json) => {
+            callback(json.data);
+        })
+        .catch(fetchErrorHandler);
+}
+/**
  *
  * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
  */
@@ -48,14 +64,8 @@ export const queryMembers = _.debounce(async (input, callback, per_page= DEFAULT
         endpoint.addQuery('filter[]', `full_name@@${input},first_name@@${input},last_name@@${input},email@@${input}`);
     }
 
+    _fetch(endpoint, callback);
 
-    fetch(buildAPIBaseUrl(endpoint.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
 }, callDelay);
 
 /**
@@ -85,14 +95,8 @@ export const querySummits = _.debounce(async (input, callback, per_page= DEFAULT
         endpoint.addQuery('filter[]', `name@@${input}`);
     }
 
-    fetch(buildAPIBaseUrl(endpoint.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
+    _fetch(endpoint, callback);
 
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
 }, callDelay);
 
 /**
@@ -122,13 +126,8 @@ export const querySpeakers = _.debounce(async (summitId, input, callback, per_pa
         endpoint.addQuery('filter[]', `full_name@@${input},first_name@@${input},last_name@@${input},email@@${input}`);
     }
 
-    fetch(buildAPIBaseUrl(endpoint.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
+    _fetch(endpoint, callback);
+
 }, callDelay);
 
 /**
@@ -237,14 +236,7 @@ export const queryTrackGroups = _.debounce(async (summitId, input, callback, per
         endpoint.addQuery('filter[]', `name@@${input}`);
     }
 
-    fetch(buildAPIBaseUrl(endpoint.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
+    _fetch(endpoint, callback);
 
 }, callDelay);
 
@@ -316,14 +308,8 @@ export const queryEventTypes = _.debounce(async (summitId, input, callback, even
         endpoint.addQuery('filter[]', `class_name==${eventTypeClassName}`);
     }
 
-    fetch(buildAPIBaseUrl(endpoint.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
+    _fetch(endpoint, callback);
 
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
 }, callDelay);
 
 
@@ -423,14 +409,8 @@ export const queryRegistrationCompanies = _.debounce(async (summitId, input, cal
         endpoint.addQuery('filter[]', `name@@${input}`);
     }
 
-    fetch(buildAPIBaseUrl(endpoint.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
+    _fetch(endpoint, callback);
 
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
 }, callDelay);
 
 /**
@@ -460,13 +440,8 @@ export const querySponsors = _.debounce(async (summitId, input, callback, per_pa
         endpoint.addQuery('filter[]', `company_name@@${input}`);
     }
 
-    fetch(buildAPIBaseUrl(endpoint.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
+    _fetch(endpoint, callback);
+
 }, callDelay);
 
 /**
@@ -495,14 +470,8 @@ export const queryAccessLevels = _.debounce(async (summitId, input, callback, pe
         endpoint.addQuery('filter[]', `name@@${input}`);
     }
 
-    fetch(buildAPIBaseUrl(endpoint.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
+    _fetch(endpoint, callback);
 
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
 }, callDelay);
 
 /**
@@ -543,22 +512,11 @@ export const queryOrganizations = _.debounce(async (input, callback, per_page = 
 }, callDelay);
 
 export const getLanguageList = (callback, signal) => {
-    return fetch(buildAPIBaseUrl(`/api/public/v1/languages`), {signal})
-        .then(fetchResponseHandler)
-        .then((response) => {
-            callback(response.data);
-        })
-        .catch(fetchErrorHandler);
+    return _fetch(new URI(`/api/public/v1/languages`), callback, { signal });
 };
 
 export const getCountryList = (callback, signal) => {
-
-    return fetch(buildAPIBaseUrl(`/api/public/v1/countries`), {signal})
-        .then(fetchResponseHandler)
-        .then((response) => {
-            callback(response.data);
-        })
-        .catch(fetchErrorHandler);
+    return _fetch(new URI(`/api/public/v1/countries`), callback, { signal });
 };
 
 let geocoder;
@@ -633,13 +591,8 @@ export const queryTicketTypes = _.debounce(async (summitId, filters = {}, callba
             endpoint.addQuery('filter[]', `audience==${audience}`);
     }
 
-    fetch(buildAPIBaseUrl(endpoint.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
+    _fetch(endpoint, callback);
+
 }, callDelay);
 
 /**
@@ -668,13 +621,8 @@ export const querySponsoredProjects = _.debounce(async (input, callback, per_pag
         endpoint.addQuery('filter[]', `name@@${input}`);
     }
 
-    fetch(buildAPIBaseUrl(endpoint.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
+    _fetch(endpoint, callback);
+
 }, callDelay);
 
 /**
@@ -703,12 +651,6 @@ export const queryPromocodes = _.debounce(async (summitId, input, callback, per_
         endpoint.addQuery('filter[]', `code@@${input}`);
     }
 
-    fetch(buildAPIBaseUrl(endpoint.toString()))
-        .then(fetchResponseHandler)
-        .then((json) => {
-            let options = [...json.data];
+    _fetch(endpoint, callback);
 
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
 }, callDelay);
