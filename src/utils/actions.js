@@ -61,7 +61,7 @@ const buildNotifyHandlerPayload = (httpCode, title, content, type) => ({ httpcod
 const buildNotifyHandlerErrorPayload = (httpCode, title, content) => buildNotifyHandlerPayload(httpcode, title, content, "error");
 const buildNotifyHandlerWarningPayload = (httpCode, title, content) => buildNotifyHandlerPayload(httpcode, title, content, "warning");
 
-const initLogin = () => (dispatch) {
+const initLogin = () => (dispatch) => {
     const currentLocation = getCurrentPathName();
     const clearingSessionState = isClearingSessionState();
     dispatch({
@@ -90,7 +90,7 @@ export const authErrorHandler = (
     switch (code) {
         case 401:
             if (notifyErrorHandler !== showMessage) {
-                payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.user_not_auth");
+                payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.user_not_auth"));
                 callback = () => initLogin()(dispatch);
             } else {
                 initLogin()(dispatch);
