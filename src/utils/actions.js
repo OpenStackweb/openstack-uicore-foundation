@@ -57,9 +57,9 @@ const isObjectEmpty = (obj) => {
     return Object.keys(obj).length === 0 && obj.constructor === Object ;
 }
 
-const buildNotifyHandlerPayload = (httpCode, title, content, type) => ({ httpcode, title, html: content, type });
-const buildNotifyHandlerErrorPayload = (httpCode, title, content) => buildNotifyHandlerPayload(httpcode, title, content, "error");
-const buildNotifyHandlerWarningPayload = (httpCode, title, content) => buildNotifyHandlerPayload(httpcode, title, content, "warning");
+const buildNotifyHandlerPayload = (httpCode, title, content, type) => ({ httpCode, title, html: content, type });
+const buildNotifyHandlerErrorPayload = (httpCode, title, content) => buildNotifyHandlerPayload(httpCode, title, content, "error");
+const buildNotifyHandlerWarningPayload = (httpCode, title, content) => buildNotifyHandlerPayload(httpCode, title, content, "warning");
 
 const initLogin = () => (dispatch) => {
     const currentLocation = getCurrentPathName();
@@ -79,7 +79,7 @@ export const authErrorHandler = (
     err,
     res,
     notifyErrorHandler = showMessage
-) => (dispatch, state) => {
+) => (dispatch) => {
 
     const code = err.status;
     let msg = "";
@@ -91,9 +91,9 @@ export const authErrorHandler = (
         case 401:
             if (notifyErrorHandler !== showMessage) {
                 payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.user_not_auth"));
-                callback = () => initLogin()(dispatch);
+                callback = () => dispatch(initLogin());
             } else {
-                initLogin()(dispatch);
+                dispatch(initLogin());
             }
             break;
         case 403:
@@ -119,7 +119,8 @@ export const authErrorHandler = (
             payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.server_error"));
     }
 
-    if (payload) notifyError(payload, callback);
+    if (payload)
+        dispatch(notifyErrorHandler(payload, callback));
 }
 
 export const getRequest =(
