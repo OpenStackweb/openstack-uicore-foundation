@@ -40,6 +40,7 @@
     "font-awesome": "^4.7.0",
     "history": "^4.7.2",
     "i18n-react": "^0.6.4",
+    "identity-obj-proxy": "^3.0.0",
     "idtoken-verifier": "^2.2.2",
     "immutability-helper": "^2.7.1",
     "jest": "^28.1.0",
@@ -137,6 +138,11 @@
     "collectCoverageFrom": [
       "src/**/*.{js,jsx,mjs}"
     ],
+    "moduleNameMapper": {
+        "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$":
+        "<rootDir>/__mocks__/fileMock.js",
+      "\\.(css|scss)$": "identity-obj-proxy"
+    },
     "testMatch": [
       "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
       "<rootDir>/src/**/?(*.)(spec|test).{js,jsx,mjs}"
@@ -159,8 +165,8 @@
       "mjs"
     ],
     "globals": {
-        "window": {},
-        "console": {}
+      "window": {},
+      "console": {}
     },
     "testEnvironment": "jsdom"
   },
