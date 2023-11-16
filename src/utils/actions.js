@@ -93,7 +93,7 @@ export const authErrorHandler = (
                 payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.user_not_auth");
                 callback = () => initLogin()(dispatch);
             } else {
-                initLogin();
+                initLogin()(dispatch);
             }
             break;
         case 403:
