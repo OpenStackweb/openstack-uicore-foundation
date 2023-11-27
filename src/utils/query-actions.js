@@ -119,7 +119,7 @@ export const querySpeakers = _.debounce(async (summitId, input, callback, per_pa
  */
 export const queryTags = _.debounce(async (summitId, input, callback, per_page = 50) => {
 
-    let endpoint = URI(`/api/v1/${summitId ? `/summits/${summitId}/track-tag-groups/all/allowed-tags`:`/tags`}`);
+    let endpoint = URI(`/api/v1/${summitId ? `summits/${summitId}/track-tag-groups/all/allowed-tags`:`tags`}`);
 
     if(summitId)
         endpoint.addQuery('expand', `tag,track_tag_group`);
