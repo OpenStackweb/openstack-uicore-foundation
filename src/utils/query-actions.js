@@ -47,6 +47,11 @@ const _fetch = async (endpoint, callback, options = {}) => {
             if(typeof callback === 'function')
                 callback(json.data);
         })
+        .catch(response => {
+            const code = response.status;
+            if (code === 404) callback([]);
+            return response;
+        })
         .catch(fetchErrorHandler);
 }
 /**
