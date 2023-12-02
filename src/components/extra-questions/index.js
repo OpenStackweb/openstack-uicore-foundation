@@ -147,7 +147,18 @@ const ExtraQuestionsForm = React.forwardRef(({
     useImperativeHandle(ref, () => ({
         doSubmit() {
             formRef.current.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-        }
+        },
+        scroll2QuestionById(questionId){
+            if(questionRef.current.hasOwnProperty(questionId)) {
+                const ref = questionRef.current[questionId];
+                ref.focus();
+                ref.scrollIntoView
+                ({
+                    behavior: 'smooth',
+                    block: 'center',
+                })
+            }
+        },
     }));
 
     const formatUserAnswers = () => {
@@ -218,7 +229,7 @@ const ExtraQuestionsForm = React.forwardRef(({
     const getLabel = (q) => {
         // Keep the last word and the required asterisk on the same line
         const nonBreakingSpace = String.fromCharCode(160); // equals to &nbsp;
-        
+
         // Using browser parser isntead of regex to avoid possible issues
         const div = document.createElement("div");
         div.innerHTML = q.label;
@@ -487,7 +498,8 @@ const ExtraQuestionsForm = React.forwardRef(({
 
     const scrollToFirstError = (invalidFormFields) => {
         const firstError = getFirstError(invalidFormFields)
-        questionRef.current[firstError.id].scrollIntoView({
+        questionRef.current[firstError.id].scrollIntoView
+        ({
             behavior: 'smooth',
             block: 'center',
         })
@@ -510,7 +522,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                                 const invalidFormFields = form.getRegisteredFields().filter(field => form.getFieldState(field).invalid);
                                 if (invalidFormFields.length > 0) {
                                     const firstError = getFirstError(invalidFormFields);
-                                    onError(invalidFormFields, questionRef.current[firstError.id])
+                                    onError(invalidFormFields,  questionRef.current[firstError.id], firstError.id);
                                     if(shouldScroll2FirstError)
                                         scrollToFirstError(invalidFormFields)
                                 }

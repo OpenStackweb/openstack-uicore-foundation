@@ -1238,3 +1238,303 @@ it('question should be enabled', () => {
 })
 
 
+test('question with mandatory imcompleted subquestion should scroll', () => {
+
+    const testQuestions = [
+        {
+            "id": 370,
+            "created": 1700189993,
+            "last_edited": 1700189993,
+            "name": "Organizational Role",
+            "type": "RadioButtonList",
+            "label": "<p>Which best describes your role in your organization?</p>",
+            "placeholder": null,
+            "order": 3,
+            "mandatory": true,
+            "max_selected_values": 0,
+            "class": "MainQuestion",
+            "usage": "Ticket",
+            "printable": false,
+            "summit_id": 55,
+            "sub_question_rules": [
+                {
+                    "id": 97,
+                    "created": 1700190418,
+                    "last_edited": 1700190418,
+                    "visibility": "Visible",
+                    "visibility_condition": "Equal",
+                    "answer_values": [
+                        "1225"
+                    ],
+                    "answer_values_operator": "And",
+                    "order": 1,
+                    "parent_question_id": 370,
+                    "sub_question": {
+                        "id": 371,
+                        "created": 1700190397,
+                        "last_edited": 1700190397,
+                        "name": "Organizational Role SUB-QUESTION (Other)",
+                        "type": "Text",
+                        "label": "<p>If you selected \"Other\", please describe</p>",
+                        "placeholder": null,
+                        "order": 4,
+                        "mandatory": true,
+                        "max_selected_values": 0,
+                        "class": "SubQuestion",
+                        "usage": "Ticket",
+                        "printable": false,
+                        "summit_id": 55,
+                        "parent_rules": [
+                            97
+                        ],
+                        "allowed_ticket_types": [],
+                        "allowed_badge_features_types": []
+                    }
+                }
+            ],
+            "values": [
+                {
+                    "id": 1206,
+                    "created": 1700190063,
+                    "last_edited": 1700190063,
+                    "label": "Administrative",
+                    "value": "Administrative",
+                    "order": 1,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1207,
+                    "created": 1700190081,
+                    "last_edited": 1700190081,
+                    "label": "Academia/Student",
+                    "value": "Academia/Student",
+                    "order": 2,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1208,
+                    "created": 1700190097,
+                    "last_edited": 1700190097,
+                    "label": "Analyst",
+                    "value": "Analyst",
+                    "order": 3,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1209,
+                    "created": 1700190116,
+                    "last_edited": 1700190116,
+                    "label": "Business Development/Sales",
+                    "value": "Business Development/Sales",
+                    "order": 4,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1210,
+                    "created": 1700190131,
+                    "last_edited": 1700190131,
+                    "label": "Consultant",
+                    "value": "Consultant",
+                    "order": 5,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1211,
+                    "created": 1700190146,
+                    "last_edited": 1700190146,
+                    "label": "Engineer",
+                    "value": "Engineer",
+                    "order": 6,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1212,
+                    "created": 1700190160,
+                    "last_edited": 1700190160,
+                    "label": "Event Management",
+                    "value": "Event Management",
+                    "order": 7,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1213,
+                    "created": 1700190175,
+                    "last_edited": 1700190175,
+                    "label": "Facility Management",
+                    "value": "Facility Management",
+                    "order": 8,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1214,
+                    "created": 1700190190,
+                    "last_edited": 1700190190,
+                    "label": "Investor",
+                    "value": "Investor",
+                    "order": 9,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1215,
+                    "created": 1700190203,
+                    "last_edited": 1700190203,
+                    "label": "Legal",
+                    "value": "Legal",
+                    "order": 10,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1216,
+                    "created": 1700190214,
+                    "last_edited": 1700190214,
+                    "label": "Marketing",
+                    "value": "Marketing",
+                    "order": 11,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1217,
+                    "created": 1700190225,
+                    "last_edited": 1700190225,
+                    "label": "Media",
+                    "value": "Media",
+                    "order": 12,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1218,
+                    "created": 1700190237,
+                    "last_edited": 1700190237,
+                    "label": "Operations",
+                    "value": "Operations",
+                    "order": 13,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1219,
+                    "created": 1700190253,
+                    "last_edited": 1700190253,
+                    "label": "Procurement",
+                    "value": "Procurement",
+                    "order": 14,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1220,
+                    "created": 1700190266,
+                    "last_edited": 1700190266,
+                    "label": "Product Manager",
+                    "value": "Product Manager",
+                    "order": 15,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1221,
+                    "created": 1700190277,
+                    "last_edited": 1700190277,
+                    "label": "Research",
+                    "value": "Research",
+                    "order": 16,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1222,
+                    "created": 1700190289,
+                    "last_edited": 1700190289,
+                    "label": "Senior Executive",
+                    "value": "Senior Executive",
+                    "order": 17,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1223,
+                    "created": 1700190301,
+                    "last_edited": 1700190301,
+                    "label": "Software Infrastructure",
+                    "value": "Software Infrastructure",
+                    "order": 18,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1224,
+                    "created": 1700190314,
+                    "last_edited": 1700190314,
+                    "label": "Technology Architect",
+                    "value": "Technology Architect",
+                    "order": 19,
+                    "question_id": 370,
+                    "is_default": false
+                },
+                {
+                    "id": 1225,
+                    "created": 1700190326,
+                    "last_edited": 1700190326,
+                    "label": "Other",
+                    "value": "Other",
+                    "order": 20,
+                    "question_id": 370,
+                    "is_default": false
+                }
+            ],
+            "parent_rules": [],
+            "allowed_ticket_types": [],
+            "allowed_badge_features_types": []
+        }
+    ]
+
+    const testAnswers = [
+        {
+            "id": 431802,
+            "created": 1651848786,
+            "last_edited": 1651848786,
+            "value": "1225",
+            "question_id": 370,
+            "order_id": 0,
+            "attendee_id": 131
+        },
+    ];
+
+    const formRef = React.createRef();
+
+    const component = mount(
+        <ExtraQuestionsForm
+            extraQuestions={testQuestions}
+            userAnswers={testAnswers}
+            onAnswerChanges={() => {
+            }}
+            ref={formRef}
+            className="extra-questions"
+            shouldScroll2FirstError={true}
+            allowExtraQuestionsEdit={true}
+        />,
+    );
+
+    const slug = toSlug('Organizational Role SUB-QUESTION (Other)');
+    expect(component.find(`#${slug}`).exists()).toBeTruthy();
+    const input = component.find(`#${slug} input`).at(0);
+    expect(input.props().disabled === true).toBeFalsy();
+
+    formRef.current.doSubmit();
+
+    const question = component.find(`#${slug}`);
+
+});
+
