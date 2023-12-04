@@ -236,12 +236,9 @@ const ExtraQuestionsForm = React.forwardRef(({
         // Using innerText first since it keeps the line breaks
         const label = div.innerText || div.textContent || "";
 
-        const labelText = q.mandatory ? `${label}${nonBreakingSpace}<b>*</b>` : label
-        const labelHTML = `<label id="${toSlug(q.name)} label" htmlFor="${toSlug(q.name)}">
-                                ${labelText}
-                           </label>`
+        const labelText = q.mandatory ? `${label}${nonBreakingSpace}<b>*</b>` : label;
 
-        return labelHTML;
+        return `<label id="${toSlug(q.name)} label" htmlFor="${toSlug(q.name)}">${labelText}</label>`;
     }
 
     const isAnswered = (q, answers) => {
