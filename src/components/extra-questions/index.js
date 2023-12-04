@@ -318,9 +318,8 @@ const ExtraQuestionsForm = React.forwardRef(({
         if (q.type === QuestionType_Checkbox) {
             return (
                 <Fragment key={toSlug(q.name)}>
-                    <div ref={el => questionRef.current[q.id] = el} style={{display: 'flex'}}
-                         className={questionContainerClassName}>
-                        <div className={questionControlContainerClassName}>
+                    <div ref={el => questionRef.current[q.id] = el} className={`${questionContainerClassName} checkbox-wrapper`}>
+                        <div className={`${questionControlContainerClassName} input-wrapper`}>
                             <div className="form-check abc-checkbox">
                                 <Field
                                        name={toSlug(q.name)}
