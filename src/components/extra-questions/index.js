@@ -322,7 +322,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                                 <label className="form-check-label" htmlFor={toSlug(q.name)}/>
                             </div>
                         </div>
-                        <RawHTML replaceNewLine={true} className={`eq-checkbox-label ${questionLabelContainerClassName}`} style={{paddingTop: 0}}>
+                        <RawHTML replaceNewLine={true} className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
                             {getLabel(q)}
                         </RawHTML>
                     </div>
