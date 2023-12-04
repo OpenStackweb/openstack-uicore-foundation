@@ -237,9 +237,7 @@ const ExtraQuestionsForm = React.forwardRef(({
         const label = div.innerText || div.textContent || "";
 
         const labelText = q.mandatory ? `${label}${nonBreakingSpace}<b>*</b>` : label
-        const labelHTML = `<label id="${toSlug(q.name)} label" htmlFor="${toSlug(q.name)}">
-                                ${labelText}
-                           </label>`
+        const labelHTML = `<label id="${toSlug(q.name)} label" htmlFor="${toSlug(q.name)}">${labelText}</label>`
 
         return labelHTML;
     }
@@ -333,7 +331,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                                 <label className="form-check-label" htmlFor={toSlug(q.name)}/>
                             </div>
                         </div>
-                        <RawHTML className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
+                        <RawHTML replaceNewLine={true} className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
                             {getLabel(q)}
                         </RawHTML>
                     </div>

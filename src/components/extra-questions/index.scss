@@ -31,7 +31,7 @@
     form > div.checkbox-wrapper {
         display: grid;
         gap: 15px;
-        grid-template-columns: 1fr 14fr;
+        grid-template-columns: 0fr 14fr;
         grid-template-rows: 1fr;
         align-items: start;
         .input-wrapper {
