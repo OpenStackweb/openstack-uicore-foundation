@@ -236,7 +236,8 @@ const ExtraQuestionsForm = React.forwardRef(({
         // Using innerText first since it keeps the line breaks
         const label = div.innerText || div.textContent || "";
 
-        const labelText = q.mandatory ? `${label}${nonBreakingSpace}<b>*</b>` : label;
+        // Asterisk for mandatory questions only shown on label except for checkbox questions
+        const labelText = q.mandatory && q.type !== QuestionType_Checkbox ? `${label}${nonBreakingSpace}<b>*</b>` : label;
 
         return `<label id="${toSlug(q.name)} label" htmlFor="${toSlug(q.name)}">${labelText}</label>`;
     }
@@ -327,6 +328,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                                        type="checkbox"
                                        className="form-check-input"
                                        component="input" />
+                                {q.mandatory && <span className='checkbox-mandatory'><b>*</b></span>}
                                 <label className="form-check-label" htmlFor={toSlug(q.name)}/>
                             </div>
                         </div>
