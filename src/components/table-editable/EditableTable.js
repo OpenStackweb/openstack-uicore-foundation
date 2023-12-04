@@ -5,9 +5,11 @@ import EditableActionsTableCell from './EditableActionsTableCell';
 import EditableTableRow from './EditableTableRow';
 import Swal from "sweetalert2";
 import T from "i18n-react/dist/i18n-react";
-import './editable-table.css';
 import ReactTooltip from "react-tooltip";
 import { shallowEqual } from '../../utils/methods'
+
+import './editable-table.less';
+
 
 const defaults = {
     colWidth: ''
@@ -70,9 +72,9 @@ export default class EditableTable extends React.Component {
         };
 
         // we store the delete and save functions in props cause we need to extend them
-        this.onSave = props.options.actions.save.onClick;
+        this.onSave = props.options.actions?.save?.onClick;
 
-        this.actions = {...props.options.actions};
+        this.actions = props.options.actions || {};
         this.actions.edit = this.editRow.bind(this);
         this.actions.save = this.saveRow.bind(this);
         this.actions.delete = this.deleteClick.bind(this);
@@ -104,7 +106,7 @@ export default class EditableTable extends React.Component {
     }
 
     deleteClick(id) {
-        let onDelete = this.props.options.actions.delete.onClick;
+        let onDelete = this.props.options.actions?.delete?.onClick;
         let noAlert = this.props.options.hasOwnProperty('noAlert');
 
         if (noAlert) {

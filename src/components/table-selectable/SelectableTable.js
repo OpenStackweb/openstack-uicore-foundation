@@ -4,7 +4,7 @@ import SelectableTableCell from './SelectableTableCell';
 import SelectableTableRow from './SelectableTableRow';
 import SelectableActionsTableCell from './SelectableActionsTableCell';
 import ReactTooltip from 'react-tooltip'
-import './selectable-table.css';
+import './selectable-table.less';
 
 const defaults = {
     sortFunc: (a,b) => (a < b ? -1 : (a > b ? 1 : 0)),
@@ -59,17 +59,17 @@ class SelectableTable extends React.Component {
     render() {
         let {options, columns} = this.props;
         let tableClass = options.hasOwnProperty('className') ? options.className : '';
-        tableClass += (options.actions.hasOwnProperty('edit')) ? ' table-hover' : '';
+        tableClass += options.actions?.edit ? ' table-hover' : '';
 
         return (
             <div>
-                <table className={"table table-striped dataTable " + tableClass}>
+                <table className={"table table-striped selectableTable " + tableClass}>
                     <thead>
                     <tr>
                         <th>
                             <input type="checkbox" id="select_all"
                                    name="select_all"
-                                   onChange={options.actions.edit.onSelectedAll}
+                                   onChange={options.actions?.edit?.onSelectedAll}
                                    checked={options.selectedAll}/>
                         </th>
                         {columns.map((col,i) => {

@@ -27,7 +27,7 @@ export default class TableRow extends React.Component {
 
     render() {
         let {even, actions, id, children} = this.props;
-        let canEdit = (actions.hasOwnProperty('edit') && this.shouldDisplayAction(actions.edit));
+        let canEdit = (actions?.edit && this.shouldDisplayAction(actions.edit));
         let rowClass = even ? 'even' : 'odd';
 
         if (canEdit) {

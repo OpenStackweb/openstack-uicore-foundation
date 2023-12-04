@@ -5,7 +5,7 @@ import TableRow from './TableRow';
 import ActionsTableCell from './ActionsTableCell';
 import ReactTooltip from 'react-tooltip'
 
-import './table.css';
+import './table.less';
 
 const defaults = {
     sortFunc: (a,b) => (a < b ? -1 : (a > b ? 1 : 0)),
@@ -16,18 +16,22 @@ const defaults = {
 }
 
 const createRow = (row, columns, actions) => {
+    const cells = columns.map((col,i) => {
+        const colStyles = col?.styles || {};
 
-    var action_buttons = '';
-    var cells = columns.map((col,i) => {
         if(col.hasOwnProperty("render"))
             return (
-                <TableCell key={'cell_'+i} >
+                <TableCell key={'cell_'+i} style={colStyles} >
                     {col.render(row, row[col.columnKey])}
                 </TableCell>
             );
 
         return (
-            <TableCell key={'cell_'+i} title={col.hasOwnProperty("title") ? row[col.columnKey] : null}>
+            <TableCell
+                key={'cell_'+i}
+                title={col.hasOwnProperty("title") ? row[col.columnKey] : null}
+                style={colStyles}
+            >
                 {row[col.columnKey]}
             </TableCell>
         );
@@ -53,7 +57,7 @@ const getSortDir = (columnKey, columnIndex, sortCol, sortDir) => {
 const Table = (props) => {
     let {options, columns} = props;
     let tableClass = options.hasOwnProperty('className') ? options.className : '';
-    tableClass += (options.actions.hasOwnProperty('edit')) ? ' table-hover' : '';
+    tableClass += options.actions?.edit ? ' table-hover' : '';
 
     return (
         <div>

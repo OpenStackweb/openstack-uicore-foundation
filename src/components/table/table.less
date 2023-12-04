@@ -1,0 +1,151 @@
+table.table {
+    clear: both;
+    margin-top: 6px !important;
+    margin-bottom: 6px !important;
+    max-width: none !important;
+
+    td, th {
+        -webkit-box-sizing: content-box;
+        -moz-box-sizing: content-box;
+        box-sizing: content-box;
+
+        &.tables_empty {
+            text-align: center
+        }
+    }
+
+    thead {
+        tr {
+            th, td {
+                &.sorting,
+                &.sorting_asc,
+                &.sorting_desc {
+                   min-width: 30px;
+                   padding-right: 10px
+                }
+
+                &.sorting,
+                &.sorting_asc,
+                &.sorting_desc,
+                &.sorting_asc_disabled,
+                &.sorting_desc_disabled {
+                    cursor: pointer;
+                    position: relative;
+
+                    &:after {
+                        position: relative;
+                        left: 8px;
+                        top: 2px;
+                        display: inline-block;
+                        font-family: 'Glyphicons Halflings', sans-serif;
+                        opacity: 0.5;
+                    }
+                }
+
+                &:active {
+                    outline: none
+                }
+
+                &.sorting:after {
+                    opacity: 0.2;
+                    content: "\e150"
+                }
+
+                &.sorting_asc:after {
+                    content: "\e155"
+                }
+
+                &.sorting_desc:after {
+                    content: "\e156"
+                }
+
+                &.sorting_asc_disabled:after,
+                &.sorting_desc_disabled:after {
+                    color: #eee
+                }
+            }
+        }
+    }
+
+    &.nowrap {
+        th, td {
+            white-space: nowrap
+        }
+    }
+
+    tbody {
+        tr {
+            &.child {
+                padding: 0.5em 1em;
+
+                &:hover {
+                    background: transparent !important
+                }
+
+                ul {
+                    display: inline-block;
+                    list-style-type: none;
+                    margin: 0;
+                    padding: 0;
+
+                    li {
+                        border-bottom: 1px solid #efefef;
+                        padding: 0.5em 0;
+
+                        &:first-child {
+                            padding-top: 0
+                        }
+
+                        &:last-child {
+                            border-bottom: none
+                        }
+                    }
+                }
+            }
+
+            &.can-edit {
+                cursor:pointer
+            }
+        }
+    }
+
+
+    .actions {
+        width: 70px;
+
+        a {
+            margin-left: 10px;
+
+            .delete-icon:hover {
+                color: #da0000 !important;
+            }
+
+            .fa:hover {
+                color: #024c85;
+            }
+        }
+    }
+}
+
+table.table-bordered.table {
+    border-collapse: separate !important;
+
+    th, td {
+        border-left-width: 0;
+
+        &:last-child {
+            border-right-width: 0
+        }
+    }
+
+    tbody {
+        th, td {
+            border-bottom-width: 0
+        }
+    }
+
+}
+
+
+
+
