@@ -103,7 +103,7 @@ export const querySummits = _.debounce(async (input, callback, per_page= DEFAULT
 export const querySpeakers = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE ) => {
 
 
-    let endpoint = URI(`/api/v1/${summitId ? `/summits/${summitId}`:``}/speakers`);
+    let endpoint = URI(`/api/v1/${summitId ? `summits/${summitId}/speakers`:`speakers`}`);
 
     endpoint.addQuery('expand', `member,registration_request`);
     endpoint.addQuery('order','first_name,last_name');
