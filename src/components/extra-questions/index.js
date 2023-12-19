@@ -328,8 +328,8 @@ const ExtraQuestionsForm = React.forwardRef(({
                                        type="checkbox"
                                        className="form-check-input"
                                        component="input" />
-                                {q.mandatory && <span className='checkbox-mandatory'><b>*</b></span>}
                                 <label className="form-check-label" htmlFor={toSlug(q.name)}/>
+                                {q.mandatory && <span className='checkbox-mandatory'><b>*</b></span>}
                             </div>
                         </div>
                         <RawHTML replaceNewLine={true} className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
