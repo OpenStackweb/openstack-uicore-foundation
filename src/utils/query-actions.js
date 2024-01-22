@@ -444,7 +444,7 @@ export const querySponsoredProjects = _.debounce(async (input, callback, per_pag
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
  */
-export const queryPromocodes = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE) => {
+export const queryPromocodes = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE, extraFilters = {}) => {
 
 
     let endpoint = URI(`/api/v1/summits/${summitId}/promo-codes`);
@@ -456,6 +456,12 @@ export const queryPromocodes = _.debounce(async (summitId, input, callback, per_
     if(input) {
         input = escapeFilterValue(input);
         endpoint.addQuery('filter[]', `code@@${input}`);
+    }
+
+    if(extraFilters.hasOwnProperty('class_name')) {
+        const class_name = escapeFilterValue(extraFilters.class_name);
+        if(class_name && class_name != '')
+            endpoint.addQuery('filter[]', `class_name==${class_name}`);
     }
 
     _fetch(endpoint, callback);
