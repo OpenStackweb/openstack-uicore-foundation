@@ -18,7 +18,7 @@ import _ from 'lodash';
 export const RECEIVE_COUNTRIES  = 'RECEIVE_COUNTRIES';
 const callDelay = 500; // milliseconds
 import URI from "urijs";
-const DEFAULT_PAGE_SIZE = 10;
+export const DEFAULT_PAGE_SIZE = 10;
 
 /**
  * @param endpoint

@@ -13,9 +13,9 @@
 
 import React from 'react';
 import AsyncSelect from 'react-select/lib/Async';
-import {queryPromocodes} from '../../utils/query-actions';
+import {DEFAULT_PAGE_SIZE, queryPromocodes} from '../../utils/query-actions';
 
-const PromocodeInput = ({summitId, error, value, onChange, id, multi, ...rest}) => {
+const PromocodeInput = ({summitId, error, value, onChange, id, multi, extraFilters, ...rest}) => {
 
     const handleChange = (value) => {
         let theValue = null;
@@ -46,7 +46,7 @@ const PromocodeInput = ({summitId, error, value, onChange, id, multi, ...rest}) 
             callback(newOptions);
         };
 
-        queryPromocodes(summitId, input, translateOptions);
+        queryPromocodes(summitId, input, translateOptions, DEFAULT_PAGE_SIZE, extraFilters);
     }
 
     const has_error = !!( error && error !== '' );
