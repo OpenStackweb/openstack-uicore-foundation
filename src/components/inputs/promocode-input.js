@@ -12,10 +12,11 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import AsyncSelect from 'react-select/lib/Async';
 import {DEFAULT_PAGE_SIZE, queryPromocodes} from '../../utils/query-actions';
 
-const PromocodeInput = ({summitId, error, value, onChange, id, multi, extraFilters, ...rest}) => {
+const PromocodeInput = ({summitId, error, value, onChange, id, multi, perPage, extraFilters, ...rest}) => {
 
     const handleChange = (value) => {
         let theValue = null;
@@ -34,6 +35,7 @@ const PromocodeInput = ({summitId, error, value, onChange, id, multi, extraFilte
     }
 
     const getPromocodes = (input, callback) => {
+
         if (!input) {
             return Promise.resolve({ options: [] });
         }
@@ -46,7 +48,7 @@ const PromocodeInput = ({summitId, error, value, onChange, id, multi, extraFilte
             callback(newOptions);
         };
 
-        queryPromocodes(summitId, input, translateOptions, DEFAULT_PAGE_SIZE, extraFilters);
+        queryPromocodes(summitId, input, translateOptions, perPage, extraFilters);
     }
 
     const has_error = !!( error && error !== '' );
@@ -78,5 +80,15 @@ const PromocodeInput = ({summitId, error, value, onChange, id, multi, extraFilte
         </div>
     );
 }
+
+PromocodeInput.propTypes = {
+    perPage: PropTypes.number,
+    extraFilters: PropTypes.array
+};
+
+PromocodeInput.defaultProps = {
+    perPage: DEFAULT_PAGE_SIZE,
+    extraFilters: []
+};
 
 export default PromocodeInput;
