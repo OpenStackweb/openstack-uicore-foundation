@@ -18,7 +18,7 @@ import _ from 'lodash';
 export const RECEIVE_COUNTRIES  = 'RECEIVE_COUNTRIES';
 const callDelay = 500; // milliseconds
 import URI from "urijs";
-const DEFAULT_PAGE_SIZE = 10;
+export const DEFAULT_PAGE_SIZE = 10;
 
 /**
  * @param endpoint
@@ -444,7 +444,7 @@ export const querySponsoredProjects = _.debounce(async (input, callback, per_pag
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
  */
-export const queryPromocodes = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE) => {
+export const queryPromocodes = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE, extraFilters = []) => {
 
 
     let endpoint = URI(`/api/v1/summits/${summitId}/promo-codes`);
@@ -456,6 +456,11 @@ export const queryPromocodes = _.debounce(async (summitId, input, callback, per_
     if(input) {
         input = escapeFilterValue(input);
         endpoint.addQuery('filter[]', `code@@${input}`);
+    }
+
+    //eg: filter = 'class_name==SummitRegistrationPromoCode'
+    for (const filter of extraFilters) {
+        endpoint.addQuery('filter[]', filter);
     }
 
     _fetch(endpoint, callback);
