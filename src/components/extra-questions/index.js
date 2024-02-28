@@ -23,7 +23,11 @@ import QuestionsSet from '../../utils/questions-set';
 import {Field, Form} from "react-final-form";
 import {toSlug} from "../../utils/methods";
 import {
-    QuestionType_Checkbox, QuestionType_CheckBoxList, QuestionType_ComboBox, QuestionType_CountryComboBox,
+    QuestionType_Checkbox,
+    QuestionType_CheckBoxList,
+    QuestionType_ComboBox,
+    QuestionType_CountryComboBox,
+    QuestionType_RadioButton,
     QuestionType_RadioButtonList,
     QuestionType_Text,
     QuestionType_TextArea
@@ -345,6 +349,42 @@ const ExtraQuestionsForm = React.forwardRef(({
                             </Condition>
                         )
                     )}
+                </Fragment>
+            );
+        }
+        if (q.type === QuestionType_RadioButton){
+            return (
+                <Fragment key={toSlug(q.name)}>
+                    <div ref={el => questionRef.current[q.id] = el} className={`${questionContainerClassName} checkbox-wrapper`}>
+                        <div className={`${questionControlContainerClassName} input-wrapper`}>
+                            <div className="form-check abc-radio">
+                                <Field
+                                    name={toSlug(q.name)}
+                                    id={toSlug(q.name)}
+                                    validate={getValidator(q.mandatory)}
+                                    disabled={isDisabled}
+                                    required={q.mandatory}
+                                    type="radio"
+                                    className="form-check-input"
+                                    value="true"
+                                    component="input" />
+                                <label className="form-check-label" htmlFor={toSlug(q.name)}/>
+                                {q.mandatory && <span className='checkbox-mandatory'><b>*</b></span>}
+                            </div>
+                        </div>
+                        <RawHTML replaceNewLine={true} className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
+                            {getLabel(q)}
+                        </RawHTML>
+                    </div>
+                    <Error name={toSlug(q.name)}/>
+                    {q.sub_question_rules?.length > 0 &&
+                        q.sub_question_rules.map((r) =>
+                            (
+                                <Condition key={r.id} when={toSlug(q.name)} rule={r}>
+                                    {renderQuestion(r.sub_question)}
+                                </Condition>
+                            )
+                        )}
                 </Fragment>
             );
         }
