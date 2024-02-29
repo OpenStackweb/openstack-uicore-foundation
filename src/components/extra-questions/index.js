@@ -239,9 +239,10 @@ const ExtraQuestionsForm = React.forwardRef(({
         div.innerHTML = q.label;
         // Using innerText first since it keeps the line breaks
         const label = div.innerText || div.textContent || "";
-
-        // Asterisk for mandatory questions only shown on label except for checkbox questions
-        const labelText = q.mandatory && q.type !== QuestionType_Checkbox ? `${label}${nonBreakingSpace}<b>*</b>` : label;
+        const questions2Exclude = [QuestionType_Checkbox, QuestionType_RadioButton]
+        // Asterisk for mandatory questions only shown on label except for those questions
+        // included on questions2Exclude
+        const labelText = q.mandatory && !questions2Exclude.includes(q.type) ? `${label}${nonBreakingSpace}<b>*</b>` : label;
 
         return `<label id="${toSlug(q.name)} label" htmlFor="${toSlug(q.name)}">${labelText}</label>`;
     }
