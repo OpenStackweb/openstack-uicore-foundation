@@ -292,7 +292,7 @@ export const querySponsors = _.debounce(async (summitId, input, callback, per_pa
 
     let endpoint = URI(`/api/v1/summits/${summitId}/sponsors`);
 
-    endpoint.addQuery('expand','company,sponsorship')
+    endpoint.addQuery('expand','company,sponsorship,sponsorship.type')
     endpoint.addQuery('order','id')
     endpoint.addQuery('page', 1);
     endpoint.addQuery('per_page', per_page);

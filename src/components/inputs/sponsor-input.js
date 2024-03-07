@@ -54,7 +54,7 @@ export default class SponsorInput extends React.Component {
                 <AsyncSelect
                     value={value}
                     getOptionValue={option => option.id}
-                    getOptionLabel={option => `${option.company.name} (${option.sponsorship.label})`}
+                    getOptionLabel={option => `${option.company.name} (${option.sponsorship?.type?.name})`}
                     onChange={this.handleChange}
                     loadOptions={this.getSponsors}
                     isMulti={isMulti}
