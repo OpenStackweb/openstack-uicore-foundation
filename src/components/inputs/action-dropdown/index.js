@@ -21,7 +21,7 @@ export default class ActionDropdown extends React.Component {
         super(props);
 
         this.state = {
-            value: null,
+            value: props.value || null,
         };
 
         this.handleChange = this.handleChange.bind(this);
