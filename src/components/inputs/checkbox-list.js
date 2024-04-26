@@ -67,7 +67,6 @@ export default class CheckboxList extends React.Component {
         let { otherChecked } = this.state;
 
         let inline = ( this.props.hasOwnProperty('inline') );
-        let html = ( this.props.hasOwnProperty('html') );
         let allowOther = ( this.props.hasOwnProperty('allowOther') );
         let otherValue = value ? value.find( v => !options.map(op => op.value).includes(v) ) : false ;
         let has_error = ( this.props.hasOwnProperty('error') && error !== '' );
@@ -103,12 +102,7 @@ export default class CheckboxList extends React.Component {
                                        disabled={isDisabled}
                                        onChange={this.handleChange} className="form-check-input" value={op.value} />
                                 <label className="form-check-label" htmlFor={`cb_${id}_${op.value}`  } >
-                                    {html &&
                                     <RawHTML>{op.label}</RawHTML>
-                                    }
-                                    {!html &&
-                                    op.label
-                                    }
                                 </label>
                             </div>
                         )
