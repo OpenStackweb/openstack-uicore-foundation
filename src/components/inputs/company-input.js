@@ -51,6 +51,8 @@ export default class CompanyInput extends React.Component {
     }
 
     getCompanies (input, callback) {
+        const {extraOptions} = this.props;
+
         if (!input) {
             return Promise.resolve({ options: [] });
         }
@@ -60,6 +62,11 @@ export default class CompanyInput extends React.Component {
 
         const translateOptions = (options) => {
             let newOptions = options.map(c => ({value: c.id.toString(), label: c.name}));
+
+            if (extraOptions.length > 0) {
+                newOptions = [...extraOptions, ...newOptions];
+            }
+
             callback(newOptions);
         };
 
