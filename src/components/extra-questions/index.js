@@ -13,8 +13,6 @@
 
 import React, {Fragment, useEffect, useRef, useState, useImperativeHandle} from 'react';
 import PropTypes from 'prop-types';
-
-import RawHTML from '../raw-html'
 import Input from '../inputs/text-input'
 import Dropdown from '../inputs/dropdown'
 import RadioList from '../inputs/radio-list'
@@ -233,18 +231,13 @@ const ExtraQuestionsForm = React.forwardRef(({
     const getLabel = (q) => {
         // Keep the last word and the required asterisk on the same line
         const nonBreakingSpace = String.fromCharCode(160); // equals to &nbsp;
-
-        // Using browser parser isntead of regex to avoid possible issues
-        const div = document.createElement("div");
-        div.innerHTML = q.label;
-        // Using innerText first since it keeps the line breaks
-        const label = div.innerText || div.textContent || "";
+        // replace line breaks and remove outer <p>
+        const label =  q?.label?.replace(/\n/g, '<br />').replace(/<p>(.*)<\/p>/gi, '$1');
         const questions2Exclude = [QuestionType_Checkbox, QuestionType_RadioButton]
         // Asterisk for mandatory questions only shown on label except for those questions
         // included on questions2Exclude
         const labelText = q.mandatory && !questions2Exclude.includes(q.type) ? `${label}${nonBreakingSpace}<b>*</b>` : label;
-
-        return `<label id="${toSlug(q.name)} label" htmlFor="${toSlug(q.name)}">${labelText}</label>`;
+        return (<label dangerouslySetInnerHTML={{__html: labelText}} htmlFor={toSlug(q.name)} id={`${toSlug(q.name)} label`} />);
     }
 
     const isAnswered = (q, answers) => {
@@ -268,7 +261,7 @@ const ExtraQuestionsForm = React.forwardRef(({
             return (
                 <Fragment key={toSlug(q.name)}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
-                        <RawHTML replaceNewLine={true} className={questionLabelContainerClassName}>{getLabel(q)}</RawHTML>
+                        <span className={questionLabelContainerClassName}>{getLabel(q)}</span>
                         <div className={questionControlContainerClassName}>
                             <Field name={toSlug(q.name)}
                                    question={q}
@@ -295,7 +288,7 @@ const ExtraQuestionsForm = React.forwardRef(({
             return (
                 <Fragment key={toSlug(q.name)}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
-                        <RawHTML replaceNewLine={true} className={questionLabelContainerClassName}>{getLabel(q)}</RawHTML>
+                        <span className={questionLabelContainerClassName}>{getLabel(q)}</span>
                         <div className={questionControlContainerClassName}>
                             <Field
                                    validate={getValidator(q.mandatory)}
@@ -337,9 +330,9 @@ const ExtraQuestionsForm = React.forwardRef(({
                                 {q.mandatory && <span className='checkbox-mandatory'><b>*</b></span>}
                             </div>
                         </div>
-                        <RawHTML replaceNewLine={true} className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
+                        <span className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
                             {getLabel(q)}
-                        </RawHTML>
+                        </span>
                     </div>
                     <Error name={toSlug(q.name)}/>
                     {q.sub_question_rules?.length > 0 &&
@@ -373,9 +366,9 @@ const ExtraQuestionsForm = React.forwardRef(({
                                 {q.mandatory && <span className='checkbox-mandatory'><b>*</b></span>}
                             </div>
                         </div>
-                        <RawHTML replaceNewLine={true} className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
+                        <span className={`eq-checkbox-label ${questionLabelContainerClassName}`}>
                             {getLabel(q)}
-                        </RawHTML>
+                        </span>
                     </div>
                     <Error name={toSlug(q.name)}/>
                     {q.sub_question_rules?.length > 0 &&
@@ -394,9 +387,9 @@ const ExtraQuestionsForm = React.forwardRef(({
             return (
                 <Fragment key={toSlug(q.name)}>
                     <div key={toSlug(q.name)} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
-                        <RawHTML replaceNewLine={true} className={questionLabelContainerClassName}>
+                        <span className={questionLabelContainerClassName}>
                             {getLabel(q)}
-                        </RawHTML>
+                        </span>
                         <div className={questionControlContainerClassName}>
                             <Field name={toSlug(q.name)}
                                    options={options}
@@ -424,9 +417,9 @@ const ExtraQuestionsForm = React.forwardRef(({
             return (
                 <Fragment key={toSlug(q.name)}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
-                        <RawHTML replaceNewLine={true} className={questionLabelContainerClassName}>
+                        <span className={questionLabelContainerClassName}>
                             {getLabel(q)}
-                        </RawHTML>
+                        </span>
                         <div className={`${questionControlContainerClassName} reactSelectDropdown`}>
                             <Field name={toSlug(q.name)}
                                    options={options}
@@ -455,9 +448,9 @@ const ExtraQuestionsForm = React.forwardRef(({
             return (
                 <Fragment key={toSlug(q.name)}>
                     <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
-                        <RawHTML replaceNewLine={true} className={questionLabelContainerClassName}>
+                        <span className={questionLabelContainerClassName}>
                             {getLabel(q)}
-                        </RawHTML>
+                        </span>
                         <div className={questionControlContainerClassName}>
                             <Field name={toSlug(q.name)}
                                    className={questionControlContainerClassName}
