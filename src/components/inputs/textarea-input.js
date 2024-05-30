@@ -13,18 +13,33 @@
 
 import React from 'react';
 
-const TextArea = ({ onChange, value, className, error, ...rest }) => {
+const TextArea = ({ onChange, value, className, error, maxLength, ...rest }) => {
     const has_error = error && error !== '';
     const class_name = className ? className : 'form-control';
+    const charCountLeft = Math.max(maxLength - value.length, 0);
+
+    const handleChange = (ev) => {
+        const isBackSpace = !!(value?.length - ev.target?.value?.length);
+
+        if (!maxLength || isBackSpace) onChange(ev);
+
+        if (charCountLeft) {
+            onChange(ev)
+        }
+    };
 
     return (
         <div>
             <textarea
                 className={class_name + ' ' + (has_error ? 'error' : '')}                
                 value={value}
-                onChange={onChange}
+                onChange={handleChange}
+                maxLength={maxLength}
                 {...rest}
             />
+            {!!maxLength &&
+                <p><i>characters left: {charCountLeft}</i></p>
+            }
             {has_error &&
                 <p className="error-label">{error}</p>
             }
