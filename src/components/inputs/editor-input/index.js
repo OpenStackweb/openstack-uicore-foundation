@@ -13,7 +13,7 @@
 
 import React from 'react';
 
-
+import './editor-input.less';
 
 export default class TextEditor extends React.Component {
 
@@ -80,7 +80,7 @@ export default class TextEditor extends React.Component {
         let has_error = ( this.props.hasOwnProperty('error') && error !== '' );
 
         return (
-            <div>
+            <div className='editor-input'>
                 {this.RichTextEditor &&
                     <this.RichTextEditor
                         id={id}
