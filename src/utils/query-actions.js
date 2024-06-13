@@ -20,6 +20,21 @@ const callDelay = 500; // milliseconds
 import URI from "urijs";
 export const DEFAULT_PAGE_SIZE = 10;
 
+const _fetchPublic = async (endpoint, callback, options = {}) => {
+    return fetch(buildAPIBaseUrl(endpoint.toString()), options)
+        .then(fetchResponseHandler)
+        .then((json) => {
+            if(typeof callback === 'function')
+                callback(json.data);
+        })
+        .catch(response => {
+            const code = response.status;
+            if (code === 404) callback([]);
+            return response;
+        })
+        .catch(fetchErrorHandler);
+}
+
 /**
  * @param endpoint
  * @param callback
@@ -41,33 +56,7 @@ const _fetch = async (endpoint, callback, options = {}) => {
 
     endpoint.addQuery('access_token', accessToken);
 
-    return fetch(buildAPIBaseUrl(endpoint.toString()), options)
-        .then(fetchResponseHandler)
-        .then((json) => {
-            if(typeof callback === 'function')
-                callback(json.data);
-        })
-        .catch(response => {
-            const code = response.status;
-            if (code === 404) callback([]);
-            return response;
-        })
-        .catch(fetchErrorHandler);
-}
-
-const _fetchPublic = async (endpoint, callback, options = {}) => {
-    return fetch(buildAPIBaseUrl(endpoint.toString()), options)
-        .then(fetchResponseHandler)
-        .then((json) => {
-            if(typeof callback === 'function')
-                callback(json.data);
-        })
-        .catch(response => {
-            const code = response.status;
-            if (code === 404) callback([]);
-            return response;
-        })
-        .catch(fetchErrorHandler);
+    return _fetchPublic(endpoint, callback, options);
 }
 
 /**

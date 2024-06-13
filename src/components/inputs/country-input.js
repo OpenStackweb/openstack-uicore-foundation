@@ -35,7 +35,10 @@ export default class CountryInput extends React.Component {
     }
 
     componentDidMount() {
-        getCountryList(this.setOptions).catch(e => console.log("Error getting countries: ", e));
+        getCountryList(this.setOptions).catch(e => {
+            console.log("Error getting countries: ", e);
+            this.setState({options: []});
+        });
     }
 
     handleChange(value) {

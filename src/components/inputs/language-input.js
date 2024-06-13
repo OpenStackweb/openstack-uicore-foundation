@@ -31,7 +31,10 @@ export default class LanguageInput extends React.Component {
     }
 
     componentDidMount() {
-        getLanguageList(this.setOptions, this.abortController.signal).catch(e => console.log("Error get languages: ", e));
+        getLanguageList(this.setOptions, this.abortController.signal).catch(e => {
+            console.log("Error get languages: ", e);
+            this.setOptions({options: []});
+        });
     }
 
     componentWillUnmount(){
