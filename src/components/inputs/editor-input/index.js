@@ -49,8 +49,8 @@ export default class TextEditor extends React.Component {
     }
 
     handleChange(editorValue) {
-
         let oldEditorValue = this.state.editorValue;
+
         this.setState({editorValue});
 
         let oldContentState = oldEditorValue ? oldEditorValue.getEditorState().getCurrentContent() : null;
@@ -75,9 +75,10 @@ export default class TextEditor extends React.Component {
     }
 
     render() {
-
-        let {onChange, value, error, className, id, ...rest} = this.props;
-        let has_error = ( this.props.hasOwnProperty('error') && error !== '' );
+        const {onChange, value, error, className, id, maxLength, ...rest} = this.props;
+        const {currentValue, editorValue} = this.state;
+        const has_error = ( this.props.hasOwnProperty('error') && error !== '' );
+        const charCountLeft = maxLength - currentValue.length;
 
         return (
             <div className='editor-input'>
@@ -85,10 +86,13 @@ export default class TextEditor extends React.Component {
                     <this.RichTextEditor
                         id={id}
                         className={className + ' ' + (has_error ? 'error' : '')}
-                        value={this.state.editorValue}
+                        value={editorValue}
                         onChange={this.handleChange}
                         {...rest}
                     />
+                }
+                {!!maxLength &&
+                    <p><i>characters left: {charCountLeft}</i></p>
                 }
                 {has_error &&
                 <p className="error-label">{error}</p>

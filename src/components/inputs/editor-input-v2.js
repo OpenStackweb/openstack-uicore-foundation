@@ -29,10 +29,11 @@ const CodeView = ({value, onSave}) => {
     );
 }
 
-const TextEditorV2 = ({id, value, onChange, error, className, ...rest}) => {
+const TextEditorV2 = ({id, value, onChange, error, className, maxLength, ...rest}) => {
     const [view, setView] = useState('text');
     const [editorValue, setEditorValue] = useState(createValueFromString(value, 'html'));
     const has_error = error && error !== '';
+    const charCountLeft = maxLength - editorValue?.toString('html')?.length;
 
     const handleChange = (editorValue) => {
         setEditorValue(editorValue);
@@ -80,6 +81,9 @@ const TextEditorV2 = ({id, value, onChange, error, className, ...rest}) => {
             }
             {view === 'code' &&
                 <CodeView value={editorValue.toString('html')} onSave={onSaveCode} />
+            }
+            {!!maxLength &&
+                <p><i>characters left: {charCountLeft}</i></p>
             }
             {has_error &&
                 <p className="error-label">{error}</p>
