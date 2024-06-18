@@ -47,4 +47,8 @@ const TextArea = ({ onChange, value, className, error, maxLength, ...rest }) => 
     );
 }
 
+TextArea.defaultProps = {
+    value: ""
+};
+
 export default TextArea;
