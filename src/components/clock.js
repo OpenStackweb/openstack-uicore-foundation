@@ -11,6 +11,7 @@
  * limitations under the License.
  **/
 import React from 'react';
+import PropTypes from 'prop-types';
 import moment from "moment-timezone";
 import FragmentParser from "./fragment-parser";
 import {getTimeServiceUrl} from '../utils/methods';
@@ -63,12 +64,12 @@ class Clock extends React.Component {
 
     componentDidMount() {
         this._isMounted = true;
-        const {timezone = 'UTC', now} = this.props;
+        const {timezone = 'UTC', now, canUseNowParam} = this.props;
         const nowQS = this.fragmentParser.getParam('now');
         const momentQS = moment.tz(nowQS, 'YYYY-MM-DD,hh:mm:ss', timezone);
         let timestamp = null;
         let manualSet = false;
-        if (momentQS.isValid()) {
+        if (canUseNowParam() && momentQS.isValid()) {
             timestamp = momentQS.valueOf() / 1000;
             console.log(`Clock::componentDidMount nowQS ${nowQS} is valid setting timestamp ${timestamp}`);
             manualSet  = true;
@@ -154,5 +155,13 @@ class Clock extends React.Component {
     }
 
 }
+
+Clock.propTypes = {
+    canUseNowParam: PropTypes.func,
+};
+
+Clock.defaultProps = {
+    canUseNowParam: () => false
+};
 
 export default Clock;
