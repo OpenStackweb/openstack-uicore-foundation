@@ -318,7 +318,13 @@ export const putFile = (
         if(!isObjectEmpty(fileMetadata)) {
             Object.keys(fileMetadata).forEach(function (key) {
                 let value = fileMetadata[key];
-                req.field(key, value);
+                if (Array.isArray(value)) {
+                    value.forEach(item => {
+                        req.field(`${key}[]`, item);
+                    });
+                } else {
+                    req.field(key, value);
+                }
             });
         }
 
