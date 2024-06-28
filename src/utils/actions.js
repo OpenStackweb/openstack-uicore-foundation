@@ -75,6 +75,21 @@ const initLogin = () => (dispatch) => {
     }
 };
 
+const normalizeFormDataPayload = (req, formData) => {
+    if(!isObjectEmpty(formData)) {
+        Object.keys(formData).forEach(function (key) {
+            let value = formData[key];
+            if (Array.isArray(value)) {
+                value.forEach(item => {
+                    req.field(`${key}[]`, item);
+                });
+            } else {
+                req.field(key, value);
+            }
+        });
+    }
+};
+
 export const authErrorHandler = (
     err,
     res,
@@ -272,12 +287,7 @@ export const postFile = (
         const req = http.post(url)
                     .attach('file', file);
 
-        if(!isObjectEmpty(fileMetadata)) {
-            Object.keys(fileMetadata).forEach(function (key) {
-                let value = fileMetadata[key];
-                req.field(key, value);
-            });
-        }
+        normalizeFormDataPayload(req, fileMetadata);
 
         req.end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject));
     });
@@ -309,12 +319,7 @@ export const putFile = (
             req.attach('file', file);
         }
 
-        if(!isObjectEmpty(fileMetadata)) {
-            Object.keys(fileMetadata).forEach(function (key) {
-                let value = fileMetadata[key];
-                req.field(key, value);
-            });
-        }
+        normalizeFormDataPayload(req, fileMetadata)
 
         req.end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject));
     });
