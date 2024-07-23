@@ -12,7 +12,7 @@ import {
 } from "../../utils/methods";
 import request from 'superagent/lib/client';
 import SuperTokensLock from 'browser-tabs-lock';
-
+import Cookies from 'js-cookie'
 let http = request;
 
 /**
@@ -29,6 +29,7 @@ export const RESPONSE_TYPE_CODE = 'code';
 const AUTH_INFO = 'authInfo';
 const NONCE = 'nonce';
 const PKCE = 'pkce';
+const ID_TOKEN = 'idToken';
 
 import URI from "urijs";
 import IdTokenVerifier from "idtoken-verifier";
@@ -277,12 +278,12 @@ const processRefreshToken = async (flow, refreshToken) => {
         }
 
         let response = await refreshAccessToken(refreshToken);
-        let {access_token, expires_in, refresh_token} = response;
+        let {access_token, expires_in, refresh_token, id_token} = response;
         //console.log(`getAccessToken access_token ${access_token} expires_in ${expires_in} refresh_token ${refresh_token}`);
         if (typeof refresh_token === 'undefined') {
             refresh_token = null; // not using rotate policy
         }
-        storeAuthInfo(access_token, expires_in, refresh_token);
+        storeAuthInfo(access_token, expires_in, refresh_token, id_token);
         //console.log(`getAccessToken access_token ${access_token} [NEW]`);
         return access_token;
     }
@@ -356,8 +357,8 @@ export const refreshAccessToken = async (refresh_token) => {
         });
 
         const json = await response.json();
-        let {access_token, refresh_token, expires_in} = json;
-        return {access_token, refresh_token, expires_in}
+        let {access_token, refresh_token, expires_in, id_token} = json;
+        return {access_token, refresh_token, expires_in, id_token}
     } catch (err) {
         console.log(err);
         throw err;
@@ -374,11 +375,11 @@ export const storeAuthInfo = (accessToken, expiresIn, refreshToken = null, idTok
         accessTokenUpdatedAt: Math.floor(Date.now() / 1000),
     };
 
-    if (refreshToken === null && formerAuthInfo) {
+    if (refreshToken == null && formerAuthInfo) {
         refreshToken = formerAuthInfo.refreshToken;
     }
 
-    if (idToken === null && formerAuthInfo) {
+    if (idToken == null && formerAuthInfo) {
         idToken = formerAuthInfo.idToken;
     }
 
@@ -387,7 +388,11 @@ export const storeAuthInfo = (accessToken, expiresIn, refreshToken = null, idTok
     }
 
     if (idToken) {
-        authInfo['idToken'] = idToken;
+        authInfo[ID_TOKEN] = idToken;
+        Cookies.set(ID_TOKEN, idToken, { secure: true, sameSite: 'Lax' });
+    }
+    else{
+        Cookies.remove(ID_TOKEN);
     }
 
     putOnLocalStorage(AUTH_INFO, JSON.stringify(authInfo));
@@ -406,6 +411,7 @@ export const getAuthInfo = () => {
 export const clearAuthInfo = () => {
     if (typeof window !== 'undefined') {
         removeFromLocalStorage(AUTH_INFO);
+        Cookies.remove(ID_TOKEN);
     }
 };
 
