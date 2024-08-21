@@ -82,6 +82,27 @@ export const queryMembers = _.debounce(async (input, callback, per_page= DEFAULT
 }, callDelay);
 
 /**
+ *
+ * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
+ */
+export const queryAttendees = _.debounce(async (summitId, input, callback, per_page= DEFAULT_PAGE_SIZE) => {
+    
+    let endpoint = URI(`/api/v1/summits/${summitId}/attendees`);
+    
+    endpoint.addQuery('order','first_name,last_name');
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+    
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `full_name=@${input},email=@${input}`);
+    }
+    
+    _fetch(endpoint, callback);
+    
+}, callDelay);
+
+/**
  * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
  */
 export const querySummits = _.debounce(async (input, callback, per_page= DEFAULT_PAGE_SIZE) => {

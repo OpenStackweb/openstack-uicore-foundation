@@ -50,6 +50,7 @@ module.exports = {
         'components/inputs/group-input': './src/components/inputs/group-input.js',
         'components/inputs/language-input': './src/components/inputs/language-input.js',
         'components/inputs/member-input': './src/components/inputs/member-input.js',
+        'components/inputs/attendee-input': './src/components/inputs/attendee-input.js',
         'components/inputs/operator-input': './src/components/inputs/operator-input.js',
         'components/inputs/organization-input': './src/components/inputs/organization-input.js',
         'components/inputs/radio-list': './src/components/inputs/radio-list.js',
