@@ -101,18 +101,28 @@ export const authErrorHandler = (
     let payload, callback;
 
     dispatch(stopLoading());
+    
+    const defaultError401 = "Hold on. Your user is not authenticated!.";
+    const defaultError403 = "Hold on. Your user is not authorized!.";    
+    const defaultError500 = "There was a problem with our server, please contact admin.";
+
+    const translateOrDefault = (key, msg) => {
+        const translated = T.translate(key);
+        // If the translation is the same as the key, return the default message
+        return translated === key ? msg : translated;
+    };
 
     switch (code) {
         case 401:
             if (notifyErrorHandler !== showMessage) {
-                payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.user_not_auth"));
+                payload = buildNotifyHandlerErrorPayload(code, "ERROR", translateOrDefault("errors.user_not_auth", defaultError401));
                 callback = () => dispatch(initLogin());
             } else {
                 dispatch(initLogin());
             }
             break;
         case 403:
-            payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.user_not_authz"));
+            payload = buildNotifyHandlerErrorPayload(code, "ERROR", translateOrDefault("errors.user_not_authz", defaultError403));
             callback = initLogOut;
             break;
         case 404:
@@ -131,7 +141,7 @@ export const authErrorHandler = (
             payload = buildNotifyHandlerWarningPayload(code, "Validation error", msg);
             break;
         default:
-            payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.server_error"));
+            payload = buildNotifyHandlerErrorPayload(code, "ERROR", translateOrDefault("errors.server_error", defaultError500));
     }
 
     if (payload)
