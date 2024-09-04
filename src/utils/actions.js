@@ -19,6 +19,7 @@ import T from "i18n-react/dist/i18n-react";
 import { isClearingSessionState, setSessionClearingState, getCurrentPathName } from './methods';
 import { CLEAR_SESSION_STATE } from '../components/security/actions';
 import { doLogin, initLogOut } from '../components/security/methods';
+import { initI18n } from '../i18n/i18n';
 
 export const GENERIC_ERROR  = "Yikes. Something seems to be broken. Our web team has been notified, and we apologize for the inconvenience.";
 export const RESET_LOADING  = 'RESET_LOADING';
@@ -27,6 +28,9 @@ export const STOP_LOADING   = 'STOP_LOADING';
 export const VALIDATE       = 'VALIDATE';
 export const CLEAR_MESSAGE  = 'CLEAR_MESSAGE';
 export const SHOW_MESSAGE   = 'SHOW_MESSAGE';
+
+// initialize i18n
+initI18n();
 
 export const createAction = type => payload => ({
     type,
@@ -102,27 +106,18 @@ export const authErrorHandler = (
 
     dispatch(stopLoading());
     
-    const defaultError401 = "Hold on. Your user is not authenticated!.";
-    const defaultError403 = "Hold on. Your user is not authorized!.";    
-    const defaultError500 = "There was a problem with our server, please contact admin.";
-
-    const translateOrDefault = (key, msg) => {
-        const translated = T.translate(key);
-        // If the translation is the same as the key, return the default message
-        return translated === key ? msg : translated;
-    };
 
     switch (code) {
         case 401:
             if (notifyErrorHandler !== showMessage) {
-                payload = buildNotifyHandlerErrorPayload(code, "ERROR", translateOrDefault("errors.user_not_auth", defaultError401));
+                payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.user_not_auth"));
                 callback = () => dispatch(initLogin());
             } else {
                 dispatch(initLogin());
             }
             break;
         case 403:
-            payload = buildNotifyHandlerErrorPayload(code, "ERROR", translateOrDefault("errors.user_not_authz", defaultError403));
+            payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.user_not_authz"));
             callback = initLogOut;
             break;
         case 404:
@@ -141,7 +136,7 @@ export const authErrorHandler = (
             payload = buildNotifyHandlerWarningPayload(code, "Validation error", msg);
             break;
         default:
-            payload = buildNotifyHandlerErrorPayload(code, "ERROR", translateOrDefault("errors.server_error", defaultError500));
+            payload = buildNotifyHandlerErrorPayload(code, "ERROR", T.translate("errors.server_error"));
     }
 
     if (payload)
