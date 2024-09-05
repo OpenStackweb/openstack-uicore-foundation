@@ -19,7 +19,6 @@ import T from "i18n-react/dist/i18n-react";
 import { isClearingSessionState, setSessionClearingState, getCurrentPathName } from './methods';
 import { CLEAR_SESSION_STATE } from '../components/security/actions';
 import { doLogin, initLogOut } from '../components/security/methods';
-import { initI18n } from '../i18n/i18n';
 
 export const GENERIC_ERROR  = "Yikes. Something seems to be broken. Our web team has been notified, and we apologize for the inconvenience.";
 export const RESET_LOADING  = 'RESET_LOADING';
@@ -28,9 +27,6 @@ export const STOP_LOADING   = 'STOP_LOADING';
 export const VALIDATE       = 'VALIDATE';
 export const CLEAR_MESSAGE  = 'CLEAR_MESSAGE';
 export const SHOW_MESSAGE   = 'SHOW_MESSAGE';
-
-// initialize i18n
-initI18n();
 
 export const createAction = type => payload => ({
     type,
