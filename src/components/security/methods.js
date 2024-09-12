@@ -19,7 +19,9 @@ let http = request;
  * @ignore
  */
 const Lock = new SuperTokensLock();
-
+/**
+ * @ignore
+ */
 const GET_TOKEN_SILENTLY_LOCK_KEY = 'openstackuicore.lock.getTokenSilently';
 const GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT = 6000;
 const NONCE_LEN = 16;
@@ -314,15 +316,17 @@ export const getAccessToken = async () => {
 
             if (timeElapsedSecs > expiresIn || accessToken == null) {
                 console.log(`getAccessToken access token expired`)
-                return processRefreshToken(flow, refreshToken);
+                accessToken = await processRefreshToken(flow, refreshToken);
             }
             return accessToken;
         } finally {
             await Lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
         }
     }
-    // error on locking
-    throw Error(AUTH_ERROR_LOCK_ACQUIRE_ERROR);
+    else {
+        // error on locking
+        throw Error(AUTH_ERROR_LOCK_ACQUIRE_ERROR);
+    }
 }
 
 export const refreshAccessToken = async (refresh_token) => {
