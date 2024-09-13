@@ -10,6 +10,7 @@ import {
     retryPromise,
     setSessionClearingState,
 } from "../../utils/methods";
+import moment from "moment-timezone";
 import request from 'superagent/lib/client';
 import SuperTokensLock from 'browser-tabs-lock';
 import Cookies from 'js-cookie'
@@ -25,7 +26,7 @@ const Lock = new SuperTokensLock();
 const GET_TOKEN_SILENTLY_LOCK_KEY = 'openstackuicore.lock.getTokenSilently';
 const GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT = 6000;
 const NONCE_LEN = 16;
-export const ACCESS_TOKEN_SKEW_TIME = 20;
+export const ACCESS_TOKEN_SKEW_TIME = 60;
 export const RESPONSE_TYPE_IMPLICIT = "token id_token";
 export const RESPONSE_TYPE_CODE = 'code';
 const AUTH_INFO = 'authInfo';
@@ -310,12 +311,13 @@ export const getAccessToken = async () => {
             let {accessToken, expiresIn, accessTokenUpdatedAt, refreshToken} = authInfo;
             let flow = getOAuth2Flow();
             // check life time
-            let now = Math.floor(Date.now() / 1000);
+            const now = moment().unix();
             let timeElapsedSecs = (now - accessTokenUpdatedAt);
-            expiresIn = (expiresIn - ACCESS_TOKEN_SKEW_TIME);
 
-            if (timeElapsedSecs > expiresIn || accessToken == null) {
-                console.log(`getAccessToken access token expired`)
+            expiresIn = (expiresIn - ACCESS_TOKEN_SKEW_TIME);
+            console.log(`openstack-uicore-foundation::Security::methods::getAccessToken now ${now} accessTokenUpdatedAt ${accessTokenUpdatedAt} expiresIn ${expiresIn}`)
+            if (timeElapsedSecs >= expiresIn || accessToken == null) {
+                console.log(`openstack-uicore-foundation::Security::methods::getAccessToken  access token expired, refreshing it ...`);
                 accessToken = await processRefreshToken(flow, refreshToken);
             }
             return accessToken;
