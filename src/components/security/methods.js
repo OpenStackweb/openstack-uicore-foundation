@@ -132,12 +132,16 @@ export const getAuthUrl = (
     return url;
 }
 
-export const getLogoutUrl = (idToken) => {
+/**
+ * @param idToken
+ * @returns {*}
+ */
+export const getLogoutUrl = (idToken= null) => {
     let baseUrl = getOAuth2IDPBaseUrl();
     let oauth2ClientId = getOAuth2ClientId();
     let url = URI(`${baseUrl}/oauth2/end-session`);
     let state = createNonce(NONCE_LEN);
-    let postLogOutUri = getOrigin() + '/auth/logout';
+    let postLogOutUri = `${getOrigin()}/auth/logout`;
     // store nonce to check it later
     putOnLocalStorage('post_logout_state', state);
     /**
@@ -145,12 +149,16 @@ export const getLogoutUrl = (idToken) => {
      * on IDP
      * "Security Settings" Tab -> Logout Options -> Post Logout Uris
      */
-    return url.query({
-        "id_token_hint": idToken,
+    const queryParams = {
         "post_logout_redirect_uri": encodeURI(postLogOutUri),
         "client_id": encodeURI(oauth2ClientId),
         "state": state,
-    });
+    }
+
+    if(idToken)
+        queryParams.id_token_hint = idToken;
+
+    return url.query(queryParams);
 }
 
 const createNonce = (len) => {
