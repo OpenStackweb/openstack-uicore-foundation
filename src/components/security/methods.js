@@ -10,6 +10,7 @@ import {
     retryPromise,
     setSessionClearingState,
 } from "../../utils/methods";
+import moment from "moment-timezone";
 import request from 'superagent/lib/client';
 import SuperTokensLock from 'browser-tabs-lock';
 import Cookies from 'js-cookie'
@@ -19,11 +20,13 @@ let http = request;
  * @ignore
  */
 const Lock = new SuperTokensLock();
-
+/**
+ * @ignore
+ */
 const GET_TOKEN_SILENTLY_LOCK_KEY = 'openstackuicore.lock.getTokenSilently';
 const GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT = 6000;
 const NONCE_LEN = 16;
-export const ACCESS_TOKEN_SKEW_TIME = 20;
+export const ACCESS_TOKEN_SKEW_TIME = 60;
 export const RESPONSE_TYPE_IMPLICIT = "token id_token";
 export const RESPONSE_TYPE_CODE = 'code';
 const AUTH_INFO = 'authInfo';
@@ -129,12 +132,16 @@ export const getAuthUrl = (
     return url;
 }
 
-export const getLogoutUrl = (idToken) => {
+/**
+ * @param idToken
+ * @returns {*}
+ */
+export const getLogoutUrl = (idToken= null) => {
     let baseUrl = getOAuth2IDPBaseUrl();
     let oauth2ClientId = getOAuth2ClientId();
     let url = URI(`${baseUrl}/oauth2/end-session`);
     let state = createNonce(NONCE_LEN);
-    let postLogOutUri = getOrigin() + '/auth/logout';
+    let postLogOutUri = `${getOrigin()}/auth/logout`;
     // store nonce to check it later
     putOnLocalStorage('post_logout_state', state);
     /**
@@ -142,12 +149,16 @@ export const getLogoutUrl = (idToken) => {
      * on IDP
      * "Security Settings" Tab -> Logout Options -> Post Logout Uris
      */
-    return url.query({
-        "id_token_hint": idToken,
+    const queryParams = {
         "post_logout_redirect_uri": encodeURI(postLogOutUri),
         "client_id": encodeURI(oauth2ClientId),
         "state": state,
-    });
+    }
+
+    if(idToken)
+        queryParams.id_token_hint = idToken;
+
+    return url.query(queryParams);
 }
 
 const createNonce = (len) => {
@@ -308,21 +319,24 @@ export const getAccessToken = async () => {
             let {accessToken, expiresIn, accessTokenUpdatedAt, refreshToken} = authInfo;
             let flow = getOAuth2Flow();
             // check life time
-            let now = Math.floor(Date.now() / 1000);
+            const now = moment().unix();
             let timeElapsedSecs = (now - accessTokenUpdatedAt);
-            expiresIn = (expiresIn - ACCESS_TOKEN_SKEW_TIME);
 
-            if (timeElapsedSecs > expiresIn || accessToken == null) {
-                console.log(`getAccessToken access token expired`)
-                return processRefreshToken(flow, refreshToken);
+            expiresIn = (expiresIn - ACCESS_TOKEN_SKEW_TIME);
+            console.log(`openstack-uicore-foundation::Security::methods::getAccessToken now ${now} accessTokenUpdatedAt ${accessTokenUpdatedAt} expiresIn ${expiresIn}`)
+            if (timeElapsedSecs >= expiresIn || accessToken == null) {
+                console.log(`openstack-uicore-foundation::Security::methods::getAccessToken  access token expired, refreshing it ...`);
+                accessToken = await processRefreshToken(flow, refreshToken);
             }
             return accessToken;
         } finally {
             await Lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
         }
     }
-    // error on locking
-    throw Error(AUTH_ERROR_LOCK_ACQUIRE_ERROR);
+    else {
+        // error on locking
+        throw Error(AUTH_ERROR_LOCK_ACQUIRE_ERROR);
+    }
 }
 
 export const refreshAccessToken = async (refresh_token) => {
