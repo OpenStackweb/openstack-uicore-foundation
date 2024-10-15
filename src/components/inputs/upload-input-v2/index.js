@@ -25,7 +25,7 @@ export default class UploadInputV2 extends React.Component {
     }
     
     getDropzone = () => {
-        const {value, onRemove, canAdd = true, mediaType, postUrl, maxFiles = 1, timeOut, onUploadComplete, djsConfig, id } = this.props;
+        const {value, onRemove, canAdd = true, mediaType, postUrl, maxFiles = 1, timeOut, onUploadComplete, djsConfig, id, parallelChunkUploads = false } = this.props;
         const allowedExt = mediaType && mediaType.type ? mediaType.type.allowed_extensions.map((ext) => `.${ext.toLowerCase()}`).join(",") : '';
         const maxSize = mediaType ? mediaType.max_size / 1024 : 100;
         const canUpload = !maxFiles || value.length < maxFiles;
@@ -41,7 +41,7 @@ export default class UploadInputV2 extends React.Component {
             timeout: timeOut || (1000 * 60 * 10),
             chunking: true,
             retryChunks: true,
-            parallelChunkUploads: false,
+            parallelChunkUploads: parallelChunkUploads,
             addRemoveLinks: true,
             maxFiles: maxFiles,
             acceptedFiles: allowedExt,
