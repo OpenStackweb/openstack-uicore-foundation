@@ -218,10 +218,6 @@ export class DropzoneJS extends React.Component {
         });
 
         this.dropzone.on('sending' , (file, xhr, formData) => {
-            if(this.props.hasOwnProperty('access_token')) {
-                // oauth2 token
-                formData.append("access_token", this.props.access_token);
-            }
             let _this = this;
             // This will track all request so we can get the correct request that returns final response:
             // We will change the load callback but we need to ensure that we will call original
