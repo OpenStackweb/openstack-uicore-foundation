@@ -22,20 +22,10 @@ export default class UploadInputV2 extends React.Component {
 
     constructor(props) {
         super(props);
-
-        this.state = {
-            postUrl: null
-        };
-    }
-
-    async componentDidMount() {
-        const postUrl = await this.props.getPostUrl();
-        this.setState({ postUrl });
     }
     
     getDropzone = () => {
-        const {value, onRemove, canAdd = true, mediaType, maxFiles = 1, timeOut, onUploadComplete, djsConfig, id, parallelChunkUploads = false } = this.props;
-        const { postUrl } = this.state;
+        const {value, onRemove, canAdd = true, mediaType, postUrl, maxFiles = 1, timeOut, onUploadComplete, djsConfig, id, parallelChunkUploads = false, } = this.props;        
         const allowedExt = mediaType && mediaType.type ? mediaType.type.allowed_extensions.map((ext) => `.${ext.toLowerCase()}`).join(",") : '';
         const maxSize = mediaType ? mediaType.max_size / 1024 : 100;
         const canUpload = !maxFiles || value.length < maxFiles;

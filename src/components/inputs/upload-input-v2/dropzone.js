@@ -4,6 +4,7 @@ import extend from 'extend'
 import 'dropzone/dist/dropzone.css';
 import { Icon } from './icon'
 import PropTypes from 'prop-types';
+import { getAccessToken } from '../../security/methods';
 
 let Dropzone = null;
 /**
@@ -15,6 +16,8 @@ export class DropzoneJS extends React.Component {
         super(props);
         this.state = {files: []};
         this.onUploadComplete = this.onUploadComplete.bind(this);
+
+        this.accessToken = null;
     }
 
     onUploadComplete(response){
@@ -32,7 +35,8 @@ export class DropzoneJS extends React.Component {
     getDjsConfig () {
         let options = null;
         const defaults = {
-            url: this.props.config.postUrl ? this.props.config.postUrl : null
+            url: this.props.config.postUrl ? this.props.config.postUrl : null,
+            autoProcessQueue: false, // Prevent automatic uploads
         };
 
         if (this.props.djsConfig) {
@@ -180,13 +184,21 @@ export class DropzoneJS extends React.Component {
             }
         }
 
-        this.dropzone.on('addedfile', (file) => {
+        this.dropzone.on('addedfile', async (file) => {
             if (!file) return;
 
             const files = this.state.files || [];
 
             files.push(file);
             this.setState({ files })
+
+            try {
+                this.accessToken = await getAccessToken();
+                this.dropzone.processQueue();
+            } catch {
+                console.log("Log out: ", e);
+                initLogOut();
+            }        
         });
 
         this.dropzone.on('removedfile', (file) => {
@@ -217,7 +229,8 @@ export class DropzoneJS extends React.Component {
             }
         });
 
-        this.dropzone.on('sending' , (file, xhr, formData) => {
+        this.dropzone.on('sending', async (file, xhr, formData) => {
+            xhr.setRequestHeader('Authorization', `Bearer ${this.accessToken}`);
             let _this = this;
             // This will track all request so we can get the correct request that returns final response:
             // We will change the load callback but we need to ensure that we will call original
