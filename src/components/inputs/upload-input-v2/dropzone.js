@@ -36,6 +36,8 @@ export class DropzoneJS extends React.Component {
             url: this.props.config.postUrl ? this.props.config.postUrl : null,
         };
 
+        if(defaults.url === null) throw new Error("missing postUrl");
+
         if (this.props.djsConfig) {
             options = extend(true, {}, defaults, this.props.djsConfig)
         } else {
@@ -225,7 +227,7 @@ export class DropzoneJS extends React.Component {
         });
 
         this.dropzone.on('sending', async (file, xhr, formData) => {
-            xhr.setRequestHeader('Authorization', 'Bearer ' + file.accessToken);
+            xhr.setRequestHeader('Authorization', `Bearer ${file.accessToken}`);
             let _this = this;
             // This will track all request so we can get the correct request that returns final response:
             // We will change the load callback but we need to ensure that we will call original
