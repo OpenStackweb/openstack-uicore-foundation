@@ -2,9 +2,9 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import extend from 'extend'
 import 'dropzone/dist/dropzone.css';
-import { Icon } from './icon'
+import {Icon} from './icon'
 import PropTypes from 'prop-types';
-import { getAccessToken } from '../../security/methods';
+import {getAccessToken, initLogOut} from '../../security/methods';
 
 let Dropzone = null;
 /**
@@ -45,10 +45,11 @@ export class DropzoneJS extends React.Component {
         }
 
         options.accept = async (file, done) => {
+            // see https://github.com/dropzone/dropzone/blob/f50d1828ab5df79a76be00d1306cc320e39a27f4/src/options.js#L405
             try {
-                const accessToken = await getAccessToken();                
-                file.accessToken = accessToken;
+                file.accessToken = await getAccessToken();
             } catch (e) {
+                console.log(e);
                 initLogOut();
             }
             if (options.maxFiles && options.maxFiles < (this.state.files.length + this.props.uploadCount)) {
@@ -189,6 +190,10 @@ export class DropzoneJS extends React.Component {
             }
         }
 
+        /*
+         * see https://docs.dropzone.dev/configuration/events
+         * see https://github.com/dropzone/dropzone/blob/main/src/options.js#L574
+         */
         this.dropzone.on('addedfile', async (file) => {
             if (!file) return;
 
@@ -227,7 +232,9 @@ export class DropzoneJS extends React.Component {
         });
 
         this.dropzone.on('sending', async (file, xhr, formData) => {
-            xhr.setRequestHeader('Authorization', `Bearer ${file.accessToken}`);
+            if(file?.accessToken)
+                xhr.setRequestHeader('Authorization', `Bearer ${file.accessToken}`);
+
             let _this = this;
             // This will track all request so we can get the correct request that returns final response:
             // We will change the load callback but we need to ensure that we will call original
