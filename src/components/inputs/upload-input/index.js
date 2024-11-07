@@ -67,16 +67,16 @@ const UploadInput = ({value, error, handleRemove, handleUpload, handleError, ...
     const onDrop = (acceptedFiles, fileRejections) => {
         if (acceptedFiles.length > 0) {
             const file = acceptedFiles[0];
-            handleUpload(file);
+            handleUpload(file, {...rest});
         }
 
         if (fileRejections.length > 0 && handleError)
-            handleError(fileRejections);
+            handleError(fileRejections, {...rest});
     }
 
     const onRemove = (ev) => {
         ev.preventDefault();
-        handleRemove();
+        handleRemove(ev, {...rest});
     }
 
     const showVeil = () => {
