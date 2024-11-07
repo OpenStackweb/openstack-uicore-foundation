@@ -16,8 +16,6 @@ export class DropzoneJS extends React.Component {
         super(props);
         this.state = {files: []};
         this.onUploadComplete = this.onUploadComplete.bind(this);
-
-        this.accessToken = null;
     }
 
     onUploadComplete(response){
@@ -36,7 +34,6 @@ export class DropzoneJS extends React.Component {
         let options = null;
         const defaults = {
             url: this.props.config.postUrl ? this.props.config.postUrl : null,
-            autoProcessQueue: false, // Prevent automatic uploads
         };
 
         if (this.props.djsConfig) {
@@ -45,7 +42,13 @@ export class DropzoneJS extends React.Component {
             options = defaults
         }
 
-        options.accept = (file, done) => {
+        options.accept = async (file, done) => {
+            try {
+                const accessToken = await getAccessToken();                
+                file.accessToken = accessToken;
+            } catch (e) {
+                initLogOut();
+            }
             if (options.maxFiles && options.maxFiles < (this.state.files.length + this.props.uploadCount)) {
                 done('Max files reached');
             }
@@ -191,14 +194,6 @@ export class DropzoneJS extends React.Component {
 
             files.push(file);
             this.setState({ files })
-
-            try {
-                this.accessToken = await getAccessToken();
-                this.dropzone.processQueue();
-            } catch {
-                console.log("Log out: ", e);
-                initLogOut();
-            }        
         });
 
         this.dropzone.on('removedfile', (file) => {
@@ -230,7 +225,7 @@ export class DropzoneJS extends React.Component {
         });
 
         this.dropzone.on('sending', async (file, xhr, formData) => {
-            xhr.setRequestHeader('Authorization', `Bearer ${this.accessToken}`);
+            xhr.setRequestHeader('Authorization', 'Bearer ' + file.accessToken);
             let _this = this;
             // This will track all request so we can get the correct request that returns final response:
             // We will change the load callback but we need to ensure that we will call original
