@@ -2,8 +2,9 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import extend from 'extend'
 import 'dropzone/dist/dropzone.css';
-import { Icon } from './icon'
+import {Icon} from './icon'
 import PropTypes from 'prop-types';
+import {getAccessToken, initLogOut} from '../../security/methods';
 
 let Dropzone = null;
 /**
@@ -32,8 +33,10 @@ export class DropzoneJS extends React.Component {
     getDjsConfig () {
         let options = null;
         const defaults = {
-            url: this.props.config.postUrl ? this.props.config.postUrl : null
+            url: this.props.config.postUrl ? this.props.config.postUrl : null,
         };
+
+        if(defaults.url === null) throw new Error("missing postUrl");
 
         if (this.props.djsConfig) {
             options = extend(true, {}, defaults, this.props.djsConfig)
@@ -41,7 +44,14 @@ export class DropzoneJS extends React.Component {
             options = defaults
         }
 
-        options.accept = (file, done) => {
+        options.accept = async (file, done) => {
+            // see https://github.com/dropzone/dropzone/blob/f50d1828ab5df79a76be00d1306cc320e39a27f4/src/options.js#L405
+            try {
+                file.accessToken = await getAccessToken();
+            } catch (e) {
+                console.log(e);
+                initLogOut();
+            }
             if (options.maxFiles && options.maxFiles < (this.state.files.length + this.props.uploadCount)) {
                 done('Max files reached');
             }
@@ -180,7 +190,11 @@ export class DropzoneJS extends React.Component {
             }
         }
 
-        this.dropzone.on('addedfile', (file) => {
+        /*
+         * see https://docs.dropzone.dev/configuration/events
+         * see https://github.com/dropzone/dropzone/blob/main/src/options.js#L574
+         */
+        this.dropzone.on('addedfile', async (file) => {
             if (!file) return;
 
             const files = this.state.files || [];
@@ -217,11 +231,10 @@ export class DropzoneJS extends React.Component {
             }
         });
 
-        this.dropzone.on('sending' , (file, xhr, formData) => {
-            if(this.props.hasOwnProperty('access_token')) {
-                // oauth2 token
-                formData.append("access_token", this.props.access_token);
-            }
+        this.dropzone.on('sending', async (file, xhr, formData) => {
+            if(file?.accessToken)
+                xhr.setRequestHeader('Authorization', `Bearer ${file.accessToken}`);
+
             let _this = this;
             // This will track all request so we can get the correct request that returns final response:
             // We will change the load callback but we need to ensure that we will call original
