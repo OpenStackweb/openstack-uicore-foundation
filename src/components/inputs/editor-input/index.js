@@ -12,6 +12,11 @@
  **/
 
 import React from 'react';
+import {
+    getTextAlignClassName,
+    getTextAlignStyles,
+    getTextAlignBlockMetadata,
+  } from 'react-rte';
 
 import './editor-input.less';
 
@@ -45,7 +50,7 @@ export default class TextEditor extends React.Component {
             }
         }
 
-        return {...state, editorValue: editorValue.setContentFromString(value, 'html'), currentValue: value}
+        return {...state, editorValue: editorValue.setContentFromString(value, 'html', {customBlockFn: getTextAlignBlockMetadata}), currentValue: value}
     }
 
     handleChange(editorValue) {
@@ -57,7 +62,7 @@ export default class TextEditor extends React.Component {
         let newContentState = editorValue.getEditorState().getCurrentContent();
 
         if (oldContentState !== newContentState) {
-            let stringValue = editorValue.toString('html');
+            let stringValue = editorValue.toString('html',{blockStyleFn: getTextAlignStyles});
             stringValue = stringValue === '<p><br></p>' ? '' : stringValue;
 
             this.setState({currentValue: stringValue});
@@ -86,6 +91,7 @@ export default class TextEditor extends React.Component {
                     <this.RichTextEditor
                         id={id}
                         className={className + ' ' + (has_error ? 'error' : '')}
+                        blockStyleFn={getTextAlignClassName}
                         value={editorValue}
                         onChange={this.handleChange}
                         {...rest}
