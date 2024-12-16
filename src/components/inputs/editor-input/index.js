@@ -20,11 +20,16 @@ export default class TextEditor extends React.Component {
     constructor(props) {
         super(props);
         this.RichTextEditor = null;
+        this.getTextAlignClassName = null;
+        this.getTextAlignStyles = null;
 
         // this is done bc due SSR issues
         // @see https://github.com/sstur/react-rte/issues/373
         if (typeof window !== 'undefined') {
-            this.RichTextEditor = require('react-rte').default;
+            const { default: RichTextEditor, getTextAlignClassName, getTextAlignStyles } = require('react-rte');
+            this.RichTextEditor = RichTextEditor;
+            this.getTextAlignClassName = getTextAlignClassName;
+            this.getTextAlignStyles = getTextAlignStyles;
         }
 
         this.state = {
@@ -43,9 +48,24 @@ export default class TextEditor extends React.Component {
             if (value === currentValue) {
                 return state;
             }
+        } 
+
+        let newEditorValue = editorValue.setContentFromString(value, 'html');
+
+        // this is done bc due SSR issues
+        // @see https://github.com/sstur/react-rte/issues/373
+        if (typeof window !== 'undefined') {
+            const { getTextAlignBlockMetadata } = require('react-rte');
+            newEditorValue = editorValue.setContentFromString(
+                value, 
+                'html',
+                {
+                    customBlockFn: getTextAlignBlockMetadata,
+                }
+            );
         }
 
-        return {...state, editorValue: editorValue.setContentFromString(value, 'html'), currentValue: value}
+        return {...state, editorValue: newEditorValue, currentValue: value}
     }
 
     handleChange(editorValue) {
@@ -57,7 +77,12 @@ export default class TextEditor extends React.Component {
         let newContentState = editorValue.getEditorState().getCurrentContent();
 
         if (oldContentState !== newContentState) {
-            let stringValue = editorValue.toString('html');
+            let stringValue = editorValue.toString( 
+                'html',
+                {
+                   blockStyleFn: this.getTextAlignStyles,
+                }
+            )
             stringValue = stringValue === '<p><br></p>' ? '' : stringValue;
 
             this.setState({currentValue: stringValue});
@@ -88,6 +113,7 @@ export default class TextEditor extends React.Component {
                         className={className + ' ' + (has_error ? 'error' : '')}
                         value={editorValue}
                         onChange={this.handleChange}
+                        blockStyleFn={this.getTextAlignClassName}
                         {...rest}
                     />
                 }
