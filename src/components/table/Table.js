@@ -3,7 +3,7 @@ import TableHeading from './TableHeading';
 import TableCell from './TableCell';
 import TableRow from './TableRow';
 import ActionsTableCell from './ActionsTableCell';
-import ReactTooltip from 'react-tooltip'
+import { Tooltip } from 'react-tooltip';
 
 import './table.less';
 
@@ -109,7 +109,7 @@ const Table = (props) => {
                     })}
                 </tbody>
             </table>
-            <ReactTooltip delayShow={10} />
+            <Tooltip delayShow={10} />
         </div>
     );
 };

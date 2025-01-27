@@ -12,7 +12,12 @@
  **/
 
 import React, {useState} from 'react';
-import RichTextEditor, { createValueFromString, Button } from 'react-rte';
+import RichTextEditor, { 
+    createValueFromString, 
+    getTextAlignClassName, 
+    getTextAlignBlockMetadata,
+    getTextAlignStyles, 
+    Button } from 'react-rte';
 
 const CodeView = ({value, onSave}) => {
     const [codeValue, setCodeValue] = useState(value);
@@ -31,14 +36,19 @@ const CodeView = ({value, onSave}) => {
 
 const TextEditorV2 = ({id, value, onChange, error, className, maxLength, ...rest}) => {
     const [view, setView] = useState('text');
-    const [editorValue, setEditorValue] = useState(createValueFromString(value, 'html'));
+    const [editorValue, setEditorValue] = useState(createValueFromString(value, 'html', {customBlockFn: getTextAlignBlockMetadata}));
     const has_error = error && error !== '';
     const charCountLeft = maxLength - editorValue?.toString('html')?.length;
 
     const handleChange = (editorValue) => {
         setEditorValue(editorValue);
 
-        let stringValue = editorValue.toString('html');
+        let stringValue = editorValue.toString( 
+            'html',
+            {
+               blockStyleFn: getTextAlignStyles,
+            }
+        )
         stringValue = stringValue === '<p><br></p>' ? '' : stringValue;
 
         const ev = {
@@ -76,6 +86,7 @@ const TextEditorV2 = ({id, value, onChange, error, className, maxLength, ...rest
                     value={editorValue}
                     onChange={handleChange}
                     customControls={[ViewCodeButton]}
+                    blockStyleFn={getTextAlignClassName}
                     {...rest}
                 />
             }

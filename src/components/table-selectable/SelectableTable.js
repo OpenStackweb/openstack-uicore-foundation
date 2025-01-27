@@ -3,7 +3,7 @@ import SelectableTableHeading from './SelectableTableHeading';
 import SelectableTableCell from './SelectableTableCell';
 import SelectableTableRow from './SelectableTableRow';
 import SelectableActionsTableCell from './SelectableActionsTableCell';
-import ReactTooltip from 'react-tooltip'
+import { Tooltip } from 'react-tooltip'
 import './selectable-table.less';
 
 const defaults = {
@@ -117,7 +117,7 @@ class SelectableTable extends React.Component {
                     })}
                     </tbody>
                 </table>
-                <ReactTooltip delayShow={10} />
+                <Tooltip delayShow={10} />
             </div>
         );
     }
