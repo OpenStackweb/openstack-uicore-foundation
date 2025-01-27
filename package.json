@@ -1,6 +1,6 @@
 {
   "name": "openstack-uicore-foundation",
-  "version": "4.1.94",
+  "version": "4.1.95",
   "description": "ui reactjs components for openstack marketing site",
   "main": "lib/openstack-uicore-foundation.js",
   "scripts": {
@@ -46,6 +46,7 @@
     "jest": "^28.1.0",
     "jest-environment-jsdom": "^28.1.0",
     "jest-transform-stub": "^2.0.0",
+    "jodit-react": "^5.0.10",
     "js-cookie": "^3.0.5",
     "js-yaml": "^4.1.0",
     "js-yaml-loader": "^1.2.2",
@@ -110,6 +111,7 @@
     "i18n-react": "^0.6.4",
     "idtoken-verifier": "^2.2.2",
     "immutability-helper": "^2.7.1",
+    "jodit-react": "^5.0.10",
     "js-cookie": "^3.0.5",
     "lodash": "^4.17.14",
     "moment": "^2.22.2",
