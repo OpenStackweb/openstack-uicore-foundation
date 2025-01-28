@@ -1,10 +1,10 @@
-import React from "react";
-import SelectableTableHeading from "./SelectableTableHeading";
-import SelectableTableCell from "./SelectableTableCell";
-import SelectableTableRow from "./SelectableTableRow";
-import SelectableActionsTableCell from "./SelectableActionsTableCell";
-import ReactTooltip from "react-tooltip";
-import "./selectable-table.less";
+import React from 'react';
+import SelectableTableHeading from './SelectableTableHeading';
+import SelectableTableCell from './SelectableTableCell';
+import SelectableTableRow from './SelectableTableRow';
+import SelectableActionsTableCell from './SelectableActionsTableCell';
+import { Tooltip } from 'react-tooltip'
+import './selectable-table.less';
 
 const defaults = {
     sortFunc: (a, b) => (a < b ? -1 : a > b ? 1 : 0),
@@ -176,7 +176,7 @@ class SelectableTable extends React.Component {
                             })}
                     </tbody>
                 </table>
-                <ReactTooltip delayShow={10} />
+                <Tooltip delayShow={10} />
             </div>
         );
     }

@@ -5,7 +5,7 @@ import EditableActionsTableCell from './EditableActionsTableCell';
 import EditableTableRow from './EditableTableRow';
 import Swal from "sweetalert2";
 import T from "i18n-react/dist/i18n-react";
-import ReactTooltip from "react-tooltip";
+import { Tooltip } from "react-tooltip";
 import { shallowEqual } from '../../utils/methods'
 
 import './editable-table.less';
@@ -232,7 +232,7 @@ export default class EditableTable extends React.Component {
                         </EditableTableRow>
                     </tbody>
                 </table>
-                <ReactTooltip delayShow={10} />
+                <Tooltip delayShow={10} />
             </div>
         );
     }
