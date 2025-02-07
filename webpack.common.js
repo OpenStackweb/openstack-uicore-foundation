@@ -11,6 +11,7 @@ module.exports = {
         'security/constants': './src/components/security/constants.js',
         'security/session-checker': './src/components/security/session-checker/op-session-checker.js',
         'security/abstract-auth-callback-route': './src/components/security/abstract-auth-callback-route.js',
+        'security/abstract-auth-callback-route-v2': './src/components/security/abstract-auth-callback-route-v2.js',
         // components
         'components/index': './src/components',
         'components/ajaxloader': './src/components/ajaxloader/index.js',
