@@ -23,18 +23,32 @@ export default class UploadInputV2 extends React.Component {
     constructor(props) {
         super(props);
     }
-    
+
     getDropzone = () => {
-        const {value, onRemove, canAdd = true, mediaType, postUrl, maxFiles = 1, timeOut, onUploadComplete, djsConfig, id, parallelChunkUploads = false, } = this.props;        
+        const {
+            value,
+            onRemove,
+            canAdd = true,
+            mediaType,
+            postUrl,
+            maxFiles = 1,
+            timeOut,
+            onUploadComplete,
+            djsConfig,
+            id,
+            parallelChunkUploads = false,
+            onError = () => {}
+        } = this.props;
+
         const allowedExt = mediaType && mediaType.type ? mediaType.type.allowed_extensions.map((ext) => `.${ext.toLowerCase()}`).join(",") : '';
         const maxSize = mediaType ? mediaType.max_size / 1024 : 100;
         const canUpload = !maxFiles || value.length < maxFiles;
-        
+
         let eventHandlers = {};
         if (onRemove) {
             eventHandlers = {removedfile: onRemove};
         }
-    
+
         const djsConfigSet = {
             paramName: "file", // The name that will be used to transfer the file,
             maxFilesize: maxSize, // MB,
@@ -48,7 +62,7 @@ export default class UploadInputV2 extends React.Component {
             dropzoneSelector: `media_upload_${mediaType.id}`,
             ...djsConfig
         };
-        
+
         const componentConfig = {
             showFiletypeIcon: false,
             postUrl: postUrl
@@ -87,6 +101,7 @@ export default class UploadInputV2 extends React.Component {
                     data={data}
                     uploadCount={value.length}
                     onUploadComplete={onUploadComplete}
+                    onError={onError}
                 />
             );
         }

@@ -16,6 +16,12 @@ export class DropzoneJS extends React.Component {
         super(props);
         this.state = {files: []};
         this.onUploadComplete = this.onUploadComplete.bind(this);
+        this.onError = this.onError.bind(this);
+    }
+
+    onError(e, status){
+        if(this.props.onError)
+            this.props.onError(e, status, this.props.id);
     }
 
     onUploadComplete(response){
@@ -50,10 +56,11 @@ export class DropzoneJS extends React.Component {
                 file.accessToken = await getAccessToken();
             } catch (e) {
                 console.log(e);
+                this.onError(e);
                 initLogOut();
             }
             if (options.maxFiles && options.maxFiles < (this.state.files.length + this.props.uploadCount)) {
-                done('Max files reached');
+                done('Max files reached.');
             }
 
             done();
@@ -241,14 +248,26 @@ export class DropzoneJS extends React.Component {
             // load callback from dropzone
             let dropzoneOnLoad = xhr.onload;
             xhr.onload = function (e) {
+
                 dropzoneOnLoad(e);
-                // Check for final chunk and get the response
-                let uploadResponse = JSON.parse(xhr.responseText);
-                if (typeof uploadResponse.name === 'string') {
-                    _this.onUploadComplete(uploadResponse);
+                if(xhr?.status == 200) {
+                    // Check for final chunk and get the response
+                    let uploadResponse = JSON.parse(xhr.responseText);
+                    if (typeof uploadResponse.name === 'string') {
+                        _this.onUploadComplete(uploadResponse);
+                    }
                 }
+                else{
+                    _this.onError(JSON.parse(xhr?.responseText), xhr?.status);
+                }
+
             }
         })
+
+        this.dropzone.on('error', (file, message) => {
+            console.log(`DropzoneJS::error`, message);
+            this.onError(message);
+        });
     }
 
     /**
