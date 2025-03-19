@@ -144,22 +144,14 @@ const ExtraQuestionsForm = React.forwardRef(({
         formatUserAnswers();
     }, [extraQuestions])
 
-
     // @see https://beta.reactjs.org/reference/react/useImperativeHandle
     useImperativeHandle(ref, () => ({
         doSubmit() {
             formRef.current?.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
         },
         scroll2QuestionById(questionId) {
-            const ref = questionRefs.current[questionId];
-            if (ref && ref.current) {
-                ref.current.focus();
-                ref.current.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-            }
-        },
+            scrollToQuestion(questionId);
+        }
     }));
 
     const getQuestionRef = (id) => {
@@ -536,7 +528,13 @@ const ExtraQuestionsForm = React.forwardRef(({
 
     const scrollToFirstError = (invalidFormFields) => {
         const firstError = getFirstError(invalidFormFields);
-        const ref = questionRefs.current[firstError.id];
+        if (firstError) {
+            scrollToQuestion(firstError.id);
+        }
+    }
+
+    const scrollToQuestion = (questionId) => {
+        const ref = questionRefs.current[questionId];
         if (ref && ref.current) {
             ref.current.focus();
             ref.current.scrollIntoView({
@@ -544,7 +542,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                 block: 'center'
             });
         }
-    }
+    };
 
     if (!Object.keys(answers).length) return null;
 
@@ -567,7 +565,7 @@ const ExtraQuestionsForm = React.forwardRef(({
                                     // This ensures that even after re-renders, we have a consistent reference for actions such as scrolling or focusing.
                                     // Passing a direct DOM element might not reliably reflect the current element if the component updates.
                                     onError(invalidFormFields, questionRefs.current[firstError.id], firstError.id);
-                                    if(shouldScroll2FirstError)
+                                    if (shouldScroll2FirstError)
                                         scrollToFirstError(invalidFormFields)
                                 }
                                 handleSubmit(event)
