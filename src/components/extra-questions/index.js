@@ -563,6 +563,9 @@ const ExtraQuestionsForm = React.forwardRef(({
                                 const invalidFormFields = form.getRegisteredFields().filter(field => form.getFieldState(field).invalid);
                                 if (invalidFormFields.length > 0) {
                                     const firstError = getFirstError(invalidFormFields);
+                                    // Note: The second argument is an stable reference to the errer extra question
+                                    // This ensures that even after re-renders, we have a consistent reference for actions such as scrolling or focusing.
+                                    // Passing a direct DOM element might not reliably reflect the current element if the component updates.
                                     onError(invalidFormFields, questionRefs.current[firstError.id], firstError.id);
                                     if(shouldScroll2FirstError)
                                         scrollToFirstError(invalidFormFields)
