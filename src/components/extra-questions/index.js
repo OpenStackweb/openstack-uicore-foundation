@@ -136,7 +136,7 @@ const ExtraQuestionsForm = React.forwardRef(({
 
     let submit = null;
 
-    const questionRef = useRef({});
+    const questionRefs = useRef({});
     const formRef = useRef(null);
     const [answers, setAnswers] = useState({});
 
@@ -144,24 +144,22 @@ const ExtraQuestionsForm = React.forwardRef(({
         formatUserAnswers();
     }, [extraQuestions])
 
-
     // @see https://beta.reactjs.org/reference/react/useImperativeHandle
     useImperativeHandle(ref, () => ({
         doSubmit() {
-            formRef.current.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+            formRef.current?.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
         },
-        scroll2QuestionById(questionId){
-            if(questionRef.current.hasOwnProperty(questionId)) {
-                const ref = questionRef.current[questionId];
-                ref.focus();
-                ref.scrollIntoView
-                ({
-                    behavior: 'smooth',
-                    block: 'center',
-                })
-            }
-        },
+        scroll2QuestionById(questionId) {
+            scrollToQuestion(questionId);
+        }
     }));
+
+    const getQuestionRef = (id) => {
+        if (!questionRefs.current[id]) {
+            questionRefs.current[id] = React.createRef();
+        }
+        return questionRefs.current[id];
+    };
 
     const formatUserAnswers = () => {
         const qs = new QuestionsSet(extraQuestions, userAnswers);
@@ -177,12 +175,12 @@ const ExtraQuestionsForm = React.forwardRef(({
     );
 
     const Error = ({ name }) => (
-        <Field name={name} subscription={{ error: true, touched: true }}>
-            {({ meta: { error, touched } }) =>
-                error && touched ? <div className={ValidationErrorClassName}>{error}</div> : null
+        <Field name={name} subscription={{ error: true, touched: true, submitFailed: true }}>
+            {({ meta: { error, touched, submitFailed } }) =>
+                error && (touched || submitFailed) ? <div className={ValidationErrorClassName}>{error}</div> : null
             }
         </Field>
-    )
+    );
 
     const checkRule = (value, rule) => {
         let values = rule.answer_values;
@@ -206,25 +204,25 @@ const ExtraQuestionsForm = React.forwardRef(({
     const checkVisibility = (rule, ruleResult, children) => {
         if (rule.visibility === "Visible") {
             if (rule.visibility_condition === "Equal") {
-                if(ruleResult) return children;
-                delete questionRef.current[rule.sub_question.id]
+                if (ruleResult) return children;
+                delete questionRefs.current[rule.sub_question.id]
                 return null;
             }
             // Non Equal
             if(!ruleResult){
                 return children;
             }
-            delete questionRef.current[rule.sub_question.id]
+            delete questionRefs.current[rule.sub_question.id]
             return null;
         }
         // not visible
         if (rule.visibility_condition === "Equal") {
-            if(!ruleResult) return children;
-            delete questionRef.current[rule.sub_question.id]
+            if (!ruleResult) return children;
+            delete questionRefs.current[rule.sub_question.id]
             return null;
         }
-        if(ruleResult) return children;
-        delete questionRef.current[rule.sub_question.id]
+        if (ruleResult) return children;
+        delete questionRefs.current[rule.sub_question.id]
         return null;
     };
 
@@ -245,10 +243,10 @@ const ExtraQuestionsForm = React.forwardRef(({
         if(!answers.hasOwnProperty(slug)) return false;
         const answer = answers[slug];
         // check type
-        if(Array.isArray(answer)) return answer.length > 0;
+        if (Array.isArray(answer)) return answer.length > 0;
         if (typeof answer === 'string') return answer.length > 0;
-        if(typeof answer === 'number') return answer > 0;
-        if(typeof answer === 'boolean') return answer;
+        if (typeof answer === 'number') return answer > 0;
+        if (typeof answer === 'boolean') return answer;
         return false;
     }
 
@@ -260,7 +258,7 @@ const ExtraQuestionsForm = React.forwardRef(({
         if (q.type === QuestionType_Text) {
             return (
                 <Fragment key={toSlug(q.name)}>
-                    <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+                    <div ref={getQuestionRef(q.id)} className={questionContainerClassName}>
                         <span className={questionLabelContainerClassName}>{getLabel(q)}</span>
                         <div className={questionControlContainerClassName}>
                             <Field name={toSlug(q.name)}
@@ -287,7 +285,7 @@ const ExtraQuestionsForm = React.forwardRef(({
         if (q.type === QuestionType_TextArea) {
             return (
                 <Fragment key={toSlug(q.name)}>
-                    <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+                    <div ref={getQuestionRef(q.id)} className={questionContainerClassName}>
                         <span className={questionLabelContainerClassName}>{getLabel(q)}</span>
                         <div className={questionControlContainerClassName}>
                             <Field
@@ -314,7 +312,7 @@ const ExtraQuestionsForm = React.forwardRef(({
         if (q.type === QuestionType_Checkbox) {
             return (
                 <Fragment key={toSlug(q.name)}>
-                    <div ref={el => questionRef.current[q.id] = el} className={`${questionContainerClassName} checkbox-wrapper`}>
+                    <div ref={getQuestionRef(q.id)} className={`${questionContainerClassName} checkbox-wrapper`}>
                         <div className={`${questionControlContainerClassName} input-wrapper`}>
                             <div className="form-check abc-checkbox">
                                 <Field
@@ -349,7 +347,7 @@ const ExtraQuestionsForm = React.forwardRef(({
         if (q.type === QuestionType_RadioButton){
             return (
                 <Fragment key={toSlug(q.name)}>
-                    <div ref={el => questionRef.current[q.id] = el} className={`${questionContainerClassName} checkbox-wrapper`}>
+                    <div ref={getQuestionRef(q.id)} className={`${questionContainerClassName} checkbox-wrapper`}>
                         <div className={`${questionControlContainerClassName} input-wrapper`}>
                             <div className="form-check abc-radio">
                                 <Field
@@ -386,7 +384,7 @@ const ExtraQuestionsForm = React.forwardRef(({
             const options = questionValues.map(val => ({label : val.label, value : val.id}));
             return (
                 <Fragment key={toSlug(q.name)}>
-                    <div key={toSlug(q.name)} ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+                    <div ref={getQuestionRef(q.id)} className={questionContainerClassName}>
                         <span className={questionLabelContainerClassName}>
                             {getLabel(q)}
                         </span>
@@ -416,7 +414,7 @@ const ExtraQuestionsForm = React.forwardRef(({
             const options = questionValues.map(val => ({label : val.label, value : val.id}));
             return (
                 <Fragment key={toSlug(q.name)}>
-                    <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+                    <div ref={getQuestionRef(q.id)} className={questionContainerClassName}>
                         <span className={questionLabelContainerClassName}>
                             {getLabel(q)}
                         </span>
@@ -447,7 +445,7 @@ const ExtraQuestionsForm = React.forwardRef(({
             const options = questionValues.map(val => ({label : val.label, value : val.id}));
             return (
                 <Fragment key={toSlug(q.name)}>
-                    <div ref={el => questionRef.current[q.id] = el} className={questionContainerClassName}>
+                    <div ref={getQuestionRef(q.id)} className={questionContainerClassName}>
                         <span className={questionLabelContainerClassName}>
                             {getLabel(q)}
                         </span>
@@ -480,7 +478,7 @@ const ExtraQuestionsForm = React.forwardRef(({
     };
 
     const isVisible = (q) => {
-        return !!questionRef.current[q.id];
+        return !!questionRefs.current[q.id];
     };
 
     const validateQuestion = (q, values, errors) => {
@@ -529,13 +527,22 @@ const ExtraQuestionsForm = React.forwardRef(({
     }
 
     const scrollToFirstError = (invalidFormFields) => {
-        const firstError = getFirstError(invalidFormFields)
-        questionRef.current[firstError.id].scrollIntoView
-        ({
-            behavior: 'smooth',
-            block: 'center',
-        })
+        const firstError = getFirstError(invalidFormFields);
+        if (firstError) {
+            scrollToQuestion(firstError.id);
+        }
     }
+
+    const scrollToQuestion = (questionId) => {
+        const ref = questionRefs.current[questionId];
+        if (ref && ref.current) {
+            ref.current.focus();
+            ref.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+    };
 
     if (!Object.keys(answers).length) return null;
 
@@ -554,8 +561,11 @@ const ExtraQuestionsForm = React.forwardRef(({
                                 const invalidFormFields = form.getRegisteredFields().filter(field => form.getFieldState(field).invalid);
                                 if (invalidFormFields.length > 0) {
                                     const firstError = getFirstError(invalidFormFields);
-                                    onError(invalidFormFields,  questionRef.current[firstError.id], firstError.id);
-                                    if(shouldScroll2FirstError)
+                                    // Note: The second argument is an stable reference to the errer extra question
+                                    // This ensures that even after re-renders, we have a consistent reference for actions such as scrolling or focusing.
+                                    // Passing a direct DOM element might not reliably reflect the current element if the component updates.
+                                    onError(invalidFormFields, questionRefs.current[firstError.id], firstError.id);
+                                    if (shouldScroll2FirstError)
                                         scrollToFirstError(invalidFormFields)
                                 }
                                 handleSubmit(event)
