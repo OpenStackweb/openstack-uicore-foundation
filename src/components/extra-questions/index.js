@@ -183,12 +183,12 @@ const ExtraQuestionsForm = React.forwardRef(({
     );
 
     const Error = ({ name }) => (
-        <Field name={name} subscription={{ error: true, touched: true }}>
-            {({ meta: { error, touched } }) =>
-                error && touched ? <div className={ValidationErrorClassName}>{error}</div> : null
+        <Field name={name} subscription={{ error: true, touched: true, submitFailed: true }}>
+            {({ meta: { error, touched, submitFailed } }) =>
+                error && (touched || submitFailed) ? <div className={ValidationErrorClassName}>{error}</div> : null
             }
         </Field>
-    )
+    );
 
     const checkRule = (value, rule) => {
         let values = rule.answer_values;
