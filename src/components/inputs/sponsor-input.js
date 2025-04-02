@@ -15,57 +15,40 @@ import React from 'react';
 import AsyncSelect from 'react-select/lib/Async';
 import {querySponsors} from '../../utils/query-actions';
 
-export default class SponsorInput extends React.Component {
+const SponsorInput = ({id, summitId, value, error, multi, onChange, queryFunction, ...rest}) => {
+    const queryFn = queryFunction || querySponsors;
+    const has_error = error !== '' ;
 
-    constructor(props) {
-        super(props);
-
-        this.handleChange = this.handleChange.bind(this);
-        this.getSponsors = this.getSponsors.bind(this);
-    }
-
-    handleChange(value) {
+    const handleChange = (value) => {
         let ev = {target: {
-            id: this.props.id,
+            id: id,
             value: value,
             type: 'sponsorinput'
         }};
 
-        this.props.onChange(ev);
+        onChange(ev);
     }
 
-    getSponsors (input, callback) {
-        let {summitId} = this.props;
-
-        if (!input) {
-            return Promise.resolve({ options: [] });
-        }
-
-        querySponsors(summitId, input, callback);
+    const getSponsors = (input, callback) => {
+        queryFn(summitId, input, callback);
     }
 
-    render() {
-        let {error, value, onChange, id, multi, summitId, ...rest} = this.props;
-        let has_error = ( this.props.hasOwnProperty('error') && error != '' );
-        let isMulti = (this.props.hasOwnProperty('multi'));
-
-        return (
-            <div>
-                <AsyncSelect
-                    value={value}
-                    getOptionValue={option => option.id}
-                    getOptionLabel={option => `${option.company.name} (${option.sponsorship?.type?.name})`}
-                    onChange={this.handleChange}
-                    loadOptions={this.getSponsors}
-                    isMulti={isMulti}
-                    {...rest}
-                />
-                {has_error &&
+    return (
+        <div>
+            <AsyncSelect
+                value={value}
+                getOptionValue={option => option.id}
+                getOptionLabel={option => `${option.company.name} (${option.sponsorship?.type?.name})`}
+                onChange={handleChange}
+                loadOptions={getSponsors}
+                isMulti={multi}
+                {...rest}
+            />
+            {has_error &&
                 <p className="error-label">{error}</p>
-                }
-            </div>
-        );
-
-    }
+            }
+        </div>
+    );
 }
 
+export default SponsorInput;

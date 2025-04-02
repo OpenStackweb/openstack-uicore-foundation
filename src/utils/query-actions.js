@@ -335,6 +335,30 @@ export const querySponsors = _.debounce(async (summitId, input, callback, per_pa
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
  */
+export const querySponsorsWithBadgeScans = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE) => {
+
+    let endpoint = URI(`/api/v1/summits/${summitId}/sponsors`);
+
+    endpoint.addQuery('expand','company,sponsorship,sponsorship.type');
+    endpoint.addQuery('fields','id,company.name,sponsorship.type.name');
+    endpoint.addQuery('relations','none,company.none,sponsorship.type.none');
+    endpoint.addQuery('filter[]','badge_scans_count>0');
+    endpoint.addQuery('order','+company_name');
+    endpoint.addQuery('page', 1);
+    endpoint.addQuery('per_page', per_page);
+
+    if(input) {
+        input = escapeFilterValue(input);
+        endpoint.addQuery('filter[]', `company_name@@${input}`);
+    }
+
+    _fetch(endpoint, callback);
+
+}, callDelay);
+
+/**
+ * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
+ */
 export const queryAccessLevels = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE) => {
 
     let endpoint = URI(`/api/v1/summits/${summitId}/access-level-types`);
