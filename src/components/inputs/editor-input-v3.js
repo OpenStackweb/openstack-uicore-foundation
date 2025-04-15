@@ -45,7 +45,7 @@ const TextEditorV3 = ({
             beautifyHTML: false,
             ...options
         }),
-        [options, className]
+        []
     );
 
     const handleChange = (newValue) => {
