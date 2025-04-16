@@ -57,11 +57,12 @@ export default class AccessLevelsInput extends React.Component {
     }
 
     getAccessLevels (input, callback) {
-        let {summitId} = this.props;
+        let {summitId, defaultOptions} = this.props;
 
-        if (!input) {
+        if (!input && !defaultOptions) {
             return Promise.resolve({ options: [] });
         }
+
         queryAccessLevels(summitId,input, callback);
     }
 
