@@ -254,31 +254,6 @@ export const emitAccessToken = async (code, backUrl = null) => {
     }
 };
 
-export const clearAccessToken = async () => {
-    if (
-        await retryPromise(
-            () => Lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT),
-            10
-        )
-    ) {
-        try {
-
-            let authInfo = getAuthInfo();
-
-            if (!authInfo) {
-                throw Error(AUTH_ERROR_MISSING_AUTH_INFO);
-            }
-
-            let {accessToken, expiresIn, accessTokenUpdatedAt, refreshToken} = authInfo;
-
-            storeAuthInfo(null, 0, refreshToken)
-
-        } finally {
-            await Lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
-        }
-    }
-}
-
 const processRefreshToken = async (flow, refreshToken) => {
 
     if (flow === RESPONSE_TYPE_CODE && useOAuth2RefreshToken()) {
@@ -302,42 +277,109 @@ const processRefreshToken = async (flow, refreshToken) => {
     throw Error(AUTH_ERROR_ACCESS_TOKEN_EXPIRED);
 }
 
+/**
+ * @returns {Promise<*>}
+ * @private
+ */
+const _getAccessToken = async () => {
+    console.log(`openstack-uicore-foundation::Security::methods::_getAccessToken`);
+    let authInfo = getAuthInfo();
+
+    if (!authInfo) {
+        console.log(`openstack-uicore-foundation::Security::methods::_getAccessToken AUTH_ERROR_MISSING_AUTH_INFO`);
+        throw Error(AUTH_ERROR_MISSING_AUTH_INFO);
+    }
+
+    let {accessToken, expiresIn, accessTokenUpdatedAt, refreshToken} = authInfo;
+    let flow = getOAuth2Flow();
+    // check lifetime
+    const now = moment().unix();
+    let timeElapsedSecs = (now - accessTokenUpdatedAt);
+
+    expiresIn = (expiresIn - ACCESS_TOKEN_SKEW_TIME);
+    console.log(`openstack-uicore-foundation::Security::methods::_getAccessToken now ${now} accessTokenUpdatedAt ${accessTokenUpdatedAt} expiresIn ${expiresIn} timeElapsedSecs ${timeElapsedSecs}`)
+    if (timeElapsedSecs >= expiresIn || accessToken == null) {
+        console.log(`openstack-uicore-foundation::Security::methods::_getAccessToken  access token expired, refreshing it ...`);
+        accessToken = await processRefreshToken(flow, refreshToken);
+    }
+    return accessToken;
+}
+
+/**
+ * @returns {Promise<*|undefined>}
+ */
 export const getAccessToken = async () => {
-    if (
-        await retryPromise(
-            () => Lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT),
-            10
-        )
-    ) {
-        try {
-            let authInfo = getAuthInfo();
-
-            if (!authInfo) {
-                throw Error(AUTH_ERROR_MISSING_AUTH_INFO);
-            }
-
-            let {accessToken, expiresIn, accessTokenUpdatedAt, refreshToken} = authInfo;
-            let flow = getOAuth2Flow();
-            // check life time
-            const now = moment().unix();
-            let timeElapsedSecs = (now - accessTokenUpdatedAt);
-
-            expiresIn = (expiresIn - ACCESS_TOKEN_SKEW_TIME);
-            console.log(`openstack-uicore-foundation::Security::methods::getAccessToken now ${now} accessTokenUpdatedAt ${accessTokenUpdatedAt} expiresIn ${expiresIn}`)
-            if (timeElapsedSecs >= expiresIn || accessToken == null) {
-                console.log(`openstack-uicore-foundation::Security::methods::getAccessToken  access token expired, refreshing it ...`);
-                accessToken = await processRefreshToken(flow, refreshToken);
-            }
-            return accessToken;
-        } finally {
-            await Lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
-        }
+    if(navigator?.locks){
+        return await navigator.locks.request(GET_TOKEN_SILENTLY_LOCK_KEY, async lock => {
+            console.log(`openstack-uicore-foundation::Security::methods::getAccessToken web lock api`, lock);
+            return await _getAccessToken();
+        });
     }
     else {
-        // error on locking
-        throw Error(AUTH_ERROR_LOCK_ACQUIRE_ERROR);
+        if (
+            await retryPromise(
+                () => Lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT),
+                10
+            )
+        ) {
+            try {
+                return await _getAccessToken();
+            } finally {
+                await Lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
+            }
+        } else {
+            // error on locking
+            throw Error(AUTH_ERROR_LOCK_ACQUIRE_ERROR);
+        }
     }
 }
+
+/**
+ * @private
+ */
+const _clearAccessToken = () => {
+    console.log(`openstack-uicore-foundation::Security::methods::_clearAccessToken`);
+
+    let authInfo = getAuthInfo();
+
+    if (!authInfo) {
+        console.log(`openstack-uicore-foundation::Security::methods::_clearAccessToken AUTH_ERROR_MISSING_AUTH_INFO`);
+        throw Error(AUTH_ERROR_MISSING_AUTH_INFO);
+    }
+
+    let {accessToken, expiresIn, accessTokenUpdatedAt, refreshToken} = authInfo;
+
+    storeAuthInfo(null, 0, refreshToken)
+}
+
+export const clearAccessToken = async () => {
+    // see https://developer.mozilla.org/en-US/docs/Web/API/Web_Locks_API
+    if(navigator?.locks){
+        await navigator.locks.request(GET_TOKEN_SILENTLY_LOCK_KEY, async lock => {
+            console.log(`openstack-uicore-foundation::Security::methods::clearAccessToken web lock api`, lock);
+            _clearAccessToken();
+        });
+    }
+    else {
+        if (
+            await retryPromise(
+                () => Lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT),
+                10
+            )
+        ) {
+            try {
+                _clearAccessToken();
+            } finally {
+                await Lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
+            }
+        }
+        else{
+            // error on locking
+            throw Error(AUTH_ERROR_LOCK_ACQUIRE_ERROR);
+        }
+    }
+}
+
 
 export const refreshAccessToken = async (refresh_token) => {
 
