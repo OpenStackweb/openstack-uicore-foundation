@@ -171,7 +171,7 @@ export const queryTags = _.debounce(async (summitId, input, callback, per_page =
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
  */
-export const queryTracks = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PAGE_SIZE) => {
+export const queryTracks = _.debounce(async (summitId, input, callback, excludedIds = [], per_page = DEFAULT_PAGE_SIZE) => {
 
     let endpoint = URI(`/api/v1/summits/${summitId}/tracks`);
 
@@ -179,7 +179,11 @@ export const queryTracks = _.debounce(async (summitId, input, callback, per_page
     endpoint.addQuery('page', 1);
     endpoint.addQuery('per_page', per_page);
 
-    if(input) {
+    if (excludedIds?.length > 0) {
+        endpoint.addQuery('filter[]', `not_id==${excludedIds.join("||")}`);
+    }
+
+    if (input) {
         input = escapeFilterValue(input);
         endpoint.addQuery('filter[]', `name@@${input}`);
     }
