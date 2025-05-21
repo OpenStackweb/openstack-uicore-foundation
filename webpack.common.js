@@ -72,6 +72,9 @@ module.exports = {
         'components/inputs/stepped-select' : './src/components/inputs/stepped-select/index.jsx',
         'components/bulk-actions-selector' : './src/components/bulk-actions-selector/index.js',
         'components/progressive-img': './src/components/progressive-img/index.js',
+        'components/inputs/editor-input-v2' : './src/components/inputs/editor-input-v2.js',
+        'components/inputs/editor-input-v3' : './src/components/inputs/editor-input-v3.js',
+
         // models
         'models/index': './src/models',
         'models/summit-event' : './src/models/summit-event.js',
