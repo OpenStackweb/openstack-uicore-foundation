@@ -20,6 +20,9 @@
     "@babel/preset-flow": "^7.7.4",
     "@babel/preset-react": "^7.7.4",
     "@babel/runtime": "^7.20.7",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/material": "^5.15.20",
     "@react-pdf/renderer": "^3.1.11",
     "awesome-bootstrap-checkbox": "^1.0.1",
     "babel-cli": "^6.26.0",
@@ -101,7 +104,7 @@
   "peerDependencies": {
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
-    "@mui/material": "^5.15.20",  
+    "@mui/material": "^5.15.20",
     "@react-pdf/renderer": "^3.1.11",
     "awesome-bootstrap-checkbox": "^1.0.1",
     "browser-tabs-lock": "^1.2.15",
