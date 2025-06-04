@@ -64,6 +64,7 @@ const TextEditorV3 = ({
         <div className="editor-input">
             <JoditEditor
                 ref={editor}
+                key={value}
                 value={value}
                 config={config}
                 onBlur={handleChange} // preferred to use only this option to update the content for performance reasons
