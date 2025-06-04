@@ -56,11 +56,12 @@ export {default as SummitVenuesSelect} from './inputs/summit-venues-select'
 export {default as BulkActionsSelector} from './bulk-actions-selector'
 export {default as ScheduleBuilderView} from './schedule-builder-view'
 
-// this 4 includes 3rd party deps
+// this 5 includes 3rd party deps
 // export {default as ExtraQuestionsForm } from './extra-questions/index.js';
 // export {default as GMap} from './google-map';
 // export {default as TextEditorV2} from './inputs/editor-input-v2'
 // export {default as TextEditorV3} from './inputs/editor-input-v3'
+// export {default as CompanyInputV2} from './inputs/company-input-v2.js'
 
 let language = getCurrentUserLanguage();
 
