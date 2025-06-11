@@ -118,7 +118,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
           <li key={key} {...optionProps}>
             <Typography
               variant="body2"
-              sx={{ fontSize: "1rem", color: "text.secondary" }}
+              sx={{ fontSize: "1em", color: "text.secondary" }}
             >
               {option.name}
             </Typography>
