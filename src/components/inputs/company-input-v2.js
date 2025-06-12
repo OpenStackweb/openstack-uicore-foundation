@@ -16,7 +16,7 @@ import PropTypes from "prop-types";
 import { TextField, Autocomplete, Typography } from "@mui/material";
 import { queryRegistrationCompanies } from "../../utils/query-actions";
 
-const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink }) => {
+const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink, ...rest }) => {
   const [inputValue, setInputValue] = React.useState("");
   const [options, setOptions] = React.useState([]);
 
@@ -125,6 +125,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
           </li>
         );
       }}
+      {...rest}
     />
   );
 };
