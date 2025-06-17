@@ -14,7 +14,7 @@ const TextEditorV3 = ({
     // all options from https://xdsoft.net/jodit/docs/,
     const config = useMemo(
         () => ({
-            placeholder: "Start typings...",
+            placeholder: "Start typing...",
             className,
             buttons: [
                 "bold",
