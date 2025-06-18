@@ -70,8 +70,10 @@ export default class CompanyInput extends React.Component {
             callback(newOptions);
         };
 
-        queryCompanies(input, translateOptions);
-    }
+        const queryFn = this.props.queryFunction || queryCompanies;
+
+        queryFn(input, translateOptions);
+    }    
 
     render() {
         let {error, value, onChange, id, multi, ...rest} = this.props;
