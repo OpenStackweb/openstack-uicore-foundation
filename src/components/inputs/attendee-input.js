@@ -15,7 +15,8 @@ import React, {useState} from 'react';
 import AsyncSelect from 'react-select/lib/Async';
 import {queryAttendees} from '../../utils/query-actions';
 
-const AttendeeInput = ({id, value, summitId, error, multi, onChange, getOptionValue, getOptionLabel, ...rest}) => {
+const AttendeeInput = ({id, value, summitId, error, multi, onChange, getOptionValue, getOptionLabel, queryFunction, ...rest}) => {
+    const queryFn = queryFunction || queryAttendees;
     const [_value, _setValue] = useState(value);
     const has_error = ( error !== '' );
 
@@ -49,7 +50,7 @@ const AttendeeInput = ({id, value, summitId, error, multi, onChange, getOptionVa
         if (!input) {
             return Promise.resolve({ options: [] });
         }
-        queryAttendees(summitId, input, callback);
+        queryFn(summitId, input, callback);
     }
     
     return (
