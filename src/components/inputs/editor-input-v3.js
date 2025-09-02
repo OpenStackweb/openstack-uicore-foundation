@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from "react";
+import React, {useMemo, useRef} from "react";
 import JoditEditor from "jodit-react";
 
 const TextEditorV3 = ({
@@ -7,7 +7,8 @@ const TextEditorV3 = ({
                           error,
                           className,
                           onChange,
-                          options = {}
+                          options = {},
+                          extraButtons = []
                       }) => {
     const editor = useRef(null);
 
@@ -34,7 +35,11 @@ const TextEditorV3 = ({
                 "link",
                 "|",
                 "undo",
-                "redo"
+                "redo",
+                "|",
+                "spellcheck",
+                "table",
+                ...extraButtons
             ],
             askBeforePasteHTML: false,
             askBeforePasteFromWord: false,
