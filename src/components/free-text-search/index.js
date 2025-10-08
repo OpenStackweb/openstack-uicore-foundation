@@ -25,7 +25,7 @@ class FreeTextSearch extends React.Component {
         this.onChange       = this.onChange.bind(this);
 
         this.state = {
-            value: props.value,
+            value: props.value || "",
         };
     }
 
@@ -46,7 +46,7 @@ class FreeTextSearch extends React.Component {
         this.setState({value: ''});
     }
 
-    doFiltering(term){
+    doFiltering(term = ""){
         this.props.onSearch(term.trim());
     }
 
@@ -95,6 +95,7 @@ class FreeTextSearch extends React.Component {
 FreeTextSearch.defaultProps = {
     preventEvents: false,
     onChange: null,
+    value: "",
 }
 
 FreeTextSearch.propTypes = {
