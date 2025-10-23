@@ -65,6 +65,7 @@ module.exports = {
         'components/inputs/registration-company-input':'./src/components/inputs/registration-company-input.js',
         'components/inputs/ticket-types-input':'./src/components/inputs/ticket-types-input.js',
         'components/extra-questions': './src/components/extra-questions/index.js',
+        'components/extra-questions-mui': './src/components/extra-questions-mui/index.js',
         'components/sponsored-project-input' : './src/components/inputs/sponsored-project-input.js',
         'components/schedule-builder-view' : './src/components/schedule-builder-view/index.js',
         'components/schedule-builder-constants' : './src/components/schedule-builder-view/constants.js',
