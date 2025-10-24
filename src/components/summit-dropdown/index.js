@@ -47,6 +47,7 @@ export default class SummitDropdown extends React.Component {
             ).map(s => ({label: s.name, value: s.id}));
 
         let bigClass = this.props.hasOwnProperty('big') ? 'big' : '';
+        const isDisabled = !this.state.summitValue;
 
         return (
             <div className={"summit-dropdown btn-group " + bigClass}>
@@ -59,7 +60,7 @@ export default class SummitDropdown extends React.Component {
                     className="btn-group summit-select text-left"
                     isClearable={false}
                 />
-                <button type="button" className={`btn btn-default ${actionClass}`} onClick={this.handleClick}>
+                <button type="button" className={`btn btn-default ${actionClass}`} disabled={isDisabled} onClick={this.handleClick}>
                     {actionLabel}
                 </button>
             </div>
