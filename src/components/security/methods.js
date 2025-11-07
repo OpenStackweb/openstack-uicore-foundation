@@ -59,6 +59,7 @@ import {
  * @param provider
  * @param loginHint
  * @param otpLoginHint
+ * @param tenant
  * @returns {*}
  */
 export const getAuthUrl = (
@@ -67,7 +68,8 @@ export const getAuthUrl = (
     tokenIdHint = null,
     provider = null,
     loginHint = null,
-    otpLoginHint = null) => {
+    otpLoginHint = null,
+    tenant = null) => {
 
     let oauth2ClientId = getOAuth2ClientId();
     let redirectUri = getAuthCallback();
@@ -127,6 +129,10 @@ export const getAuthUrl = (
         query['login_hint'] = encodeURI(loginHint);
     }
 
+    if (tenant) {
+        query['tenant'] = tenant;
+    }
+
     url = url.query(query);
     //console.log(`getAuthUrl ${url.toString()}`);
     return url;
@@ -177,15 +183,17 @@ const createNonce = (len) => {
  * @param prompt
  * @param loginHint
  * @param otpLoginHint
+ * @param tenant
  */
 export const doLogin = (
     backUrl = null,
     provider = null,
     prompt = null,
     loginHint = null,
-    otpLoginHint = null
+    otpLoginHint = null,
+    tenant = null
 ) => {
-    let url = getAuthUrl(backUrl, prompt, null, provider, loginHint, otpLoginHint);
+    let url = getAuthUrl(backUrl, prompt, null, provider, loginHint, otpLoginHint, tenant);
     let location = getCurrentLocation()
     location.replace(url.toString());
 }
