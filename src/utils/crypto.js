@@ -1,3 +1,5 @@
+import SparkMD5 from "spark-md5";
+
 // limit of Crypto.getRandomValues()
 // https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues
 const MAX_BYTES = 65536
@@ -35,4 +37,33 @@ export const getSHA256 = (message, format = 'hex') => {
         f = Base64url;
 
     return sha256(message).toString(f);
+}
+
+export const getMD5 = (file) => {
+    return new Promise((resolve, reject) => {
+        const chunkSize = 2 * 1024 * 1024; // 2 MB by chunk
+        const spark = new SparkMD5.ArrayBuffer();
+        const fileReader = new FileReader();
+        let cursor = 0;
+
+        fileReader.onload = e => {
+            spark.append(e.target.result); 
+            cursor += chunkSize;
+
+            if (cursor < file.size) {
+                readNextChunk();
+            } else {
+                resolve(spark.end()); // final MD5
+            }
+        };
+
+        fileReader.onerror = () => reject("Error reading the file");
+
+        function readNextChunk() {
+            const slice = file.slice(cursor, cursor + chunkSize);
+            fileReader.readAsArrayBuffer(slice);
+        }
+
+        readNextChunk();
+    });
 }
