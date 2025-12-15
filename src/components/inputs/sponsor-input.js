@@ -13,24 +13,31 @@
 
 import React from 'react';
 import AsyncSelect from 'react-select/lib/Async';
-import {querySponsors} from '../../utils/query-actions';
+import { querySponsors } from '../../utils/query-actions';
 
-const SponsorInput = ({id, summitId, value, error, multi, onChange, queryFunction, ...rest}) => {
+const SponsorInput = ({ id, summitId, value, error, multi, onChange, queryFunction, ...rest }) => {
     const queryFn = queryFunction || querySponsors;
-    const has_error = error !== '' ;
+    const has_error = error !== '';
 
     const handleChange = (value) => {
-        let ev = {target: {
-            id: id,
-            value: value,
-            type: 'sponsorinput'
-        }};
+        let ev = {
+            target: {
+                id: id,
+                value: value,
+                type: 'sponsorinput'
+            }
+        };
 
         onChange(ev);
     }
 
     const getSponsors = (input, callback) => {
-        queryFn(summitId, input, callback);
+        const filterSponsors = (options) => {
+            let newOptions = options.filter(c => c.company);
+            callback(newOptions);
+        };
+
+        queryFn(summitId, input, filterSponsors);
     }
 
     return (
