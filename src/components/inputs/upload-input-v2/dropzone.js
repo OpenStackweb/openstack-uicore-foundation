@@ -55,6 +55,9 @@ export class DropzoneJS extends React.Component {
             // see https://github.com/dropzone/dropzone/blob/f50d1828ab5df79a76be00d1306cc320e39a27f4/src/options.js#L405
             try {
                 file.accessToken = await getAccessToken();
+                // IMPORTANT: compute once BEFORE upload starts
+                file.md5 = await getMD5(file);
+                file.fileSize = file.size;
             } catch (e) {
                 console.log(e);
                 this.onError(e);
@@ -239,16 +242,16 @@ export class DropzoneJS extends React.Component {
             }
         });
 
-        this.dropzone.on('sending', async (file, xhr, formData) => {
+        this.dropzone.on('sending', (file, xhr, formData) => {
             if(file?.accessToken)
                 xhr.setRequestHeader('Authorization', `Bearer ${file.accessToken}`);
 
-            // send md5 + size with each request (server can use it on final chunk)
-            const md5 = await getMD5(file);
-            const fileSize = file?.size;
-            console.log(`DropzoneJS::sending md5 ${md5} fileSize ${fileSize}`);
-            formData.append('md5', md5);
-            formData.append('size', String(fileSize));
+            // synchronous append (this WILL be included)
+            if (file?.md5)
+                formData.append('md5', file.md5);
+
+            formData.append('size', String(file?.size || 0));
+            console.log(`DropzoneJS::sending md5 ${file?.md5} size ${file?.size}`);
 
             let _this = this;
             // This will track all request so we can get the correct request that returns final response:
