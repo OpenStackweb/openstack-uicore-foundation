@@ -245,8 +245,10 @@ export class DropzoneJS extends React.Component {
 
             // send md5 + size with each request (server can use it on final chunk)
             const md5 = await getMD5(file);
+            const fileSize = file?.size;
+            console.log(`DropzoneJS::sending md5 ${md5} fileSize ${fileSize}`);
             formData.append('md5', md5);
-            formData.append('size', String(file.size));
+            formData.append('size', String(fileSize));
 
             let _this = this;
             // This will track all request so we can get the correct request that returns final response:
