@@ -3,6 +3,7 @@ import {
     amountToCents,
     amountFromCents,
     parsePrice,
+    currencyAmountFromCents,
 } from "../money";
 
 describe("amountToCents()", () => {
@@ -115,5 +116,43 @@ describe("parsePrice()", () => {
         expect(() => parsePrice("$")).toThrow(/Invalid price/);
         expect(() => parsePrice("nope")).toThrow(/Invalid price/);
         expect(() => parsePrice("..,,")).toThrow(/Invalid money format/);
+    });
+});
+
+describe("currencyAmountFromCents (integration, no mocks)", () => {
+    it("throws if cents is not a number", () => {
+        expect(() => currencyAmountFromCents("10")).toThrow("cents must be an integer number");
+        expect(() => currencyAmountFromCents(null)).toThrow("cents must be an integer number");
+        expect(() => currencyAmountFromCents(undefined)).toThrow("cents must be an integer number");
+    });
+
+    it("throws if cents is not an integer", () => {
+        expect(() => currencyAmountFromCents(10.5)).toThrow("cents must be an integer number");
+        expect(() => currencyAmountFromCents(NaN)).toThrow("cents must be an integer number");
+    });
+
+    it("formats USD by default", () => {
+        expect(currencyAmountFromCents(0)).toBe("$0.00");
+        expect(currencyAmountFromCents(30)).toBe("$0.30");
+        expect(currencyAmountFromCents(1234)).toBe("$12.34");
+    });
+
+    it("formats a known currency code (EUR) if supported by your symbol map", () => {
+        // If you haven't added EUR yet, this will likely fall back to "$".
+        // Add EUR: "€" in your CURRENCY_SYMBOL map to make this pass.
+        expect(currencyAmountFromCents(1234, "EUR")).toBe("€12.34");
+    });
+
+    it("formats a known currency code (GBP) if supported by your symbol map", () => {
+        // Add GBP: "£" in your CURRENCY_SYMBOL map to make this pass.
+        expect(currencyAmountFromCents(30, "GBP")).toBe("£0.30");
+    });
+
+    it('falls back to "$" for unknown currency codes', () => {
+        expect(currencyAmountFromCents(100, "ZZZ")).toBe("$1.00");
+    });
+
+    it("handles negative cents", () => {
+        expect( () => currencyAmountFromCents(-123, "USD")).toThrow("cents must be non-negative.");
     });
 });

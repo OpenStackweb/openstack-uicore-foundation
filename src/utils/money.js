@@ -19,6 +19,19 @@ import {
     ONE_CENT
 } from "./constants";
 
+const CURRENCY_SYMBOL = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    CAD: "C$",
+    AUD: "A$",
+    NZD: "NZ$",
+    CHF: "CHF",
+    ARS: "AR$",
+    BRL: "R$",
+    MXN: "MX$",
+};
+
 /**
  * Convert a decimal money amount to integer cents safely (no floating point math).
  *
@@ -131,11 +144,26 @@ export function amountFromCents(cents) {
         throw new Error("cents must be non-negative.");
     }
 
-    const dollars = c / CENTS_FACTOR;
+    const amount = c / CENTS_FACTOR;
     const remainder = c % CENTS_FACTOR;
 
     // Always pad remainder to 2 digits
-    return `${dollars.toString()}.${remainder.toString().padStart(TWO_DECIMAL_PLACES, "0")}`;
+    return `${amount.toString()}.${remainder.toString().padStart(TWO_DECIMAL_PLACES, "0")}`;
+}
+
+/**
+ * @param cents
+ * @param currency
+ * @returns {string}
+ */
+export function currencyAmountFromCents(cents, currency =  "USD"){
+    if (typeof cents !== "number" || !Number.isInteger(cents)) {
+        throw new Error("cents must be an integer number");
+    }
+
+    const amount = amountFromCents(cents); // "12.34"
+    const symbol = CURRENCY_SYMBOL[currency] ?? "$";
+    return `${symbol}${amount}`;
 }
 
 /**
