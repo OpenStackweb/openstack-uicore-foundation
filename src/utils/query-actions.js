@@ -18,6 +18,7 @@ import _ from 'lodash';
 export const RECEIVE_COUNTRIES  = 'RECEIVE_COUNTRIES';
 const callDelay = 500; // milliseconds
 import URI from "urijs";
+URI.escapeQuerySpace = false;
 export const DEFAULT_PAGE_SIZE = 10;
 
 const _fetchPublic = async (endpoint, callback, options = {}) => {

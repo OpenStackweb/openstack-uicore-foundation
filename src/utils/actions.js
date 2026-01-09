@@ -13,6 +13,8 @@
 
 import request from 'superagent/lib/client';
 import URI from "urijs";
+URI.escapeQuerySpace = false;
+
 let http = request;
 import Swal from 'sweetalert2';
 import T from "i18n-react/dist/i18n-react";
@@ -494,7 +496,12 @@ export const getRawCSV = (endpoint, params, header = null) => {
 };
 
 export const escapeFilterValue = (value) => {
+    value = String(value);
+    // escape backslash first so you don't accidentally break your own escapes
+    value = value.replace(/\\/g, "\\\\");
     value = value.replace(/,/g, "\\,");
     value = value.replace(/;/g, "\\;");
-    return encodeURIComponent(value);
+    // especial case for literal +
+    value = value.replace(/\+/g, "%2B");
+    return value;
 };
