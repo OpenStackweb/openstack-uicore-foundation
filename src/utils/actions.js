@@ -496,5 +496,6 @@ export const getRawCSV = (endpoint, params, header = null) => {
 export const escapeFilterValue = (value) => {
     value = value.replace(/,/g, "\\,");
     value = value.replace(/;/g, "\\;");
-    return encodeURIComponent(value);
+    value = value.replace(/\+/g, "%2B");
+    return value;
 };
