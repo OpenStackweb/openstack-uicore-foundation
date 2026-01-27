@@ -1,6 +1,5 @@
 import React from 'react';
-import T from 'i18n-react';
-import { getCurrentUserLanguage } from '../utils/methods';
+import { initI18n } from '../i18n/i18n.js';
 
 export {default as AjaxLoader} from './ajaxloader';
 export {default as RawHTML} from './raw-html';
@@ -63,19 +62,5 @@ export {default as ScheduleBuilderView} from './schedule-builder-view'
 // export {default as TextEditorV3} from './inputs/editor-input-v3'
 // export {default as CompanyInputV2} from './inputs/company-input-v2.js'
 
-let language = getCurrentUserLanguage();
-
-// language would be something like es-ES or es_ES
-// However we store our files with format es.json or en.json
-// therefore retrieve only the first 2 digits
-
-if (language.length > 2) {
-    language = language.split("-")[0];
-    language = language.split("_")[0];
-}
-
-try {
-    T.setTexts(require(`../i18n/${language}.json`));
-} catch (e) {
-    T.setTexts(require(`../i18n/en.json`));
-}
+// initialize i18n
+initI18n();

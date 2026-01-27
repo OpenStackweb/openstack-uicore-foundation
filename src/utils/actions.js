@@ -103,6 +103,7 @@ export const authErrorHandler = (
     let payload, callback;
 
     dispatch(stopLoading());
+    
 
     switch (code) {
         case 401:
