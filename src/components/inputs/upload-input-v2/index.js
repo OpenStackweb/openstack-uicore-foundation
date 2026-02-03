@@ -24,6 +24,16 @@ export default class UploadInputV2 extends React.Component {
         super(props);
     }
 
+    getDefaultAllowedExtensions = () => {
+        const { mediaType } = this.props
+        return mediaType && mediaType.type ? mediaType?.type?.allowed_extensions.map((ext) => `.${ext.toLowerCase()}`).join(",") : '';
+    }
+
+    getDefaultMaxSize = () => {
+        const { mediaType } = this.props
+        return mediaType ? mediaType?.max_size / 1024 : 100;
+    }
+
     getDropzone = () => {
         const {
             value,
@@ -37,11 +47,13 @@ export default class UploadInputV2 extends React.Component {
             djsConfig,
             id,
             parallelChunkUploads = false,
-            onError = () => {}
+            onError = () => {},
+            getAllowedExtensions = null,
+            getMaxSize = null
         } = this.props;
 
-        const allowedExt = mediaType && mediaType.type ? mediaType.type.allowed_extensions.map((ext) => `.${ext.toLowerCase()}`).join(",") : '';
-        const maxSize = mediaType ? mediaType.max_size / 1024 : 100;
+        const allowedExt = getAllowedExtensions ? getAllowedExtensions() : this.getDefaultAllowedExtensions();
+        const maxSize = getMaxSize ? getMaxSize() : this.getDefaultMaxSize();
         const canUpload = !maxFiles || value.length < maxFiles;
 
         let eventHandlers = {};
@@ -59,7 +71,6 @@ export default class UploadInputV2 extends React.Component {
             addRemoveLinks: true,
             maxFiles: maxFiles,
             acceptedFiles: allowedExt,
-            dropzoneSelector: `media_upload_${mediaType.id}`,
             ...djsConfig
         };
 
@@ -67,6 +78,7 @@ export default class UploadInputV2 extends React.Component {
             showFiletypeIcon: false,
             postUrl: postUrl
         };
+
         const data = {
             media_type: mediaType,
             media_upload: value,
@@ -113,7 +125,7 @@ export default class UploadInputV2 extends React.Component {
 
         return (
             <div className="row">
-                <div className="col-md-6"  style={{height: 180}}>
+                <div className="col-md-6" style={{height: 180}}>
                     {this.getDropzone()}
                 </div>
                 <div className="col-md-6">
