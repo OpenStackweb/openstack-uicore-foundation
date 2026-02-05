@@ -31,6 +31,7 @@ module.exports = {
         'components/table-sortable': './src/components/table-sortable/SortableTable.js',
         'components/attendance-tracker': './src/components/attendance-tracker.js',
         'components/clock': './src/components/clock.js',
+        'components/clock-context': './src/components/clock-context.js',
         'components/exclusive-wrapper': './src/components/exclusive-wrapper.js',
         'components/video-stream': './src/components/video-stream.js',
         'components/inputs/action-dropdown': './src/components/inputs/action-dropdown/index.js',
@@ -90,6 +91,7 @@ module.exports = {
         'i18n': './src/i18n/i18n.js',
         'utils/questions-set': './src/utils/questions-set.js',
         'utils/money': './src/utils/money.js',
+        'utils/external-store': './src/utils/external-store.js',
     },
     output: {
         path: path.resolve(__dirname, 'lib'),
