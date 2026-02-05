@@ -10,6 +10,9 @@
     "test": "jest"
   },
   "license": "APACHE 2.0",
+  "dependencies": {
+    "use-sync-external-store": "^1.2.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.17.8",
     "@babel/plugin-proposal-class-properties": "^7.16.7",
@@ -37,6 +40,8 @@
     "dropzone": "5.7.2",
     "enzyme": "^3.11.0",
     "enzyme-adapter-react-16": "^1.15.6",
+    "@testing-library/react": "^12.1.5",
+    "@testing-library/jest-dom": "^5.16.5",
     "extend": "^3.0.1",
     "file-loader": "^6.2.0",
     "final-form": "^4.20.7",
