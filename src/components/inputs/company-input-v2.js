@@ -68,13 +68,21 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       }}
       onChange={(_, newValue) => {
         let tmpValue = newValue?.inputValue || newValue;
+        // empty option
+        if (newValue === null) {
+          tmpValue = { id: null, name: '' };
+        }
+        // if the company name is a string
+        else if (typeof newValue === 'string') {
+          tmpValue = { id: 0, name: newValue };
+        }
         // if new option is selected ...
-        if (newValue && typeof newValue === 'object' && newValue.inputValue) {          
+        else if (newValue && typeof newValue === 'object' && newValue.inputValue) {
           tmpValue = {
             id: 0,
             name: newValue.inputValue
           };
-        }       
+        }
         setOptions(tmpValue ? [tmpValue, ...options] : options);
         let ev = {
           target: {
