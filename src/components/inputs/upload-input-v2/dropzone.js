@@ -1,5 +1,4 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
 import extend from 'extend'
 import 'dropzone/dist/dropzone.css';
 import {Icon} from './icon'
@@ -15,6 +14,7 @@ export class DropzoneJS extends React.Component {
 
     constructor(props) {
         super(props);
+        this.dropzoneRef = React.createRef();
         this.state = {files: []};
         this.onUploadComplete = this.onUploadComplete.bind(this);
         this.onError = this.onError.bind(this);
@@ -78,6 +78,7 @@ export class DropzoneJS extends React.Component {
      * Sets up dropzone.js with the component.
      */
     componentDidMount () {
+        if(!this.dropzoneRef.current) return;
         const options = this.getDjsConfig();
 
         Dropzone = Dropzone || require('dropzone');
@@ -87,9 +88,10 @@ export class DropzoneJS extends React.Component {
             console.info('Neither postUrl nor a "drop" eventHandler specified, the React-Dropzone component might misbehave.')
         }
 
-        var dropzoneNode = this.props.config.dropzoneSelector || ReactDOM.findDOMNode(this);
-        this.dropzone = new Dropzone(dropzoneNode, options);
+        const dropzoneNode = this.dropzoneRef.current;
+        if (!dropzoneNode) throw new Error("Dropzone node not found");
 
+        this.dropzone = new Dropzone(dropzoneNode, options);
         this.setupEvents()
     }
 
@@ -134,8 +136,10 @@ export class DropzoneJS extends React.Component {
         this.queueDestroy = false;
 
         if (!this.dropzone) {
-            const dropzoneNode = this.props.config.dropzoneSelector || ReactDOM.findDOMNode(this);
+            const dropzoneNode = this.dropzoneRef.current;
+            if (!dropzoneNode) throw new Error("Dropzone node not found");
             this.dropzone = new Dropzone(dropzoneNode, this.getDjsConfig());
+            this.setupEvents();
         }
 
         this.dropzone.options = extend(true, {}, this.dropzone.options, djsConfigObj, postUrlConfigObj);
@@ -158,14 +162,14 @@ export class DropzoneJS extends React.Component {
 
         if (!this.props.config.postUrl && this.props.action) {
             return (
-                <form action={this.props.action} className={className}>
+                <form ref={this.dropzoneRef} action={this.props.action} className={className}>
                     {icons}
                     {this.props.children}
                 </form>
             );
         } else {
             return (
-                <div id={this.props.id} className={className}> {icons} {this.props.children} </div>
+                <div ref={this.dropzoneRef} id={this.props.id} className={className}> {icons} {this.props.children} </div>
             );
         }
     }
