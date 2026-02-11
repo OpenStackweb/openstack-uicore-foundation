@@ -119,6 +119,9 @@ export const authErrorHandler = (
             break;
         case 404:
             msg = err.response.body?.message || err.response.error?.message || err.message;
+            if (err.response.body?.errors?.length) {
+                msg += `<br>${err.response.body.errors.join("<br>")}`;
+            }
             payload = buildNotifyHandlerWarningPayload(code, "Not Found", msg);
             break;
         case 412:
