@@ -45,6 +45,7 @@ import {
     AUTH_ERROR_MISSING_REFRESH_TOKEN,
     AUTH_ERROR_LOCK_ACQUIRE_ERROR,
     AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR,
+    AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR,
     AUTH_ERROR_ID_TOKEN_INVALID,
     AUTH_ERROR_MISSING_OTP_PARAM,
     AUTH_ERROR_MISSING_PKCE_PARAM,
@@ -262,23 +263,43 @@ export const emitAccessToken = async (code, backUrl = null) => {
     }
 };
 
+export const MAX_RETRIES = 5;
+export const BACKOFF_BASE_MS = 1000;
+
+const retryWithBackoff = async (fn, maxRetries = MAX_RETRIES, baseDelayMs = BACKOFF_BASE_MS) => {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            return await fn();
+        } catch (err) {
+            // auth errors (HTTP 400) are fatal — never retry
+            if (err.message && err.message.startsWith(AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR)) {
+                throw err;
+            }
+            // network/5xx errors are retryable — retry unless exhausted
+            if (attempt === maxRetries) {
+                throw err;
+            }
+            const delay = baseDelayMs * Math.pow(2, attempt);
+            console.log(`retryWithBackoff retry ${attempt + 1}/${maxRetries} in ${delay}ms`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+};
+
 const processRefreshToken = async (flow, refreshToken) => {
 
     if (flow === RESPONSE_TYPE_CODE && useOAuth2RefreshToken()) {
-        //console.log('getAccessToken getting new access token, access token got void');
         if (!refreshToken) {
             clearAuthInfo();
             throw Error(AUTH_ERROR_MISSING_REFRESH_TOKEN);
         }
 
-        let response = await refreshAccessToken(refreshToken);
+        let response = await retryWithBackoff(() => refreshAccessToken(refreshToken));
         let {access_token, expires_in, refresh_token, id_token} = response;
-        //console.log(`getAccessToken access_token ${access_token} expires_in ${expires_in} refresh_token ${refresh_token}`);
         if (typeof refresh_token === 'undefined') {
             refresh_token = null; // not using rotate policy
         }
         storeAuthInfo(access_token, expires_in, refresh_token, id_token);
-        //console.log(`getAccessToken access_token ${access_token} [NEW]`);
         return access_token;
     }
     clearAuthInfo();
@@ -400,33 +421,37 @@ export const refreshAccessToken = async (refresh_token) => {
         "refresh_token": refresh_token
     };
 
+    let response;
     try {
-        const response = await fetch(`${baseUrl}/oauth2/token`, {
+        response = await fetch(`${baseUrl}/oauth2/token`, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
-        }).then((response) => {
-            if (response.status === 400) {
-                let currentLocation = getCurrentPathName();
-                setSessionClearingState(true);
-                throw Error(`${AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR}: ${response.status} - ${response.statusText}`);
-            }
-            return response;
-
-        }).catch(function (error) {
-            throw Error(`${AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR}: ${error.message}`);
         });
-
-        const json = await response.json();
-        let {access_token, refresh_token, expires_in, id_token} = json;
-        return {access_token, refresh_token, expires_in, id_token}
-    } catch (err) {
-        console.log(err);
-        throw err;
+    } catch (networkError) {
+        // fetch rejects on network failures (DNS, timeout, no connectivity)
+        console.log('refreshAccessToken network error:', networkError.message);
+        throw Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: ${networkError.message}`);
     }
+
+    if (response.status === 400) {
+        // token is genuinely revoked — this is a real auth error
+        setSessionClearingState(true);
+        throw Error(`${AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR}: ${response.status} - ${response.statusText}`);
+    }
+
+    if (response.status >= 500) {
+        // server error — transient, should be retried
+        console.log(`refreshAccessToken server error: ${response.status} - ${response.statusText}`);
+        throw Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: ${response.status} - ${response.statusText}`);
+    }
+
+    const json = await response.json();
+    let {access_token, refresh_token: new_refresh_token, expires_in, id_token} = json;
+    return {access_token, refresh_token: new_refresh_token, expires_in, id_token}
 }
 
 export const storeAuthInfo = (accessToken, expiresIn, refreshToken = null, idToken = null) => {
