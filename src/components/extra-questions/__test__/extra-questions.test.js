@@ -11,6 +11,9 @@ import {toSlug} from '../../../utils/methods';
 
 Enzyme.configure({adapter: new Adapter()});
 
+// jsdom does not implement scrollIntoView
+Element.prototype.scrollIntoView = jest.fn();
+
 const questions = [
     {
         "id": 93,

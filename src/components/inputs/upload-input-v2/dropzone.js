@@ -4,6 +4,7 @@ import 'dropzone/dist/dropzone.css';
 import {Icon} from './icon'
 import PropTypes from 'prop-types';
 import {getAccessToken, initLogOut} from '../../security/methods';
+import {AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR} from '../../security/constants';
 import {getMD5} from "../../../utils/crypto";
 
 let Dropzone = null;
@@ -61,7 +62,12 @@ export class DropzoneJS extends React.Component {
             } catch (e) {
                 console.log(e);
                 this.onError(e);
-                initLogOut();
+                // only logout on genuine auth errors, not transient network failures
+                if (!e.message || !e.message.startsWith(AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR)) {
+                    initLogOut();
+                }
+                done(e.message || 'Auth error');
+                return;
             }
             if (options.maxFiles && options.maxFiles < (this.state.files.length + this.props.uploadCount)) {
                 done('Max files reached.');
