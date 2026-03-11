@@ -268,7 +268,7 @@ export const MAX_RETRIES = 5;
 export const BACKOFF_BASE_MS = 1000;
 
 export const retryWithBackoff = async (fn, maxRetries = MAX_RETRIES, baseDelayMs = BACKOFF_BASE_MS) => {
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
             return await fn();
         } catch (err) {
