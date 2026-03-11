@@ -157,6 +157,36 @@ describe('refreshAccessToken', () => {
             .toThrow(AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR);
     });
 
+    it('should throw AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR on HTTP 408 (Request Timeout)', async () => {
+        const mockResponse = {
+            ok: false,
+            status: 408,
+            statusText: 'Request Timeout',
+        };
+        global.fetch = jest.fn().mockResolvedValue(mockResponse);
+
+        await expect(refreshAccessToken('valid-token'))
+            .rejects
+            .toThrow(AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR);
+
+        expect(setSessionClearingState).not.toHaveBeenCalled();
+    });
+
+    it('should throw AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR on HTTP 429 (Too Many Requests)', async () => {
+        const mockResponse = {
+            ok: false,
+            status: 429,
+            statusText: 'Too Many Requests',
+        };
+        global.fetch = jest.fn().mockResolvedValue(mockResponse);
+
+        await expect(refreshAccessToken('valid-token'))
+            .rejects
+            .toThrow(AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR);
+
+        expect(setSessionClearingState).not.toHaveBeenCalled();
+    });
+
     it('should throw AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR on network failure', async () => {
         global.fetch = jest.fn().mockRejectedValue(new TypeError('Failed to fetch'));
 
@@ -225,6 +255,32 @@ describe('refreshAccessToken', () => {
             .rejects
             .toThrow(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: Failed to fetch`);
     });
+
+    it('should throw retryable error when response body is not valid JSON', async () => {
+        const mockResponse = {
+            ok: true,
+            status: 200,
+            json: jest.fn().mockRejectedValue(new SyntaxError('Unexpected token < in JSON')),
+        };
+        global.fetch = jest.fn().mockResolvedValue(mockResponse);
+
+        await expect(refreshAccessToken('valid-token'))
+            .rejects
+            .toThrow(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: invalid JSON response from IDP`);
+
+        expect(setSessionClearingState).not.toHaveBeenCalled();
+    });
+
+    it('should throw retryable error when fetch is aborted by timeout', async () => {
+        const abortError = new DOMException('The operation was aborted.', 'AbortError');
+        global.fetch = jest.fn().mockRejectedValue(abortError);
+
+        await expect(refreshAccessToken('valid-token'))
+            .rejects
+            .toThrow(AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR);
+
+        expect(setSessionClearingState).not.toHaveBeenCalled();
+    });
 });
 
 describe('retryWithBackoff', () => {
@@ -241,7 +297,7 @@ describe('retryWithBackoff', () => {
 
     it('should retry network errors up to maxRetries then throw', async () => {
         jest.useRealTimers();
-        const networkError = new Error('network down');
+        const networkError = new Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: network down`);
         const fn = jest.fn().mockRejectedValue(networkError);
 
         await expect(retryWithBackoff(fn, 3, 1))
@@ -254,8 +310,8 @@ describe('retryWithBackoff', () => {
     it('should succeed after transient failures', async () => {
         jest.useRealTimers();
         const fn = jest.fn()
-            .mockRejectedValueOnce(new Error('transient'))
-            .mockRejectedValueOnce(new Error('transient'))
+            .mockRejectedValueOnce(new Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: transient`))
+            .mockRejectedValueOnce(new Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: transient`))
             .mockResolvedValue('recovered');
 
         const result = await retryWithBackoff(fn, 5, 1);
@@ -276,13 +332,25 @@ describe('retryWithBackoff', () => {
         expect(fn).toHaveBeenCalledTimes(1);
     });
 
+    it('should not retry unexpected errors (fail fast)', async () => {
+        jest.useRealTimers();
+        const unexpectedError = new TypeError('Cannot read properties of undefined');
+        const fn = jest.fn().mockRejectedValue(unexpectedError);
+
+        await expect(retryWithBackoff(fn, 5, 1))
+            .rejects
+            .toThrow('Cannot read properties of undefined');
+
+        expect(fn).toHaveBeenCalledTimes(1);
+    });
+
     it('should apply exponential backoff delays', async () => {
         jest.useRealTimers();
         const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
 
         const fn = jest.fn()
-            .mockRejectedValueOnce(new Error('fail 1'))
-            .mockRejectedValueOnce(new Error('fail 2'))
+            .mockRejectedValueOnce(new Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: fail 1`))
+            .mockRejectedValueOnce(new Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: fail 2`))
             .mockResolvedValue('ok');
 
         const baseDelay = 100;

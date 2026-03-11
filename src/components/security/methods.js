@@ -266,18 +266,16 @@ export const emitAccessToken = async (code, backUrl = null) => {
 
 export const MAX_RETRIES = 5;
 export const BACKOFF_BASE_MS = 1000;
+export const REFRESH_TOKEN_FETCH_TIMEOUT_MS = 10000;
 
 export const retryWithBackoff = async (fn, maxRetries = MAX_RETRIES, baseDelayMs = BACKOFF_BASE_MS) => {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
             return await fn();
         } catch (err) {
-            // auth errors (HTTP 400) are fatal — never retry
-            if (err.message && err.message.startsWith(AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR)) {
-                throw err;
-            }
-            // network/5xx errors are retryable — retry unless exhausted
-            if (attempt === maxRetries - 1) {
+            // only retry transient network/server errors — everything else fails fast
+            const isRetryable = err.message && err.message.startsWith(AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR);
+            if (!isRetryable || attempt === maxRetries - 1) {
                 throw err;
             }
             const delay = baseDelayMs * Math.pow(2, attempt);
@@ -339,7 +337,7 @@ const _getAccessToken = async () => {
  * @returns {Promise<*|undefined>}
  */
 export const getAccessToken = async () => {
-    if (navigator?.locks) {
+    if (typeof navigator !== 'undefined' && navigator.locks) {
         return await navigator.locks.request(GET_TOKEN_SILENTLY_LOCK_KEY, async lock => {
             console.log(`openstack-uicore-foundation::Security::methods::getAccessToken web lock api`, lock);
             return await _getAccessToken();
@@ -383,7 +381,7 @@ const _clearAccessToken = () => {
 
 export const clearAccessToken = async () => {
     // see https://developer.mozilla.org/en-US/docs/Web/API/Web_Locks_API
-    if (navigator?.locks) {
+    if (typeof navigator !== 'undefined' && navigator.locks) {
         await navigator.locks.request(GET_TOKEN_SILENTLY_LOCK_KEY, async lock => {
             console.log(`openstack-uicore-foundation::Security::methods::clearAccessToken web lock api`, lock);
             _clearAccessToken();
@@ -419,6 +417,9 @@ export const refreshAccessToken = async (refresh_token) => {
         "refresh_token": refresh_token
     };
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REFRESH_TOKEN_FETCH_TIMEOUT_MS);
+
     let response;
     try {
         response = await fetch(`${baseUrl}/oauth2/token`, {
@@ -427,18 +428,21 @@ export const refreshAccessToken = async (refresh_token) => {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            signal: controller.signal
         });
     } catch (networkError) {
-        // fetch rejects on network failures (DNS, timeout, no connectivity)
+        // fetch rejects on network failures (DNS, timeout, no connectivity, abort)
         console.log('refreshAccessToken network error:', networkError.message);
         throw Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: ${networkError.message}`);
+    } finally {
+        clearTimeout(timeoutId);
     }
 
     if (!response.ok) {
         console.log(`refreshAccessToken server error: ${response.status} - ${response.statusText}`);
-        if (response.status >= 500) {
-            // server error — transient, should be retried
+        if (response.status >= 500 || response.status === 408 || response.status === 429) {
+            // transient error (server error, request timeout, rate limit) — should be retried
             throw Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: ${response.status} - ${response.statusText}`);
         }
         // token is genuinely revoked — this is a real auth error
@@ -446,7 +450,13 @@ export const refreshAccessToken = async (refresh_token) => {
         throw Error(`${AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR}: ${response.status} - ${response.statusText}`);
     }
 
-    const json = await response.json();
+    let json;
+    try {
+        json = await response.json();
+    } catch (parseError) {
+        // IDP returned non-JSON (HTML error page, empty body, etc.) — treat as transient
+        throw Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: invalid JSON response from IDP`);
+    }
     let {access_token, refresh_token: new_refresh_token, expires_in, id_token} = json;
     // Defensively ensure we never propagate an undefined access token.
     if (!access_token) {
