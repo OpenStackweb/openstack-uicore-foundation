@@ -66,6 +66,7 @@ export class DropzoneJS extends React.Component {
                 if (!e.message || !e.message.startsWith(AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR)) {
                     initLogOut();
                 }
+                done(e.message || 'Auth error');
                 return;
             }
             if (options.maxFiles && options.maxFiles < (this.state.files.length + this.props.uploadCount)) {

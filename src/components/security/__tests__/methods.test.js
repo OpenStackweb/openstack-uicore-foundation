@@ -3,7 +3,7 @@ import {
     AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR,
 } from '../constants';
 
-import { refreshAccessToken } from '../methods';
+import { refreshAccessToken, retryWithBackoff } from '../methods';
 
 // Mock utils/methods imports used by security/methods
 jest.mock('../../../utils/methods', () => ({
@@ -79,6 +79,7 @@ describe('refreshAccessToken', () => {
 
     it('should return tokens on successful response', async () => {
         const mockResponse = {
+            ok: true,
             status: 200,
             json: jest.fn().mockResolvedValue({
                 access_token: 'new-access-token',
@@ -102,6 +103,7 @@ describe('refreshAccessToken', () => {
 
     it('should throw AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR on HTTP 400', async () => {
         const mockResponse = {
+            ok: false,
             status: 400,
             statusText: 'Bad Request',
         };
@@ -116,6 +118,7 @@ describe('refreshAccessToken', () => {
 
     it('should throw AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR on HTTP 500', async () => {
         const mockResponse = {
+            ok: false,
             status: 500,
             statusText: 'Internal Server Error',
         };
@@ -130,6 +133,7 @@ describe('refreshAccessToken', () => {
 
     it('should throw AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR on HTTP 502', async () => {
         const mockResponse = {
+            ok: false,
             status: 502,
             statusText: 'Bad Gateway',
         };
@@ -142,6 +146,7 @@ describe('refreshAccessToken', () => {
 
     it('should throw AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR on HTTP 503', async () => {
         const mockResponse = {
+            ok: false,
             status: 503,
             statusText: 'Service Unavailable',
         };
@@ -184,6 +189,7 @@ describe('refreshAccessToken', () => {
 
     it('should call setSessionClearingState(true) only on HTTP 400', async () => {
         const mockResponse = {
+            ok: false,
             status: 400,
             statusText: 'Bad Request',
         };
@@ -201,6 +207,7 @@ describe('refreshAccessToken', () => {
 
     it('should include status in error message for 5xx', async () => {
         const mockResponse = {
+            ok: false,
             status: 503,
             statusText: 'Service Unavailable',
         };
@@ -217,5 +224,81 @@ describe('refreshAccessToken', () => {
         await expect(refreshAccessToken('valid-token'))
             .rejects
             .toThrow(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: Failed to fetch`);
+    });
+});
+
+describe('retryWithBackoff', () => {
+
+    it('should return on first success without retrying', async () => {
+        jest.useRealTimers();
+        const fn = jest.fn().mockResolvedValue('ok');
+
+        const result = await retryWithBackoff(fn, 3, 1);
+
+        expect(result).toBe('ok');
+        expect(fn).toHaveBeenCalledTimes(1);
+    });
+
+    it('should retry network errors up to maxRetries then throw', async () => {
+        jest.useRealTimers();
+        const networkError = new Error('network down');
+        const fn = jest.fn().mockRejectedValue(networkError);
+
+        await expect(retryWithBackoff(fn, 3, 1))
+            .rejects
+            .toThrow('network down');
+
+        expect(fn).toHaveBeenCalledTimes(3);
+    });
+
+    it('should succeed after transient failures', async () => {
+        jest.useRealTimers();
+        const fn = jest.fn()
+            .mockRejectedValueOnce(new Error('transient'))
+            .mockRejectedValueOnce(new Error('transient'))
+            .mockResolvedValue('recovered');
+
+        const result = await retryWithBackoff(fn, 5, 1);
+
+        expect(result).toBe('recovered');
+        expect(fn).toHaveBeenCalledTimes(3);
+    });
+
+    it('should not retry auth errors (HTTP 400)', async () => {
+        jest.useRealTimers();
+        const authError = new Error(`${AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR}: 400 - Bad Request`);
+        const fn = jest.fn().mockRejectedValue(authError);
+
+        await expect(retryWithBackoff(fn, 5, 1))
+            .rejects
+            .toThrow(AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR);
+
+        expect(fn).toHaveBeenCalledTimes(1);
+    });
+
+    it('should apply exponential backoff delays', async () => {
+        jest.useRealTimers();
+        const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
+
+        const fn = jest.fn()
+            .mockRejectedValueOnce(new Error('fail 1'))
+            .mockRejectedValueOnce(new Error('fail 2'))
+            .mockResolvedValue('ok');
+
+        const baseDelay = 100;
+        const result = await retryWithBackoff(fn, 5, baseDelay);
+
+        expect(result).toBe('ok');
+        expect(fn).toHaveBeenCalledTimes(3);
+
+        // Extract the delay arguments from setTimeout calls made by retryWithBackoff
+        const retryDelays = setTimeoutSpy.mock.calls
+            .map(call => call[1])
+            .filter(delay => delay >= baseDelay);
+
+        // 100 * 2^0 = 100ms, 100 * 2^1 = 200ms
+        expect(retryDelays).toEqual([100, 200]);
+
+        setTimeoutSpy.mockRestore();
     });
 });

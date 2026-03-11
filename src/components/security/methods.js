@@ -14,6 +14,7 @@ import moment from "moment-timezone";
 import request from 'superagent/lib/client';
 import SuperTokensLock from 'browser-tabs-lock';
 import Cookies from 'js-cookie'
+
 let http = request;
 
 /**
@@ -143,7 +144,7 @@ export const getAuthUrl = (
  * @param idToken
  * @returns {*}
  */
-export const getLogoutUrl = (idToken= null) => {
+export const getLogoutUrl = (idToken = null) => {
     let baseUrl = getOAuth2IDPBaseUrl();
     let oauth2ClientId = getOAuth2ClientId();
     let url = URI(`${baseUrl}/oauth2/end-session`);
@@ -162,7 +163,7 @@ export const getLogoutUrl = (idToken= null) => {
         "state": state,
     }
 
-    if(idToken)
+    if (idToken)
         queryParams.id_token_hint = idToken;
 
     return url.query(queryParams);
@@ -228,7 +229,7 @@ export const emitAccessToken = async (code, backUrl = null) => {
     let redirectUri = getAuthCallback();
     let pkce = JSON.parse(getFromLocalStorage(PKCE, true));
 
-    if(!pkce)
+    if (!pkce)
         throw Error(AUTH_ERROR_MISSING_PKCE_PARAM);
 
     if (backUrl != null)
@@ -266,7 +267,7 @@ export const emitAccessToken = async (code, backUrl = null) => {
 export const MAX_RETRIES = 5;
 export const BACKOFF_BASE_MS = 1000;
 
-const retryWithBackoff = async (fn, maxRetries = MAX_RETRIES, baseDelayMs = BACKOFF_BASE_MS) => {
+export const retryWithBackoff = async (fn, maxRetries = MAX_RETRIES, baseDelayMs = BACKOFF_BASE_MS) => {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
             return await fn();
@@ -276,7 +277,7 @@ const retryWithBackoff = async (fn, maxRetries = MAX_RETRIES, baseDelayMs = BACK
                 throw err;
             }
             // network/5xx errors are retryable — retry unless exhausted
-            if (attempt === maxRetries) {
+            if (attempt === maxRetries - 1) {
                 throw err;
             }
             const delay = baseDelayMs * Math.pow(2, attempt);
@@ -338,13 +339,12 @@ const _getAccessToken = async () => {
  * @returns {Promise<*|undefined>}
  */
 export const getAccessToken = async () => {
-    if(navigator?.locks){
+    if (navigator?.locks) {
         return await navigator.locks.request(GET_TOKEN_SILENTLY_LOCK_KEY, async lock => {
             console.log(`openstack-uicore-foundation::Security::methods::getAccessToken web lock api`, lock);
             return await _getAccessToken();
         });
-    }
-    else {
+    } else {
         if (
             await retryPromise(
                 () => Lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT),
@@ -383,13 +383,12 @@ const _clearAccessToken = () => {
 
 export const clearAccessToken = async () => {
     // see https://developer.mozilla.org/en-US/docs/Web/API/Web_Locks_API
-    if(navigator?.locks){
+    if (navigator?.locks) {
         await navigator.locks.request(GET_TOKEN_SILENTLY_LOCK_KEY, async lock => {
             console.log(`openstack-uicore-foundation::Security::methods::clearAccessToken web lock api`, lock);
             _clearAccessToken();
         });
-    }
-    else {
+    } else {
         if (
             await retryPromise(
                 () => Lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT),
@@ -401,8 +400,7 @@ export const clearAccessToken = async () => {
             } finally {
                 await Lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
             }
-        }
-        else{
+        } else {
             // error on locking
             throw Error(AUTH_ERROR_LOCK_ACQUIRE_ERROR);
         }
@@ -437,20 +435,24 @@ export const refreshAccessToken = async (refresh_token) => {
         throw Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: ${networkError.message}`);
     }
 
-    if (response.status === 400) {
+    if (!response.ok) {
+        console.log(`refreshAccessToken server error: ${response.status} - ${response.statusText}`);
+        if (response.status >= 500) {
+            // server error — transient, should be retried
+            throw Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: ${response.status} - ${response.statusText}`);
+        }
         // token is genuinely revoked — this is a real auth error
         setSessionClearingState(true);
         throw Error(`${AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR}: ${response.status} - ${response.statusText}`);
     }
 
-    if (response.status >= 500) {
-        // server error — transient, should be retried
-        console.log(`refreshAccessToken server error: ${response.status} - ${response.statusText}`);
-        throw Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: ${response.status} - ${response.statusText}`);
-    }
-
     const json = await response.json();
     let {access_token, refresh_token: new_refresh_token, expires_in, id_token} = json;
+    // Defensively ensure we never propagate an undefined access token.
+    if (!access_token) {
+        setSessionClearingState(true);
+        throw Error(`${AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR}: missing access_token in refresh response`);
+    }
     return {access_token, refresh_token: new_refresh_token, expires_in, id_token}
 }
 
@@ -478,9 +480,8 @@ export const storeAuthInfo = (accessToken, expiresIn, refreshToken = null, idTok
 
     if (idToken) {
         authInfo[ID_TOKEN] = idToken;
-        Cookies.set(ID_TOKEN, idToken, { secure: true, sameSite: 'Lax' });
-    }
-    else{
+        Cookies.set(ID_TOKEN, idToken, {secure: true, sameSite: 'Lax'});
+    } else {
         Cookies.remove(ID_TOKEN);
     }
 
@@ -563,7 +564,7 @@ export const validateIdToken = (idToken, issuer, audience) => {
     });
 
     let storedNonce = getFromLocalStorage(NONCE, true);
-    if(!storedNonce)
+    if (!storedNonce)
         throw Error(AUTH_ERROR_MISSING_NONCE_PARAM);
 
     let jwt = verifier.decode(idToken);
