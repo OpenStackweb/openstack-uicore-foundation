@@ -371,7 +371,6 @@ const UploadInputV3 = ({
             return (
               <Box
                 key={`uploaded-${index}`}
-                elevation={0}
                 sx={fileRowSx}
               >
                 <Box sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', mr: 2, minWidth: 32 }}>
