@@ -38,6 +38,7 @@ module.exports = {
         'components/inputs/grouped-dropdown': './src/components/inputs/grouped-dropdown/index.js',
         'components/inputs/upload-input': './src/components/inputs/upload-input/index.js',
         'components/inputs/upload-input-v2': './src/components/inputs/upload-input-v2/index.js',
+        'components/inputs/upload-input-v3': './src/components/inputs/upload-input-v3/index.js',
         'components/inputs/access-levels-input': './src/components/inputs/access-levels-input.js',
         'components/inputs/checkbox-list': './src/components/inputs/checkbox-list.js',
         'components/inputs/company-input': './src/components/inputs/company-input.js',

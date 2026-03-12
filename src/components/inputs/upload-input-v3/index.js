@@ -11,21 +11,22 @@
  * limitations under the License.
  **/
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Paper,
   IconButton,
-  Button,
-  Alert
+  Alert,
+  LinearProgress,
 } from '@mui/material';
 import {
-  InsertDriveFile as FileIcon,
+  UploadFile as UploadFileIcon,
   Delete as DeleteIcon,
-  CheckCircle as CheckCircleIcon
+  CheckCircle as CheckCircleIcon,
+  ErrorOutline as ErrorOutlineIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
-import DropzoneJS from '../upload-input-v2/dropzone';
+import { DropzoneV3 } from './dropzone-v3';
 import './index.less';
 
 const UploadInputV3 = ({
@@ -48,6 +49,9 @@ const UploadInputV3 = ({
   label,
   helpText
 }) => {
+  const dropzoneInstanceRef = useRef(null);
+  const [uploadingFiles, setUploadingFiles] = useState([]);
+  const [errorFiles, setErrorFiles] = useState([]);
 
   const getDefaultAllowedExtensions = useCallback(() => {
     return mediaType && mediaType.type
@@ -74,6 +78,11 @@ const UploadInputV3 = ({
     [maxFiles, value.length]
   );
 
+  const showDropzone = useMemo(() =>
+    canUpload && uploadingFiles.length === 0 && errorFiles.length === 0,
+    [canUpload, uploadingFiles.length, errorFiles.length]
+  );
+
   const eventHandlers = useMemo(() => {
     return onRemove ? { removedfile: onRemove } : {};
   }, [onRemove]);
@@ -88,6 +97,7 @@ const UploadInputV3 = ({
     addRemoveLinks: true,
     maxFiles: maxFiles,
     acceptedFiles: allowedExt,
+    dictDefaultMessage: '',
     ...djsConfig
   }), [maxSize, timeOut, parallelChunkUploads, maxFiles, allowedExt, djsConfig]);
 
@@ -106,10 +116,85 @@ const UploadInputV3 = ({
     return `${Math.round(bytes / 1024)}kb`;
   }, []);
 
+  const formatExtensionsDisplay = useCallback(() => {
+    if (!allowedExt) return '';
+    const exts = allowedExt.split(',')
+      .map(e => e.trim().replace('.', '').toUpperCase())
+      .filter(Boolean);
+    if (exts.length === 0) return '';
+    if (exts.length === 1) return exts[0];
+    return `${exts.slice(0, -1).join(', ')} or ${exts[exts.length - 1]}`;
+  }, [allowedExt]);
+
   const handleRemove = useCallback((file) => (ev) => {
     ev.preventDefault();
     onRemove(file);
   }, [onRemove]);
+
+  const handleDropzoneReady = useCallback((dz) => {
+    dropzoneInstanceRef.current = dz;
+  }, []);
+
+  const handleAddedFile = useCallback((file) => {
+    setUploadingFiles(prev => [...prev, { name: file.name, size: file.size, progress: 0, complete: false }]);
+  }, []);
+
+  const handleUploadProgress = useCallback((file, progress) => {
+    setUploadingFiles(prev => prev.map(f =>
+      f.name === file.name && f.size === file.size ? { ...f, progress } : f
+    ));
+  }, []);
+
+  const handleFileRemoved = useCallback((file) => {
+    setUploadingFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
+  }, []);
+
+  // Mark as complete instead of removing — keep it visible until value is updated by the parent
+  const handleFileCompleted = useCallback((file) => {
+    setUploadingFiles(prev => prev.map(f =>
+      f.name === file.name && f.size === file.size ? { ...f, progress: 100, complete: true } : f
+    ));
+  }, []);
+
+  // Once the parent updates value, remove the matching completed file from uploadingFiles
+  useEffect(() => {
+    if (uploadingFiles.length === 0 || value.length === 0) return;
+    setUploadingFiles(prev => prev.filter(f => {
+      if (!f.complete) return true;
+      return !value.some(v => v.filename === f.name);
+    }));
+  }, [value]);
+
+  const handleFileError = useCallback((file, message) => {
+    setUploadingFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
+    setErrorFiles(prev => [...prev, { name: file.name, size: file.size, message }]);
+  }, []);
+
+  const handleDismissError = useCallback((file) => {
+    if (dropzoneInstanceRef.current) {
+      const dzFile = dropzoneInstanceRef.current.files?.find(
+        f => f.name === file.name && f.size === file.size
+      );
+      if (dzFile) dropzoneInstanceRef.current.removeFile(dzFile);
+    }
+    setErrorFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
+  }, []);
+
+  const handleDeleteUploading = useCallback((file) => {
+    if (dropzoneInstanceRef.current) {
+      const dzFile = dropzoneInstanceRef.current.files?.find(
+        f => f.name === file.name && f.size === file.size
+      );
+      if (dzFile) dropzoneInstanceRef.current.removeFile(dzFile);
+    }
+    setUploadingFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
+  }, []);
+
+  const wrappedOnUploadComplete = useCallback((response, dzId, dzData) => {
+    if (onUploadComplete) onUploadComplete(response, dzId, dzData);
+  }, [onUploadComplete]);
+
+  const extDisplay = formatExtensionsDisplay();
 
   const renderDropzone = () => {
     if (!postUrl) {
@@ -126,30 +211,49 @@ const UploadInputV3 = ({
         </Alert>
       );
     }
-    if (!canUpload) {
-      return (
-        <Alert severity="info" sx={{ borderRadius: 2 }}>
-          Max number of files uploaded for this type - Remove uploaded file to add new file.
-        </Alert>
-      );
-    }
 
     return (
-      <DropzoneJS
+      <DropzoneV3
         id={id}
         djsConfig={djsConfigSet}
         config={componentConfig}
         eventHandlers={eventHandlers}
         data={data}
         uploadCount={value.length}
-        onUploadComplete={onUploadComplete}
+        onUploadComplete={wrappedOnUploadComplete}
         onError={onError}
-      />
+        onDropzoneReady={handleDropzoneReady}
+        onAddedFile={handleAddedFile}
+        onUploadProgress={handleUploadProgress}
+        onFileRemoved={handleFileRemoved}
+        onFileCompleted={handleFileCompleted}
+        onFileError={handleFileError}
+      >
+        <Box className="dz-custom-content">
+          <UploadFileIcon className="dz-custom-icon" />
+          <Typography variant="body2" className="dz-custom-message">
+            <span className="dz-click-text">Click to upload</span> or drag and drop
+          </Typography>
+          {(extDisplay || maxSize) && (
+            <Typography variant="caption" className="dz-custom-hint">
+              {extDisplay ? `${extDisplay} files` : ''}
+              {maxSize ? ` (max. ${maxSize}MB)` : ''}
+            </Typography>
+          )}
+        </Box>
+      </DropzoneV3>
     );
   };
 
+  const fileRowSx = {
+    display: 'flex',
+    alignItems: 'center',
+    py: 1.5,
+    mb: 1,
+  };
+
   return (
-    <Box>
+    <Box className="upload-input-v3">
       {label && (
         <Typography variant="subtitle1" fontWeight={600} gutterBottom>
           {label}
@@ -162,14 +266,100 @@ const UploadInputV3 = ({
         </Typography>
       )}
 
-      <Box sx={{ mb: 2 }}>
-        {canUpload && renderDropzone()}
-      </Box>
+      {canUpload && (
+        <Box sx={{ mb: 2, display: showDropzone ? 'block' : 'none' }}>
+          {renderDropzone()}
+        </Box>
+      )}
 
       {error && (
         <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
           {error}
         </Alert>
+      )}
+
+      {uploadingFiles.length > 0 && (
+        <Box sx={{ mt: 2 }}>
+          {uploadingFiles.map((file, index) => (
+            <Box
+              key={`uploading-${index}`}
+              sx={fileRowSx}
+            >
+              <Box sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', mr: 2, minWidth: 32 }}>
+                <UploadFileIcon fontSize="medium" />
+              </Box>
+
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography
+                  variant="body2"
+                  fontWeight={500}
+                  sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                >
+                  {file.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {formatFileSize(file.size)} · {file.complete ? 'Complete' : 'Loading'}
+                </Typography>
+                {!file.complete && (
+                  <LinearProgress
+                    variant="determinate"
+                    value={file.progress}
+                    sx={{ mt: 0.5, borderRadius: 1 }}
+                  />
+                )}
+              </Box>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <IconButton
+                  size="small"
+                  onClick={() => handleDeleteUploading(file)}
+                  sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+                {file.complete && (
+                  <CheckCircleIcon sx={{ color: 'success.main', fontSize: 28 }} />
+                )}
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {errorFiles.length > 0 && (
+        <Box sx={{ mt: 2 }}>
+          {errorFiles.map((file, index) => (
+            <Box
+              key={`error-${index}`}
+              sx={fileRowSx}
+            >
+              <Box sx={{ color: 'error.main', display: 'flex', alignItems: 'center', mr: 2, minWidth: 32 }}>
+                <ErrorOutlineIcon fontSize="medium" />
+              </Box>
+
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography
+                  variant="body2"
+                  fontWeight={500}
+                  sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                >
+                  {file.name}
+                </Typography>
+                <Typography variant="caption" color="error">
+                  {file.message}
+                </Typography>
+              </Box>
+
+              <IconButton
+                size="small"
+                onClick={() => handleDismissError(file)}
+                sx={{ color: 'error.main' }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          ))}
+        </Box>
       )}
 
       {value.length > 0 && (
@@ -179,41 +369,20 @@ const UploadInputV3 = ({
             const fileSize = formatFileSize(file.size);
 
             return (
-              <Paper
+              <Box
                 key={`uploaded-${index}`}
                 elevation={0}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  p: 2,
-                  mb: 1.5,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 2,
-                  '&:hover': {
-                    bgcolor: 'action.hover'
-                  }
-                }}
+                sx={fileRowSx}
               >
-                <Box sx={{
-                  color: 'primary.main',
-                  display: 'flex',
-                  alignItems: 'center',
-                  mr: 2,
-                  minWidth: 40
-                }}>
-                  <FileIcon fontSize="large" />
+                <Box sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', mr: 2, minWidth: 32 }}>
+                  <UploadFileIcon fontSize="medium" />
                 </Box>
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography
                     variant="body2"
                     fontWeight={500}
-                    sx={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}
+                    sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                   >
                     {filename}
                   </Typography>
@@ -227,32 +396,19 @@ const UploadInputV3 = ({
                     <IconButton
                       size="small"
                       onClick={handleRemove(file)}
-                      sx={{
-                        color: 'text.secondary',
-                        '&:hover': { color: 'error.main' }
-                      }}
+                      sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
                     >
                       <DeleteIcon />
                     </IconButton>
                   )}
                   <CheckCircleIcon sx={{ color: 'success.main', fontSize: 28 }} />
                 </Box>
-              </Paper>
+              </Box>
             );
           })}
         </Box>
       )}
 
-      {!canUpload && (
-        <Button
-          fullWidth
-          variant="contained"
-          disabled
-          sx={{ mt: 2, py: 1.5, textTransform: 'uppercase' }}
-        >
-          Upload File
-        </Button>
-      )}
     </Box>
   );
 };

@@ -12,7 +12,7 @@
  **/
 
 import React from 'react'
-import DropzoneJS from './dropzone'
+import DropzoneJS from '../dropzone'
 import './index.less';
 import file_icon from '../upload-input/file.png';
 import ProgressiveImg from "../../progressive-img";
