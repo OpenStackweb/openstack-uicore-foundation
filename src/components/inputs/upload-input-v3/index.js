@@ -60,7 +60,7 @@ const UploadInputV3 = ({
   }, [mediaType]);
 
   const getDefaultMaxSize = useCallback(() => {
-    return mediaType ? mediaType?.max_size / 1024 : 100;
+    return mediaType ? mediaType?.max_size / (1024 * 1024) : 100;
   }, [mediaType]);
 
   const allowedExt = useMemo(() =>
@@ -112,8 +112,9 @@ const UploadInputV3 = ({
   }), [mediaType, value]);
 
   const formatFileSize = useCallback((bytes) => {
-    if (!bytes) return '100kb';
-    return `${Math.round(bytes / 1024)}kb`;
+    if (!bytes) return '0 KB';
+    if (bytes >= 1024 * 1024) return `${Math.round(bytes / (1024 * 1024))} MB`;
+    return `${Math.round(bytes / 1024)} KB`;
   }, []);
 
   const formatExtensionsDisplay = useCallback(() => {

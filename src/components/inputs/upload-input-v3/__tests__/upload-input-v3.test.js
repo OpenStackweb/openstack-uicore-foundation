@@ -44,7 +44,7 @@ describe('UploadInputV3', () => {
       type: {
         allowed_extensions: ['pdf', 'jpg', 'png']
       },
-      max_size: 1024000
+      max_size: 10485760
     }
   };
 
@@ -139,14 +139,14 @@ describe('UploadInputV3', () => {
     test('shows default size when size is not provided', () => {
       const files = [{ filename: 'no-size.pdf' }];
       const wrapper = mount(<UploadInputV3 {...defaultProps} value={files} />);
-      expect(wrapper.text()).toContain('100kb');
+      expect(wrapper.text()).toContain('0 KB');
       wrapper.unmount();
     });
 
     test('formats file size correctly', () => {
       const files = [{ filename: 'large-file.pdf', size: 2048000 }];
       const wrapper = mount(<UploadInputV3 {...defaultProps} value={files} />);
-      expect(wrapper.text()).toContain('2000kb');
+      expect(wrapper.text()).toContain('2 MB');
       wrapper.unmount();
     });
   });

@@ -44,7 +44,7 @@ export const DropzoneV3 = ({
       if (eventHandlers.removedfile) eventHandlers.removedfile(file);
     },
     uploadprogress: (file, progress, bytesSent) => {
-      if (onUploadProgress) onUploadProgress(file, bytesSent / file.size * 100);
+      if (onUploadProgress) onUploadProgress(file, file.size > 0 ? bytesSent / file.size * 100 : 0);
       if (eventHandlers.uploadprogress) eventHandlers.uploadprogress(file, progress, bytesSent);
     },
     success: (file) => {
