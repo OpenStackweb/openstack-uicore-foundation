@@ -45,18 +45,31 @@ describe('SummitDropdown summitValue state', () => {
 
     test('handleChange does not set summitValue when given a non-object', () => {
         const wrapper = render();
+        const option = { label: 'Summit A', value: 1 };
+        const invalidOption = 'not-an-object';
 
-        wrapper.instance().handleChange('not-an-object');
-
+        wrapper.instance().handleChange(invalidOption);
         expect(wrapper.instance().state.summitValue).toBeNull();
+
+        wrapper.instance().handleChange(option);
+        expect(wrapper.instance().state.summitValue).toEqual(option);
+
+        wrapper.instance().handleChange(invalidOption);
+        expect(wrapper.instance().state.summitValue).toEqual(option);
     });
 
     test('handleChange does not set summitValue when given null', () => {
         const wrapper = render();
+        const option = { label: 'Summit A', value: 1 };
 
         wrapper.instance().handleChange(null);
-
         expect(wrapper.instance().state.summitValue).toBeNull();
+
+        wrapper.instance().handleChange(option);
+        expect(wrapper.instance().state.summitValue).toEqual(option);
+
+        wrapper.instance().handleChange(null);
+        expect(wrapper.instance().state.summitValue).toEqual(option);
     });
 
     test('handleClick does not call onClick when summitValue is null', () => {

@@ -31,15 +31,22 @@ export default class SummitDropdown extends React.Component {
     }
 
     handleChange(summit) {
-        if (typeof summit === OBJECT_TYPEOF)
-          this.setState({summitValue: summit});
+        const summitValue =
+            summit !== null &&
+            typeof summit === OBJECT_TYPEOF &&
+            typeof summit.value !== UNDEFINED_TYPEOF
+                ? summit
+                : this.state.summitValue;
+
+        this.setState({ summitValue });
     }
 
     handleClick(ev) {
         ev.preventDefault();
         if (
-          typeof this.state.summitValue === OBJECT_TYPEOF &&
-          typeof this.state.summitValue?.value !== UNDEFINED_TYPEOF
+           this.state.summitValue !== null &&
+           typeof this.state.summitValue === OBJECT_TYPEOF &&
+           typeof this.state.summitValue.value !== UNDEFINED_TYPEOF
         )
           this.props.onClick(this.state.summitValue.value);
     }
@@ -52,7 +59,10 @@ export default class SummitDropdown extends React.Component {
                 (a, b) => (a.start_date < b.start_date ? 1 : (a.start_date > b.start_date ? -1 : 0))
             ).map(s => ({label: s.name, value: s.id}));
 
-        const isDisabled = typeof this.state.summitValue !== OBJECT_TYPEOF || this.state.summitValue === null;
+        const isDisabled =
+            this.state.summitValue === null ||
+            typeof this.state.summitValue !== OBJECT_TYPEOF ||
+            typeof this.state.summitValue.value === UNDEFINED_TYPEOF;
 
         return (
             <div className={"summit-dropdown btn-group " + bigClass}>
