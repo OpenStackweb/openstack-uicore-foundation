@@ -35,7 +35,8 @@ export default class SummitDropdown extends React.Component {
 
     handleClick(ev) {
         ev.preventDefault();
-        this.props.onClick(this.state.summitValue.value);
+        if (this.state.summitValue)
+            this.props.onClick(this.state.summitValue.value);
     }
 
     render() {
