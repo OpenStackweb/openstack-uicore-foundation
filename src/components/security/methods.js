@@ -2,7 +2,6 @@ import {
     base64URLEncode,
     getAuthCallback,
     getCurrentLocation,
-    getCurrentPathName,
     getFromLocalStorage,
     removeFromLocalStorage,
     getOrigin,
@@ -14,27 +13,7 @@ import moment from "moment-timezone";
 import request from 'superagent/lib/client';
 import SuperTokensLock from 'browser-tabs-lock';
 import Cookies from 'js-cookie'
-
 let http = request;
-
-/**
- * @ignore
- */
-const Lock = new SuperTokensLock();
-/**
- * @ignore
- */
-const GET_TOKEN_SILENTLY_LOCK_KEY = 'openstackuicore.lock.getTokenSilently';
-const GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT = 6000;
-const NONCE_LEN = 16;
-export const ACCESS_TOKEN_SKEW_TIME = 60;
-export const RESPONSE_TYPE_IMPLICIT = "token id_token";
-export const RESPONSE_TYPE_CODE = 'code';
-const AUTH_INFO = 'authInfo';
-const NONCE = 'nonce';
-const PKCE = 'pkce';
-const ID_TOKEN = 'idToken';
-
 import URI from "urijs";
 import IdTokenVerifier from "idtoken-verifier";
 import {SET_LOGGED_USER} from "./actions";
@@ -54,6 +33,26 @@ import {
 } from "./constants";
 
 /**
+ * @ignore
+ */
+const Lock = new SuperTokensLock();
+/**
+ * @ignore
+ */
+const GET_TOKEN_SILENTLY_LOCK_KEY = 'openstackuicore.lock.getTokenSilently';
+const GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT = 6000;
+const NONCE_LEN = 16;
+export const ACCESS_TOKEN_SKEW_TIME = 60;
+export const RESPONSE_TYPE_IMPLICIT = "token id_token";
+export const RESPONSE_TYPE_CODE = 'code';
+const AUTH_INFO = 'authInfo';
+const NONCE = 'nonce';
+const PKCE = 'pkce';
+const ID_TOKEN = 'idToken';
+const BACK_ULR_PARAM_NAME = 'BackUrl';
+
+
+/**
  *
  * @param backUrl
  * @param prompt
@@ -62,6 +61,7 @@ import {
  * @param loginHint
  * @param otpLoginHint
  * @param tenant
+ * @param backUrlParamName
  * @returns {*}
  */
 export const getAuthUrl = (
@@ -71,7 +71,9 @@ export const getAuthUrl = (
     provider = null,
     loginHint = null,
     otpLoginHint = null,
-    tenant = null) => {
+    tenant = null,
+    backUrlParamName = BACK_ULR_PARAM_NAME
+    ) => {
 
     let oauth2ClientId = getOAuth2ClientId();
     let redirectUri = getAuthCallback();
@@ -80,7 +82,7 @@ export const getAuthUrl = (
     let flow = getOAuth2Flow();
 
     if (backUrl != null)
-        redirectUri += `?BackUrl=${encodeURI(backUrl)}`;
+        redirectUri += `?${backUrlParamName}=${encodeURIComponent(backUrl)}`;
 
     let nonce = createNonce(NONCE_LEN);
 
@@ -222,7 +224,14 @@ const createPKCECodes = () => {
     return codePair
 }
 
-export const emitAccessToken = async (code, backUrl = null) => {
+/**
+
+ * @param code
+ * @param backUrl
+ * @param backUrlParamName
+ * @returns {Promise<{access_token: *, refresh_token: *, id_token: *, expires_in: *, error: *, error_description: *}>}
+ */
+export const emitAccessToken = async (code, backUrl = null, backUrlParamName = BACK_ULR_PARAM_NAME) => {
 
     let baseUrl = getOAuth2IDPBaseUrl();
     let oauth2ClientId = getOAuth2ClientId();
@@ -233,7 +242,7 @@ export const emitAccessToken = async (code, backUrl = null) => {
         throw Error(AUTH_ERROR_MISSING_PKCE_PARAM);
 
     if (backUrl != null)
-        redirectUri += `?BackUrl=${encodeURI(backUrl)}`;
+        redirectUri += `?${backUrlParamName}=${encodeURIComponent(backUrl)}`;
 
     const payload = {
         'code': code,
