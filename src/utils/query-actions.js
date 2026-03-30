@@ -159,7 +159,7 @@ export const fetchAllSummits = async (onlyActive) => {
         endpoint.addQuery('filter[]', `end_date<=${now}`);
     }
 
-    return _fetchPromise(endpoint, callback)
+    return _fetchPromise(endpoint)
         .then((json) => json.data);
 };
 
@@ -388,7 +388,6 @@ export const querySponsorsV2 = _.debounce(async (input, summitId, callback) => {
         endpoint.addQuery("filter", `company_name=@${escapedInput}`);
     }
     _fetch(endpoint)
-        .then(fetchResponseHandler)
         .then((json) => {
             const options = [...json.data].map((sp) => ({
                 id: sp.id,
@@ -605,7 +604,7 @@ export const querySponsorAddons = async (
                 "sponsorship,sponsorship.type,sponsorship.type.type"
             );
             endpoint.addQuery("relations", "sponsorship.none");
-            return _fetch(endpoint)
+            return _fetchPromise(endpoint)
                 .then(fetchResponseHandler)
                 .then((json) => json.data)
                 .catch((error) => {
@@ -632,13 +631,7 @@ export const querySummitAddons = async (
     endpoint.addQuery("page", 1);
     endpoint.addQuery("per_page", MAX_PER_PAGE);
 
-    return _fetch(endpoint)
-        .then(fetchResponseHandler)
-        .then((data) => callback(data))
-        .catch((error) => {
-            fetchErrorHandler(error);
-            return [];
-        });
+    _fetch(endpoint, callback);
 };
 
 
@@ -648,13 +641,7 @@ export const querySponsorships = _.debounce(async (input, callback) => {
     if (input) {
         endpoint.addQuery("filter", `name=@${input}`);
     }
-    _fetch(endpoint)
-        .then(fetchResponseHandler)
-        .then((json) => {
-            const options = [...json.data];
-            callback(options);
-        })
-        .catch(fetchErrorHandler);
+    _fetch(endpoint, callback);
 }, DEBOUNCE_WAIT);
 
 
@@ -671,13 +658,7 @@ export const querySponsorshipsBySummit = _.debounce(
         if (input) {
             endpoint.addQuery("filter", `name=@${input}`);
         }
-        _fetch(endpoint)
-            .then(fetchResponseHandler)
-            .then((json) => {
-                const options = [...json.data];
-                callback(options);
-            })
-            .catch(fetchErrorHandler);
+        _fetch(endpoint, callback);
     },
     DEBOUNCE_WAIT
 );

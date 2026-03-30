@@ -12,13 +12,9 @@
  **/
 
 import React from 'react';
-import Enzyme, { shallow, mount } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-import { act } from 'react-dom/test-utils';
+import { render, screen, act, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import UploadInputV3 from '../index';
-import { Box, Typography, IconButton, Alert } from '@mui/material';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 // Capture the latest dropzone props so tests can trigger callbacks
 let dropzoneCallbacks = {};
@@ -54,68 +50,48 @@ describe('UploadInputV3', () => {
 
   describe('Rendering', () => {
     test('renders without crashing', () => {
-      const wrapper = shallow(<UploadInputV3 {...defaultProps} />);
-      expect(wrapper.find(Box).length).toBeGreaterThan(0);
+      const { container } = render(<UploadInputV3 {...defaultProps} />);
+      expect(container.firstChild).not.toBeNull();
     });
 
     test('renders label when provided', () => {
-      const wrapper = shallow(<UploadInputV3 {...defaultProps} label="Upload File" />);
-      const label = wrapper.find(Typography).first();
-      expect(label.children().text()).toBe('Upload File');
+      render(<UploadInputV3 {...defaultProps} label="Upload File" />);
+      expect(screen.getByText('Upload File')).toBeInTheDocument();
     });
 
     test('renders helpText when provided', () => {
       const helpText = 'Please upload PDF, JPG or PNG files';
-      const wrapper = shallow(<UploadInputV3 {...defaultProps} helpText={helpText} />);
-      const helpTypography = wrapper.findWhere(node =>
-        node.type() === Typography && node.prop('color') === 'text.secondary'
-      );
-      expect(helpTypography.children().text()).toBe(helpText);
+      render(<UploadInputV3 {...defaultProps} helpText={helpText} />);
+      expect(screen.getByText(helpText)).toBeInTheDocument();
     });
 
     test('renders error message when error prop is provided', () => {
       const errorMessage = 'File upload failed';
-      const wrapper = shallow(<UploadInputV3 {...defaultProps} error={errorMessage} />);
-      const alert = wrapper.findWhere(node =>
-        node.type() === Alert && node.prop('severity') === 'error'
-      );
-      expect(alert.length).toBe(1);
-      expect(alert.children().text()).toBe(errorMessage);
+      render(<UploadInputV3 {...defaultProps} error={errorMessage} />);
+      expect(screen.getByText(errorMessage)).toBeInTheDocument();
     });
 
     test('does not render label when not provided', () => {
-      const wrapper = shallow(<UploadInputV3 {...defaultProps} />);
-      const labels = wrapper.findWhere(node =>
-        node.type() === Typography && node.prop('fontWeight') === 600
-      );
-      expect(labels.length).toBe(0);
+      render(<UploadInputV3 {...defaultProps} />);
+      expect(screen.queryByText('Upload File')).not.toBeInTheDocument();
     });
 
     test('shows alert when postUrl is not provided', () => {
-      const wrapper = shallow(<UploadInputV3 {...defaultProps} postUrl={null} />);
-      const alert = wrapper.findWhere(node =>
-        node.type() === Alert && node.prop('severity') === 'error'
-      );
-      expect(alert.length).toBe(1);
-      expect(alert.children().text()).toBe('No Post URL');
+      render(<UploadInputV3 {...defaultProps} postUrl={null} />);
+      expect(screen.getByText('No Post URL')).toBeInTheDocument();
     });
 
     test('shows alert when canAdd is false', () => {
-      const wrapper = shallow(<UploadInputV3 {...defaultProps} canAdd={false} />);
-      const alert = wrapper.findWhere(node =>
-        node.type() === Alert && node.prop('severity') === 'warning'
-      );
-      expect(alert.length).toBe(1);
-      expect(alert.children().text()).toBe('Upload has been disabled by administrators.');
+      render(<UploadInputV3 {...defaultProps} canAdd={false} />);
+      expect(screen.getByText('Upload has been disabled by administrators.')).toBeInTheDocument();
     });
   });
 
   describe('File Display', () => {
     test('displays uploaded file with filename', () => {
       const files = [{ filename: 'document.pdf', size: 102400 }];
-      const wrapper = mount(<UploadInputV3 {...defaultProps} value={files} />);
-      expect(wrapper.text()).toContain('document.pdf');
-      wrapper.unmount();
+      render(<UploadInputV3 {...defaultProps} value={files} />);
+      expect(screen.getByText('document.pdf')).toBeInTheDocument();
     });
 
     test('displays multiple uploaded files', () => {
@@ -123,155 +99,128 @@ describe('UploadInputV3', () => {
         { filename: 'document1.pdf', size: 102400 },
         { filename: 'document2.pdf', size: 204800 },
       ];
-      const wrapper = mount(<UploadInputV3 {...defaultProps} value={files} maxFiles={2} />);
-      expect(wrapper.text()).toContain('document1.pdf');
-      expect(wrapper.text()).toContain('document2.pdf');
-      wrapper.unmount();
+      render(<UploadInputV3 {...defaultProps} value={files} maxFiles={2} />);
+      expect(screen.getByText('document1.pdf')).toBeInTheDocument();
+      expect(screen.getByText('document2.pdf')).toBeInTheDocument();
     });
 
     test('shows Complete status for uploaded files', () => {
       const files = [{ filename: 'document.pdf', size: 102400 }];
-      const wrapper = mount(<UploadInputV3 {...defaultProps} value={files} />);
-      expect(wrapper.text()).toContain('Complete');
-      wrapper.unmount();
+      render(<UploadInputV3 {...defaultProps} value={files} />);
+      expect(screen.getByText(/Complete/)).toBeInTheDocument();
     });
 
     test('shows default size when size is not provided', () => {
       const files = [{ filename: 'no-size.pdf' }];
-      const wrapper = mount(<UploadInputV3 {...defaultProps} value={files} />);
-      expect(wrapper.text()).toContain('0 KB');
-      wrapper.unmount();
+      render(<UploadInputV3 {...defaultProps} value={files} />);
+      expect(screen.getByText(/0 KB/)).toBeInTheDocument();
     });
 
     test('formats file size correctly', () => {
       const files = [{ filename: 'large-file.pdf', size: 2048000 }];
-      const wrapper = mount(<UploadInputV3 {...defaultProps} value={files} />);
-      expect(wrapper.text()).toContain('2 MB');
-      wrapper.unmount();
+      render(<UploadInputV3 {...defaultProps} value={files} />);
+      expect(screen.getByText(/2 MB/)).toBeInTheDocument();
     });
   });
 
   describe('Delete Functionality', () => {
     test('shows delete button when onRemove and canDelete are provided', () => {
       const files = [{ filename: 'document.pdf', size: 102400 }];
-      const wrapper = shallow(
-        <UploadInputV3 {...defaultProps} value={files} onRemove={jest.fn()} canDelete={true} />
-      );
-      expect(wrapper.find(IconButton).length).toBe(1);
+      render(<UploadInputV3 {...defaultProps} value={files} onRemove={jest.fn()} canDelete={true} />);
+      expect(screen.getAllByRole('button').length).toBe(1);
     });
 
     test('calls onRemove when delete button is clicked', () => {
       const files = [{ filename: 'document.pdf', size: 102400 }];
       const onRemoveMock = jest.fn();
-      const wrapper = shallow(
-        <UploadInputV3 {...defaultProps} value={files} onRemove={onRemoveMock} canDelete={true} />
-      );
-      wrapper.find(IconButton).first().simulate('click', { preventDefault: () => {} });
+      render(<UploadInputV3 {...defaultProps} value={files} onRemove={onRemoveMock} canDelete={true} />);
+      fireEvent.click(screen.getByRole('button'));
       expect(onRemoveMock).toHaveBeenCalledWith(files[0]);
     });
 
     test('does not show delete button when canDelete is false', () => {
       const files = [{ filename: 'document.pdf', size: 102400 }];
-      const wrapper = shallow(
-        <UploadInputV3 {...defaultProps} value={files} onRemove={jest.fn()} canDelete={false} />
-      );
-      expect(wrapper.find(IconButton).length).toBe(0);
+      render(<UploadInputV3 {...defaultProps} value={files} onRemove={jest.fn()} canDelete={false} />);
+      expect(screen.queryAllByRole('button')).toHaveLength(0);
     });
 
     test('does not show delete button when onRemove is not provided', () => {
       const files = [{ filename: 'document.pdf', size: 102400 }];
-      const wrapper = shallow(<UploadInputV3 {...defaultProps} value={files} canDelete={true} />);
-      expect(wrapper.find(IconButton).length).toBe(0);
+      render(<UploadInputV3 {...defaultProps} value={files} canDelete={true} />);
+      expect(screen.queryAllByRole('button')).toHaveLength(0);
     });
   });
 
   describe('Upload States', () => {
     test('shows dropzone when no file is uploading', () => {
-      const wrapper = mount(<UploadInputV3 {...defaultProps} />);
-      expect(wrapper.find('.dropzone-mock').length).toBe(1);
-      wrapper.unmount();
+      const { container } = render(<UploadInputV3 {...defaultProps} />);
+      expect(container.querySelector('.dropzone-mock')).toBeInTheDocument();
     });
 
     test('hides dropzone while a file is uploading', () => {
-      const wrapper = mount(<UploadInputV3 {...defaultProps} />);
+      const { container } = render(<UploadInputV3 {...defaultProps} />);
       act(() => {
         dropzoneCallbacks.onAddedFile({ name: 'sample.png', size: 11264 });
       });
-      wrapper.update();
-      const dropzoneBox = wrapper.findWhere(n =>
-        n.type() === Box && n.prop('sx') && n.prop('sx').display === 'none'
-      );
-      expect(dropzoneBox.length).toBeGreaterThan(0);
-      wrapper.unmount();
+      expect(container.querySelector('.dropzone-mock')).not.toBeVisible();
     });
 
     test('shows Loading status and progress bar while uploading', () => {
-      const wrapper = mount(<UploadInputV3 {...defaultProps} />);
+      render(<UploadInputV3 {...defaultProps} />);
       act(() => {
         dropzoneCallbacks.onAddedFile({ name: 'sample.png', size: 11264 });
       });
-      wrapper.update();
-      expect(wrapper.text()).toContain('sample.png');
-      expect(wrapper.text()).toContain('Loading');
-      wrapper.unmount();
+      expect(screen.getByText('sample.png')).toBeInTheDocument();
+      expect(screen.getByText(/Loading/)).toBeInTheDocument();
     });
 
     test('shows Complete status and hides progress bar after upload finishes', () => {
-      const wrapper = mount(<UploadInputV3 {...defaultProps} />);
+      render(<UploadInputV3 {...defaultProps} />);
       act(() => {
         dropzoneCallbacks.onAddedFile({ name: 'sample.png', size: 11264 });
       });
-      wrapper.update();
       act(() => {
         dropzoneCallbacks.onFileCompleted({ name: 'sample.png', size: 11264 });
       });
-      wrapper.update();
-      expect(wrapper.text()).toContain('Complete');
-      expect(wrapper.text()).not.toContain('Loading');
-      wrapper.unmount();
+      expect(screen.getByText(/Complete/)).toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
     });
 
     test('hides dropzone when max files reached', () => {
       const files = [{ filename: 'document.pdf', size: 102400 }];
-      const wrapper = mount(<UploadInputV3 {...defaultProps} value={files} maxFiles={1} />);
-      expect(wrapper.find('.dropzone-mock').length).toBe(0);
-      wrapper.unmount();
+      const { container } = render(<UploadInputV3 {...defaultProps} value={files} maxFiles={1} />);
+      expect(container.querySelector('.dropzone-mock')).toBeNull();
     });
 
     test('shows dropzone when below max files', () => {
       const files = [{ filename: 'document.pdf', size: 102400 }];
-      const wrapper = mount(<UploadInputV3 {...defaultProps} value={files} maxFiles={2} />);
-      expect(wrapper.find('.dropzone-mock').length).toBe(1);
-      wrapper.unmount();
+      const { container } = render(<UploadInputV3 {...defaultProps} value={files} maxFiles={2} />);
+      expect(container.querySelector('.dropzone-mock')).toBeInTheDocument();
     });
   });
 
   describe('Error Handling', () => {
     test('shows error row with filename and message when a file error occurs', () => {
-      const wrapper = mount(<UploadInputV3 {...defaultProps} />);
+      render(<UploadInputV3 {...defaultProps} />);
       act(() => {
         dropzoneCallbacks.onAddedFile({ name: 'big-file.png', size: 9999999 });
       });
-      wrapper.update();
       act(() => {
         dropzoneCallbacks.onFileError(
           { name: 'big-file.png', size: 9999999 },
           'File is too big (9.54MiB). Max filesize: 5MiB.'
         );
       });
-      wrapper.update();
-      expect(wrapper.text()).toContain('big-file.png');
-      expect(wrapper.text()).toContain('File is too big (9.54MiB). Max filesize: 5MiB.');
-      wrapper.unmount();
+      expect(screen.getByText('big-file.png')).toBeInTheDocument();
+      expect(screen.getByText('File is too big (9.54MiB). Max filesize: 5MiB.')).toBeInTheDocument();
     });
 
     test('removes the uploading row and shows error row when error occurs', () => {
-      const wrapper = mount(<UploadInputV3 {...defaultProps} />);
+      render(<UploadInputV3 {...defaultProps} />);
       act(() => {
         dropzoneCallbacks.onAddedFile({ name: 'big-file.png', size: 9999999 });
       });
-      wrapper.update();
-      expect(wrapper.text()).toContain('Loading');
+      expect(screen.getByText(/Loading/)).toBeInTheDocument();
 
       act(() => {
         dropzoneCallbacks.onFileError(
@@ -279,67 +228,51 @@ describe('UploadInputV3', () => {
           'File is too big (9.54MiB). Max filesize: 5MiB.'
         );
       });
-      wrapper.update();
-      expect(wrapper.text()).not.toContain('Loading');
-      expect(wrapper.text()).toContain('File is too big');
-      wrapper.unmount();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
+      expect(screen.getByText(/File is too big/)).toBeInTheDocument();
     });
 
     test('dismissing an error removes it from the view and restores the dropzone', () => {
-      const wrapper = mount(<UploadInputV3 {...defaultProps} />);
+      const { container } = render(<UploadInputV3 {...defaultProps} />);
       act(() => {
         dropzoneCallbacks.onFileError(
           { name: 'big-file.png', size: 9999999 },
           'File is too big (9.54MiB). Max filesize: 5MiB.'
         );
       });
-      wrapper.update();
-      expect(wrapper.text()).toContain('File is too big');
+      expect(screen.getByText(/File is too big/)).toBeInTheDocument();
+      expect(container.querySelector('.dropzone-mock')).not.toBeVisible();
 
-      const isDropzoneHidden = () => wrapper.findWhere(n =>
-        n.type() === Box && n.prop('sx') && n.prop('sx').display === 'none'
-      ).length > 0;
-      expect(isDropzoneHidden()).toBe(true);
-
-      const dismissButton = wrapper.findWhere(n =>
-        n.type() === IconButton && n.prop('onClick') !== undefined
-      ).first();
       act(() => {
-        dismissButton.prop('onClick')();
+        fireEvent.click(screen.getByRole('button'));
       });
-      wrapper.update();
-      expect(wrapper.text()).not.toContain('File is too big');
-      expect(isDropzoneHidden()).toBe(false);
-      wrapper.unmount();
+
+      expect(screen.queryByText(/File is too big/)).not.toBeInTheDocument();
+      expect(container.querySelector('.dropzone-mock')).toBeVisible();
     });
 
     test('hides dropzone when an error is present', () => {
-      const wrapper = mount(<UploadInputV3 {...defaultProps} />);
+      const { container } = render(<UploadInputV3 {...defaultProps} />);
       act(() => {
         dropzoneCallbacks.onFileError(
           { name: 'big-file.png', size: 9999999 },
           'File is too big (9.54MiB). Max filesize: 5MiB.'
         );
       });
-      wrapper.update();
-      const dropzoneHidden = wrapper.findWhere(n =>
-        n.type() === Box && n.prop('sx') && n.prop('sx').display === 'none'
-      );
-      expect(dropzoneHidden.length).toBeGreaterThan(0);
-      wrapper.unmount();
+      expect(container.querySelector('.dropzone-mock')).not.toBeVisible();
     });
   });
 
   describe('Configuration', () => {
     test('uses custom getAllowedExtensions function when provided', () => {
       const customGetExtensions = jest.fn(() => '.doc,.docx');
-      shallow(<UploadInputV3 {...defaultProps} getAllowedExtensions={customGetExtensions} />);
+      render(<UploadInputV3 {...defaultProps} getAllowedExtensions={customGetExtensions} />);
       expect(customGetExtensions).toHaveBeenCalled();
     });
 
     test('uses custom getMaxSize function when provided', () => {
       const customGetMaxSize = jest.fn(() => 500);
-      shallow(<UploadInputV3 {...defaultProps} getMaxSize={customGetMaxSize} />);
+      render(<UploadInputV3 {...defaultProps} getMaxSize={customGetMaxSize} />);
       expect(customGetMaxSize).toHaveBeenCalled();
     });
 
@@ -348,36 +281,32 @@ describe('UploadInputV3', () => {
         { filename: 'doc1.pdf', size: 102400 },
         { filename: 'doc2.pdf', size: 102400 },
       ];
-      const wrapper = mount(<UploadInputV3 {...defaultProps} value={files} maxFiles={3} />);
-      expect(wrapper.find('.dropzone-mock').length).toBe(1);
-      expect(wrapper.text()).toContain('doc1.pdf');
-      expect(wrapper.text()).toContain('doc2.pdf');
-      wrapper.unmount();
+      const { container } = render(<UploadInputV3 {...defaultProps} value={files} maxFiles={3} />);
+      expect(container.querySelector('.dropzone-mock')).toBeInTheDocument();
+      expect(screen.getByText('doc1.pdf')).toBeInTheDocument();
+      expect(screen.getByText('doc2.pdf')).toBeInTheDocument();
     });
   });
 
   describe('Edge Cases', () => {
     test('handles empty value array', () => {
-      const wrapper = mount(<UploadInputV3 {...defaultProps} value={[]} />);
-      expect(wrapper.find('.dropzone-mock').length).toBe(1);
-      wrapper.unmount();
+      const { container } = render(<UploadInputV3 {...defaultProps} value={[]} />);
+      expect(container.querySelector('.dropzone-mock')).toBeInTheDocument();
     });
 
     test('handles mediaType without type property', () => {
-      const wrapper = mount(<UploadInputV3 {...defaultProps} mediaType={{ max_size: 1024000 }} />);
-      expect(wrapper.find('.dropzone-mock').length).toBe(1);
-      wrapper.unmount();
+      const { container } = render(<UploadInputV3 {...defaultProps} mediaType={{ max_size: 1024000 }} />);
+      expect(container.querySelector('.dropzone-mock')).toBeInTheDocument();
     });
 
     test('handles missing mediaType', () => {
-      const wrapper = mount(<UploadInputV3 value={[]} postUrl="https://example.com/upload" id="test" />);
-      expect(wrapper.find('.dropzone-mock').length).toBe(1);
-      wrapper.unmount();
+      const { container } = render(<UploadInputV3 value={[]} postUrl="https://example.com/upload" id="test" />);
+      expect(container.querySelector('.dropzone-mock')).toBeInTheDocument();
     });
 
     test('handles undefined value prop', () => {
-      const wrapper = shallow(<UploadInputV3 postUrl="https://example.com/upload" id="test" mediaType={defaultProps.mediaType} />);
-      expect(wrapper.find(Box).length).toBeGreaterThan(0);
+      const { container } = render(<UploadInputV3 postUrl="https://example.com/upload" id="test" mediaType={defaultProps.mediaType} />);
+      expect(container.firstChild).not.toBeNull();
     });
   });
 });

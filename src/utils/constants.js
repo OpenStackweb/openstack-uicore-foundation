@@ -4,6 +4,8 @@ export const THREE_DECIMAL_PLACES = 3;
 export const ONE_CENT = 1n;
 export const ZERO_INT = 0;
 
+export const CODE_200 = 200;
+
 export const DEBOUNCE_WAIT_250 = 250;
 export const DEBOUNCE_WAIT = 500;
 
