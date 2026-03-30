@@ -156,7 +156,7 @@ export const fetchAllSummits = async (onlyActive) => {
 
     if (onlyActive) {
         const now = moment().tz("UTC").unix();
-        endpoint.addQuery('filter[]', `end_date<=${now}`);
+        endpoint.addQuery('filter[]', `end_date>=${now}`);
     }
 
     return _fetchPromise(endpoint)
@@ -387,7 +387,7 @@ export const querySponsorsV2 = _.debounce(async (input, summitId, callback) => {
     if (escapedInput) {
         endpoint.addQuery("filter", `company_name=@${escapedInput}`);
     }
-    _fetch(endpoint)
+    _fetchPromise(endpoint)
         .then((json) => {
             const options = [...json.data].map((sp) => ({
                 id: sp.id,
