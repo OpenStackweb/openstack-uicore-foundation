@@ -15,6 +15,8 @@ import {
     CLEAR_MESSAGE,
     SHOW_MESSAGE,
     STOP_LOADING,
+    SET_SNACKBAR_MESSAGE,
+    CLEAR_SNACKBAR_MESSAGE
 } from './actions';
 
 const DEFAULT_STATE = {
@@ -38,6 +40,13 @@ export const genericReducers  = function ( state = DEFAULT_STATE, action = {}) {
 
         case STOP_LOADING:
             return { ...state, loading: false };
+
+        case SET_SNACKBAR_MESSAGE: {
+            return { ...state, snackbarMessage: payload };
+        }
+        case CLEAR_SNACKBAR_MESSAGE: {
+            return { ...state, snackbarMessage: DEFAULT_STATE.snackbarMessage };
+        }
 
         default:
             return state;

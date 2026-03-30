@@ -29,6 +29,8 @@ export const STOP_LOADING   = 'STOP_LOADING';
 export const VALIDATE       = 'VALIDATE';
 export const CLEAR_MESSAGE  = 'CLEAR_MESSAGE';
 export const SHOW_MESSAGE   = 'SHOW_MESSAGE';
+export const SET_SNACKBAR_MESSAGE = "SET_SNACKBAR_MESSAGE";
+export const CLEAR_SNACKBAR_MESSAGE = "CLEAR_SNACKBAR_MESSAGE";
 
 export const createAction = type => payload => ({
     type,
@@ -38,6 +40,24 @@ export const createAction = type => payload => ({
 export const resetLoading = createAction(RESET_LOADING);
 export const startLoading = createAction(START_LOADING);
 export const stopLoading  = createAction(STOP_LOADING);
+
+export const clearSnackbarMessage = () => (dispatch) => {
+    dispatch(createAction(CLEAR_SNACKBAR_MESSAGE)({}));
+};
+
+export const setSnackbarMessage = (message) => (dispatch) => {
+    dispatch(createAction(SET_SNACKBAR_MESSAGE)(message));
+};
+
+export const snackbarErrorHandler = (err, res) => (dispatch, state) => {
+    authErrorHandler(err, res, setSnackbarMessage)(dispatch, state);
+};
+
+export const snackbarSuccessHandler = (message) => (dispatch, state) =>
+    setSnackbarMessage({ ...message, type: "success", code: CODE_200 })(
+        dispatch,
+        state
+    );
 
 const xhrs = {};
 const etagCache = {};
