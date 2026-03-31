@@ -24,15 +24,23 @@ const DEFAULT_STATE = {
     msg_type: null,
     params: {},
     loading: false,
+    snackbarMessage: {
+        title: "",
+        html: "",
+        type: "",
+        httpCode: ""
+    }
 }
 
 export const genericReducers  = function ( state = DEFAULT_STATE, action = {}) {
-    switch(action.type) {
+    const { type, payload } = action;
+
+    switch(type) {
         case SHOW_MESSAGE:
             return {
                 ...state,
-                msg: action.payload.msg,
-                msg_type: action.payload.msg_type,
+                msg: payload.msg,
+                msg_type: payload.msg_type,
             };
 
         case CLEAR_MESSAGE:

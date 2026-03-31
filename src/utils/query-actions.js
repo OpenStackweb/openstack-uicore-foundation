@@ -44,7 +44,7 @@ const _fetchPromise = async (endpoint, options = {}) => {
     try {
         accessToken = await getAccessToken();
     } catch (e) {
-        return Promise.reject();
+        return Promise.reject(e);
     }
 
     endpoint.addQuery('access_token', accessToken);
