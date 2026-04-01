@@ -2,14 +2,10 @@
  * @jest-environment jsdom
  */
 import React from 'react';
+import { render, act } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import ExtraQuestionsForm from '..';
-import Enzyme, {mount} from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-import Input from '../../inputs/text-input';
-import Dropdown from '../../inputs/dropdown';
 import {toSlug} from '../../../utils/methods';
-
-Enzyme.configure({adapter: new Adapter()});
 
 // jsdom does not implement scrollIntoView
 Element.prototype.scrollIntoView = jest.fn();
@@ -1067,7 +1063,7 @@ const completeAnswers2 = [
 ];
 
 it('has input', () => {
-    const component = mount(
+    const { container } = render(
         <ExtraQuestionsForm
             extraQuestions={questions}
             userAnswers={completeAnswers}
@@ -1078,13 +1074,13 @@ it('has input', () => {
         />,
     );
 
-    expect(component.find(Input).exists()).toBeTruthy();
-    expect(component.find(Dropdown).exists()).toBeTruthy();
-
+    // Text input (sub-question of type Text) and Dropdown (react-select) should be rendered
+    expect(container.querySelector('input[type="text"]')).not.toBeNull();
+    expect(container.querySelector('.ddl-extra-questions-container')).not.toBeNull();
 });
 
 it('meat-type and values should show prefer', () => {
-    const component = mount(
+    const { container } = render(
         <ExtraQuestionsForm
             extraQuestions={questions2And}
             userAnswers={completeAnswers2}
@@ -1095,8 +1091,7 @@ it('meat-type and values should show prefer', () => {
         />,
     );
 
-
-    expect(component.find('#prefer').exists()).toBeTruthy();
+    expect(container.querySelector('#prefer')).not.toBeNull();
 })
 
 it('question should disabled', () => {
@@ -1157,7 +1152,7 @@ it('question should disabled', () => {
         }
     ];
 
-    const component = mount(
+    const { container } = render(
         <ExtraQuestionsForm
             extraQuestions={testQuestions}
             userAnswers={testAnswers}
@@ -1170,9 +1165,10 @@ it('question should disabled', () => {
     );
 
     const slug = toSlug('cloud_service_provider_market_sub_segment');
-    expect(component.find('#'+slug).exists()).toBeTruthy();
-    const input = component.find('#'+slug+' input').at(1);
-    expect(input.props().disabled === true).toBeTruthy();
+    const slugContainer = container.querySelector('#chl_wrapper_' + slug);
+    expect(slugContainer).not.toBeNull();
+    const inputs = slugContainer.querySelectorAll('input[type="checkbox"]');
+    expect(inputs[1].disabled).toBe(true);
 })
 
 it('question should be enabled', () => {
@@ -1222,7 +1218,7 @@ it('question should be enabled', () => {
         }
     ];
 
-    const component = mount(
+    const { container } = render(
         <ExtraQuestionsForm
             extraQuestions={testQuestions}
             userAnswers={[]}
@@ -1235,9 +1231,10 @@ it('question should be enabled', () => {
     );
 
     const slug = toSlug('cloud_service_provider_market_sub_segment');
-    expect(component.find(`#${slug}`).exists()).toBeTruthy();
-    const input = component.find(`#${slug} input`).at(1);
-    expect(input.props().disabled === true).toBeFalsy();
+    const slugContainer = container.querySelector(`#chl_wrapper_${slug}`);
+    expect(slugContainer).not.toBeNull();
+    const inputs = slugContainer.querySelectorAll('input[type="checkbox"]');
+    expect(inputs[1].disabled).toBe(false);
 })
 
 
@@ -1517,7 +1514,7 @@ test('question with mandatory imcompleted subquestion should scroll', () => {
 
     const formRef = React.createRef();
 
-    const component = mount(
+    const { container } = render(
         <ExtraQuestionsForm
             extraQuestions={testQuestions}
             userAnswers={testAnswers}
@@ -1531,13 +1528,15 @@ test('question with mandatory imcompleted subquestion should scroll', () => {
     );
 
     const slug = toSlug('Organizational Role SUB-QUESTION (Other)');
-    expect(component.find(`#${slug}`).exists()).toBeTruthy();
-    const input = component.find(`#${slug} input`).at(0);
-    expect(input.props().disabled === true).toBeFalsy();
+    // Text-type sub-question: the <input> itself has id=slug
+    const inputElement = container.querySelector(`input#${slug}`);
+    expect(inputElement).not.toBeNull();
+    expect(inputElement.disabled).toBe(false);
 
-    formRef.current.doSubmit();
+    act(() => {
+        formRef.current.doSubmit();
+    });
 
-    const question = component.find(`#${slug}`);
-
+    expect(container.querySelector(`input#${slug}`)).not.toBeNull();
 });
 

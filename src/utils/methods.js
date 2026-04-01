@@ -294,3 +294,6 @@ export const convertSVGtoImg = async (svgUrl) => {
     console.log(url, newWidth, newHeight);
     return {url, width: newWidth, height: newHeight}
 }
+
+export const isRateEnabled = (value) =>
+    value !== null && value !== undefined && value !== "";

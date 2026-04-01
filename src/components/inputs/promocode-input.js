@@ -14,7 +14,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import AsyncSelect from 'react-select/lib/Async';
-import {DEFAULT_PAGE_SIZE, queryPromocodes} from '../../utils/query-actions';
+import {queryPromocodes} from '../../utils/query-actions';
+import {DEFAULT_PER_PAGE} from '../../utils/constants';
 
 const PromocodeInput = ({summitId, error, value, onChange, id, multi, perPage, extraFilters, ...rest}) => {
 
@@ -87,7 +88,7 @@ PromocodeInput.propTypes = {
 };
 
 PromocodeInput.defaultProps = {
-    perPage: DEFAULT_PAGE_SIZE,
+    perPage: DEFAULT_PER_PAGE,
     extraFilters: []
 };
 

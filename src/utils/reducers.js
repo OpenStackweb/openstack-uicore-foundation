@@ -15,6 +15,8 @@ import {
     CLEAR_MESSAGE,
     SHOW_MESSAGE,
     STOP_LOADING,
+    SET_SNACKBAR_MESSAGE,
+    CLEAR_SNACKBAR_MESSAGE
 } from './actions';
 
 const DEFAULT_STATE = {
@@ -22,15 +24,23 @@ const DEFAULT_STATE = {
     msg_type: null,
     params: {},
     loading: false,
+    snackbarMessage: {
+        title: "",
+        html: "",
+        type: "",
+        httpCode: ""
+    }
 }
 
 export const genericReducers  = function ( state = DEFAULT_STATE, action = {}) {
-    switch(action.type) {
+    const { type, payload } = action;
+
+    switch(type) {
         case SHOW_MESSAGE:
             return {
                 ...state,
-                msg: action.payload.msg,
-                msg_type: action.payload.msg_type,
+                msg: payload.msg,
+                msg_type: payload.msg_type,
             };
 
         case CLEAR_MESSAGE:
@@ -38,6 +48,13 @@ export const genericReducers  = function ( state = DEFAULT_STATE, action = {}) {
 
         case STOP_LOADING:
             return { ...state, loading: false };
+
+        case SET_SNACKBAR_MESSAGE: {
+            return { ...state, snackbarMessage: payload };
+        }
+        case CLEAR_SNACKBAR_MESSAGE: {
+            return { ...state, snackbarMessage: DEFAULT_STATE.snackbarMessage };
+        }
 
         default:
             return state;

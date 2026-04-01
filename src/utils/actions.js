@@ -21,6 +21,7 @@ import T from "i18n-react/dist/i18n-react";
 import { isClearingSessionState, setSessionClearingState, getCurrentPathName } from './methods';
 import { CLEAR_SESSION_STATE } from '../components/security/actions';
 import { doLogin, initLogOut } from '../components/security/methods';
+import {CODE_200} from "./constants";
 
 export const GENERIC_ERROR  = "Yikes. Something seems to be broken. Our web team has been notified, and we apologize for the inconvenience.";
 export const RESET_LOADING  = 'RESET_LOADING';
@@ -29,6 +30,8 @@ export const STOP_LOADING   = 'STOP_LOADING';
 export const VALIDATE       = 'VALIDATE';
 export const CLEAR_MESSAGE  = 'CLEAR_MESSAGE';
 export const SHOW_MESSAGE   = 'SHOW_MESSAGE';
+export const SET_SNACKBAR_MESSAGE = "SET_SNACKBAR_MESSAGE";
+export const CLEAR_SNACKBAR_MESSAGE = "CLEAR_SNACKBAR_MESSAGE";
 
 export const createAction = type => payload => ({
     type,
@@ -38,6 +41,24 @@ export const createAction = type => payload => ({
 export const resetLoading = createAction(RESET_LOADING);
 export const startLoading = createAction(START_LOADING);
 export const stopLoading  = createAction(STOP_LOADING);
+
+export const clearSnackbarMessage = () => (dispatch) => {
+    dispatch(createAction(CLEAR_SNACKBAR_MESSAGE)({}));
+};
+
+export const setSnackbarMessage = (message) => (dispatch) => {
+    dispatch(createAction(SET_SNACKBAR_MESSAGE)(message));
+};
+
+export const snackbarErrorHandler = (err, res) => (dispatch, state) => {
+    authErrorHandler(err, res, setSnackbarMessage)(dispatch, state);
+};
+
+export const snackbarSuccessHandler = (message) => (dispatch, state) =>
+    setSnackbarMessage({ ...message, type: "success", code: CODE_200 })(
+        dispatch,
+        state
+    );
 
 const xhrs = {};
 const etagCache = {};

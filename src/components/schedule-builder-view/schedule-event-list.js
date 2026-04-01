@@ -16,7 +16,6 @@ import moment from 'moment-timezone'
 import {useDrop} from 'react-dnd'
 import {DraggableItemTypes} from './constants';
 import ScheduleEvent from './schedule-event';
-import ReactDOM from 'react-dom';
 import SummitEvent from '../../models/summit-event';
 
 const TimeSlot = ({timeLabel, id}) => {
@@ -165,7 +164,7 @@ const ScheduleEventList = (props) => {
   }
 
   const getBoundingBox = () => {
-    return ReactDOM.findDOMNode(scheduleEventContainer.current).getBoundingClientRect();
+    return scheduleEventContainer.current.getBoundingClientRect();
   }
 
   const calculateInitialTop = (event) => {
