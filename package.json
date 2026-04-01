@@ -190,5 +190,6 @@
       "console": {}
     },
     "testEnvironment": "jsdom"
-  }
+  },
+  "dependencies": {}
 }

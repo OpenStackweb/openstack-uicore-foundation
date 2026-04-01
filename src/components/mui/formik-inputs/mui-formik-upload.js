@@ -14,7 +14,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { FormHelperText } from "@mui/material";
-import { UploadInputV2 } from "../../inputs/upload-input-v2";
+import UploadInputV2 from "../../inputs/upload-input-v2";
 import { useField } from "formik";
 import {
   ALLOWED_INVENTORY_IMAGE_FORMATS,
