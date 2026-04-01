@@ -54,3 +54,5 @@ export const RATE_FIELDS = {
     STANDARD: "standard_rate",
     ONSITE: "onsite_rate"
 };
+
+export const DECIMAL_DIGITS = 2;

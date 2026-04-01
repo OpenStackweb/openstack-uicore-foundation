@@ -11,16 +11,15 @@
  * limitations under the License.
  * */
 
-jest.mock("../../inputs/upload-input-v2", () => ({
-  UploadInputV2: ({ value, canAdd }) => {
-    const React = require("react");
-    return (
-      <div data-testid="upload-input" data-can-add={canAdd}>
-        {value.length} file(s)
-      </div>
-    );
-  }
-}));
+jest.mock("../../inputs/upload-input-v2", () => {
+  const React = require("react");
+  const MockUploadInputV2 = ({ value, canAdd }) => (
+    <div data-testid="upload-input" data-can-add={canAdd}>
+      {value.length} file(s)
+    </div>
+  );
+  return { __esModule: true, default: MockUploadInputV2 };
+});
 
 import React from "react";
 import { render, screen } from "@testing-library/react";
