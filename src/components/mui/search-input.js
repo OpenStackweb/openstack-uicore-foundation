@@ -11,27 +11,41 @@
  * limitations under the License.
  * */
 
-import React, { useEffect, useState } from "react";
-import { TextField, IconButton } from "@mui/material";
+import React, { useEffect, useState, useCallback } from "react";
+import { TextField, IconButton, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
+import { debounce } from "lodash";
+import { DEBOUNCE_WAIT } from "../../utils/constants";
 
-const SearchInput = ({ term, onSearch, placeholder = "Search..." }) => {
+const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) => {
   const [searchTerm, setSearchTerm] = useState(term);
 
   useEffect(() => {
     setSearchTerm(term || "");
   }, [term]);
 
-  const handleSearch = (ev) => {
-    if (ev.key === "Enter") {
-      onSearch(searchTerm);
-    }
-  };
-
   const handleClear = () => {
     setSearchTerm("");
     onSearch("");
+  };
+
+  const onSearchDebounced = useCallback(
+    debounced ? debounce((value) => onSearch(value), DEBOUNCE_WAIT) : null,
+    [onSearch, debounced]
+  );
+
+  useEffect(() => () => onSearchDebounced?.cancel(), [onSearchDebounced]);
+
+  const handleChange = (value) => {
+    setSearchTerm(value);
+    if (debounced) onSearchDebounced(value);
+  };
+
+  const handleKeyDown = (ev) => {
+    if (!debounced && ev.key === "Enter") {
+      onSearch(searchTerm);
+    }
   };
 
   return (
@@ -41,6 +55,11 @@ const SearchInput = ({ term, onSearch, placeholder = "Search..." }) => {
       placeholder={placeholder}
       slotProps={{
         input: {
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon sx={{ color: "#0000008F" }} />
+            </InputAdornment>
+          ),
           endAdornment: term ? (
             <IconButton
               size="small"
@@ -56,8 +75,8 @@ const SearchInput = ({ term, onSearch, placeholder = "Search..." }) => {
           )
         }
       }}
-      onChange={(event) => setSearchTerm(event.target.value)}
-      onKeyDown={handleSearch}
+      onChange={(ev) => handleChange(ev.target.value)}
+      onKeyDown={handleKeyDown}
       fullWidth
       sx={{
         "& .MuiOutlinedInput-root": {
