@@ -66,8 +66,8 @@ const AdditionalInputList = ({ name, onDelete, onDeleteValue, entityId }) => {
         newValues.push({ ...DEFAULT_META_FIELD, _key: `draft_${Date.now()}` });
       }
       setFieldValue(name, newValues);
+      setFieldTouched(name, [], false);
     };
-    setFieldTouched(name, [], false);
 
     if (item.id && onDelete) {
       onDelete(entityId, item.id)
