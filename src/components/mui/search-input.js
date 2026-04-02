@@ -26,6 +26,7 @@ const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) =
   }, [term]);
 
   const handleClear = () => {
+    onSearchDebounced?.cancel();
     setSearchTerm("");
     onSearch("");
   };
