@@ -61,18 +61,12 @@ const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) =
               <SearchIcon sx={{ color: "#0000008F" }} />
             </InputAdornment>
           ),
-          endAdornment: term ? (
-            <IconButton
-              size="small"
-              onClick={handleClear}
-              sx={{ position: "absolute", right: 0 }}
-            >
-              <ClearIcon sx={{ color: "#0000008F" }} />
-            </IconButton>
-          ) : (
-            <SearchIcon
-              sx={{ mr: 1, color: "#0000008F", position: "absolute", right: 0 }}
-            />
+          endAdornment: term && (
+            <InputAdornment position="end">
+              <IconButton size="small" onClick={handleClear}>
+                <ClearIcon fontSize="small" sx={{ color: "#0000008F" }} />
+              </IconButton>
+            </InputAdornment>
           )
         }
       }}
