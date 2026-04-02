@@ -31,7 +31,7 @@ const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) =
   };
 
   const onSearchDebounced = useMemo(
-    debounced ? debounce((value) => onSearch(value), DEBOUNCE_WAIT) : null,
+    () => debounced ? debounce((value) => onSearch(value), DEBOUNCE_WAIT) : null,
     [onSearch, debounced]
   );
 
