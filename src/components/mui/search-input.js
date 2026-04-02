@@ -11,7 +11,7 @@
  * limitations under the License.
  * */
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { TextField, IconButton, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -30,7 +30,7 @@ const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) =
     onSearch("");
   };
 
-  const onSearchDebounced = useCallback(
+  const onSearchDebounced = useMemo(
     debounced ? debounce((value) => onSearch(value), DEBOUNCE_WAIT) : null,
     [onSearch, debounced]
   );
