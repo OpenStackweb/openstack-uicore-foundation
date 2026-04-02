@@ -28,7 +28,7 @@ const DEFAULT_META_FIELD = {
 };
 
 const AdditionalInputList = ({ name, onDelete, onDeleteValue, entityId }) => {
-  const { values, setFieldValue, errors } = useFormikContext();
+  const { values, setFieldValue, errors, setFieldTouched } = useFormikContext();
 
   const metaFields = values[name] || [];
 
@@ -67,6 +67,7 @@ const AdditionalInputList = ({ name, onDelete, onDeleteValue, entityId }) => {
       }
       setFieldValue(name, newValues);
     };
+    setFieldTouched(name, [], false);
 
     if (item.id && onDelete) {
       onDelete(entityId, item.id)
