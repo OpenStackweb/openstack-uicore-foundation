@@ -40,6 +40,8 @@
     "css-loader": "^6.7.1",
     "css-minimizer-webpack-plugin": "^4.2.2",
     "dropzone": "5.7.2",
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.8",
     "extend": "^3.0.1",
     "file-loader": "^6.2.0",
     "final-form": "^4.20.7",
@@ -190,9 +192,5 @@
       "console": {}
     },
     "testEnvironment": "jsdom"
-  },
-  "dependencies": {
-    "enzyme": "^3.11.0",
-    "enzyme-adapter-react-16": "^1.15.8"
   }
 }
