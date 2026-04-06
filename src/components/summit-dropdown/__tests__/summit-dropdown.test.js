@@ -2,11 +2,15 @@
  * @jest-environment jsdom
  */
 import React from 'react';
-import Enzyme, { mount } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
+import "@testing-library/jest-dom";
+import { render, screen, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import SummitDropdown from '..';
 
-Enzyme.configure({ adapter: new Adapter() });
+jest.mock('i18n-react/dist/i18n-react', () => ({
+    __esModule: true,
+    default: { translate: (key) => key },
+}));
 
 const summits = [
     { id: 1, name: 'Summit A', start_date: 1000 },
@@ -20,89 +24,97 @@ const defaultProps = {
     onClick: jest.fn(),
 };
 
-function render(props = {}) {
-    return mount(<SummitDropdown {...defaultProps} {...props} />);
+function renderComponent(props = {}) {
+    return render(<SummitDropdown {...defaultProps} {...props} />);
 }
 
 describe('SummitDropdown summitValue state', () => {
     beforeEach(() => {
         defaultProps.onClick.mockClear();
+        jest.clearAllMocks();
     });
 
     test('summitValue is null on initial render', () => {
-        const wrapper = render();
-        expect(wrapper.instance().state.summitValue).toBeNull();
+        renderComponent();
+        expect(screen.getByRole('button', { name: 'Go' })).toBeDisabled();
     });
 
-    test('handleChange sets summitValue when given a valid object', () => {
-        const wrapper = render();
-        const option = { label: 'Summit A', value: 1 };
+    test('handleChange sets summitValue when given a valid object', async () => {
+        const user = userEvent.setup();
+        renderComponent();
 
-        wrapper.instance().handleChange(option);
+        await user.click(screen.getByRole('textbox'));
+        await user.click(screen.getByText('Summit A'));
 
-        expect(wrapper.instance().state.summitValue).toEqual(option);
+        expect(screen.getByRole('button', { name: 'Go' })).toBeEnabled();
     });
 
     test('handleChange does not set summitValue when given a non-object', () => {
-        const wrapper = render();
+        const ref = React.createRef();
+        render(<SummitDropdown {...defaultProps} ref={ref} />);
+
         const option = { label: 'Summit A', value: 1 };
         const invalidOption = 'not-an-object';
 
-        wrapper.instance().handleChange(invalidOption);
-        expect(wrapper.instance().state.summitValue).toBeNull();
+        act(() => { ref.current.handleChange(invalidOption); });
+        expect(ref.current.state.summitValue).toBeNull();
 
-        wrapper.instance().handleChange(option);
-        expect(wrapper.instance().state.summitValue).toEqual(option);
+        act(() => { ref.current.handleChange(option); });
+        expect(ref.current.state.summitValue).toEqual(option);
 
-        wrapper.instance().handleChange(invalidOption);
-        expect(wrapper.instance().state.summitValue).toEqual(option);
+        act(() => { ref.current.handleChange(invalidOption); });
+        expect(ref.current.state.summitValue).toEqual(option);
     });
 
     test('handleChange does not set summitValue when given null', () => {
-        const wrapper = render();
+        const ref = React.createRef();
+        render(<SummitDropdown {...defaultProps} ref={ref} />);
+
         const option = { label: 'Summit A', value: 1 };
 
-        wrapper.instance().handleChange(null);
-        expect(wrapper.instance().state.summitValue).toBeNull();
+        act(() => { ref.current.handleChange(null); });
+        expect(ref.current.state.summitValue).toBeNull();
 
-        wrapper.instance().handleChange(option);
-        expect(wrapper.instance().state.summitValue).toEqual(option);
+        act(() => { ref.current.handleChange(option); });
+        expect(ref.current.state.summitValue).toEqual(option);
 
-        wrapper.instance().handleChange(null);
-        expect(wrapper.instance().state.summitValue).toEqual(option);
+        act(() => { ref.current.handleChange(null); });
+        expect(ref.current.state.summitValue).toEqual(option);
     });
 
-    test('handleClick does not call onClick when summitValue is null', () => {
-        const wrapper = render();
-        const fakeEvent = { preventDefault: jest.fn() };
+    test('handleClick does not call onClick when summitValue is null', async () => {
+        const user = userEvent.setup();
+        renderComponent();
 
-        // summitValue starts as null — onClick must NOT be called
-        wrapper.instance().handleClick(fakeEvent);
+        // button is disabled — click is a no-op, onClick must NOT be called
+        await user.click(screen.getByRole('button', { name: 'Go' }));
 
         expect(defaultProps.onClick).not.toHaveBeenCalled();
     });
 
-    test('handleClick calls onClick with summit id when summitValue is set', () => {
-        const wrapper = render();
-        const option = { label: 'Summit A', value: 1 };
-        const fakeEvent = { preventDefault: jest.fn() };
+    test('handleClick calls onClick with summit id when summitValue is set', async () => {
+        const user = userEvent.setup();
+        renderComponent();
 
-        wrapper.instance().handleChange(option);
-        wrapper.instance().handleClick(fakeEvent);
+        await user.click(screen.getByRole('textbox'));
+        await user.click(screen.getByText('Summit A'));
+        await user.click(screen.getByRole('button', { name: 'Go' }));
 
         expect(defaultProps.onClick).toHaveBeenCalledWith(1);
     });
 
     test('button is disabled when summitValue is null', () => {
-        const wrapper = render();
-        expect(wrapper.find('button').prop('disabled')).toBe(true);
+        renderComponent();
+        expect(screen.getByRole('button', { name: 'Go' })).toBeDisabled();
     });
 
-    test('button is enabled after selecting a summit', () => {
-        const wrapper = render();
-        wrapper.instance().handleChange({ label: 'Summit A', value: 1 });
-        wrapper.update();
+    test('button is enabled after selecting a summit', async () => {
+        const user = userEvent.setup();
+        renderComponent();
 
-        expect(wrapper.find('button').prop('disabled')).toBe(false);
+        await user.click(screen.getByRole('textbox'));
+        await user.click(screen.getByText('Summit A'));
+
+        expect(screen.getByRole('button', { name: 'Go' })).toBeEnabled();
     });
 });
