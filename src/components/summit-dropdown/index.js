@@ -15,7 +15,6 @@ import React from 'react';
 import './summit-dropdown.less';
 import Select from 'react-select';
 import T from 'i18n-react/dist/i18n-react';
-import { OBJECT_TYPEOF, UNDEFINED_TYPEOF } from '../../utils/constants';
 
 export default class SummitDropdown extends React.Component {
 
@@ -31,12 +30,7 @@ export default class SummitDropdown extends React.Component {
     }
 
     handleChange(summit) {
-        const summitValue =
-            summit !== null &&
-            typeof summit === OBJECT_TYPEOF &&
-            typeof summit.value !== UNDEFINED_TYPEOF
-                ? summit
-                : this.state.summitValue;
+        const summitValue = summit?.value !== undefined ? summit : this.state.summitValue;
 
         this.setState({ summitValue });
     }
@@ -53,16 +47,16 @@ export default class SummitDropdown extends React.Component {
 
     render() {
 
-        let {summits, actionLabel, actionClass, big: bigClass = "" } = this.props;
-        let summitOptions = summits
+        let { summits, actionLabel, actionClass } = this.props;
+        let summitOptions = [...summits]
             .sort(
                 (a, b) => (a.start_date < b.start_date ? 1 : (a.start_date > b.start_date ? -1 : 0))
             ).map(s => ({label: s.name, value: s.id}));
 
-        const isDisabled =
-            this.state.summitValue === null ||
-            typeof this.state.summitValue !== OBJECT_TYPEOF ||
-            typeof this.state.summitValue.value === UNDEFINED_TYPEOF;
+        let bigClass = this.props.hasOwnProperty('big') ? 'big' : '';
+        const isDisabled = this.state.summitValue?.value === undefined;
+
+
 
         return (
             <div className={"summit-dropdown btn-group " + bigClass}>

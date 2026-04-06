@@ -56,6 +56,3 @@ export const RATE_FIELDS = {
 };
 
 export const DECIMAL_DIGITS = 2;
-
-export const OBJECT_TYPEOF = 'object';
-export const UNDEFINED_TYPEOF = 'undefined';
