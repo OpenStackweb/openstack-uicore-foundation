@@ -39,12 +39,12 @@ describe("MuiFormikPriceField", () => {
 
   test("displays value as-is when inCents is false", () => {
     renderWithFormik({}, { price: 50 });
-    expect(screen.getByDisplayValue("50")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("50.00")).toBeInTheDocument();
   });
 
   test("divides value by 100 when inCents is true", () => {
     renderWithFormik({ inCents: true }, { price: 1500 });
-    expect(screen.getByDisplayValue("15")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("15.00")).toBeInTheDocument();
   });
 
   test("renders 0 display value when price is 0", () => {
