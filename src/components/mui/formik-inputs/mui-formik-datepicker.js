@@ -27,17 +27,12 @@ const MuiFormikDatepicker = ({
 }) => {
   const [field, meta, helpers] = useField(name);
   const requiredLabel = `${label} *`;
-  const handleChange = (value) => {
-    helpers.setValue(value);
-    if (meta.touched) helpers.setTouched(false, false);
-  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterMoment}>
       <DatePicker
         value={field.value}
-        onChange={handleChange}
-        onClose={handleChange}
+        onChange={helpers.setValue}
         slotProps={{
           textField: {
             name,

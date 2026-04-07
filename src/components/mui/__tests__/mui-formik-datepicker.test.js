@@ -57,4 +57,21 @@ describe("MuiFormikDatepicker", () => {
 
     expect(await screen.findByText("This field is required")).toBeInTheDocument();
   });
+
+  test("retains selected date after picker closes", async () => {
+    const user = userEvent.setup();
+    renderWithFormik({ required: true });
+
+    await user.click(screen.getByLabelText("Test Date *"));
+    await user.click(screen.getByRole("button", { name: "Choose date" }));
+
+    const today = await screen.findByRole("gridcell", {
+      name: String(new Date().getDate())
+    });
+    await user.click(today);
+
+    const input = screen.getByLabelText("Test Date *");
+    expect(input).not.toHaveValue("");
+    expect(input).not.toHaveValue("MM/DD/YYYY");
+  });
 });
