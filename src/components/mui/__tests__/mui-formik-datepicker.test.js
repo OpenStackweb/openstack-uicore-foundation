@@ -12,7 +12,7 @@
  * */
 
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Formik, Form } from "formik";
 import "@testing-library/jest-dom";
@@ -33,6 +33,7 @@ const renderWithFormik = (props, initialValues = { test_date: null }) =>
     >
       <Form>
         <MuiFormikDatepicker name="test_date" label="Test Date" {...props} />
+        <button type="submit">Submit</button>
       </Form>
     </Formik>
   );
@@ -44,7 +45,7 @@ describe("MuiFormikDatepicker", () => {
     expect(screen.getByLabelText("Test Date *")).toBeInTheDocument();
   });
 
-  test("shows validation error when blurring without value", async () => {
+  test("shows validation error on submit without value", async () => {
     renderWithFormik({ required: true });
 
     expect(
@@ -52,12 +53,8 @@ describe("MuiFormikDatepicker", () => {
     ).not.toBeInTheDocument();
 
     const user = userEvent.setup();
-    const input = screen.getByLabelText("Test Date *");
-    await user.click(input);
-    await user.tab();
+    await user.click(screen.getByRole("button", { name: "Submit" }));
 
-    await waitFor(() => {
-      expect(screen.getByText("This field is required")).toBeInTheDocument();
-    });
+    expect(await screen.findByText("This field is required")).toBeInTheDocument();
   });
 });
