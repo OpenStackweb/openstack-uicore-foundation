@@ -1,0 +1,45 @@
+/**
+ * Copyright 2026 OpenStack Foundation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import CustomAlert from "../CustomAlert/index";
+
+describe("CustomAlert (component)", () => {
+  test("renders the message", () => {
+    render(<CustomAlert message="Hello world" />);
+    expect(screen.getByTestId("custom-alert")).toBeInTheDocument();
+    expect(screen.getByTestId("custom-alert").innerHTML).toBe("Hello world");
+  });
+
+  test("renders without crashing when no props provided", () => {
+    const { container } = render(<CustomAlert />);
+    expect(container.firstChild).toBeInTheDocument();
+  });
+
+  test("renders HTML message content safely via dangerouslySetInnerHTML", () => {
+    render(<CustomAlert message="<strong>Bold</strong>" />);
+    expect(screen.getByTestId("custom-alert").querySelector("strong")).toBeInTheDocument();
+  });
+
+  test("renders with error severity", () => {
+    render(<CustomAlert severity="error" message="Error!" />);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+
+  test("renders with success severity", () => {
+    render(<CustomAlert severity="success" message="Done!" />);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+});
