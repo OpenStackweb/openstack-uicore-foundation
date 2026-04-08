@@ -33,7 +33,14 @@ const renderModal = (props) =>
       onSubmit={jest.fn()}
     >
       <Form>
-        <NotesModal item={item} open={true} onClose={jest.fn()} {...props} />
+        <NotesModal
+          id={item.form_item_id}
+          label={item.name}
+          title="sponsor_edit_form.notes"
+          open={true}
+          onClose={jest.fn()}
+          {...props}
+        />
       </Form>
     </Formik>
   );

@@ -11,6 +11,7 @@
  * limitations under the License.
  **/
 
+import * as Sentry from "@sentry/react";
 import moment from 'moment-timezone';
 import URI from "urijs";
 
@@ -297,3 +298,10 @@ export const convertSVGtoImg = async (svgUrl) => {
 
 export const isRateEnabled = (value) =>
     value !== null && value !== undefined && value !== "";
+
+const isSentryInitialized = () => !!window.SENTRY_DSN;
+
+export const handleSentryException = (err) =>
+  isSentryInitialized()
+    ? Sentry.captureException(err)
+    : console.log("Error on registration: ", err);

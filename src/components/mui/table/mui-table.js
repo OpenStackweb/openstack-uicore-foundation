@@ -13,7 +13,7 @@
 
 import * as React from "react";
 import T from "i18n-react/dist/i18n-react";
-import { isBoolean } from "lodash";
+import {isBoolean} from "lodash";
 import {
   Box,
   Button,
@@ -32,14 +32,12 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import { visuallyHidden } from "@mui/utils";
-import {
-  DEFAULT_PER_PAGE,
-  FIFTY_PER_PAGE,
-  TWENTY_PER_PAGE
-} from "../../../utils/constants";
+import {visuallyHidden} from "@mui/utils";
+import {DEFAULT_PER_PAGE, FIFTY_PER_PAGE, TWENTY_PER_PAGE} from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
 import styles from "./mui-table.module.less";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import PropTypes from "prop-types";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",
@@ -47,26 +45,30 @@ const ARCHIVED_CELL_SX = {
 };
 
 const MuiTable = ({
-  columns = [],
-  data = [],
-  children,
-  totalRows,
-  perPage,
-  currentPage,
-  onPageChange,
-  onPerPageChange,
-  onSort,
-  options = { sortCol: "", sortDir: 1, disableProp: null }, // disableProp is the prop that will disable the row
-  getName = (item) => item.name,
-  onEdit,
-  onArchive,
-  onDelete,
-  canDelete = () => true,
-  deleteDialogTitle = null,
-  deleteDialogBody = null,
-  deleteDialogConfirmText = null,
-  confirmButtonColor = null
-}) => {
+                    columns = [],
+                    data = [],
+                    children,
+                    totalRows,
+                    perPage,
+                    currentPage,
+                    onPageChange,
+                    onPerPageChange,
+                    onSort,
+                    options = {sortCol: "", sortDir: 1, disableProp: null}, // disableProp is the prop that will disable the row
+                    getName = (item) => item.name,
+                    onEdit,
+                    onArchive,
+                    onDelete,
+                    onSelect,
+                    canDelete = () => true,
+                    deleteDialogTitle = null,
+                    deleteDialogBody = null,
+                    deleteDialogConfirmText = null,
+                    confirmButtonColor = null
+                  }) => {
+  const totalColumnsCount =
+    columns.length + (onEdit ? 1 : 0) + (onDelete ? 1 : 0) + (onArchive ? 1 : 0) + (onSelect ? 1 : 0);
+
   const handleChangePage = (_, newPage) => {
     onPageChange(newPage + 1);
   };
@@ -92,7 +94,7 @@ const MuiTable = ({
     customPerPageOptions = [initialPerPage.current];
   }
 
-  const { sortCol, sortDir } = options;
+  const {sortCol, sortDir} = options;
 
   const getArchivedCellSx = (row) =>
     options.disableProp && row[options.disableProp] ? ARCHIVED_CELL_SX : null;
@@ -109,7 +111,7 @@ const MuiTable = ({
         typeof deleteDialogBody === "function"
           ? deleteDialogBody(getName(item))
           : deleteDialogBody ||
-            `${T.translate("general.row_remove_warning")} ${getName(item)}`,
+          `${T.translate("general.row_remove_warning")} ${getName(item)}`,
       type: "warning",
       showCancelButton: true,
       confirmButtonColor: confirmButtonColor || "#DD6B55",
@@ -129,9 +131,9 @@ const MuiTable = ({
 
     if (isBoolean(row[col.columnKey])) {
       return row[col.columnKey] ? (
-        <CheckIcon fontSize="large" />
+        <CheckIcon fontSize="large"/>
       ) : (
-        <CloseIcon fontSize="large" />
+        <CloseIcon fontSize="large"/>
       );
     }
 
@@ -139,15 +141,15 @@ const MuiTable = ({
   };
 
   return (
-    <Box sx={{ width: "100%" }}>
-      <Paper elevation={0} sx={{ width: "100%", mb: 2 }}>
+    <Box sx={{width: "100%"}}>
+      <Paper elevation={0} sx={{width: "100%", mb: 2}}>
         <TableContainer
           component={Paper}
-          sx={{ borderRadius: 0, boxShadow: "none" }}
+          sx={{borderRadius: 0, boxShadow: "none"}}
         >
           <Table>
             {/* TABLE HEADER */}
-            <TableHead sx={{ backgroundColor: "#EAEAEA" }}>
+            <TableHead sx={{backgroundColor: "#EAEAEA"}}>
               <TableRow>
                 {columns.map((col) => (
                   <TableCell
@@ -183,9 +185,10 @@ const MuiTable = ({
                     )}
                   </TableCell>
                 ))}
-                {onEdit && <TableCell sx={{ width: 40 }} />}
-                {onArchive && <TableCell sx={{ width: 80 }} />}
-                {onDelete && <TableCell sx={{ width: 40 }} />}
+                {onEdit && <TableCell sx={{width: 40}}/>}
+                {onArchive && <TableCell sx={{width: 80}}/>}
+                {onDelete && <TableCell sx={{width: 40}}/>}
+                {onSelect && <TableCell sx={{width: 40}}/>}
               </TableRow>
             </TableHead>
 
@@ -211,10 +214,10 @@ const MuiTable = ({
                     <TableCell
                       align="center"
                       className={styles.dottedBorderLeft}
-                      sx={getCellSx(row, { width: 40 })}
+                      sx={getCellSx(row, {width: 40})}
                     >
-                      <IconButton size="large" onClick={() => onEdit(row)}>
-                        <EditIcon fontSize="large" />
+                      <IconButton size="large" onClick={() => onEdit(row)} data-testid="action-edit">
+                        <EditIcon fontSize="large"/>
                       </IconButton>
                     </TableCell>
                   )}
@@ -222,7 +225,7 @@ const MuiTable = ({
                   {onArchive && (
                     <TableCell
                       align="center"
-                      sx={{ width: 80 }}
+                      sx={{width: 80}}
                       className={styles.dottedBorderLeft}
                     >
                       <Button
@@ -230,6 +233,7 @@ const MuiTable = ({
                         color="inherit"
                         size="small"
                         onClick={() => onArchive(row)}
+                        data-testid="action-archive"
                         sx={{
                           fontSize: "1.3rem",
                           fontWeight: 500,
@@ -248,16 +252,32 @@ const MuiTable = ({
                     <TableCell
                       align="center"
                       className={styles.dottedBorderLeft}
-                      sx={getCellSx(row, { width: 40 })}
+                      sx={getCellSx(row, {width: 40})}
                     >
                       {canDelete(row) && (
                         <IconButton
                           size="large"
                           onClick={() => handleDelete(row)}
+                          data-testid="action-delete"
                         >
-                          <DeleteIcon fontSize="large" />
+                          <DeleteIcon fontSize="large"/>
                         </IconButton>
                       )}
+                    </TableCell>
+                  )}
+                  {onSelect && (
+                    <TableCell
+                      align="center"
+                      sx={{width: 40}}
+                      className={styles.dottedBorderLeft}
+                    >
+                      <IconButton
+                        size="large"
+                        onClick={() => onSelect(row)}
+                        data-testid="action-select"
+                      >
+                        <ArrowForwardIcon/>
+                      </IconButton>
                     </TableCell>
                   )}
                 </TableRow>
@@ -266,7 +286,7 @@ const MuiTable = ({
               {children}
               {data.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={columns.length} align="center">
+                  <TableCell colSpan={totalColumnsCount} align="center">
                     {T.translate("mui_table.no_items")}
                   </TableCell>
                 </TableRow>
@@ -303,6 +323,29 @@ const MuiTable = ({
       </Paper>
     </Box>
   );
+};
+
+MuiTable.propTypes = {
+  columns: PropTypes.array,
+  data: PropTypes.array,
+  children: PropTypes.node,
+  totalRows: PropTypes.number,
+  perPage: PropTypes.number,
+  currentPage: PropTypes.number,
+  onPageChange: PropTypes.func,
+  onPerPageChange: PropTypes.func,
+  onSort: PropTypes.func,
+  options: PropTypes.object,
+  getName: PropTypes.func,
+  onEdit: PropTypes.func,
+  onArchive: PropTypes.func,
+  onDelete: PropTypes.func,
+  onSelect: PropTypes.func,
+  canDelete: PropTypes.func,
+  deleteDialogTitle: PropTypes.string,
+  deleteDialogBody: PropTypes.string,
+  deleteDialogConfirmText: PropTypes.string,
+  confirmButtonColor: PropTypes.string
 };
 
 export default MuiTable;
