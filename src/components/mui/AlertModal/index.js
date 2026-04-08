@@ -11,27 +11,16 @@
  * limitations under the License.
  * */
 
-import React, { useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
 import T from "i18n-react";
-import { useField } from "formik";
-import { Button, Dialog, DialogActions, DialogContent, Divider, DialogContentText, DialogTitle, IconButton, TextField } from "@mui/material";
+import { Divider, IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
-const NotesModal = ({ id, label, open, title, placeholder, onClose }) => {
-  const name = `i-${id}-c-global-f-notes`;
-  // eslint-disable-next-line
-  const [field, meta, helpers] = useField(name);
-  const [notes, setNotes] = useState(field?.value || "");
-
-  const handleSave = () => {
-    helpers.setValue(notes);
-    onClose();
-  };
-
+const AlertModal = ({ title, message, open, onClose }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{title || T.translate("general.notes")}</DialogTitle>
+      <DialogTitle>{title}</DialogTitle>
       <IconButton
         aria-label="close"
         onClick={onClose}
@@ -46,34 +35,23 @@ const NotesModal = ({ id, label, open, title, placeholder, onClose }) => {
       </IconButton>
       <Divider />
       <DialogContent>
-        <DialogContentText>{label}</DialogContentText>
-        <TextField
-          name={name}
-          onChange={(ev) => setNotes(ev.target.value)}
-          value={notes}
-          margin="normal"
-          multiline
-          fullWidth
-          rows={4}
-          placeholder={placeholder || T.translate("placeholders.notes")}
-        />
+        <DialogContentText>{message}</DialogContentText>
       </DialogContent>
+      <Divider />
       <DialogActions>
-        <Button onClick={handleSave} variant="contained" fullWidth>
-          {T.translate("general.save")}
+        <Button onClick={onClose} variant="contained" fullWidth>
+          {T.translate("general.ok")}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-NotesModal.propTypes = {
-  id: PropTypes.any,
-  label: PropTypes.string,
-  title: PropTypes.string,
-  placeholder: PropTypes.string,
+AlertModal.propTypes = {
+  title: PropTypes.string.isRequired,
+  message: PropTypes.string.isRequired,
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired
 };
 
-export default NotesModal;
+export default AlertModal;

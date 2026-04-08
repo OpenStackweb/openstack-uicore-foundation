@@ -11,6 +11,7 @@
  * limitations under the License.
  **/
 
+import * as Sentry from "@sentry/react";
 import moment from 'moment-timezone';
 import URI from "urijs";
 
@@ -309,3 +310,10 @@ export const empty = (value) => {
   if (typeof value === "object") return Object.keys(value).length === 0;
   return false;
 };
+
+const isSentryInitialized = () => !!window.SENTRY_DSN;
+
+export const handleSentryException = (err) =>
+  isSentryInitialized()
+    ? Sentry.captureException(err)
+    : console.log("Error on registration: ", err);
