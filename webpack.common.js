@@ -170,6 +170,7 @@ module.exports = {
         }),
     ],
     resolve: {
+        extensions: ['.js', '.jsx', '.json'],
         fallback: {
             "fs" : false,
             "crypto" : false,
