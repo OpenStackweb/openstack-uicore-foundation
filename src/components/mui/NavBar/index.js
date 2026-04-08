@@ -12,9 +12,9 @@
  * */
 
 import React from "react";
-import {AppBar, Box, Toolbar, Typography} from "@mui/material/AppBar";
+import {AppBar, Box, Toolbar, Typography} from "@mui/material";
 import AuthButton from "../AuthButton";
-import * as styles from "./styles.module.scss";
+import styles from "./styles.module.scss";
 
 const NavBar = ({title, profilePic, isLoggedUser, onClickLogin, initLogOut}) => {
   return (

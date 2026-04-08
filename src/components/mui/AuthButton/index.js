@@ -14,7 +14,7 @@
 import React, { useState } from "react";
 import T from "i18n-react";
 import {Button, Box} from '@mui/material';
-import * as styles from "./styles.module.scss"
+import styles from "./styles.module.scss"
 
 const AuthButton = ({ isLoggedUser, doLogin, initLogOut, picture }) => {
   const [showLogOut, setShowLogOut] = useState(false);
