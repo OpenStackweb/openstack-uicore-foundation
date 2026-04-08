@@ -27,9 +27,7 @@ const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) =
   }, [onSearch]);
 
   const onSearchDebouncedRef = useRef(
-    debounced
-      ? debounce((value) => onSearchRef.current(value), DEBOUNCE_WAIT)
-      : null
+    debounce((value) => onSearchRef.current(value), DEBOUNCE_WAIT)
   );
 
   useEffect(() => {
@@ -61,8 +59,8 @@ const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) =
       value={searchTerm}
       placeholder={placeholder}
       slotProps={{
-        input: {
-          startAdornment: !debounced && (
+        input: {          
+          startAdornment: debounced && (
             <InputAdornment position="start">
               <SearchIcon sx={{ color: "#0000008F" }} />
             </InputAdornment>
@@ -73,8 +71,9 @@ const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) =
                 <IconButton size="small" onClick={handleClear}>
                   <ClearIcon fontSize="small" sx={{ color: "#0000008F" }} />
                 </IconButton>
-              ) : (
-                <SearchIcon
+              ) : 
+              (
+                !debounced && <SearchIcon
                   sx={{ mr: 1, color: "#0000008F", position: "absolute", right: 0 }}
                 />
               )}
