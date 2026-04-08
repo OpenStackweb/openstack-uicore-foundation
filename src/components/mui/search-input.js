@@ -11,27 +11,46 @@
  * limitations under the License.
  * */
 
-import React, { useEffect, useState } from "react";
-import { TextField, IconButton } from "@mui/material";
+import React, { useEffect, useState, useRef } from "react";
+import { TextField, IconButton, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
+import { debounce } from "lodash";
+import { DEBOUNCE_WAIT } from "../../utils/constants";
 
-const SearchInput = ({ term, onSearch, placeholder = "Search..." }) => {
+const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) => {
   const [searchTerm, setSearchTerm] = useState(term);
+
+  const onSearchRef = useRef(onSearch);
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
+
+  const onSearchDebouncedRef = useRef(
+    debounce((value) => onSearchRef.current(value), DEBOUNCE_WAIT)
+  );
 
   useEffect(() => {
     setSearchTerm(term || "");
   }, [term]);
 
-  const handleSearch = (ev) => {
-    if (ev.key === "Enter") {
-      onSearch(searchTerm);
-    }
-  };
+  useEffect(() => () => onSearchDebouncedRef.current?.cancel(), []);
 
   const handleClear = () => {
+    onSearchDebouncedRef.current?.cancel();
     setSearchTerm("");
     onSearch("");
+  };
+
+  const handleChange = (value) => {
+    setSearchTerm(value);
+    if (debounced) onSearchDebouncedRef.current?.(value);
+  };
+
+  const handleKeyDown = (ev) => {
+    if (!debounced && ev.key === "Enter") {
+      onSearch(searchTerm);
+    }
   };
 
   return (
@@ -40,24 +59,30 @@ const SearchInput = ({ term, onSearch, placeholder = "Search..." }) => {
       value={searchTerm}
       placeholder={placeholder}
       slotProps={{
-        input: {
-          endAdornment: term ? (
-            <IconButton
-              size="small"
-              onClick={handleClear}
-              sx={{ position: "absolute", right: 0 }}
-            >
-              <ClearIcon sx={{ color: "#0000008F" }} />
-            </IconButton>
-          ) : (
-            <SearchIcon
-              sx={{ mr: 1, color: "#0000008F", position: "absolute", right: 0 }}
-            />
+        input: {          
+          startAdornment: debounced && (
+            <InputAdornment position="start">
+              <SearchIcon sx={{ color: "#0000008F" }} />
+            </InputAdornment>
+          ),
+          endAdornment: (
+            <InputAdornment position="end">
+              {searchTerm ? (
+                <IconButton size="small" onClick={handleClear}>
+                  <ClearIcon fontSize="small" sx={{ color: "#0000008F" }} />
+                </IconButton>
+              ) : 
+              (
+                !debounced && <SearchIcon
+                  sx={{ mr: 1, color: "#0000008F", position: "absolute", right: 0 }}
+                />
+              )}
+            </InputAdornment>
           )
         }
       }}
-      onChange={(event) => setSearchTerm(event.target.value)}
-      onKeyDown={handleSearch}
+      onChange={(ev) => handleChange(ev.target.value)}
+      onKeyDown={handleKeyDown}
       fullWidth
       sx={{
         "& .MuiOutlinedInput-root": {
