@@ -11,7 +11,7 @@
  * limitations under the License.
  * */
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { TextField, IconButton, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -21,26 +21,32 @@ import { DEBOUNCE_WAIT } from "../../utils/constants";
 const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) => {
   const [searchTerm, setSearchTerm] = useState(term);
 
+  const onSearchRef = useRef(onSearch);
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
+
+  const onSearchDebouncedRef = useRef(
+    debounced
+      ? debounce((value) => onSearchRef.current(value), DEBOUNCE_WAIT)
+      : null
+  );
+
   useEffect(() => {
     setSearchTerm(term || "");
   }, [term]);
 
+  useEffect(() => () => onSearchDebouncedRef.current?.cancel(), []);
+
   const handleClear = () => {
-    onSearchDebounced?.cancel();
+    onSearchDebouncedRef.current?.cancel();
     setSearchTerm("");
     onSearch("");
   };
 
-  const onSearchDebounced = useMemo(
-    () => debounced ? debounce((value) => onSearch(value), DEBOUNCE_WAIT) : null,
-    [onSearch, debounced]
-  );
-
-  useEffect(() => () => onSearchDebounced?.cancel(), [onSearchDebounced]);
-
   const handleChange = (value) => {
     setSearchTerm(value);
-    if (debounced) onSearchDebounced(value);
+    if (debounced) onSearchDebouncedRef.current?.(value);
   };
 
   const handleKeyDown = (ev) => {
@@ -56,16 +62,22 @@ const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) =
       placeholder={placeholder}
       slotProps={{
         input: {
-          startAdornment: (
+          startAdornment: !debounced && (
             <InputAdornment position="start">
               <SearchIcon sx={{ color: "#0000008F" }} />
             </InputAdornment>
           ),
-          endAdornment: term && (
+          endAdornment: (
             <InputAdornment position="end">
-              <IconButton size="small" onClick={handleClear}>
-                <ClearIcon fontSize="small" sx={{ color: "#0000008F" }} />
-              </IconButton>
+              {searchTerm ? (
+                <IconButton size="small" onClick={handleClear}>
+                  <ClearIcon fontSize="small" sx={{ color: "#0000008F" }} />
+                </IconButton>
+              ) : (
+                <SearchIcon
+                  sx={{ mr: 1, color: "#0000008F", position: "absolute", right: 0 }}
+                />
+              )}
             </InputAdornment>
           )
         }

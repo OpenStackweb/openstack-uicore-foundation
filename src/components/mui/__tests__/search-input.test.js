@@ -75,6 +75,19 @@ describe("SearchInput", () => {
       expect(onSearch).toHaveBeenCalledWith("something");
     });
 
+    test("pending debounced call is not lost when parent re-renders with a new onSearch reference", async () => {
+      const firstSearch = jest.fn();
+      const secondSearch = jest.fn();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const { rerender } = render(<SearchInput term="" onSearch={firstSearch} debounced />);
+      const input = screen.getByPlaceholderText("Search...");
+      await user.type(input, "hello");
+      rerender(<SearchInput term="" onSearch={secondSearch} debounced />);
+      act(() => jest.advanceTimersByTime(DEBOUNCE_WAIT));
+      expect(firstSearch).not.toHaveBeenCalled();
+      expect(secondSearch).toHaveBeenCalledWith("hello");
+    });    
+
     test("does not call onSearch on Enter when debounced is true", async () => {
       const onSearch = jest.fn();
       const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
