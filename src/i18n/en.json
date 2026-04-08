@@ -1,83 +1,112 @@
 {
-    "errors": {
-        "user_not_auth": "Hold on. Your user is not authenticated!.",
-        "user_not_authz": "Hold on. Your user is not authorized!.",
-        "session_expired": "Hold on. Your session expired!.",
-        "server_error": "There was a problem with our server, please contact admin."
-    },
-    "general": {
-        "select_summit": "Select a Summit...",
-        "add": "Add",
-        "clear": "Clear",
-        "remove": "Remove",
-        "drop_files": "Drop images or click to select files to upload.",
-        "search": "Search",
-        "save": "Save",
-        "done": "Done!",
-        "unarchive": "Unarchive",
-        "archive": "Archive",
-        "settings": "Settings",
-        "drag_and_drop": "Drag and Drop to sort items.",
-        "other": "Other",
-        "type_something": "Type something and press tab or enter.",
-        "are_you_sure": "Are you sure?",
-        "yes_delete": "Yes, delete.",
-        "remove_warning": "Are you sure you want to delete this?",
-        "select_an_option": "Select an option...",
-        "all": "All",
-        "row_remove_warning": "Are you sure you want to delete row ",
-        "edit": "Edit",
-        "delete": "Delete",
-        "n_a": "N/A",
-        "not_available": "N/A"
-    },
-    "mui_table": {
-        "no_items": "No items found.",
-        "no_data": "No data found.",
-        "rows_per_page": "Rows per page",
-        "sorted_desc": "sorted descending",
-        "sorted_asc": "sorted ascending",
-        "total": "Total"
-    },
-    "meta_fields": {
-        "delete_value_warning": "Please verify you want to delete the added value",
-        "is_default": "Is Default?",
-        "add_value": "Add a value",
-        "placeholders": {
-            "name": "Name",
-            "value": "Value"
-        }
-    },
-    "rates": {
-        "early_bird": "Early bird",
-        "standard_rate": "Standard",
-        "onsite_rate": "Onsite"
-    },
-    "additional_inputs": {
-        "title": "Field Title",
-        "type": "Field Type",
-        "required": "Required",
-        "delete_warning": "Are you sure you want to delete meta field ",
-        "placeholders": {
-            "title": "Field Title",
-            "type": "Select...",
-            "minimum_quantity": "Minimum",
-            "maximum_quantity": "Maximum"
-        }
-    },
-    "sponsor_edit_form": {
-        "code": "Code",
-        "description": "Description",
-        "custom_rate": "Custom Rate",
-        "early_bird_rate": "Early Bird Rate",
-        "standard_rate": "Standard Rate",
-        "onsite_rate": "Onsite Rate",
-        "qty": "Quantity",
-        "total": "Total",
-        "notes": "Notes",
-        "notes_placeholder": "Enter your notes here...",
-        "additional_info": "Additional Info",
-        "discount": "Discount",
-        "total_on_caps": "TOTAL"
+  "errors": {
+    "user_not_auth": "Hold on. Your user is not authenticated!.",
+    "user_not_authz": "Hold on. Your user is not authorized!.",
+    "session_expired": "Hold on. Your session expired!.",
+    "server_error": "There was a problem with our server, please contact admin."
+  },
+  "general": {
+    "select_summit": "Select a Summit...",
+    "add": "Add",
+    "clear": "Clear",
+    "remove": "Remove",
+    "drop_files": "Drop images or click to select files to upload.",
+    "search": "Search",
+    "save": "Save",
+    "done": "Done!",
+    "ok": "ok",
+    "unarchive": "Unarchive",
+    "archive": "Archive",
+    "settings": "Settings",
+    "drag_and_drop": "Drag and Drop to sort items.",
+    "other": "Other",
+    "type_something": "Type something and press tab or enter.",
+    "are_you_sure": "Are you sure?",
+    "yes_delete": "Yes, delete.",
+    "remove_warning": "Are you sure you want to delete this?",
+    "select_an_option": "Select an option...",
+    "all": "All",
+    "row_remove_warning": "Are you sure you want to delete row ",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "n_a": "N/A",
+    "not_available": "N/A",
+    "notes": "Notes",
+    "due": "Due",
+    "to": "To",
+    "from": "From"
+  },
+  "buttons": {
+    "log_in": "Log in",
+    "sign_out": "Sign Out",
+    "my_cart": "My Cart",
+    "upload_file": "Upload file",
+    "download": "Download"
+  },
+  "placeholders": {
+    "notes": "Enter your notes here..."
+  },
+  "alerts": {
+    "confirm_delete_title": "Confirm Deletion",
+    "confirm_delete": "Are you sure you want to delete this item? This action cannot be undone."
+  },
+  "mui_table": {
+    "no_items": "No items found.",
+    "no_data": "No data found.",
+    "rows_per_page": "Rows per page",
+    "sorted_desc": "sorted descending",
+    "sorted_asc": "sorted ascending",
+    "total": "Total"
+  },
+  "meta_fields": {
+    "delete_value_warning": "Please verify you want to delete the added value",
+    "is_default": "Is Default?",
+    "add_value": "Add a value",
+    "placeholders": {
+      "name": "Name",
+      "value": "Value"
     }
+  },
+  "rates": {
+    "early_bird": "Early bird",
+    "standard_rate": "Standard",
+    "onsite_rate": "Onsite"
+  },
+  "additional_inputs": {
+    "title": "Field Title",
+    "type": "Field Type",
+    "required": "Required",
+    "delete_warning": "Are you sure you want to delete meta field ",
+    "placeholders": {
+      "title": "Field Title",
+      "type": "Select...",
+      "minimum_quantity": "Minimum",
+      "maximum_quantity": "Maximum"
+    }
+  },
+  "sponsor_edit_form": {
+    "code": "Code",
+    "description": "Description",
+    "custom_rate": "Custom Rate",
+    "early_bird_rate": "Early Bird Rate",
+    "standard_rate": "Standard Rate",
+    "onsite_rate": "Onsite Rate",
+    "qty": "Quantity",
+    "total": "Total",
+    "notes": "Notes",
+    "notes_placeholder": "Enter your notes here...",
+    "additional_info": "Additional Info",
+    "discount": "Discount",
+    "total_on_caps": "TOTAL"
+  },
+  "upload_input": {
+    "upload_file": "Upload file"
+  },
+  "stripe_form": {
+    "processing": "Processing...",
+    "button_cta": "PAY {amount}",
+    "title": "Select a payment method",
+    "payment_confirmation_error": "Payment confirmation failed"
+  }
 }

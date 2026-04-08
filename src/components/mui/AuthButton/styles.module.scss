@@ -1,0 +1,28 @@
+.userMenu {
+  position: absolute;
+  top: 12px;
+  right: 34px;
+  height: 40px;
+  width: 140px;
+  cursor: pointer;
+}
+
+.login {
+  width: 100%;
+  text-align: right;
+}
+
+.logout {
+  top: 4px;
+  right: 4px;
+}
+
+.profilePic {
+  height: 40px;
+  width: 40px;
+  border: 1px solid #afafaf;
+  border-radius: 20px;
+  overflow: hidden;
+  float: right;
+  background-size: cover;
+}
