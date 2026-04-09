@@ -15,12 +15,21 @@ import ReactDOM from "react-dom";
 import React from "react";
 import ConfirmDialog from "./confirm-dialog";
 
-// React 18+ uses createRoot from react-dom/client; React 17 does not have this module
-let createRoot;
-try {
-  ({ createRoot } = require("react-dom/client"));
-} catch (_) {
-  // React 17 — createRoot not available, will fall back to ReactDOM.render
+// Lazy-loaded createRoot for React 18+.
+// Cached after first call so the dynamic import only runs once.
+let createRootFn = undefined; // undefined = not yet checked
+
+async function getCreateRoot() {
+  if (createRootFn !== undefined) return createRootFn;
+  try {
+    // webpackIgnore prevents webpack from resolving this at build time,
+    // so consuming projects on React 16/17 won't get a "Module not found" error.
+    const mod = await import(/* webpackIgnore: true */ "react-dom/client");
+    createRootFn = mod.createRoot || null;
+  } catch (_) {
+    createRootFn = null;
+  }
+  return createRootFn;
 }
 
 const showConfirmDialog = ({
@@ -66,12 +75,14 @@ const showConfirmDialog = ({
       />
     );
 
-    if (createRoot) {
-      root = createRoot(container);
-      root.render(element);
-    } else {
-      ReactDOM.render(element, container);
-    }
+    getCreateRoot().then((createRoot) => {
+      if (createRoot) {
+        root = createRoot(container);
+        root.render(element);
+      } else {
+        ReactDOM.render(element, container);
+      }
+    });
   });
 
 export default showConfirmDialog;
