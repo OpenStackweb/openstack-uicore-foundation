@@ -109,15 +109,15 @@
     "cheerio": "1.0.0-rc.10"
   },
   "peerDependencies": {
-    "@sentry/react": "^8.54.0",
-    "@stripe/react-stripe-js": "^5.4.1",
-    "@stripe/stripe-js": "^8.5.3",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@mui/icons-material": "^6.4.3",
     "@mui/material": "^6.4.3",
     "@mui/x-date-pickers": "^7.26.0",
     "@react-pdf/renderer": "^3.1.11",
+    "@sentry/react": "^8.54.0",
+    "@stripe/react-stripe-js": "^5.4.1",
+    "@stripe/stripe-js": "^8.5.3",
     "awesome-bootstrap-checkbox": "^1.0.1",
     "browser-tabs-lock": "^1.2.15",
     "crypto-js": "^4.1.1",
