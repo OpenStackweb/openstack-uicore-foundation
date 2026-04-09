@@ -19,7 +19,7 @@ import PropTypes from "prop-types";
 
 const OrderSummary = ({ amount, dueDate, toName, fromName }) => {
   const getPrice = () => {
-    if (amount) return currencyAmountFromCents(amount);
+    if (amount != null) return currencyAmountFromCents(amount);
     return <Skeleton variant="rectangular" width={110} height={40} />;
   };
 

@@ -18,7 +18,12 @@ import styles from "./styles.module.scss";
 
 const NavBar = ({title, profilePic, isLoggedUser, onClickLogin, initLogOut}) => {
   return (
-    <AppBar position="relative" elevation={2} color="background.paper">
+    <AppBar
+      position="relative"
+      elevation={2}
+      color="default"
+      sx={{backgroundColor: "background.paper", color: "text.primary"}}
+    >
       <Toolbar>
         <Typography
           className={styles.title}

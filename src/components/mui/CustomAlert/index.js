@@ -17,7 +17,7 @@ import { Alert } from "@mui/material";
 const CustomAlert = ({ severity = "info", message = "", hideIcon = false }) => (
   <Alert
     severity={severity}
-    icon={!hideIcon}
+    icon={hideIcon ? false : undefined}
     sx={{
       justifyContent: "start",
       alignItems: "center",

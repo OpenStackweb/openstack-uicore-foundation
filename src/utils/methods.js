@@ -311,7 +311,7 @@ export const empty = (value) => {
   return false;
 };
 
-const isSentryInitialized = () => !!window.SENTRY_DSN;
+const isSentryInitialized = () => typeof window !== "undefined" && !!window.SENTRY_DSN;
 
 export const handleSentryException = (err) =>
   isSentryInitialized()

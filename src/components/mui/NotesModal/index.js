@@ -11,7 +11,7 @@
  * limitations under the License.
  * */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import T from "i18n-react";
 import { useField } from "formik";
@@ -23,6 +23,10 @@ const NotesModal = ({ id, label, open, title, placeholder, onClose }) => {
   // eslint-disable-next-line
   const [field, meta, helpers] = useField(name);
   const [notes, setNotes] = useState(field?.value || "");
+
+  useEffect(() => {
+    setNotes(field?.value || "");
+  }, [id, field?.value]);
 
   const handleSave = () => {
     helpers.setValue(notes);
