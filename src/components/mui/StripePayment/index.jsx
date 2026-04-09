@@ -32,7 +32,7 @@ const StripePayment = ({
     [providerKey]
   );
 
-  if (!paymentProfile || !paymentIntent) return null;
+  if (!paymentProfile || !paymentIntent?.client_secret || !providerKey) return null;
 
   const options = {
     clientSecret: paymentIntent.client_secret,

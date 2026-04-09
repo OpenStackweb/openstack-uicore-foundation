@@ -299,7 +299,7 @@ export const convertSVGtoImg = async (svgUrl) => {
 export const isRateEnabled = (value) =>
     value !== null && value !== undefined && value !== "";
 
-const isSentryInitialized = () => !!window.SENTRY_DSN;
+const isSentryInitialized = () => typeof window !== "undefined" && !!window.SENTRY_DSN;
 
 export const handleSentryException = (err) =>
   isSentryInitialized()
