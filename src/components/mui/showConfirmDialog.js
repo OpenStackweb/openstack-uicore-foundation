@@ -15,6 +15,14 @@ import ReactDOM from "react-dom";
 import React from "react";
 import ConfirmDialog from "./confirm-dialog";
 
+// React 18+ uses createRoot from react-dom/client; React 17 does not have this module
+let createRoot;
+try {
+  ({ createRoot } = require("react-dom/client"));
+} catch (_) {
+  // React 17 — createRoot not available, will fall back to ReactDOM.render
+}
+
 const showConfirmDialog = ({
   title,
   text,
@@ -28,8 +36,14 @@ const showConfirmDialog = ({
     const container = document.createElement("div");
     document.body.appendChild(container);
 
+    let root = null;
+
     const close = (answer) => {
-      ReactDOM.unmountComponentAtNode(container);
+      if (root) {
+        root.unmount();
+      } else {
+        ReactDOM.unmountComponentAtNode(container);
+      }
       container.remove();
       resolve(answer);
     };
@@ -37,7 +51,7 @@ const showConfirmDialog = ({
     const handleConfirm = () => close(true);
     const handleCancel = () => close(false);
 
-    ReactDOM.render(
+    const element = (
       <ConfirmDialog
         open
         title={title}
@@ -49,9 +63,15 @@ const showConfirmDialog = ({
         cancelButtonColor={cancelButtonColor}
         onConfirm={handleConfirm}
         onCancel={handleCancel}
-      />,
-      container
+      />
     );
+
+    if (createRoot) {
+      root = createRoot(container);
+      root.render(element);
+    } else {
+      ReactDOM.render(element, container);
+    }
   });
 
 export default showConfirmDialog;
