@@ -29,10 +29,16 @@ const DropdownCheckbox = ({
   allLabel,
   value = [],
   options,
-  onChange
+  onChange,
+  ...rest
 }) => {
   const handleChange = (ev) => {
-    const selected = ev.target.value;
+    const rawValue = ev.target.value;
+    const selected = Array.isArray(rawValue)
+      ? rawValue
+      : typeof rawValue === "string"
+      ? rawValue.split(",")
+      : [];
 
     if (selected.includes("all")) {
       if (!value.includes("all")) {
@@ -43,6 +49,8 @@ const DropdownCheckbox = ({
         onChange({
           target: { name, value: selected.filter((v) => v !== "all") }
         });
+      } else {
+        onChange({ target: { name, value: ["all"] } });
       }
     } else {
       // else if "all" is not selected we just send selection
@@ -59,6 +67,7 @@ const DropdownCheckbox = ({
         multiple
         value={value}
         onChange={handleChange}
+        {...rest}
         input={<OutlinedInput label={label} />}
         renderValue={(selected) => {
           if (selected.includes("all")) {

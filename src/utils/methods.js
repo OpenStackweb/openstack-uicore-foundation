@@ -297,3 +297,15 @@ export const convertSVGtoImg = async (svgUrl) => {
 
 export const isRateEnabled = (value) =>
     value !== null && value !== undefined && value !== "";
+
+/**
+ * Returns true if value is null, undefined, empty/whitespace string,
+ * empty array, or empty object.
+ */
+export const empty = (value) => {
+  if (value === null || value === undefined) return true;
+  if (typeof value === "string") return value.trim().length === 0;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === "object") return Object.keys(value).length === 0;
+  return false;
+};
