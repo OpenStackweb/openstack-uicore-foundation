@@ -25,7 +25,7 @@ const DownloadBtn = ({ url }) => {
       rel="noopener noreferrer"
       variant="contained"
       size="medium"
-      sx={{ width: 180, heigh: 36 }}
+      sx={{ width: 180, height: 36 }}
     >
       {T.translate("buttons.download")}
     </Button>
