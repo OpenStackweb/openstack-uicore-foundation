@@ -21,6 +21,7 @@ const StripePayment = ({
   paymentProfile,
   client,
   redirectUrl,
+  stripeFormTitle,
   onPaymentSuccess,
   onPaymentError,
   updatePaymentIntent
@@ -42,6 +43,7 @@ const StripePayment = ({
   return (
     <Elements stripe={stripePromise} options={options}>
       <StripeForm
+        title={stripeFormTitle}
         client={client}
         amount={paymentIntent.total_amount}
         redirectUrl={redirectUrl}

@@ -33,13 +33,14 @@ const buildAddress = (userAddress = {}) => {
 };
 
 const StripeForm = ({
-                      amount = 0,
-                      client,
-                      redirectUrl,
-                      onSuccess,
-                      onError,
-                      onPaymentMethodChange
-                    }) => {
+  title,
+  amount = 0,
+  client,
+  redirectUrl,
+  onSuccess,
+  onError,
+  onPaymentMethodChange
+}) => {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -105,19 +106,23 @@ const StripeForm = ({
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{p: 3}}>
-      <Typography sx={{mb: 2}}>{T.translate("stripe_form.title")}</Typography>
+      {title &&
+        <Typography sx={{mb: 2}}>
+          {title || T.translate("stripe_form.title")}
+        </Typography>
+      }
 
       <PaymentElement
         options={{
           layout: "tabs"
         }}
       />
-
       <Button
         fullWidth
         type="submit"
         variant="contained"
         disabled={!stripe || loading}
+        sx={{mt: 2}}
       >
         {loading ? T.translate("stripe_form.processing") : T.translate("stripe_form.button_cta", {amount: currencyAmountFromCents(amount)})}
       </Button>
