@@ -30,24 +30,29 @@ export default class SummitDropdown extends React.Component {
     }
 
     handleChange(summit) {
-        this.setState({summitValue: summit});
+        const summitValue = summit?.value !== undefined ? summit : this.state.summitValue;
+
+        this.setState({ summitValue });
     }
 
     handleClick(ev) {
         ev.preventDefault();
-        this.props.onClick(this.state.summitValue.value);
+        if ( this.state?.summitValue?.value !== undefined )
+          this.props.onClick(this.state.summitValue.value);
     }
 
     render() {
 
-        let {summits, actionLabel, actionClass} = this.props;
-        let summitOptions = summits
+        let { summits, actionLabel, actionClass } = this.props;
+        let summitOptions = [...summits]
             .sort(
                 (a, b) => (a.start_date < b.start_date ? 1 : (a.start_date > b.start_date ? -1 : 0))
             ).map(s => ({label: s.name, value: s.id}));
 
         let bigClass = this.props.hasOwnProperty('big') ? 'big' : '';
-        const isDisabled = !this.state.summitValue;
+        const isDisabled = this.state.summitValue?.value === undefined;
+
+
 
         return (
             <div className={"summit-dropdown btn-group " + bigClass}>
