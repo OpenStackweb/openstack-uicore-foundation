@@ -216,6 +216,7 @@ const MuiTableSortable = ({
                                 className={`${
                                   col.dottedBorder && styles.dottedBorderLeft
                                 } ${col.className}`}
+                                sx={{ fontWeight: "normal" }}
                               >
                                 {col.render?.(row) || row[col.columnKey]}
                               </TableCell>
@@ -230,6 +231,7 @@ const MuiTableSortable = ({
                                 <IconButton
                                   size="large"
                                   onClick={() => onEdit(row)}
+                                  sx={{ padding: 0 }}
                                 >
                                   <EditIcon fontSize="large" />
                                 </IconButton>
@@ -245,6 +247,7 @@ const MuiTableSortable = ({
                                 <IconButton
                                   size="large"
                                   onClick={() => handleDelete(row)}
+                                  sx={{ padding: 0 }}
                                 >
                                   <DeleteIcon fontSize="large" />
                                 </IconButton>
