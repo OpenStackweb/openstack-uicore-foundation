@@ -18,7 +18,7 @@ import {PaymentElement, useElements, useStripe} from "@stripe/react-stripe-js";
 import {currencyAmountFromCents} from "../../../utils/money";
 import {handleSentryException} from "../../../utils/methods";
 
-const buildAddress = (userAddress) => {
+const buildAddress = (userAddress = {}) => {
   const address = {};
   // stripe payment payload requires data that's not an empty string
   if (userAddress.locality) address.city = userAddress.locality;

@@ -53,9 +53,13 @@ describe("OrderSummary", () => {
     expect(screen.getByText(/2026-05-01/)).toBeInTheDocument();
   });
 
-  test("renders a skeleton when amount is falsy", () => {
-    render(<OrderSummary {...defaultProps} amount={0} />);
-    // amount=0 is falsy — component renders a Skeleton placeholder
+  test("renders a skeleton when amount is null/undefined", () => {
+    render(<OrderSummary {...defaultProps} amount={null} />);
     expect(document.querySelector(".MuiSkeleton-root")).toBeInTheDocument();
+  });
+
+  test("renders $0.00 when amount is 0", () => {
+    render(<OrderSummary {...defaultProps} amount={0} />);
+    expect(screen.getByText("$0.00")).toBeInTheDocument();
   });
 });
