@@ -84,7 +84,6 @@ module.exports = {
         'components/mui/chip-notify': './src/components/mui/chip-notify.js',
         'components/mui/chip-select-input': './src/components/mui/chip-select-input.js',
         'components/mui/confirm-dialog': './src/components/mui/confirm-dialog.js',
-        'components/mui/global-confirm-dialog': './src/components/mui/showConfirmDialog.js',
         'components/mui/custom-alert': './src/components/mui/custom-alert.js',
         'components/mui/dnd-list': './src/components/mui/dnd-list.js',
         'components/mui/dropdown-checkbox': './src/components/mui/dropdown-checkbox.js',

@@ -20,7 +20,8 @@ import ConfirmDialog from "./confirm-dialog";
  * SETUP (required):
  * Place <GlobalConfirmDialog /> at the root of your app:
  *
- *   import { GlobalConfirmDialog } from 'openstack-uicore-foundation';
+ *   import { GlobalConfirmDialog } from
+ *     'openstack-uicore-foundation/lib/components/mui/show-confirm-dialog';
  *
  *   function App() {
  *     return (
@@ -31,17 +32,21 @@ import ConfirmDialog from "./confirm-dialog";
  *     );
  *   }
  *
- * USAGE:
- *   import { MuiShowConfirmDialog } from 'openstack-uicore-foundation';
+ * USAGE (works from any file — the bridge is shared via globalThis):
+ *   import showConfirmDialog from
+ *     'openstack-uicore-foundation/lib/components/mui/show-confirm-dialog';
  *
- *   const confirmed = await MuiShowConfirmDialog({
+ *   const confirmed = await showConfirmDialog({
  *     title: 'Delete Item?',
  *     text: 'This cannot be undone'
  *   });
  */
 
-// Module-level bridge: holds the callback registered by GlobalConfirmDialog
-let bridgeFn = null;
+// Shared bridge reference stored on globalThis so that all webpack bundles
+// (table, sortable-table, show-confirm-dialog, index, etc.) read/write the
+// same callback. A module-level variable would be duplicated per bundle.
+const BRIDGE_KEY = "__oif_confirm_dialog_bridge__";
+const _global = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 
 /**
  * @param param0
@@ -63,14 +68,14 @@ const showConfirmDialog = ({
   confirmButtonColor = "primary",
   cancelButtonColor = "primary"
 }) => {
-  if (!bridgeFn) {
+  if (!_global[BRIDGE_KEY]) {
     throw new Error(
       "[openstack-uicore-foundation] showConfirmDialog: <GlobalConfirmDialog /> is not mounted. " +
         "Add <GlobalConfirmDialog /> to the root of your app."
     );
   }
 
-  return bridgeFn({
+  return _global[BRIDGE_KEY]({
     title,
     text,
     iconType,
@@ -95,12 +100,12 @@ export const GlobalConfirmDialog = () => {
   const [dialogState, setDialogState] = useState(null);
 
   useEffect(() => {
-    bridgeFn = (options) => {
+    _global[BRIDGE_KEY] = (options) => {
       return new Promise((resolve) => {
         setDialogState({ ...options, open: true, onResolve: resolve });
       });
     };
-    return () => { bridgeFn = null; };
+    return () => { _global[BRIDGE_KEY] = null; };
   }, []);
 
   const handleConfirm = () => {
