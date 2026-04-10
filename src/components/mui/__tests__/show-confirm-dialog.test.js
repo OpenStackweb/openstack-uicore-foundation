@@ -16,6 +16,7 @@ jest.mock("react-dom", () => ({
   unmountComponentAtNode: jest.fn()
 }));
 
+
 jest.mock("../confirm-dialog", () => {
   const React = require("react");
   return { __esModule: true, default: () => <div /> };
@@ -32,24 +33,27 @@ describe("showConfirmDialog", () => {
     expect(result).toBeInstanceOf(Promise);
   });
 
-  test("calls ReactDOM.render to mount the dialog", () => {
+  test("calls ReactDOM.render to mount the dialog", async () => {
     showConfirmDialog({ title: "Test", text: "Body" });
+    await Promise.resolve();
     expect(ReactDOM.render).toHaveBeenCalledTimes(1);
   });
 
-  test("appends a container div to the document body", () => {
+  test("appends a container div to the document body", async () => {
     const initialChildCount = document.body.children.length;
     showConfirmDialog({ title: "Test", text: "Body" });
+    await Promise.resolve();
     expect(document.body.children.length).toBeGreaterThan(initialChildCount);
   });
 
-  test("passes title and text to ConfirmDialog", () => {
+  test("passes title and text to ConfirmDialog", async () => {
     showConfirmDialog({
       title: "My Title",
       text: "My Text",
       confirmButtonText: "Yes",
       cancelButtonText: "No"
     });
+    await Promise.resolve();
     const [element] = ReactDOM.render.mock.calls[0];
     expect(element.props.title).toBe("My Title");
     expect(element.props.text).toBe("My Text");
