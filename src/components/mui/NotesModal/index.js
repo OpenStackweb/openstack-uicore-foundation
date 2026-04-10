@@ -11,28 +11,22 @@
  * limitations under the License.
  * */
 
-import React, { useEffect, useState } from "react";
-import T from "i18n-react/dist/i18n-react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
+import T from "i18n-react";
 import { useField } from "formik";
-import { Divider, IconButton, TextField } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, Divider, DialogContentText, DialogTitle, IconButton, TextField } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
-const NotesModal = ({ item, open, onClose }) => {
-  const name = `i-${item?.form_item_id}-c-global-f-notes`;
+const NotesModal = ({ id, label, open, title, placeholder, onClose }) => {
+  const name = `i-${id}-c-global-f-notes`;
   // eslint-disable-next-line
   const [field, meta, helpers] = useField(name);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(field?.value || "");
 
   useEffect(() => {
-    setNotes(field.value || "");
-  }, [field?.value]);
+    setNotes(field?.value || "");
+  }, [id, field?.value]);
 
   const handleSave = () => {
     helpers.setValue(notes);
@@ -41,9 +35,7 @@ const NotesModal = ({ item, open, onClose }) => {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        {T.translate("sponsor_edit_form.notes")}
-      </DialogTitle>
+      <DialogTitle>{title || T.translate("general.notes")}</DialogTitle>
       <IconButton
         aria-label="close"
         onClick={onClose}
@@ -58,7 +50,7 @@ const NotesModal = ({ item, open, onClose }) => {
       </IconButton>
       <Divider />
       <DialogContent>
-        <DialogContentText>{item?.name}</DialogContentText>
+        <DialogContentText>{label}</DialogContentText>
         <TextField
           name={name}
           onChange={(ev) => setNotes(ev.target.value)}
@@ -67,9 +59,7 @@ const NotesModal = ({ item, open, onClose }) => {
           multiline
           fullWidth
           rows={4}
-          placeholder={T.translate(
-            "sponsor_edit_form.notes_placeholder"
-          )}
+          placeholder={placeholder || T.translate("placeholders.notes")}
         />
       </DialogContent>
       <DialogActions>
@@ -82,7 +72,10 @@ const NotesModal = ({ item, open, onClose }) => {
 };
 
 NotesModal.propTypes = {
-  item: PropTypes.object,
+  id: PropTypes.any,
+  label: PropTypes.string,
+  title: PropTypes.string,
+  placeholder: PropTypes.string,
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired
 };

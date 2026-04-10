@@ -1,5 +1,6 @@
 import {getCurrentUserLanguage} from "../utils/methods";
 import T from "i18n-react";
+import merge from "lodash/merge";
 import en from './en.json';
 import zh from './zh.json';
 import es from './es.json';
@@ -26,3 +27,16 @@ try {
 } catch (e) {
     T.setTexts(resources['en']);
 }
+
+/**
+ * Call this instead of T.setTexts() in consumer apps.
+ * Deep-merges the lib's base translations with your custom translations,
+ * so new keys added to the lib are always available even if your
+ * translation file doesn't include them yet. Consumer keys take precedence.
+ *
+ * @param {object} customTexts - your app's translation object
+ */
+export const setAppTexts = (customTexts = {}) => {
+    const libTexts = resources[language] || resources['en'];
+    T.setTexts(merge({}, libTexts, customTexts));
+};

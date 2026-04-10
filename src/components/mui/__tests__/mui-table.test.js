@@ -103,26 +103,21 @@ describe("MuiTable", () => {
 
   test("renders edit button when onEdit is provided", () => {
     setup({ onEdit: jest.fn() });
-    const editBtns = screen.getAllByRole("button");
-    expect(editBtns.length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId("action-edit")).toHaveLength(2);
   });
 
   test("calls onEdit when edit button is clicked", async () => {
     const onEdit = jest.fn();
     setup({ onEdit });
-    const buttons = screen.getAllByRole("button");
-    await userEvent.click(buttons[0]);
-    expect(onEdit).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 1 })
-    );
+    await userEvent.click(screen.getAllByTestId("action-edit")[0]);
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
   });
 
   test("calls showConfirmDialog and then onDelete when delete confirmed", async () => {
     const onDelete = jest.fn();
     showConfirmDialog.mockResolvedValueOnce(true);
     setup({ onDelete });
-    const buttons = screen.getAllByRole("button");
-    await userEvent.click(buttons[0]);
+    await userEvent.click(screen.getAllByTestId("action-delete")[0]);
     await new Promise((r) => setTimeout(r, 0));
     expect(showConfirmDialog).toHaveBeenCalled();
     expect(onDelete).toHaveBeenCalledWith(1);
@@ -132,10 +127,40 @@ describe("MuiTable", () => {
     const onDelete = jest.fn();
     showConfirmDialog.mockResolvedValueOnce(false);
     setup({ onDelete });
-    const buttons = screen.getAllByRole("button");
-    await userEvent.click(buttons[0]);
+    await userEvent.click(screen.getAllByTestId("action-delete")[0]);
     await new Promise((r) => setTimeout(r, 0));
     expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  test("calls onSort when sortable column header is clicked", async () => {
+    const onSort = jest.fn();
+    const sortableColumns = [
+      { columnKey: "name", header: "Name", sortable: true },
+      { columnKey: "role", header: "Role" }
+    ];
+    setup({ columns: sortableColumns, onSort, options: { sortCol: "", sortDir: 1 } });
+    await userEvent.click(screen.getByText("Name"));
+    expect(onSort).toHaveBeenCalledWith("name", -1);
+  });
+
+  test("calls onSelect when select button is clicked", async () => {
+    const onSelect = jest.fn();
+    setup({ onSelect });
+    await userEvent.click(screen.getAllByTestId("action-select")[0]);
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
+  });
+
+  test("calls onArchive when archive button is clicked", async () => {
+    const onArchive = jest.fn();
+    setup({ onArchive });
+    await userEvent.click(screen.getAllByTestId("action-archive")[0]);
+    expect(onArchive).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
+  });
+
+  test("hides delete button when canDelete returns false", () => {
+    const onDelete = jest.fn();
+    setup({ onDelete, canDelete: (row) => row.id !== 1 });
+    expect(screen.getAllByTestId("action-delete")).toHaveLength(1);
   });
 
   test("renders pagination when perPage and currentPage are set", () => {
