@@ -11,27 +11,71 @@
  * limitations under the License.
  * */
 
+/**
+ * REACT 19 USAGE:
+ *
+ * For React 19 projects (where ReactDOM.render() was removed), wrap your app with the provider:
+ *
+ * import { ConfirmDialogProvider } from 'openstack-uicore-foundation';
+ *
+ * function App() {
+ *   return (
+ *     <ConfirmDialogProvider>
+ *       <YourApp />
+ *     </ConfirmDialogProvider>
+ *   );
+ * }
+ *
+ * Then use showConfirmDialog() anywhere in your app:
+ *
+ * import { MuiShowConfirmDialog } from 'openstack-uicore-foundation';
+ *
+ * const confirmed = await MuiShowConfirmDialog({
+ *   title: 'Delete Item?',
+ *   text: 'This cannot be undone'
+ * });
+ *
+ * The provider renders dialogs inside the React tree using hooks (no createRoot or ReactDOM.render needed).
+ *
+ * WITHOUT PROVIDER (React 16/17/18 fallback):
+ * Falls back to ReactDOM.render() - works on React 16/17/18, logs warning suggesting provider migration.
+ * Not compatible with React 19 - provider is required.
+ */
+
 import ReactDOM from "react-dom";
 import React from "react";
 import ConfirmDialog from "./confirm-dialog";
 
-// Lazy-loaded createRoot for React 18+.
-// Cached after first call so the dynamic import only runs once.
-let createRootFn = undefined; // undefined = not yet checked
+// Bridge pattern: module-level variable to hold the provider's callback
+let bridgeFn = null;
 
-async function getCreateRoot() {
-  if (createRootFn !== undefined) return createRootFn;
-  try {
-    // webpackIgnore prevents webpack from resolving this at build time,
-    // so consuming projects on React 16/17 won't get a "Module not found" error.
-    const mod = await import(/* webpackIgnore: true */ "react-dom/client");
-    createRootFn = mod.createRoot || null;
-  } catch (_) {
-    createRootFn = null;
-  }
-  return createRootFn;
+/**
+ * Register the bridge callback (called by ConfirmDialogProvider on mount)
+ * @private - exported for testing only
+ */
+export function _registerBridge(callback) {
+  bridgeFn = callback;
 }
 
+/**
+ * Unregister the bridge callback (called by ConfirmDialogProvider on unmount)
+ * @private - exported for testing only
+ */
+export function _unregisterBridge() {
+  bridgeFn = null;
+}
+
+/**
+ * @param param0
+ * @param param0.title
+ * @param param0.text
+ * @param param0.iconType
+ * @param param0.confirmButtonText
+ * @param param0.cancelButtonText
+ * @param param0.confirmButtonColor
+ * @param param0.cancelButtonColor
+ * @returns {*|Promise<unknown>}
+ */
 const showConfirmDialog = ({
   title,
   text,
@@ -40,19 +84,36 @@ const showConfirmDialog = ({
   cancelButtonText = "Cancel",
   confirmButtonColor = "primary",
   cancelButtonColor = "primary"
-}) =>
-  new Promise((resolve) => {
+}) => {
+  const options = {
+    title,
+    text,
+    iconType,
+    confirmButtonText,
+    cancelButtonText,
+    confirmButtonColor,
+    cancelButtonColor
+  };
+
+  // If bridge is registered (provider is mounted), use it
+  if (bridgeFn) {
+    return bridgeFn(options);
+  }
+
+  // Fallback to ReactDOM.render for backward compatibility
+  // This path is used when consuming apps haven't migrated to ConfirmDialogProvider yet
+  console.warn(
+    "[openstack-uicore-foundation] showConfirmDialog: ConfirmDialogProvider is not mounted. " +
+      "For better React 16/17/18/19 compatibility, wrap your app with <ConfirmDialogProvider>. " +
+      "Falling back to ReactDOM.render."
+  );
+
+  return new Promise((resolve) => {
     const container = document.createElement("div");
     document.body.appendChild(container);
 
-    let root = null;
-
     const close = (answer) => {
-      if (root) {
-        root.unmount();
-      } else {
-        ReactDOM.unmountComponentAtNode(container);
-      }
+      ReactDOM.unmountComponentAtNode(container);
       container.remove();
       resolve(answer);
     };
@@ -75,14 +136,8 @@ const showConfirmDialog = ({
       />
     );
 
-    getCreateRoot().then((createRoot) => {
-      if (createRoot) {
-        root = createRoot(container);
-        root.render(element);
-      } else {
-        ReactDOM.render(element, container);
-      }
-    });
+    ReactDOM.render(element, container);
   });
+};
 
 export default showConfirmDialog;
