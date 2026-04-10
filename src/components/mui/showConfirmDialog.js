@@ -11,59 +11,37 @@
  * limitations under the License.
  * */
 
-/**
- * REACT 19 USAGE:
- *
- * For React 19 projects (where ReactDOM.render() was removed), wrap your app with the provider:
- *
- * import { ConfirmDialogProvider } from 'openstack-uicore-foundation';
- *
- * function App() {
- *   return (
- *     <ConfirmDialogProvider>
- *       <YourApp />
- *     </ConfirmDialogProvider>
- *   );
- * }
- *
- * Then use showConfirmDialog() anywhere in your app:
- *
- * import { MuiShowConfirmDialog } from 'openstack-uicore-foundation';
- *
- * const confirmed = await MuiShowConfirmDialog({
- *   title: 'Delete Item?',
- *   text: 'This cannot be undone'
- * });
- *
- * The provider renders dialogs inside the React tree using hooks (no createRoot or ReactDOM.render needed).
- *
- * WITHOUT PROVIDER (React 16/17/18 fallback):
- * Falls back to ReactDOM.render() - works on React 16/17/18, logs warning suggesting provider migration.
- * Not compatible with React 19 - provider is required.
- */
-
-import ReactDOM from "react-dom";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import ConfirmDialog from "./confirm-dialog";
 
-// Bridge pattern: module-level variable to hold the provider's callback
+/**
+ * Imperative confirm dialog API.
+ *
+ * SETUP (required):
+ * Place <GlobalConfirmDialog /> at the root of your app:
+ *
+ *   import { GlobalConfirmDialog } from 'openstack-uicore-foundation';
+ *
+ *   function App() {
+ *     return (
+ *       <>
+ *         <YourApp />
+ *         <GlobalConfirmDialog />
+ *       </>
+ *     );
+ *   }
+ *
+ * USAGE:
+ *   import { MuiShowConfirmDialog } from 'openstack-uicore-foundation';
+ *
+ *   const confirmed = await MuiShowConfirmDialog({
+ *     title: 'Delete Item?',
+ *     text: 'This cannot be undone'
+ *   });
+ */
+
+// Module-level bridge: holds the callback registered by GlobalConfirmDialog
 let bridgeFn = null;
-
-/**
- * Register the bridge callback (called by ConfirmDialogProvider on mount)
- * @private - exported for testing only
- */
-export function _registerBridge(callback) {
-  bridgeFn = callback;
-}
-
-/**
- * Unregister the bridge callback (called by ConfirmDialogProvider on unmount)
- * @private - exported for testing only
- */
-export function _unregisterBridge() {
-  bridgeFn = null;
-}
 
 /**
  * @param param0
@@ -74,7 +52,7 @@ export function _unregisterBridge() {
  * @param param0.cancelButtonText
  * @param param0.confirmButtonColor
  * @param param0.cancelButtonColor
- * @returns {*|Promise<unknown>}
+ * @returns {Promise<boolean>}
  */
 const showConfirmDialog = ({
   title,
@@ -85,7 +63,14 @@ const showConfirmDialog = ({
   confirmButtonColor = "primary",
   cancelButtonColor = "primary"
 }) => {
-  const options = {
+  if (!bridgeFn) {
+    throw new Error(
+      "[openstack-uicore-foundation] showConfirmDialog: <GlobalConfirmDialog /> is not mounted. " +
+        "Add <GlobalConfirmDialog /> to the root of your app."
+    );
+  }
+
+  return bridgeFn({
     title,
     text,
     iconType,
@@ -93,51 +78,57 @@ const showConfirmDialog = ({
     cancelButtonText,
     confirmButtonColor,
     cancelButtonColor
+  });
+};
+
+/**
+ * Global confirm dialog component. Place at the root of your app:
+ *
+ *   <App>
+ *     ...
+ *     <GlobalConfirmDialog />
+ *   </App>
+ *
+ * Then call showConfirmDialog() anywhere.
+ */
+export const GlobalConfirmDialog = () => {
+  const [dialogState, setDialogState] = useState(null);
+
+  useEffect(() => {
+    bridgeFn = (options) => {
+      return new Promise((resolve) => {
+        setDialogState({ ...options, open: true, onResolve: resolve });
+      });
+    };
+    return () => { bridgeFn = null; };
+  }, []);
+
+  const handleConfirm = () => {
+    if (dialogState?.onResolve) dialogState.onResolve(true);
+    setDialogState(null);
   };
 
-  // If bridge is registered (provider is mounted), use it
-  if (bridgeFn) {
-    return bridgeFn(options);
-  }
+  const handleCancel = () => {
+    if (dialogState?.onResolve) dialogState.onResolve(false);
+    setDialogState(null);
+  };
 
-  // Fallback to ReactDOM.render for backward compatibility
-  // This path is used when consuming apps haven't migrated to ConfirmDialogProvider yet
-  console.warn(
-    "[openstack-uicore-foundation] showConfirmDialog: ConfirmDialogProvider is not mounted. " +
-      "For better React 16/17/18/19 compatibility, wrap your app with <ConfirmDialogProvider>. " +
-      "Falling back to ReactDOM.render."
+  if (!dialogState) return null;
+
+  return (
+    <ConfirmDialog
+      open={dialogState.open}
+      title={dialogState.title}
+      text={dialogState.text}
+      iconType={dialogState.iconType}
+      confirmButtonText={dialogState.confirmButtonText}
+      cancelButtonText={dialogState.cancelButtonText}
+      confirmButtonColor={dialogState.confirmButtonColor}
+      cancelButtonColor={dialogState.cancelButtonColor}
+      onConfirm={handleConfirm}
+      onCancel={handleCancel}
+    />
   );
-
-  return new Promise((resolve) => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-
-    const close = (answer) => {
-      ReactDOM.unmountComponentAtNode(container);
-      container.remove();
-      resolve(answer);
-    };
-
-    const handleConfirm = () => close(true);
-    const handleCancel = () => close(false);
-
-    const element = (
-      <ConfirmDialog
-        open
-        title={title}
-        text={text}
-        iconType={iconType}
-        confirmButtonText={confirmButtonText}
-        cancelButtonText={cancelButtonText}
-        confirmButtonColor={confirmButtonColor}
-        cancelButtonColor={cancelButtonColor}
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
-    );
-
-    ReactDOM.render(element, container);
-  });
 };
 
 export default showConfirmDialog;
