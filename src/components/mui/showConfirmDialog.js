@@ -11,27 +11,54 @@
  * limitations under the License.
  * */
 
-import ReactDOM from "react-dom";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import ConfirmDialog from "./confirm-dialog";
 
-// Lazy-loaded createRoot for React 18+.
-// Cached after first call so the dynamic import only runs once.
-let createRootFn = undefined; // undefined = not yet checked
+/**
+ * Imperative confirm dialog API.
+ *
+ * SETUP (required):
+ * Place <GlobalConfirmDialog /> at the root of your app:
+ *
+ *   import { GlobalConfirmDialog } from
+ *     'openstack-uicore-foundation/lib/components/mui/show-confirm-dialog';
+ *
+ *   function App() {
+ *     return (
+ *       <>
+ *         <YourApp />
+ *         <GlobalConfirmDialog />
+ *       </>
+ *     );
+ *   }
+ *
+ * USAGE (works from any file — the bridge is shared via globalThis):
+ *   import showConfirmDialog from
+ *     'openstack-uicore-foundation/lib/components/mui/show-confirm-dialog';
+ *
+ *   const confirmed = await showConfirmDialog({
+ *     title: 'Delete Item?',
+ *     text: 'This cannot be undone'
+ *   });
+ */
 
-async function getCreateRoot() {
-  if (createRootFn !== undefined) return createRootFn;
-  try {
-    // webpackIgnore prevents webpack from resolving this at build time,
-    // so consuming projects on React 16/17 won't get a "Module not found" error.
-    const mod = await import(/* webpackIgnore: true */ "react-dom/client");
-    createRootFn = mod.createRoot || null;
-  } catch (_) {
-    createRootFn = null;
-  }
-  return createRootFn;
-}
+// Shared bridge reference stored on globalThis so that all webpack bundles
+// (table, sortable-table, show-confirm-dialog, index, etc.) read/write the
+// same callback. A module-level variable would be duplicated per bundle.
+const BRIDGE_KEY = "__oif_confirm_dialog_bridge__";
+const _global = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 
+/**
+ * @param param0
+ * @param param0.title
+ * @param param0.text
+ * @param param0.iconType
+ * @param param0.confirmButtonText
+ * @param param0.cancelButtonText
+ * @param param0.confirmButtonColor
+ * @param param0.cancelButtonColor
+ * @returns {Promise<boolean>}
+ */
 const showConfirmDialog = ({
   title,
   text,
@@ -40,49 +67,73 @@ const showConfirmDialog = ({
   cancelButtonText = "Cancel",
   confirmButtonColor = "primary",
   cancelButtonColor = "primary"
-}) =>
-  new Promise((resolve) => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-
-    let root = null;
-
-    const close = (answer) => {
-      if (root) {
-        root.unmount();
-      } else {
-        ReactDOM.unmountComponentAtNode(container);
-      }
-      container.remove();
-      resolve(answer);
-    };
-
-    const handleConfirm = () => close(true);
-    const handleCancel = () => close(false);
-
-    const element = (
-      <ConfirmDialog
-        open
-        title={title}
-        text={text}
-        iconType={iconType}
-        confirmButtonText={confirmButtonText}
-        cancelButtonText={cancelButtonText}
-        confirmButtonColor={confirmButtonColor}
-        cancelButtonColor={cancelButtonColor}
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
+}) => {
+  if (!_global[BRIDGE_KEY]) {
+    throw new Error(
+      "[openstack-uicore-foundation] showConfirmDialog: <GlobalConfirmDialog /> is not mounted. " +
+        "Add <GlobalConfirmDialog /> to the root of your app."
     );
+  }
 
-    getCreateRoot().then((createRoot) => {
-      if (createRoot) {
-        root = createRoot(container);
-        root.render(element);
-      } else {
-        ReactDOM.render(element, container);
-      }
-    });
+  return _global[BRIDGE_KEY]({
+    title,
+    text,
+    iconType,
+    confirmButtonText,
+    cancelButtonText,
+    confirmButtonColor,
+    cancelButtonColor
   });
+};
+
+/**
+ * Global confirm dialog component. Place at the root of your app:
+ *
+ *   <App>
+ *     ...
+ *     <GlobalConfirmDialog />
+ *   </App>
+ *
+ * Then call showConfirmDialog() anywhere.
+ */
+export const GlobalConfirmDialog = () => {
+  const [dialogState, setDialogState] = useState(null);
+
+  useEffect(() => {
+    _global[BRIDGE_KEY] = (options) => {
+      return new Promise((resolve) => {
+        setDialogState({ ...options, open: true, onResolve: resolve });
+      });
+    };
+    return () => { _global[BRIDGE_KEY] = null; };
+  }, []);
+
+  const handleConfirm = () => {
+    if (dialogState?.onResolve) dialogState.onResolve(true);
+    setDialogState(null);
+  };
+
+  const handleCancel = () => {
+    if (dialogState?.onResolve) dialogState.onResolve(false);
+    setDialogState(null);
+  };
+
+  if (!dialogState) return null;
+
+  return (
+    <ConfirmDialog
+      open={dialogState.open}
+      title={dialogState.title}
+      text={dialogState.text}
+      iconType={dialogState.iconType}
+      confirmButtonText={dialogState.confirmButtonText}
+      cancelButtonText={dialogState.cancelButtonText}
+      confirmButtonColor={dialogState.confirmButtonColor}
+      cancelButtonColor={dialogState.cancelButtonColor}
+      onConfirm={handleConfirm}
+      onCancel={handleCancel}
+    />
+  );
+};
 
 export default showConfirmDialog;

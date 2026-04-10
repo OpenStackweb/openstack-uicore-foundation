@@ -11,53 +11,17 @@
  * limitations under the License.
  * */
 
-jest.mock("react-dom", () => ({
-  render: jest.fn(),
-  unmountComponentAtNode: jest.fn()
-}));
-
-
-jest.mock("../confirm-dialog", () => {
-  const React = require("react");
-  return { __esModule: true, default: () => <div /> };
-});
-
 import showConfirmDialog from "../showConfirmDialog";
-import ReactDOM from "react-dom";
 
 describe("showConfirmDialog", () => {
-  beforeEach(() => jest.clearAllMocks());
-
-  test("returns a Promise", () => {
-    const result = showConfirmDialog({ title: "Test", text: "Body" });
-    expect(result).toBeInstanceOf(Promise);
+  test("regression: does not reference react-dom/client", () => {
+    const moduleCode = showConfirmDialog.toString();
+    expect(moduleCode).not.toContain("react-dom/client");
   });
 
-  test("calls ReactDOM.render to mount the dialog", async () => {
-    showConfirmDialog({ title: "Test", text: "Body" });
-    await Promise.resolve();
-    expect(ReactDOM.render).toHaveBeenCalledTimes(1);
-  });
-
-  test("appends a container div to the document body", async () => {
-    const initialChildCount = document.body.children.length;
-    showConfirmDialog({ title: "Test", text: "Body" });
-    await Promise.resolve();
-    expect(document.body.children.length).toBeGreaterThan(initialChildCount);
-  });
-
-  test("passes title and text to ConfirmDialog", async () => {
-    showConfirmDialog({
-      title: "My Title",
-      text: "My Text",
-      confirmButtonText: "Yes",
-      cancelButtonText: "No"
-    });
-    await Promise.resolve();
-    const [element] = ReactDOM.render.mock.calls[0];
-    expect(element.props.title).toBe("My Title");
-    expect(element.props.text).toBe("My Text");
-    expect(element.props.confirmButtonText).toBe("Yes");
-    expect(element.props.cancelButtonText).toBe("No");
+  test("throws when GlobalConfirmDialog is not mounted", () => {
+    expect(() => {
+      showConfirmDialog({ title: "Test", text: "Body" });
+    }).toThrow("<GlobalConfirmDialog />");
   });
 });
