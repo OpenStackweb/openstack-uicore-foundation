@@ -16,7 +16,7 @@ import {Box, Button, Typography} from "@mui/material";
 import T from "i18n-react";
 import {PaymentElement, useElements, useStripe} from "@stripe/react-stripe-js";
 import {currencyAmountFromCents} from "../../../utils/money";
-import {handleSentryException} from "../../../utils/methods";
+import {handleSentryException} from "./helpers";
 
 const buildAddress = (userAddress = {}) => {
   const address = {};

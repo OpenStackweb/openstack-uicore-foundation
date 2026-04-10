@@ -343,7 +343,7 @@ MuiTable.propTypes = {
   onSelect: PropTypes.func,
   canDelete: PropTypes.func,
   deleteDialogTitle: PropTypes.string,
-  deleteDialogBody: PropTypes.string,
+  deleteDialogBody: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   deleteDialogConfirmText: PropTypes.string,
   confirmButtonColor: PropTypes.string
 };

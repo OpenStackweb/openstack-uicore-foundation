@@ -2,14 +2,14 @@ import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import StripeForm from "../stripe-form";
-import { handleSentryException } from "../../../../utils/methods";
+import { handleSentryException } from "../helpers";
 
 jest.mock("i18n-react", () => ({
   __esModule: true,
   default: { translate: (key) => key }
 }));
 
-jest.mock("../../../../utils/methods", () => ({
+jest.mock("../helpers", () => ({
   handleSentryException: jest.fn()
 }));
 
