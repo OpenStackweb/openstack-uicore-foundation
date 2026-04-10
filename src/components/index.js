@@ -64,7 +64,6 @@ export {default as MuiChipNotify} from './mui/chip-notify'
 export {default as MuiChipSelectInput} from './mui/chip-select-input'
 export {default as MuiConfirmDialog} from './mui/confirm-dialog'
 export {default as MuiCustomAlert} from './mui/custom-alert'
-export {default as MuiDndList} from './mui/dnd-list'
 export {default as MuiDropdownCheckbox} from './mui/dropdown-checkbox'
 export {default as MuiMenuButton} from './mui/menu-button'
 export {default as MuiSearchInput} from './mui/search-input'
@@ -78,10 +77,8 @@ export {default as MuiNotesModal} from './mui/NotesModal'
 export {default as MuiSnackbarNotification} from './mui/SnackbarNotification'
 export {default as MuiInfiniteTable} from './mui/infinite-table'
 export {default as MuiEditableTable} from './mui/editable-table/mui-table-editable'
-export {default as MuiSortableTable} from './mui/sortable-table/mui-table-sortable'
 export {default as MuiTable} from './mui/table/mui-table'
-export {default as MuiAdditionalInput} from './mui/formik-inputs/additional-input/additional-input'
-export {default as MuiAdditionalInputList} from './mui/formik-inputs/additional-input/additional-input-list'
+export {TotalRow as MuiTotalRow, NotesRow as MuiNotesRow} from './mui/table/extra-rows'
 export {default as MuiFormikAsyncSelect} from './mui/formik-inputs/mui-formik-async-select'
 export {default as MuiFormikCheckboxGroup} from './mui/formik-inputs/mui-formik-checkbox-group'
 export {default as MuiFormikCheckbox} from './mui/formik-inputs/mui-formik-checkbox'
@@ -105,13 +102,31 @@ export {default as MuiItemPriceTiers} from './mui/formik-inputs/item-price-tiers
 export {default as MuiSponsorInput} from './mui/formik-inputs/mui-sponsor-input'
 export {default as MuiSponsorshipInput} from './mui/formik-inputs/sponsorship-input-mui'
 export {default as MuiSponsorshipSummitSelect} from './mui/formik-inputs/sponsorship-summit-select-mui'
+export {default as MuiAlertButton} from './mui/AlertButton'
+export {default as MuiAlertModal} from './mui/AlertModal'
+export {default as MuiAuthButton} from './mui/AuthButton'
+export {default as MuiCartButton} from './mui/CartButton'
+export {default as MuiConfirmDeleteDialog} from './mui/ConfirmDeleteDialog'
+export {default as MuiDashboardCard} from './mui/DashboardCard'
+export {default as MuiDownloadBtn} from './mui/DownloadBtn'
+export {default as MuiLoadingOverlay} from './mui/LoadingOverlay'
+export {default as MuiNavBar} from './mui/NavBar'
+export {default as MuiOrderSummary} from './mui/OrderSummary'
+export {default as MuiStatusChip} from './mui/StatusChip'
+export {default as MuiUploadBtn} from './mui/UploadBtn'
+export {default as MuiUploadDialog} from './mui/UploadDialog'
 
-// this 5 includes 3rd party deps
+// these include 3rd party deps
 // export {default as ExtraQuestionsForm } from './extra-questions/index.js';
 // export {default as GMap} from './google-map';
 // export {default as TextEditorV2} from './inputs/editor-input-v2'
 // export {default as TextEditorV3} from './inputs/editor-input-v3'
 // export {default as CompanyInputV2} from './inputs/company-input-v2.js'
+// export {default as MuiDndList} from './mui/dnd-list'                              // react-beautiful-dnd
+// export {default as MuiSortableTable} from './mui/sortable-table/mui-table-sortable' // react-beautiful-dnd
+// export {default as MuiStripePayment} from './mui/StripePayment'                   // @stripe/react-stripe-js, @stripe/stripe-js
+// export {default as MuiAdditionalInput} from './mui/formik-inputs/additional-input/additional-input' // react-beautiful-dnd (via dnd-list)
+// export {default as MuiAdditionalInputList} from './mui/formik-inputs/additional-input/additional-input-list' // react-beautiful-dnd (via dnd-list)
 
 let language = getCurrentUserLanguage();
 

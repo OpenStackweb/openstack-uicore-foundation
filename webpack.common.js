@@ -126,6 +126,20 @@ module.exports = {
         'components/mui/formik-inputs/sponsor-input': './src/components/mui/formik-inputs/mui-sponsor-input.js',
         'components/mui/formik-inputs/sponsorship-input': './src/components/mui/formik-inputs/sponsorship-input-mui.js',
         'components/mui/formik-inputs/sponsorship-summit-select': './src/components/mui/formik-inputs/sponsorship-summit-select-mui.js',
+        'components/mui/alert-button': './src/components/mui/AlertButton/index.js',
+        'components/mui/alert-modal': './src/components/mui/AlertModal/index.js',
+        'components/mui/auth-button': './src/components/mui/AuthButton/index.js',
+        'components/mui/cart-button': './src/components/mui/CartButton/index.js',
+        'components/mui/confirm-delete-dialog': './src/components/mui/ConfirmDeleteDialog/index.js',
+        'components/mui/dashboard-card': './src/components/mui/DashboardCard/index.js',
+        'components/mui/download-btn': './src/components/mui/DownloadBtn/index.js',
+        'components/mui/loading-overlay': './src/components/mui/LoadingOverlay/index.jsx',
+        'components/mui/nav-bar': './src/components/mui/NavBar/index.js',
+        'components/mui/order-summary': './src/components/mui/OrderSummary/index.jsx',
+        'components/mui/status-chip': './src/components/mui/StatusChip/index.js',
+        'components/mui/stripe-payment': './src/components/mui/StripePayment/index.jsx',
+        'components/mui/upload-btn': './src/components/mui/UploadBtn/index.js',
+        'components/mui/upload-dialog': './src/components/mui/UploadDialog/index.js',
 
         // models
         'models/index': './src/models',
@@ -156,6 +170,7 @@ module.exports = {
         }),
     ],
     resolve: {
+        extensions: ['.js', '.jsx', '.json'],
         fallback: {
             "fs" : false,
             "crypto" : false,

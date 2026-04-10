@@ -309,3 +309,5 @@ export const empty = (value) => {
   if (typeof value === "object") return Object.keys(value).length === 0;
   return false;
 };
+
+export const isSentryInitialized = () => typeof window !== "undefined" && !!window.SENTRY_DSN;
