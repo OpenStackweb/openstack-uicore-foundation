@@ -37,6 +37,7 @@ const StripeForm = ({
   amount = 0,
   client,
   redirectUrl,
+  paymentOptions = {},
   onSuccess,
   onError,
   onPaymentMethodChange
@@ -75,7 +76,7 @@ const StripeForm = ({
         return_url: `${window.location.origin}${redirectUrl}`,
         payment_method_data: {
           billing_details: {
-            name: `${client.first_name} ${client.last_name}`,
+            name: client.full_name || `${client.first_name} ${client.last_name}`,
             email: client.email,
             ...buildAddress(client.address)
           }
@@ -114,7 +115,8 @@ const StripeForm = ({
 
       <PaymentElement
         options={{
-          layout: "tabs"
+          layout: "tabs",
+          ...paymentOptions
         }}
       />
       <Button
