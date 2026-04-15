@@ -47,7 +47,7 @@ export const doLogout = (backUrl) => (dispatch, getState) => {
     });
 }
 
-export const getUserInfo = (expand = 'groups', fields='', backUrl = null, history = null, errorHandler = null ) =>
+export const getUserInfo = (expand = 'groups', fields='', backUrl = null, history = null, errorHandler = null, forcePull = false ) =>
     async (dispatch, getState) => {
 
     let AllowedUserGroups = getAllowedUserGroups();
@@ -57,7 +57,7 @@ export const getUserInfo = (expand = 'groups', fields='', backUrl = null, histor
 
     let accessToken = await getAccessToken();
 
-    if (member != null) {
+    if (member != null && !forcePull) {
         if(history != null && backUrl != null)
             history.push(backUrl);
         return Promise.resolve();
