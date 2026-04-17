@@ -8,7 +8,6 @@ import SortableActionsTableCell from './SortableActionsTableCell';
 import SortableTableRow from './SortableTableRow';
 import T from 'i18n-react/dist/i18n-react';
 import TableCell from "../table/TableCell";
-import _ from 'lodash';
 
 import './table-sortable.less';
 

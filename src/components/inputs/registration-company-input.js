@@ -15,7 +15,7 @@ import React from 'react';
 import PropTypes from 'prop-types'
 import AsyncCreatableSelect from "react-select/lib/AsyncCreatable";
 import { queryRegistrationCompanies } from '../../utils/query-actions';
-import _ from 'lodash';
+import isEqual from 'lodash/isEqual';
 const NullValue = { value: null, label: '' };
 const NewId = 0;
 
@@ -23,7 +23,7 @@ const RegistrationCompanyInput = ({
         error, onChange, id, disabled, className, summitId, onError,
         value, placeholder, tabSelectsValue, selectStyles, createLabel, options2Show, ...rest }) => {
 
-    const isNullValue = (val) => _.isEqual(val, {id: null, name: ''})
+    const isNullValue = (val) => isEqual(val, {id: null, name: ''})
 
     const handleChange = (eventValue) => {
         if(!eventValue) eventValue = NullValue;
