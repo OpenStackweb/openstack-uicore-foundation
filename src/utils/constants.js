@@ -44,6 +44,11 @@ export const METAFIELD_TYPES = [
   "Time"
 ];
 
+export const METAFIELD_CLASS = {
+  FORM: "Form",
+  ITEM: "Item"
+};
+
 export const DISCOUNT_TYPES = {
   AMOUNT: "Amount",
   RATE: "Rate"

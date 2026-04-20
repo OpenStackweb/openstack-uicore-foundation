@@ -21,19 +21,30 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  IconButton
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import SettingsIcon from "@mui/icons-material/Settings";
 import T from "i18n-react/dist/i18n-react";
 import { currencyAmountFromCents } from "../../../utils/money";
-import { DISCOUNT_TYPES, ONE_HUNDRED } from "../../../utils/constants";
+import { DISCOUNT_TYPES, ONE_HUNDRED, METAFIELD_CLASS } from "../../../utils/constants";
 import GlobalQuantityField from "./components/GlobalQuantityField";
 import ItemTableField from "./components/ItemTableField";
 import MuiFormikSelect from "../formik-inputs/mui-formik-select";
 import MuiFormikPriceField from "../formik-inputs/mui-formik-pricefield";
 import MuiFormikDiscountField from "../formik-inputs/mui-formik-discountfield";
 import UnderlyingAlertNote from "./components/UnderlyingAlertNote";
+
+const getItemPreviewUrl = (row) => {
+  if (
+    Array.isArray(row.images) &&
+    row.images.length > 0 &&
+    row.images[0]?.file_url
+  ) {
+    return row.images[0].file_url;
+  }
+};
 
 const FormItemTable = ({
   data,
@@ -44,8 +55,9 @@ const FormItemTable = ({
   onSettingsClick
 }) => {
   const valuesStr = JSON.stringify(values);
-  const extraColumns =
-    data[0]?.meta_fields?.filter((mf) => mf.class_field === "Form") || [];
+  const extraColumns = (data[0]?.meta_fields ?? []).filter(
+    (mf) => mf.class_field === METAFIELD_CLASS.FORM
+  );
   const fixedColumns = 10;
   const totalColumns = extraColumns.length + fixedColumns;
 
@@ -84,11 +96,13 @@ const FormItemTable = ({
   };
 
   const hasItemFields = (row) =>
-    row.meta_fields.filter((mf) => mf.class_field === "Item").length > 0;
+    (row.meta_fields ?? []).filter(
+      (mf) => mf.class_field === METAFIELD_CLASS.ITEM
+    ).length > 0;
 
   const itemFieldsIncomplete = (row) => {
-    const requiredFields = row.meta_fields.filter(
-      (mf) => mf.class_field === "Item" && mf.is_required
+    const requiredFields = (row.meta_fields ?? []).filter(
+      (mf) => mf.class_field === METAFIELD_CLASS.ITEM && mf.is_required
     );
     const hasMissingFields = requiredFields.some((mf) => {
       const value = values[`i-${row.form_item_id}-c-item-f-${mf.type_id}`];
@@ -132,6 +146,7 @@ const FormItemTable = ({
             <TableCell>
               {T.translate("sponsor_edit_form.description")}
             </TableCell>
+            <TableCell>{T.translate("sponsor_edit_form.image")}</TableCell>
             <TableCell sx={{ minWidth: 120 }}>
               {T.translate("sponsor_edit_form.custom_rate")}
             </TableCell>
@@ -170,8 +185,15 @@ const FormItemTable = ({
                   showAdditionalItems={
                     hasItemFields(row) && itemFieldsIncomplete(row)
                   }
+                  showNotAvailable={disabled}
                 />
               </TableCell>
+              <TableCell align="center" sx={{ width: 40 }}>
+                  <FormItemImagePreviewCell
+                    imageUrl={getItemPreviewUrl(row)}
+                    itemName={row.name}
+                  />
+                </TableCell>
               <TableCell>
                 <MuiFormikPriceField
                   name={`i-${row.form_item_id}-c-global-f-custom_rate`}
