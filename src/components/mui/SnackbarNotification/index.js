@@ -18,6 +18,7 @@ import { Alert, Snackbar, Typography } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import SnackbarNotificationContext from "./Context";
+export { useSnackbarMessage } from "./Context";
 import { NOTIFICATION_TIMEOUT } from "../../../utils/constants";
 import { empty } from "../../../utils/methods";
 import { clearSnackbarMessage } from "../../../utils/actions";
