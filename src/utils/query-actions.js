@@ -14,7 +14,7 @@
 import { fetchErrorHandler, fetchResponseHandler, escapeFilterValue } from "./actions";
 import { getAccessToken } from '../components/security/methods';
 import { buildAPIBaseUrl } from "./methods";
-import _ from 'lodash';
+import debounce from 'lodash/debounce';
 import moment from 'moment-timezone'
 
 export const RECEIVE_COUNTRIES  = 'RECEIVE_COUNTRIES';
@@ -82,7 +82,7 @@ const _fetch = async (endpoint, callback, options = {}) => {
  *
  * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
  */
-export const queryMembers = _.debounce(async (input, callback, per_page= DEFAULT_PER_PAGE) => {
+export const queryMembers = debounce(async (input, callback, per_page= DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/members`);
 
@@ -104,7 +104,7 @@ export const queryMembers = _.debounce(async (input, callback, per_page= DEFAULT
  *
  * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
  */
-export const queryAttendees = _.debounce(async (summitId, input, callback, per_page= DEFAULT_PER_PAGE) => {
+export const queryAttendees = debounce(async (summitId, input, callback, per_page= DEFAULT_PER_PAGE) => {
     
     let endpoint = URI(`/api/v1/summits/${summitId}/attendees`);
     
@@ -124,7 +124,7 @@ export const queryAttendees = _.debounce(async (summitId, input, callback, per_p
 /**
  * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
  */
-export const querySummits = _.debounce(async (input, callback, per_page= DEFAULT_PER_PAGE) => {
+export const querySummits = debounce(async (input, callback, per_page= DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/summits/all`);
 
@@ -166,7 +166,7 @@ export const fetchAllSummits = async (onlyActive) => {
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
  */
-export const querySpeakers = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE ) => {
+export const querySpeakers = debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE ) => {
 
 
     let endpoint = URI(`/api/v1/${summitId ? `summits/${summitId}/speakers`:`speakers`}`);
@@ -188,7 +188,7 @@ export const querySpeakers = _.debounce(async (summitId, input, callback, per_pa
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
  */
-export const queryTags = _.debounce(async (summitId, input, callback, per_page = 50) => {
+export const queryTags = debounce(async (summitId, input, callback, per_page = 50) => {
 
     let endpoint = URI(`/api/v1/${summitId ? `summits/${summitId}/track-tag-groups/all/allowed-tags`:`tags`}`);
 
@@ -211,7 +211,7 @@ export const queryTags = _.debounce(async (summitId, input, callback, per_page =
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
  */
-export const queryTracks = _.debounce(async (summitId, input, callback, excludedIds = [], per_page = DEFAULT_PER_PAGE) => {
+export const queryTracks = debounce(async (summitId, input, callback, excludedIds = [], per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/summits/${summitId}/tracks`);
 
@@ -234,7 +234,7 @@ export const queryTracks = _.debounce(async (summitId, input, callback, excluded
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
  */
-export const queryTrackGroups = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE) => {
+export const queryTrackGroups = debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/summits/${summitId}/track-groups`);
 
@@ -254,7 +254,7 @@ export const queryTrackGroups = _.debounce(async (summitId, input, callback, per
 /**
  * @type {DebouncedFunc<(function(*, *, *=, *): Promise<void>)|*>}
  */
-export const queryEvents = _.debounce(async (summitId, input, onlyPublished = false, callback, per_page = DEFAULT_PER_PAGE) => {
+export const queryEvents = debounce(async (summitId, input, onlyPublished = false, callback, per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/summits/${summitId}/events` + (onlyPublished ? '/published' : ''));
 
@@ -273,7 +273,7 @@ export const queryEvents = _.debounce(async (summitId, input, onlyPublished = fa
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=, *=): Promise<void>)|*>}
  */
-export const queryEventTypes = _.debounce(async (summitId, input, callback, eventTypeClassName = null, per_page = DEFAULT_PER_PAGE) => {
+export const queryEventTypes = debounce(async (summitId, input, callback, eventTypeClassName = null, per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/summits/${summitId}/event-types`);
 
@@ -299,7 +299,7 @@ export const queryEventTypes = _.debounce(async (summitId, input, callback, even
 /**
  * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
  */
-export const queryGroups = _.debounce(async (input, callback, per_page = DEFAULT_PER_PAGE) => {
+export const queryGroups = debounce(async (input, callback, per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/groups`);
 
@@ -319,7 +319,7 @@ export const queryGroups = _.debounce(async (input, callback, per_page = DEFAULT
 /**
  * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
  */
-export const queryCompanies = _.debounce(async (input, callback, per_page = DEFAULT_PER_PAGE) => {
+export const queryCompanies = debounce(async (input, callback, per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/companies`);
 
@@ -338,7 +338,7 @@ export const queryCompanies = _.debounce(async (input, callback, per_page = DEFA
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
  */
-export const queryRegistrationCompanies = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE) => {
+export const queryRegistrationCompanies = debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/summits/${summitId}/registration-companies`);
 
@@ -358,7 +358,7 @@ export const queryRegistrationCompanies = _.debounce(async (summitId, input, cal
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
  */
-export const querySponsors = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE) => {
+export const querySponsors = debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/summits/${summitId}/sponsors`);
 
@@ -376,7 +376,7 @@ export const querySponsors = _.debounce(async (summitId, input, callback, per_pa
 
 }, DEBOUNCE_WAIT);
 
-export const querySponsorsV2 = _.debounce(async (input, summitId, callback) => {
+export const querySponsorsV2 = debounce(async (input, summitId, callback) => {
     const endpoint = URI(
         `/api/v2/summits/${summitId}/sponsors`
     );
@@ -401,7 +401,7 @@ export const querySponsorsV2 = _.debounce(async (input, summitId, callback) => {
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
  */
-export const querySponsorsWithBadgeScans = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE) => {
+export const querySponsorsWithBadgeScans = debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/summits/${summitId}/sponsors`);
 
@@ -425,7 +425,7 @@ export const querySponsorsWithBadgeScans = _.debounce(async (summitId, input, ca
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
  */
-export const queryAccessLevels = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE) => {
+export const queryAccessLevels = debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/summits/${summitId}/access-level-types`);
 
@@ -445,7 +445,7 @@ export const queryAccessLevels = _.debounce(async (summitId, input, callback, pe
 /**
  * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
  */
-export const queryOrganizations = _.debounce(async (input, callback, per_page = DEFAULT_PER_PAGE) => {
+export const queryOrganizations = debounce(async (input, callback, per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/organizations`);
 
@@ -512,7 +512,7 @@ export const geoCodeLatLng = (lat, lng) => {
 /**
  * @type {DebouncedFunc<(function(*, *=, *, *=, *=): Promise<void>)|*>}
  */
-export const queryTicketTypes = _.debounce(async (summitId, filters = {}, callback, version = 'v1', per_page = DEFAULT_PER_PAGE) => {
+export const queryTicketTypes = debounce(async (summitId, filters = {}, callback, version = 'v1', per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/${version}/summits/${summitId}/ticket-types`);
 
@@ -539,7 +539,7 @@ export const queryTicketTypes = _.debounce(async (summitId, filters = {}, callba
 /**
  * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
  */
-export const querySponsoredProjects = _.debounce(async (input, callback, per_page = DEFAULT_PER_PAGE) => {
+export const querySponsoredProjects = debounce(async (input, callback, per_page = DEFAULT_PER_PAGE) => {
 
 
     const endpoint = URI(`/api/v1/sponsored-projects`);
@@ -560,7 +560,7 @@ export const querySponsoredProjects = _.debounce(async (input, callback, per_pag
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
  */
-export const queryPromocodes = _.debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE, extraFilters = []) => {
+export const queryPromocodes = debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE, extraFilters = []) => {
 
 
     let endpoint = URI(`/api/v1/summits/${summitId}/promo-codes`);
@@ -635,7 +635,7 @@ export const querySummitAddons = async (
 };
 
 
-export const querySponsorships = _.debounce(async (input, callback) => {
+export const querySponsorships = debounce(async (input, callback) => {
     const endpoint = URI(`/api/v1/sponsorship-types`);
     input = escapeFilterValue(input);
     if (input) {
@@ -645,7 +645,7 @@ export const querySponsorships = _.debounce(async (input, callback) => {
 }, DEBOUNCE_WAIT);
 
 
-export const querySponsorshipsBySummit = _.debounce(
+export const querySponsorshipsBySummit = debounce(
     async (input, summitId, callback) => {
         const endpoint = URI(
             `/api/v1/summits/${summitId}/sponsorships-types`

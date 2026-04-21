@@ -15,7 +15,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { TextField, IconButton, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 import { DEBOUNCE_WAIT } from "../../utils/constants";
 
 const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) => {
