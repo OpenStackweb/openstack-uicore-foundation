@@ -80,6 +80,14 @@ jest.mock("../../formik-inputs/mui-formik-select", () => {
   };
 });
 
+jest.mock("../../formik-inputs/mui-formik-select-v2", () => {
+  const React = require("react");
+  return {
+    __esModule: true,
+    default: ({ name }) => <div data-testid="select" data-name={name} />
+  };
+});
+
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
