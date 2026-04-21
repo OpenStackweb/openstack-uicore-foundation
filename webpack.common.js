@@ -97,7 +97,6 @@ module.exports = {
         'components/mui/item-settings-modal': './src/components/mui/ItemSettingsModal/index.js',
         'components/mui/notes-modal': './src/components/mui/NotesModal/index.js',
         'components/mui/snackbar-notification': './src/components/mui/SnackbarNotification/index.js',
-        'components/mui/snackbar-notification-context': './src/components/mui/SnackbarNotification/Context.js',
         'components/mui/infinite-table': './src/components/mui/infinite-table/index.js',
         'components/mui/editable-table': './src/components/mui/editable-table/mui-table-editable.js',
         'components/mui/sortable-table': './src/components/mui/sortable-table/mui-table-sortable.js',
