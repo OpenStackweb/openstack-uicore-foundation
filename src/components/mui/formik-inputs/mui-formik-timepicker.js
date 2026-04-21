@@ -21,6 +21,7 @@ import { useField } from "formik";
 
 const MuiFormikTimepicker = ({
   name,
+  label,
   minTime,
   maxTime,
   timeZone,
@@ -41,6 +42,7 @@ const MuiFormikTimepicker = ({
         slotProps={{
           textField: {
             name,
+            label,
             error: meta.touched && Boolean(meta.error),
             helperText: meta.touched && meta.error,
             size: "small",
