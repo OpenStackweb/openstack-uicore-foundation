@@ -14,6 +14,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import T from "i18n-react/dist/i18n-react";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
