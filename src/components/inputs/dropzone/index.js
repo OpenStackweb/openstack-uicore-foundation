@@ -31,6 +31,42 @@ export class DropzoneJS extends React.Component {
             this.props.onUploadComplete(response, this.props.id, this.props.data);
     }
 
+    pollUploadStatus(fileId, baseUrl) {
+        const statusUrl = `${baseUrl}/status/${fileId}`;
+        const maxAttempts = 300; // 10 minutes at 2s intervals
+        let attempts = 0;
+
+        this._pollInterval = setInterval(async () => {
+            attempts++;
+            if (attempts > maxAttempts) {
+                clearInterval(this._pollInterval);
+                this._pollInterval = null;
+                this.onError({ message: 'Upload timed out' });
+                return;
+            }
+            try {
+                const accessToken = await getAccessToken();
+                const response = await fetch(statusUrl, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                const data = await response.json();
+                if (data.status === 'complete') {
+                    clearInterval(this._pollInterval);
+                    this._pollInterval = null;
+                    this.onUploadComplete(data);
+                } else if (data.status === 'error') {
+                    clearInterval(this._pollInterval);
+                    this._pollInterval = null;
+                    this.onError(data);
+                }
+            } catch (error) {
+                clearInterval(this._pollInterval);
+                this._pollInterval = null;
+                this.onError(error);
+            }
+        }, 2000);
+    }
+
     /**
      * Configuration of Dropzone.js. Defaults are
      * overriden by the 'djsConfig' property
@@ -106,6 +142,10 @@ export class DropzoneJS extends React.Component {
      * Removes dropzone.js (and all its globals) if the component is being unmounted
      */
     componentWillUnmount () {
+        if (this._pollInterval) {
+            clearInterval(this._pollInterval);
+            this._pollInterval = null;
+        }
         if (this.dropzone) {
             const files = this.dropzone.getActiveFiles();
 
@@ -277,6 +317,13 @@ export class DropzoneJS extends React.Component {
                     if (typeof uploadResponse.name === 'string') {
                         _this.onUploadComplete(uploadResponse);
                     }
+                }
+                else if(xhr?.status == 202) {
+                    // Async upload: server accepted the file, poll for completion
+                    let uploadResponse = JSON.parse(xhr.responseText);
+                    const fileId = uploadResponse.file_id;
+                    const baseUrl = _this.props.config.postUrl;
+                    _this.pollUploadStatus(fileId, baseUrl);
                 }
                 else{
                     _this.onError(JSON.parse(xhr?.responseText), xhr?.status);

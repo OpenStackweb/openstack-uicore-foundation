@@ -28,6 +28,7 @@ import { IconButton, TextField } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { visuallyHidden } from "@mui/utils";
+import styles from "./mui-table-editable.module.less";
 
 import {
   DEFAULT_PER_PAGE,
@@ -123,7 +124,7 @@ const EditableCell = ({ value, isEditing, onBlur, validation }) => {
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
-      <span style={{ flex: 1 }}>{value}</span>
+      <span style={{ flex: 1, fontWeight: "normal" }}>{value}</span>
       {isHovering && (
         <EditIcon
           fontSize="small"
@@ -197,7 +198,7 @@ const MuiTableEditable = ({
         : `${T.translate("general.row_remove_warning")} ${getName(item)}`,
       type: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#DD6B55",
+      confirmButtonColor: "warning",
       confirmButtonText: T.translate("general.yes_delete")
     });
 
@@ -243,7 +244,8 @@ const MuiTableEditable = ({
                     sx={{
                       width: col.width,
                       minWidth: col.width,
-                      maxWidth: col.width
+                      maxWidth: col.width,
+                      fontWeight: "normal"
                     }}
                     align={col.align ?? "left"}
                   >
@@ -256,6 +258,7 @@ const MuiTableEditable = ({
                             : "asc"
                         }
                         onClick={() => onSort(col.columnKey, sortDir * -1)}
+                        sx={{ fontWeight: "normal" }}
                       >
                         {col.header}
                         {sortCol === col.columnKey ? (
@@ -267,13 +270,19 @@ const MuiTableEditable = ({
                         ) : null}
                       </TableSortLabel>
                     ) : (
-                      col.header
+                      <span style={{ fontWeight: "normal" }}>{col.header}</span>
                     )}
                   </TableCell>
                 ))}
-                {onEdit && <TableCell sx={{ width: 40 }} />}
-                {onArchive && <TableCell sx={{ width: 80 }} />}
-                {onDelete && <TableCell sx={{ width: 40 }} />}
+                {onEdit && (
+                  <TableCell sx={{ width: 40, fontWeight: "normal" }} />
+                )}
+                {onArchive && (
+                  <TableCell sx={{ width: 80, fontWeight: "normal" }} />
+                )}
+                {onDelete && (
+                  <TableCell sx={{ width: 40, fontWeight: "normal" }} />
+                )}
               </TableRow>
             </TableHead>
             {/* TABLE BODY */}
@@ -286,7 +295,8 @@ const MuiTableEditable = ({
                       onClick={() => handleCellClick(row, col.columnKey)}
                       sx={getCellSx(row, {
                         cursor: isEditable(col, row) ? "pointer" : "default",
-                        padding: isEditable(col, row) ? "8px 16px" : undefined // Ensure enough space for the edit icon
+                        padding: isEditable(col, row) ? "8px 16px" : undefined,
+                        fontWeight: "normal"
                       })}
                     >
                       {isEditable(col, row) ? (
@@ -310,12 +320,17 @@ const MuiTableEditable = ({
                       ) : col.render ? (
                         col.render(row)
                       ) : (
-                        row[col.columnKey]
+                        <span style={{ fontWeight: "normal" }}>
+                          {row[col.columnKey]}
+                        </span>
                       )}
                     </TableCell>
                   ))}
                   {onEdit && (
-                    <TableCell sx={getCellSx(row)}>
+                    <TableCell
+                      sx={getCellSx(row)}
+                      className={styles.dottedBorderLeft}
+                    >
                       <IconButton
                         onClick={() => onEdit(row)}
                         size="small"
@@ -326,7 +341,13 @@ const MuiTableEditable = ({
                     </TableCell>
                   )}
                   {onArchive && (
-                    <TableCell align="center" sx={{ width: 80 }}>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        ...getCellSx(row, { width: 80, fontWeight: "normal" })
+                      }}
+                      className={styles.dottedBorderLeft}
+                    >
                       <Button
                         variant="text"
                         color="inherit"
@@ -334,9 +355,10 @@ const MuiTableEditable = ({
                         onClick={() => onArchive(row)}
                         sx={{
                           fontSize: "1.3rem",
-                          fontWeight: 500,
+                          fontWeight: "normal",
                           lineHeight: "2.2rem",
-                          padding: "4px 5px"
+                          padding: "4px 5px",
+                          color: "rgba(0,0,0,0.56)"
                         }}
                       >
                         {row.is_archived
@@ -346,7 +368,10 @@ const MuiTableEditable = ({
                     </TableCell>
                   )}
                   {onDelete && (
-                    <TableCell sx={getCellSx(row)}>
+                    <TableCell
+                      sx={getCellSx(row)}
+                      className={styles.dottedBorderLeft}
+                    >
                       <IconButton
                         onClick={() => handleDelete(row)}
                         size="small"

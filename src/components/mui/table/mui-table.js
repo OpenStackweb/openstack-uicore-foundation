@@ -137,7 +137,7 @@ const MuiTable = ({
       );
     }
 
-    return row[col.columnKey];
+    return <span style={{ fontWeight: "normal" }}>{row[col.columnKey]}</span>;
   };
 
   return (
@@ -204,7 +204,7 @@ const MuiTable = ({
                       className={`${
                         col.dottedBorder && styles.dottedBorderLeft
                       } ${col.className}`}
-                      sx={getCellSx(row)}
+                      sx={{ ...getCellSx(row), fontWeight: "normal" }}
                     >
                       {renderCell(row, col)}
                     </TableCell>
@@ -216,8 +216,13 @@ const MuiTable = ({
                       className={styles.dottedBorderLeft}
                       sx={getCellSx(row, {width: 40})}
                     >
-                      <IconButton size="large" onClick={() => onEdit(row)} data-testid="action-edit">
-                        <EditIcon fontSize="large"/>
+                      <IconButton
+                        size="large"
+                        onClick={() => onEdit(row)}
+                        sx={{ padding: 0 }}
+                        data-testid="action-edit"
+                      >
+                        <EditIcon fontSize="large" />
                       </IconButton>
                     </TableCell>
                   )}
@@ -225,7 +230,7 @@ const MuiTable = ({
                   {onArchive && (
                     <TableCell
                       align="center"
-                      sx={{width: 80}}
+                      sx={{ ...getCellSx(row, { width: 80 }) }}
                       className={styles.dottedBorderLeft}
                     >
                       <Button
@@ -236,9 +241,10 @@ const MuiTable = ({
                         data-testid="action-archive"
                         sx={{
                           fontSize: "1.3rem",
-                          fontWeight: 500,
+                          fontWeight: "normal",
                           lineHeight: "2.2rem",
-                          padding: "4px 5px"
+                          padding: 0,
+                          color: "rgba(0,0,0,0.56)"
                         }}
                       >
                         {row.is_archived
@@ -259,6 +265,7 @@ const MuiTable = ({
                           size="large"
                           onClick={() => handleDelete(row)}
                           data-testid="action-delete"
+                          sx={{ padding: 0 }}
                         >
                           <DeleteIcon fontSize="large"/>
                         </IconButton>
