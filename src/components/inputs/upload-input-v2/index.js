@@ -47,6 +47,7 @@ export default class UploadInputV2 extends React.Component {
             djsConfig,
             id,
             parallelChunkUploads = false,
+            maxConcurrentChunks = 6,
             onError = () => {},
             getAllowedExtensions = null,
             getMaxSize = null
@@ -114,6 +115,7 @@ export default class UploadInputV2 extends React.Component {
                     uploadCount={value.length}
                     onUploadComplete={onUploadComplete}
                     onError={onError}
+                    maxConcurrentChunks={maxConcurrentChunks}
                 />
             );
         }

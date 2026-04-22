@@ -20,6 +20,8 @@ export class DropzoneJS extends React.Component {
         this.onUploadComplete = this.onUploadComplete.bind(this);
         this.onError = this.onError.bind(this);
         this.activeXHRs = new Map(); // Track active XHR requests per file
+        this.chunkQueue = [];
+        this.chunksInFlight = 0;
     }
 
     onError(e, status){
@@ -30,6 +32,36 @@ export class DropzoneJS extends React.Component {
     onUploadComplete(response){
         if(this.props.onUploadComplete)
             this.props.onUploadComplete(response, this.props.id, this.props.data);
+    }
+
+    processChunkQueue() {
+        const maxConcurrent = this.props.maxConcurrentChunks || 6;
+        while (this.chunkQueue.length > 0 && this.chunksInFlight < maxConcurrent) {
+            const { files, dataBlocks } = this.chunkQueue.shift();
+            this.chunksInFlight++;
+            this._originalUploadData(files, dataBlocks);
+        }
+    }
+
+    setupChunkThrottle() {
+        if (!this.dropzone || !this.dropzone._uploadData) return;
+        // Wrap _uploadData to queue chunked uploads with concurrency limit
+        this._originalUploadData = this.dropzone._uploadData.bind(this.dropzone);
+        this.dropzone._uploadData = (files, dataBlocks) => {
+            // Only throttle chunked uploads (single dataBlock with chunkIndex)
+            if (dataBlocks.length === 1 && dataBlocks[0].chunkIndex !== undefined) {
+                this.chunkQueue.push({ files, dataBlocks });
+                this.processChunkQueue();
+            } else {
+                // Non-chunked uploads bypass the queue
+                this._originalUploadData(files, dataBlocks);
+            }
+        };
+    }
+
+    onChunkComplete() {
+        this.chunksInFlight = Math.max(0, this.chunksInFlight - 1);
+        this.processChunkQueue();
     }
 
     pollUploadStatus(fileId, baseUrl, file) {
@@ -160,6 +192,7 @@ export class DropzoneJS extends React.Component {
         if (!dropzoneNode) throw new Error("Dropzone node not found");
 
         this.dropzone = new Dropzone(dropzoneNode, options);
+        this.setupChunkThrottle();
         this.setupEvents()
     }
 
@@ -173,7 +206,9 @@ export class DropzoneJS extends React.Component {
             this._pollInterval = null;
         }
 
-        // Cancel all pending XHR requests
+        // Clear chunk queue and cancel all pending XHR requests
+        this.chunkQueue = [];
+        this.chunksInFlight = 0;
         this.activeXHRs.forEach((xhrs, file) => {
             xhrs.forEach(xhr => {
                 if (xhr.readyState !== XMLHttpRequest.DONE) {
@@ -213,6 +248,7 @@ export class DropzoneJS extends React.Component {
             const dropzoneNode = this.dropzoneRef.current;
             if (!dropzoneNode) throw new Error("Dropzone node not found");
             this.dropzone = new Dropzone(dropzoneNode, this.getDjsConfig());
+            this.setupChunkThrottle();
             this.setupEvents();
         }
 
@@ -361,6 +397,9 @@ export class DropzoneJS extends React.Component {
                     if (index > -1) xhrs.splice(index, 1);
                 }
 
+                // Release a slot in the chunk queue for the next chunk
+                _this.onChunkComplete();
+
                 dropzoneOnLoad(e);
                 if(xhr?.status == 200) {
                     // Check for final chunk and get the response
@@ -385,6 +424,12 @@ export class DropzoneJS extends React.Component {
                     _this.onError(JSON.parse(xhr?.responseText), xhr?.status);
                 }
 
+            }
+
+            let dropzoneOnError = xhr.onerror;
+            xhr.onerror = function(e) {
+                _this.onChunkComplete();
+                if (dropzoneOnError) dropzoneOnError(e);
             }
         })
 
