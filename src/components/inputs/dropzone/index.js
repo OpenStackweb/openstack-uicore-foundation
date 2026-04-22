@@ -31,7 +31,7 @@ export class DropzoneJS extends React.Component {
             this.props.onUploadComplete(response, this.props.id, this.props.data);
     }
 
-    pollUploadStatus(fileId, baseUrl) {
+    pollUploadStatus(fileId, baseUrl, file) {
         const statusUrl = `${baseUrl}/status/${fileId}`;
         const maxAttempts = 300; // 10 minutes at 2s intervals
         let attempts = 0;
@@ -53,6 +53,10 @@ export class DropzoneJS extends React.Component {
                 if (data.status === 'complete') {
                     clearInterval(this._pollInterval);
                     this._pollInterval = null;
+                    // Call the stored done callback to trigger Dropzone's success event
+                    if (file?._chunksUploadedDone) {
+                        file._chunksUploadedDone();
+                    }
                     this.onUploadComplete(data);
                 } else if (data.status === 'error') {
                     clearInterval(this._pollInterval);
@@ -109,6 +113,17 @@ export class DropzoneJS extends React.Component {
                 done('Max files reached.');
             }
 
+            done();
+        };
+
+        // Override chunksUploaded to defer success event for async processing (HTTP 202)
+        options.chunksUploaded = (file, done) => {
+            if (file._asyncProcessing) {
+                // Store the done callback for later execution after polling completes
+                file._chunksUploadedDone = done;
+                return;
+            }
+            // For synchronous uploads (HTTP 200), call done immediately
             done();
         };
 
@@ -309,6 +324,11 @@ export class DropzoneJS extends React.Component {
             // load callback from dropzone
             let dropzoneOnLoad = xhr.onload;
             xhr.onload = function (e) {
+                // Set async processing flag BEFORE dropzoneOnLoad for 202 responses
+                // This ensures chunksUploaded callback sees the flag and defers done()
+                if(xhr?.status == 202) {
+                    file._asyncProcessing = true;
+                }
 
                 dropzoneOnLoad(e);
                 if(xhr?.status == 200) {
@@ -323,7 +343,7 @@ export class DropzoneJS extends React.Component {
                     let uploadResponse = JSON.parse(xhr.responseText);
                     const fileId = uploadResponse.file_id;
                     const baseUrl = _this.props.config.postUrl;
-                    _this.pollUploadStatus(fileId, baseUrl);
+                    _this.pollUploadStatus(fileId, baseUrl, file);
                 }
                 else{
                     _this.onError(JSON.parse(xhr?.responseText), xhr?.status);
