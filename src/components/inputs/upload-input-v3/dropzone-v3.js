@@ -45,7 +45,7 @@ export const DropzoneV3 = ({
     },
     uploadprogress: (file, progress, bytesSent) => {
       // Use completed bytes as floor to prevent progress oscillation during chunked uploads
-      const effectiveBytes = Math.max(bytesSent, file._completedBytes || 0);
+      const effectiveBytes = Math.max(bytesSent || 0, file._completedBytes || 0);
       const correctedProgress = file.size > 0 ? Math.min(effectiveBytes / file.size * 100, 100) : 0;
       if (onUploadProgress) onUploadProgress(file, correctedProgress);
       if (eventHandlers.uploadprogress) eventHandlers.uploadprogress(file, progress, bytesSent);

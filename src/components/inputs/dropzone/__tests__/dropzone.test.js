@@ -242,7 +242,6 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
 
 describe('DropzoneJS - Progress Bar Monotonicity', () => {
   let wrapper;
-  let capturedHandlers;
 
   const defaultProps = {
     id: 'test-dropzone',
@@ -261,7 +260,7 @@ describe('DropzoneJS - Progress Bar Monotonicity', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    capturedHandlers = {};
+    mockCapturedOptions = {};
   });
 
   afterEach(() => {
@@ -274,25 +273,11 @@ describe('DropzoneJS - Progress Bar Monotonicity', () => {
    * Test: Progress should never decrease during chunked uploads
    *
    * When parallel chunks are in flight, Dropzone fires uploadprogress
-   * events with bytesSent values that can be lower than previously reported
-   * (each chunk starts from 0). The fix tracks completed bytes and uses
-   * them as a floor so progress never goes backwards.
+   * with bytesSent that can be NaN (queued chunks have undefined bytesSent)
+   * or lower than previously reported. The options.uploadprogress override
+   * uses _completedBytes as a floor so progress never goes backwards.
    */
   test('test_dropzone_progress_never_decreases_during_chunked_upload', (done) => {
-    // Override the mock to capture event handlers
-    const DropzoneMock = require('dropzone');
-    DropzoneMock.mockImplementation((element, options) => {
-      return {
-        options: { ...options, chunkSize: 2000000 },
-        on: jest.fn((event, handler) => {
-          capturedHandlers[event] = handler;
-        }),
-        off: jest.fn(),
-        destroy: jest.fn(() => null),
-        getActiveFiles: jest.fn(() => [])
-      };
-    });
-
     wrapper = mount(
       <DropzoneJS
         {...defaultProps}
@@ -302,12 +287,13 @@ describe('DropzoneJS - Progress Bar Monotonicity', () => {
     );
 
     setTimeout(() => {
-      const uploadProgressHandler = capturedHandlers['uploadprogress'];
-      expect(uploadProgressHandler).toBeDefined();
+      const progressHandler = mockCapturedOptions.uploadprogress;
+      expect(progressHandler).toBeDefined();
 
       // Create a mock file with a preview element to capture width updates
       const progressValues = [];
       const mockProgressElem = {
+        nodeName: 'DIV',
         style: {
           set width(val) {
             progressValues.push(parseFloat(val));
@@ -329,30 +315,30 @@ describe('DropzoneJS - Progress Bar Monotonicity', () => {
       };
 
       // Simulate chunk upload progress events in realistic order:
-      // Chunk 0 completes (2MB), Chunk 1 starts (reports low bytesSent)
-      uploadProgressHandler(mockFile, 0, 500000);    // 500KB sent
-      uploadProgressHandler(mockFile, 0, 1500000);   // 1.5MB sent
-      uploadProgressHandler(mockFile, 0, 2000000);   // 2MB sent (chunk 0 done)
+      progressHandler(mockFile, 0, 500000);    // 500KB sent
+      progressHandler(mockFile, 0, 1500000);   // 1.5MB sent
+      progressHandler(mockFile, 0, 2000000);   // 2MB sent (chunk 0 done)
 
       // Simulate xhr.onload completing for chunk 0 — sets _completedBytes
       mockFile._completedBytes = 2000000;
 
-      // New chunk starts - bytesSent resets to a low value
-      uploadProgressHandler(mockFile, 0, 200000);    // 200KB of chunk 1
-      uploadProgressHandler(mockFile, 0, 1000000);   // 1MB of chunk 1
+      // New chunk starts - bytesSent drops (NaN from Dropzone sum with undefined)
+      progressHandler(mockFile, 0, NaN);       // NaN bytesSent
+      progressHandler(mockFile, 0, 200000);    // 200KB of chunk 1
+      progressHandler(mockFile, 0, 1000000);   // 1MB of chunk 1
 
       // Simulate another chunk completing
       mockFile._completedBytes = 4000000;
 
       // Another chunk starts with low bytesSent
-      uploadProgressHandler(mockFile, 0, 100000);    // 100KB of chunk 2
+      progressHandler(mockFile, 0, 100000);    // 100KB of chunk 2
 
       // Verify progress never decreases
       for (let i = 1; i < progressValues.length; i++) {
         expect(progressValues[i]).toBeGreaterThanOrEqual(progressValues[i - 1]);
       }
 
-      // Verify progress values are reasonable (first should be > 0, last should be > first)
+      // Verify progress values are reasonable
       expect(progressValues.length).toBeGreaterThan(0);
       expect(progressValues[progressValues.length - 1]).toBeGreaterThan(progressValues[0]);
 
@@ -362,24 +348,8 @@ describe('DropzoneJS - Progress Bar Monotonicity', () => {
 
   /**
    * Test: Progress should never exceed 100%
-   *
-   * Even if _completedBytes exceeds file size (due to chunk size rounding),
-   * progress should be capped at 100%.
    */
   test('test_dropzone_progress_capped_at_100_percent', (done) => {
-    const DropzoneMock = require('dropzone');
-    DropzoneMock.mockImplementation((element, options) => {
-      return {
-        options: { ...options, chunkSize: 2000000 },
-        on: jest.fn((event, handler) => {
-          capturedHandlers[event] = handler;
-        }),
-        off: jest.fn(),
-        destroy: jest.fn(() => null),
-        getActiveFiles: jest.fn(() => [])
-      };
-    });
-
     wrapper = mount(
       <DropzoneJS
         {...defaultProps}
@@ -389,11 +359,12 @@ describe('DropzoneJS - Progress Bar Monotonicity', () => {
     );
 
     setTimeout(() => {
-      const uploadProgressHandler = capturedHandlers['uploadprogress'];
-      expect(uploadProgressHandler).toBeDefined();
+      const progressHandler = mockCapturedOptions.uploadprogress;
+      expect(progressHandler).toBeDefined();
 
       const progressValues = [];
       const mockProgressElem = {
+        nodeName: 'DIV',
         style: {
           set width(val) {
             progressValues.push(parseFloat(val));
@@ -406,7 +377,7 @@ describe('DropzoneJS - Progress Bar Monotonicity', () => {
 
       const mockFile = {
         name: 'small.pdf',
-        size: 3000000, // 3MB - not a multiple of chunkSize (2MB)
+        size: 3000000, // 3MB - not a multiple of chunkSize
         _completedBytes: 4000000, // Exceeds file size due to rounding
         previewElement: {
           querySelectorAll: jest.fn(() => [mockProgressElem])
@@ -414,11 +385,57 @@ describe('DropzoneJS - Progress Bar Monotonicity', () => {
       };
 
       // bytesSent also exceeds file size
-      uploadProgressHandler(mockFile, 0, 5000000);
+      progressHandler(mockFile, 0, 5000000);
 
       // Progress must be capped at 100%
       expect(progressValues.length).toBe(1);
       expect(progressValues[0]).toBe(100);
+
+      done();
+    }, 10);
+  });
+
+  /**
+   * Test: NaN bytesSent should not break progress (uses _completedBytes floor)
+   */
+  test('test_dropzone_progress_handles_nan_bytes_sent', (done) => {
+    wrapper = mount(
+      <DropzoneJS
+        {...defaultProps}
+        onUploadComplete={jest.fn()}
+        onError={jest.fn()}
+      />
+    );
+
+    setTimeout(() => {
+      const progressHandler = mockCapturedOptions.uploadprogress;
+
+      const progressValues = [];
+      const mockProgressElem = {
+        nodeName: 'DIV',
+        style: {
+          set width(val) {
+            progressValues.push(parseFloat(val));
+          },
+          get width() { return '0%'; }
+        }
+      };
+
+      const mockFile = {
+        name: 'test.mp4',
+        size: 10000000,
+        _completedBytes: 4000000,
+        previewElement: {
+          querySelectorAll: jest.fn(() => [mockProgressElem])
+        }
+      };
+
+      // bytesSent is NaN (happens when queued chunks have undefined bytesSent)
+      progressHandler(mockFile, 0, NaN);
+
+      // Should use _completedBytes as floor: 4000000/10000000 = 40%
+      expect(progressValues.length).toBe(1);
+      expect(progressValues[0]).toBe(40);
 
       done();
     }, 10);

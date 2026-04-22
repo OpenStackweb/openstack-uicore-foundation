@@ -159,6 +159,20 @@ export class DropzoneJS extends React.Component {
             done();
         };
 
+        // Override uploadprogress to use _completedBytes floor (prevents oscillation
+        // caused by chunked uploads where queued chunks drag average progress down)
+        options.uploadprogress = (file, progress, bytesSent) => {
+            const effectiveBytes = Math.max(bytesSent || 0, file._completedBytes || 0);
+            const corrected = file.size > 0 ? Math.min(effectiveBytes / file.size * 100, 100) : 0;
+            if (file.previewElement) {
+                const nodes = file.previewElement.querySelectorAll("[data-dz-uploadprogress]");
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i];
+                    node.nodeName === 'PROGRESS' ? node.value = corrected : node.style.width = corrected + "%";
+                }
+            }
+        };
+
         // Override chunksUploaded to defer success event for async processing (HTTP 202)
         options.chunksUploaded = (file, done) => {
             if (file._asyncProcessing) {
@@ -357,20 +371,8 @@ export class DropzoneJS extends React.Component {
             this.setState({ files })
         });
 
-        this.dropzone.on('uploadprogress', (file, progress, bytesSent) => {
-            // Use completed bytes as floor to prevent progress oscillation
-            const effectiveBytes = Math.max(bytesSent, file._completedBytes || 0);
-            progress = Math.min(effectiveBytes / file.size * 100, 100);
-            if(file.previewElement) {
-                let elem = file.previewElement.querySelectorAll("[data-dz-uploadprogress]");
-
-                if(elem.length > 0)
-                    elem = elem[0];
-
-                if (elem)
-                    elem.style.width = progress + "%";
-            }
-        });
+        // Progress correction is handled by options.uploadprogress override in getDjsConfig.
+        // No additional uploadprogress event handler needed here.
 
         this.dropzone.on('sending', (file, xhr, formData) => {
             if(file?.accessToken)
