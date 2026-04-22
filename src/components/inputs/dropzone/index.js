@@ -354,8 +354,13 @@ export class DropzoneJS extends React.Component {
 
         this.dropzone.on('uploadprogress', (file, progress, bytesSent) => {
             progress = bytesSent / file.size * 100;
-            // https://developer.mozilla.org/es/docs/Web/API/Document/querySelector
-            //let elem = document.querySelector(`#${this.props.id} .dz-upload`);
+            // Ensure progress never goes backwards (chunk queue can cause
+            // bytesSent to drop when a new chunk starts from 0)
+            if (file._maxProgress && progress < file._maxProgress) {
+                progress = file._maxProgress;
+            } else {
+                file._maxProgress = progress;
+            }
             if(file.previewElement) {
                 let elem = file.previewElement.querySelectorAll("[data-dz-uploadprogress]");
 
