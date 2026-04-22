@@ -44,7 +44,10 @@ export const DropzoneV3 = ({
       if (eventHandlers.removedfile) eventHandlers.removedfile(file);
     },
     uploadprogress: (file, progress, bytesSent) => {
-      if (onUploadProgress) onUploadProgress(file, file.size > 0 ? bytesSent / file.size * 100 : 0);
+      // Use completed bytes as floor to prevent progress oscillation during chunked uploads
+      const effectiveBytes = Math.max(bytesSent, file._completedBytes || 0);
+      const correctedProgress = file.size > 0 ? Math.min(effectiveBytes / file.size * 100, 100) : 0;
+      if (onUploadProgress) onUploadProgress(file, correctedProgress);
       if (eventHandlers.uploadprogress) eventHandlers.uploadprogress(file, progress, bytesSent);
     },
     success: (file) => {

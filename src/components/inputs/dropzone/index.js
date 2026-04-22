@@ -331,6 +331,11 @@ export class DropzoneJS extends React.Component {
         this.dropzone.on('removedfile', (file) => {
             if (!file) return;
 
+            // Remove queued chunks for this file so queue doesn't stay stuck
+            this.chunkQueue = this.chunkQueue.filter(
+                entry => entry.files[0] !== file
+            );
+
             // Cancel all active XHR requests for this file
             const xhrs = this.activeXHRs.get(file);
             if (xhrs) {
@@ -436,6 +441,19 @@ export class DropzoneJS extends React.Component {
             xhr.onerror = function(e) {
                 _this.onChunkComplete();
                 if (dropzoneOnError) dropzoneOnError(e);
+            }
+
+            let dropzoneOnAbort = xhr.onabort;
+            xhr.onabort = function(e) {
+                // Release chunk slot so queue doesn't get stuck after cancel
+                _this.onChunkComplete();
+                // Remove this XHR from active tracking
+                const xhrs = _this.activeXHRs.get(file);
+                if (xhrs) {
+                    const index = xhrs.indexOf(xhr);
+                    if (index > -1) xhrs.splice(index, 1);
+                }
+                if (dropzoneOnAbort) dropzoneOnAbort(e);
             }
         })
 
