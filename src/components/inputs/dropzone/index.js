@@ -353,14 +353,9 @@ export class DropzoneJS extends React.Component {
         });
 
         this.dropzone.on('uploadprogress', (file, progress, bytesSent) => {
-            progress = bytesSent / file.size * 100;
-            // Ensure progress never goes backwards (chunk queue can cause
-            // bytesSent to drop when a new chunk starts from 0)
-            if (file._maxProgress && progress < file._maxProgress) {
-                progress = file._maxProgress;
-            } else {
-                file._maxProgress = progress;
-            }
+            // Use completed bytes as floor to prevent progress oscillation
+            const effectiveBytes = Math.max(bytesSent, file._completedBytes || 0);
+            progress = Math.min(effectiveBytes / file.size * 100, 100);
             if(file.previewElement) {
                 let elem = file.previewElement.querySelectorAll("[data-dz-uploadprogress]");
 
@@ -405,28 +400,34 @@ export class DropzoneJS extends React.Component {
                 // Release a slot in the chunk queue for the next chunk
                 _this.onChunkComplete();
 
+                // Track completed bytes for accurate progress (prevents oscillation)
+                const chunkSize = _this.dropzone?.options?.chunkSize || 2000000;
+                file._completedBytes = Math.min(
+                    (file._completedBytes || 0) + chunkSize, file.size
+                );
+
+                // Parse response once
+                let uploadResponse;
+                try { uploadResponse = JSON.parse(xhr.responseText); } catch(ex) { uploadResponse = {}; }
+
+                // Set async flag BEFORE dropzoneOnLoad so chunksUploaded sees it
+                if (xhr?.status == 202 && uploadResponse.file_id) {
+                    file._asyncProcessing = true;
+                }
+
                 dropzoneOnLoad(e);
+
                 if(xhr?.status == 200) {
-                    // Check for final chunk and get the response
-                    let uploadResponse = JSON.parse(xhr.responseText);
                     if (typeof uploadResponse.name === 'string') {
                         _this.onUploadComplete(uploadResponse);
                     }
                 }
-                else if(xhr?.status == 202) {
-                    // Async upload: server accepted the file, poll for completion
-                    let uploadResponse = JSON.parse(xhr.responseText);
-                    const fileId = uploadResponse.file_id;
-                    // Only set async processing flag and start polling for the FINAL chunk
-                    // (identified by presence of file_id)
-                    if (fileId) {
-                        file._asyncProcessing = true;
-                        const baseUrl = _this.props.config.postUrl;
-                        _this.pollUploadStatus(fileId, baseUrl, file);
-                    }
+                else if(xhr?.status == 202 && uploadResponse.file_id) {
+                    const baseUrl = _this.props.config.postUrl;
+                    _this.pollUploadStatus(uploadResponse.file_id, baseUrl, file);
                 }
-                else{
-                    _this.onError(JSON.parse(xhr?.responseText), xhr?.status);
+                else if(xhr?.status != 200 && xhr?.status != 202){
+                    _this.onError(uploadResponse, xhr?.status);
                 }
 
             }

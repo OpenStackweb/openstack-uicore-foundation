@@ -239,3 +239,188 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
     }, 10);
   }, 10000);
 });
+
+describe('DropzoneJS - Progress Bar Monotonicity', () => {
+  let wrapper;
+  let capturedHandlers;
+
+  const defaultProps = {
+    id: 'test-dropzone',
+    config: {
+      postUrl: 'https://example.com/upload'
+    },
+    djsConfig: {
+      chunking: true,
+      chunkSize: 2000000,
+      maxFilesize: 100
+    },
+    eventHandlers: {},
+    data: {},
+    uploadCount: 0
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    capturedHandlers = {};
+  });
+
+  afterEach(() => {
+    if (wrapper) {
+      wrapper.unmount();
+    }
+  });
+
+  /**
+   * Test: Progress should never decrease during chunked uploads
+   *
+   * When parallel chunks are in flight, Dropzone fires uploadprogress
+   * events with bytesSent values that can be lower than previously reported
+   * (each chunk starts from 0). The fix tracks completed bytes and uses
+   * them as a floor so progress never goes backwards.
+   */
+  test('test_dropzone_progress_never_decreases_during_chunked_upload', (done) => {
+    // Override the mock to capture event handlers
+    const DropzoneMock = require('dropzone');
+    DropzoneMock.mockImplementation((element, options) => {
+      return {
+        options: { ...options, chunkSize: 2000000 },
+        on: jest.fn((event, handler) => {
+          capturedHandlers[event] = handler;
+        }),
+        off: jest.fn(),
+        destroy: jest.fn(() => null),
+        getActiveFiles: jest.fn(() => [])
+      };
+    });
+
+    wrapper = mount(
+      <DropzoneJS
+        {...defaultProps}
+        onUploadComplete={jest.fn()}
+        onError={jest.fn()}
+      />
+    );
+
+    setTimeout(() => {
+      const uploadProgressHandler = capturedHandlers['uploadprogress'];
+      expect(uploadProgressHandler).toBeDefined();
+
+      // Create a mock file with a preview element to capture width updates
+      const progressValues = [];
+      const mockProgressElem = {
+        style: {
+          set width(val) {
+            progressValues.push(parseFloat(val));
+          },
+          get width() {
+            return progressValues.length > 0
+              ? progressValues[progressValues.length - 1] + '%'
+              : '0%';
+          }
+        }
+      };
+
+      const mockFile = {
+        name: 'large-video.mp4',
+        size: 10000000, // 10MB
+        previewElement: {
+          querySelectorAll: jest.fn(() => [mockProgressElem])
+        }
+      };
+
+      // Simulate chunk upload progress events in realistic order:
+      // Chunk 0 completes (2MB), Chunk 1 starts (reports low bytesSent)
+      uploadProgressHandler(mockFile, 0, 500000);    // 500KB sent
+      uploadProgressHandler(mockFile, 0, 1500000);   // 1.5MB sent
+      uploadProgressHandler(mockFile, 0, 2000000);   // 2MB sent (chunk 0 done)
+
+      // Simulate xhr.onload completing for chunk 0 — sets _completedBytes
+      mockFile._completedBytes = 2000000;
+
+      // New chunk starts - bytesSent resets to a low value
+      uploadProgressHandler(mockFile, 0, 200000);    // 200KB of chunk 1
+      uploadProgressHandler(mockFile, 0, 1000000);   // 1MB of chunk 1
+
+      // Simulate another chunk completing
+      mockFile._completedBytes = 4000000;
+
+      // Another chunk starts with low bytesSent
+      uploadProgressHandler(mockFile, 0, 100000);    // 100KB of chunk 2
+
+      // Verify progress never decreases
+      for (let i = 1; i < progressValues.length; i++) {
+        expect(progressValues[i]).toBeGreaterThanOrEqual(progressValues[i - 1]);
+      }
+
+      // Verify progress values are reasonable (first should be > 0, last should be > first)
+      expect(progressValues.length).toBeGreaterThan(0);
+      expect(progressValues[progressValues.length - 1]).toBeGreaterThan(progressValues[0]);
+
+      done();
+    }, 10);
+  });
+
+  /**
+   * Test: Progress should never exceed 100%
+   *
+   * Even if _completedBytes exceeds file size (due to chunk size rounding),
+   * progress should be capped at 100%.
+   */
+  test('test_dropzone_progress_capped_at_100_percent', (done) => {
+    const DropzoneMock = require('dropzone');
+    DropzoneMock.mockImplementation((element, options) => {
+      return {
+        options: { ...options, chunkSize: 2000000 },
+        on: jest.fn((event, handler) => {
+          capturedHandlers[event] = handler;
+        }),
+        off: jest.fn(),
+        destroy: jest.fn(() => null),
+        getActiveFiles: jest.fn(() => [])
+      };
+    });
+
+    wrapper = mount(
+      <DropzoneJS
+        {...defaultProps}
+        onUploadComplete={jest.fn()}
+        onError={jest.fn()}
+      />
+    );
+
+    setTimeout(() => {
+      const uploadProgressHandler = capturedHandlers['uploadprogress'];
+      expect(uploadProgressHandler).toBeDefined();
+
+      const progressValues = [];
+      const mockProgressElem = {
+        style: {
+          set width(val) {
+            progressValues.push(parseFloat(val));
+          },
+          get width() {
+            return '0%';
+          }
+        }
+      };
+
+      const mockFile = {
+        name: 'small.pdf',
+        size: 3000000, // 3MB - not a multiple of chunkSize (2MB)
+        _completedBytes: 4000000, // Exceeds file size due to rounding
+        previewElement: {
+          querySelectorAll: jest.fn(() => [mockProgressElem])
+        }
+      };
+
+      // bytesSent also exceeds file size
+      uploadProgressHandler(mockFile, 0, 5000000);
+
+      // Progress must be capped at 100%
+      expect(progressValues.length).toBe(1);
+      expect(progressValues[0]).toBe(100);
+
+      done();
+    }, 10);
+  });
+});
