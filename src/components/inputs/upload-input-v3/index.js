@@ -42,6 +42,7 @@ const UploadInputV3 = ({
   djsConfig,
   id,
   parallelChunkUploads = false,
+  maxConcurrentChunks = 6,
   onError = () => {},
   getAllowedExtensions = null,
   getMaxSize = null,
@@ -229,6 +230,7 @@ const UploadInputV3 = ({
         onFileRemoved={handleFileRemoved}
         onFileCompleted={handleFileCompleted}
         onFileError={handleFileError}
+        maxConcurrentChunks={maxConcurrentChunks}
       >
         <Box className="dz-custom-content">
           <UploadFileIcon className="dz-custom-icon" />

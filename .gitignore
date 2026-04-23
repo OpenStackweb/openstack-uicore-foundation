@@ -4,3 +4,6 @@ node_modules
 *.log
 .idea/
 package.json.lock
+.codegraph
+docs
+package-lock.json

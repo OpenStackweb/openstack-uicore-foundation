@@ -19,6 +19,9 @@ export class DropzoneJS extends React.Component {
         this.state = {files: []};
         this.onUploadComplete = this.onUploadComplete.bind(this);
         this.onError = this.onError.bind(this);
+        this.activeXHRs = new Map(); // Track active XHR requests per file
+        this.chunkQueue = [];
+        this.chunksInFlight = 0;
     }
 
     onError(e, status){
@@ -31,7 +34,43 @@ export class DropzoneJS extends React.Component {
             this.props.onUploadComplete(response, this.props.id, this.props.data);
     }
 
-    pollUploadStatus(fileId, baseUrl) {
+    processChunkQueue() {
+        const maxConcurrent = this.props.maxConcurrentChunks || 6;
+        while (this.chunkQueue.length > 0 && this.chunksInFlight < maxConcurrent) {
+            const { files, dataBlocks } = this.chunkQueue.shift();
+            this.chunksInFlight++;
+            this._originalUploadData(files, dataBlocks);
+        }
+    }
+
+    setupChunkThrottle() {
+        if (!this.dropzone || !this.dropzone._uploadData) return;
+        // Wrap _uploadData to queue chunked uploads with concurrency limit
+        this._originalUploadData = this.dropzone._uploadData.bind(this.dropzone);
+        this.dropzone._uploadData = (files, dataBlocks) => {
+            // Only throttle chunked uploads (single dataBlock with chunkIndex)
+            if (dataBlocks.length === 1 && dataBlocks[0].chunkIndex !== undefined) {
+                this.chunkQueue.push({ files, dataBlocks });
+                this.processChunkQueue();
+            } else {
+                // Non-chunked uploads bypass the queue
+                this._originalUploadData(files, dataBlocks);
+            }
+        };
+    }
+
+    onChunkComplete() {
+        this.chunksInFlight = Math.max(0, this.chunksInFlight - 1);
+        this.processChunkQueue();
+    }
+
+    pollUploadStatus(fileId, baseUrl, file) {
+        // Guard against multiple polling intervals for the same file
+        if (file._pollingActive) {
+            return;
+        }
+        file._pollingActive = true;
+
         const statusUrl = `${baseUrl}/status/${fileId}`;
         const maxAttempts = 300; // 10 minutes at 2s intervals
         let attempts = 0;
@@ -41,6 +80,7 @@ export class DropzoneJS extends React.Component {
             if (attempts > maxAttempts) {
                 clearInterval(this._pollInterval);
                 this._pollInterval = null;
+                file._pollingActive = false;
                 this.onError({ message: 'Upload timed out' });
                 return;
             }
@@ -53,15 +93,22 @@ export class DropzoneJS extends React.Component {
                 if (data.status === 'complete') {
                     clearInterval(this._pollInterval);
                     this._pollInterval = null;
+                    file._pollingActive = false;
+                    // Call the stored done callback to trigger Dropzone's success event
+                    if (file?._chunksUploadedDone) {
+                        file._chunksUploadedDone();
+                    }
                     this.onUploadComplete(data);
                 } else if (data.status === 'error') {
                     clearInterval(this._pollInterval);
                     this._pollInterval = null;
+                    file._pollingActive = false;
                     this.onError(data);
                 }
             } catch (error) {
                 clearInterval(this._pollInterval);
                 this._pollInterval = null;
+                file._pollingActive = false;
                 this.onError(error);
             }
         }, 2000);
@@ -112,6 +159,17 @@ export class DropzoneJS extends React.Component {
             done();
         };
 
+        // Override chunksUploaded to defer success event for async processing (HTTP 202)
+        options.chunksUploaded = (file, done) => {
+            if (file._asyncProcessing) {
+                // Store the done callback for later execution after polling completes
+                file._chunksUploadedDone = done;
+                return;
+            }
+            // For synchronous uploads (HTTP 200), call done immediately
+            done();
+        };
+
         return options
     }
 
@@ -134,6 +192,7 @@ export class DropzoneJS extends React.Component {
         if (!dropzoneNode) throw new Error("Dropzone node not found");
 
         this.dropzone = new Dropzone(dropzoneNode, options);
+        this.setupChunkThrottle();
         this.setupEvents()
     }
 
@@ -146,25 +205,29 @@ export class DropzoneJS extends React.Component {
             clearInterval(this._pollInterval);
             this._pollInterval = null;
         }
+
+        // Clear chunk queue and cancel all pending XHR requests
+        this.chunkQueue = [];
+        this.chunksInFlight = 0;
+        this.activeXHRs.forEach((xhrs, file) => {
+            xhrs.forEach(xhr => {
+                if (xhr.readyState !== XMLHttpRequest.DONE) {
+                    xhr.abort();
+                }
+            });
+        });
+        this.activeXHRs.clear();
+
         if (this.dropzone) {
             const files = this.dropzone.getActiveFiles();
 
             if (files.length > 0) {
-                // Well, seems like we still have stuff uploading.
-                // This is dirty, but let's keep trying to get rid
-                // of the dropzone until we're done here.
-                this.queueDestroy = true;
+                // Cancel active uploads before destroying
+                files.forEach(file => {
+                    this.dropzone.cancelUpload(file);
+                });
 
-                const destroyInterval = window.setInterval(() => {
-                    if (this.queueDestroy === false) {
-                        return window.clearInterval(destroyInterval)
-                    }
-
-                    if (this.dropzone.getActiveFiles().length === 0) {
-                        this.dropzone = this.destroy(this.dropzone);
-                        return window.clearInterval(destroyInterval)
-                    }
-                }, 500)
+                this.dropzone = this.destroy(this.dropzone);
             } else {
                 this.dropzone = this.destroy(this.dropzone)
             }
@@ -185,6 +248,7 @@ export class DropzoneJS extends React.Component {
             const dropzoneNode = this.dropzoneRef.current;
             if (!dropzoneNode) throw new Error("Dropzone node not found");
             this.dropzone = new Dropzone(dropzoneNode, this.getDjsConfig());
+            this.setupChunkThrottle();
             this.setupEvents();
         }
 
@@ -267,6 +331,17 @@ export class DropzoneJS extends React.Component {
         this.dropzone.on('removedfile', (file) => {
             if (!file) return;
 
+            // Cancel all active XHR requests for this file
+            const xhrs = this.activeXHRs.get(file);
+            if (xhrs) {
+                xhrs.forEach(xhr => {
+                    if (xhr.readyState !== XMLHttpRequest.DONE) {
+                        xhr.abort();
+                    }
+                });
+                this.activeXHRs.delete(file);
+            }
+
             const files = this.state.files || [];
             files.forEach((fileInFiles, i) => {
                 if (fileInFiles.name === file.name && fileInFiles.size === file.size) {
@@ -278,9 +353,9 @@ export class DropzoneJS extends React.Component {
         });
 
         this.dropzone.on('uploadprogress', (file, progress, bytesSent) => {
-            progress = bytesSent / file.size * 100;
-            // https://developer.mozilla.org/es/docs/Web/API/Document/querySelector
-            //let elem = document.querySelector(`#${this.props.id} .dz-upload`);
+            // Use completed bytes as floor to prevent progress oscillation
+            const effectiveBytes = Math.max(bytesSent, file._completedBytes || 0);
+            progress = Math.min(effectiveBytes / file.size * 100, 100);
             if(file.previewElement) {
                 let elem = file.previewElement.querySelectorAll("[data-dz-uploadprogress]");
 
@@ -303,32 +378,64 @@ export class DropzoneJS extends React.Component {
             formData.append('size', String(file?.size || 0));
             console.log(`DropzoneJS::sending md5 ${file?.md5} size ${file?.size}`);
 
+            // Track active XHR for cancellation support
+            if (!this.activeXHRs.has(file)) {
+                this.activeXHRs.set(file, []);
+            }
+            this.activeXHRs.get(file).push(xhr);
+
             let _this = this;
             // This will track all request so we can get the correct request that returns final response:
             // We will change the load callback but we need to ensure that we will call original
             // load callback from dropzone
             let dropzoneOnLoad = xhr.onload;
             xhr.onload = function (e) {
+                // Remove this XHR from active tracking
+                const xhrs = _this.activeXHRs.get(file);
+                if (xhrs) {
+                    const index = xhrs.indexOf(xhr);
+                    if (index > -1) xhrs.splice(index, 1);
+                }
+
+                // Release a slot in the chunk queue for the next chunk
+                _this.onChunkComplete();
+
+                // Track completed bytes for accurate progress (prevents oscillation)
+                const chunkSize = _this.dropzone?.options?.chunkSize || 2000000;
+                file._completedBytes = Math.min(
+                    (file._completedBytes || 0) + chunkSize, file.size
+                );
+
+                // Parse response once
+                let uploadResponse;
+                try { uploadResponse = JSON.parse(xhr.responseText); } catch(ex) { uploadResponse = {}; }
+
+                // Set async flag BEFORE dropzoneOnLoad so chunksUploaded sees it
+                if (xhr?.status == 202 && uploadResponse.file_id) {
+                    file._asyncProcessing = true;
+                }
 
                 dropzoneOnLoad(e);
+
                 if(xhr?.status == 200) {
-                    // Check for final chunk and get the response
-                    let uploadResponse = JSON.parse(xhr.responseText);
                     if (typeof uploadResponse.name === 'string') {
                         _this.onUploadComplete(uploadResponse);
                     }
                 }
-                else if(xhr?.status == 202) {
-                    // Async upload: server accepted the file, poll for completion
-                    let uploadResponse = JSON.parse(xhr.responseText);
-                    const fileId = uploadResponse.file_id;
+                else if(xhr?.status == 202 && uploadResponse.file_id) {
                     const baseUrl = _this.props.config.postUrl;
-                    _this.pollUploadStatus(fileId, baseUrl);
+                    _this.pollUploadStatus(uploadResponse.file_id, baseUrl, file);
                 }
-                else{
-                    _this.onError(JSON.parse(xhr?.responseText), xhr?.status);
+                else if(xhr?.status != 200 && xhr?.status != 202){
+                    _this.onError(uploadResponse, xhr?.status);
                 }
 
+            }
+
+            let dropzoneOnError = xhr.onerror;
+            xhr.onerror = function(e) {
+                _this.onChunkComplete();
+                if (dropzoneOnError) dropzoneOnError(e);
             }
         })
 
