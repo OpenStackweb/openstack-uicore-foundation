@@ -7,3 +7,4 @@ package.json.lock
 .codegraph
 docs
 package-lock.json
+.claude

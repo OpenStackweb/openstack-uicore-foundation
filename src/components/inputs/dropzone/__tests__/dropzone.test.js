@@ -12,11 +12,8 @@
  **/
 
 import React from 'react';
-import Enzyme, { mount } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
+import { render, cleanup } from '@testing-library/react';
 import { DropzoneJS } from '../index';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 // Mock dependencies
 jest.mock('../../../security/methods', () => ({
@@ -45,7 +42,6 @@ jest.mock('dropzone', () => {
 });
 
 describe('DropzoneJS - HTTP 202 Polling UX', () => {
-  let wrapper;
   let onUploadCompleteMock;
   let onErrorMock;
 
@@ -72,9 +68,7 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
   });
 
   afterEach(() => {
-    if (wrapper) {
-      wrapper.unmount();
-    }
+    cleanup();
   });
 
   /**
@@ -84,7 +78,7 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
    * This test verifies the mechanism exists in the configuration.
    */
   test('test_dropzone_has_chunks_uploaded_option', (done) => {
-    wrapper = mount(
+    render(
       <DropzoneJS
         {...defaultProps}
         onUploadComplete={onUploadCompleteMock}
@@ -109,7 +103,7 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
    * - This allows Dropzone to fire the success event right away
    */
   test('test_dropzone_chunks_uploaded_calls_done_immediately_for_sync', (done) => {
-    wrapper = mount(
+    render(
       <DropzoneJS
         {...defaultProps}
         onUploadComplete={onUploadCompleteMock}
@@ -144,11 +138,9 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
    * - When chunksUploaded is called for a file WITH _asyncProcessing flag
    * - The done callback should NOT be called immediately
    * - Instead, it should be stored on the file object for later execution
-   *
-   * THIS TEST SHOULD FAIL INITIALLY (demonstrating the bug)
    */
   test('test_dropzone_202_response_should_not_fire_success_immediately', (done) => {
-    wrapper = mount(
+    render(
       <DropzoneJS
         {...defaultProps}
         onUploadComplete={onUploadCompleteMock}
@@ -171,7 +163,6 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
       }
 
       // CRITICAL ASSERTION: done should NOT be called immediately for async processing
-      // The bug is that the current code would call done() regardless of the flag
       expect(mockDone).not.toHaveBeenCalled();
 
       // Verify the done callback was stored on the file for later execution
@@ -200,9 +191,12 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
       })
     );
 
-    wrapper = mount(
+    const ref = React.createRef();
+
+    render(
       <DropzoneJS
         {...defaultProps}
+        ref={ref}
         onUploadComplete={onUploadCompleteMock}
         onError={onErrorMock}
       />
@@ -216,8 +210,8 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
         _chunksUploadedDone: jest.fn()  // Simulate the stored done callback
       };
 
-      // Get the component instance
-      const instance = wrapper.instance();
+      // Get the component instance via ref
+      const instance = ref.current;
 
       // Call pollUploadStatus (simulating the 202 response path)
       instance.pollUploadStatus('file-123', 'https://example.com/upload', mockFile);
@@ -241,7 +235,6 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
 });
 
 describe('DropzoneJS - Progress Bar Monotonicity', () => {
-  let wrapper;
   let capturedHandlers;
 
   const defaultProps = {
@@ -265,9 +258,7 @@ describe('DropzoneJS - Progress Bar Monotonicity', () => {
   });
 
   afterEach(() => {
-    if (wrapper) {
-      wrapper.unmount();
-    }
+    cleanup();
   });
 
   /**
@@ -293,7 +284,7 @@ describe('DropzoneJS - Progress Bar Monotonicity', () => {
       };
     });
 
-    wrapper = mount(
+    render(
       <DropzoneJS
         {...defaultProps}
         onUploadComplete={jest.fn()}
@@ -380,7 +371,7 @@ describe('DropzoneJS - Progress Bar Monotonicity', () => {
       };
     });
 
-    wrapper = mount(
+    render(
       <DropzoneJS
         {...defaultProps}
         onUploadComplete={jest.fn()}
