@@ -101,6 +101,7 @@ module.exports = {
         'components/mui/editable-table': './src/components/mui/editable-table/mui-table-editable.js',
         'components/mui/sortable-table': './src/components/mui/sortable-table/mui-table-sortable.js',
         'components/mui/table': './src/components/mui/table/mui-table.js',
+        'components/mui/table/extra-rows': './src/components/mui/table/extra-rows/index.js',
         'components/mui/formik-inputs/additional-input': './src/components/mui/formik-inputs/additional-input/additional-input.js',
         'components/mui/formik-inputs/additional-input-list': './src/components/mui/formik-inputs/additional-input/additional-input-list.js',
         'components/mui/formik-inputs/async-select': './src/components/mui/formik-inputs/mui-formik-async-select.js',
