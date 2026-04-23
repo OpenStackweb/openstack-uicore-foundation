@@ -191,8 +191,9 @@ const UploadInputV3 = ({
   }, []);
 
   const wrappedOnUploadComplete = useCallback((response, dzId, dzData) => {
-    // Mark all uploading files as complete when upload completes (sync or async)
-    setUploadingFiles(prev => prev.map(f => ({ ...f, complete: true })));
+    // Mark fully-uploaded rows complete (covers HTTP 202 flow where handleFileCompleted was skipped).
+    // Guard against flipping rows whose bytes are still in flight when maxFiles > 1.
+    setUploadingFiles(prev => prev.map(f => (f.progress >= 100 ? { ...f, complete: true } : f)));
     if (onUploadComplete) onUploadComplete(response, dzId, dzData);
   }, [onUploadComplete]);
 

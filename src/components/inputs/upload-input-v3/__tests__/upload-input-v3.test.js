@@ -348,5 +348,79 @@ describe('UploadInputV3', () => {
       expect(screen.getByText(/Loading/)).toBeInTheDocument();
       expect(screen.queryByText(/Complete/)).not.toBeInTheDocument();
     });
+
+    test('async file transitions from Loading to Complete when onUploadComplete fires', () => {
+      render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={1} />);
+
+      // Simulate file added
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'video.mp4', size: 5000000 });
+      });
+
+      // All chunks finish uploading — progress reaches 100 before async polling starts
+      act(() => {
+        dropzoneCallbacks.onUploadProgress({ name: 'video.mp4', size: 5000000 }, 100);
+      });
+
+      // handleFileCompleted fires with _asyncProcessing flag (HTTP 202 case) — file stays Loading
+      act(() => {
+        dropzoneCallbacks.onFileCompleted({ name: 'video.mp4', size: 5000000, _asyncProcessing: true });
+      });
+
+      // File should still be Loading despite progress being 100
+      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.queryByText(/Complete/)).not.toBeInTheDocument();
+
+      // Polling completes — onUploadComplete fires after async processing finishes
+      act(() => {
+        dropzoneCallbacks.onUploadComplete({ name: 'video_final.mp4' }, 'test-upload', {});
+      });
+
+      // Assert: file should now show "Complete"
+      expect(screen.getByText('video.mp4')).toBeInTheDocument();
+      expect(screen.getByText(/Complete/)).toBeInTheDocument();
+      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
+    });
+
+    test('completing one file does not mark other in-flight files as complete when maxFiles > 1', () => {
+      render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={3} />);
+
+      // Simulate two files added
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'file-a.png', size: 10000 });
+      });
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'file-b.png', size: 20000 });
+      });
+
+      // Both should be Loading
+      expect(screen.getByText('file-a.png')).toBeInTheDocument();
+      expect(screen.getByText('file-b.png')).toBeInTheDocument();
+      expect(screen.getAllByText(/Loading/)).toHaveLength(2);
+
+      // File A finishes uploading all chunks — progress reaches 100
+      act(() => {
+        dropzoneCallbacks.onUploadProgress({ name: 'file-a.png', size: 10000 }, 100);
+      });
+
+      // File B is still mid-upload — progress at 40
+      act(() => {
+        dropzoneCallbacks.onUploadProgress({ name: 'file-b.png', size: 20000 }, 40);
+      });
+
+      // File A completes (sync path): handleFileCompleted marks A complete
+      act(() => {
+        dropzoneCallbacks.onFileCompleted({ name: 'file-a.png', size: 10000 });
+      });
+
+      // Then onUploadComplete fires for file A
+      act(() => {
+        dropzoneCallbacks.onUploadComplete({ name: 'file-a.png' }, 'test-upload', {});
+      });
+
+      // Assert: file B should still show "Loading" — it has not finished uploading
+      expect(screen.getByText('file-b.png')).toBeInTheDocument();
+      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+    });
   });
 });
