@@ -156,13 +156,10 @@ const UploadInputV3 = ({
     ));
   }, []);
 
-  // Once the parent updates value, remove the matching completed file from uploadingFiles
+  // Once the parent updates value, remove all completed files from uploadingFiles
   useEffect(() => {
     if (uploadingFiles.length === 0 || value.length === 0) return;
-    setUploadingFiles(prev => prev.filter(f => {
-      if (!f.complete) return true;
-      return !value.some(v => v.filename === f.name);
-    }));
+    setUploadingFiles(prev => prev.filter(f => !f.complete));
   }, [value]);
 
   const handleFileError = useCallback((file, message) => {

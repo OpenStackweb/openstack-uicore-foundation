@@ -308,5 +308,26 @@ describe('UploadInputV3', () => {
       const { container } = render(<UploadInputV3 postUrl="https://example.com/upload" id="test" mediaType={defaultProps.mediaType} />);
       expect(container.firstChild).not.toBeNull();
     });
+
+    test('cleans up completed uploading file when value updates with server-renamed filename', () => {
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={1} />);
+
+      // Simulate file added
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'image.png', size: 75000 });
+      });
+
+      // Simulate file completed
+      act(() => {
+        dropzoneCallbacks.onFileCompleted({ name: 'image.png', size: 75000 });
+      });
+
+      // Parent updates value with server-renamed file
+      rerender(<UploadInputV3 {...defaultProps} value={[{ filename: 'image_abc123.png', size: 75000 }]} maxFiles={1} />);
+
+      // Assert: only the server-renamed file is visible
+      expect(screen.getByText('image_abc123.png')).toBeInTheDocument();
+      expect(screen.queryByText('image.png')).not.toBeInTheDocument();
+    });
   });
 });
