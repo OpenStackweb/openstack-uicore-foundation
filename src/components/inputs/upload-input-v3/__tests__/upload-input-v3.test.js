@@ -329,5 +329,24 @@ describe('UploadInputV3', () => {
       expect(screen.getByText('image_abc123.png')).toBeInTheDocument();
       expect(screen.queryByText('image.png')).not.toBeInTheDocument();
     });
+
+    test('does not mark file as complete when _asyncProcessing is true', () => {
+      render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={1} />);
+
+      // Simulate file added
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'video.mp4', size: 5000000 });
+      });
+
+      // Simulate file completed with _asyncProcessing flag (HTTP 202 case)
+      act(() => {
+        dropzoneCallbacks.onFileCompleted({ name: 'video.mp4', size: 5000000, _asyncProcessing: true });
+      });
+
+      // Assert: file should still show "Loading" (not "Complete") because async processing is in progress
+      expect(screen.getByText('video.mp4')).toBeInTheDocument();
+      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.queryByText(/Complete/)).not.toBeInTheDocument();
+    });
   });
 });

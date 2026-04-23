@@ -151,6 +151,9 @@ const UploadInputV3 = ({
 
   // Mark as complete instead of removing — keep it visible until value is updated by the parent
   const handleFileCompleted = useCallback((file) => {
+    // Skip marking complete for async processing (HTTP 202) — file stays "Loading" until polling confirms
+    if (file._asyncProcessing) return;
+
     setUploadingFiles(prev => prev.map(f =>
       f.name === file.name && f.size === file.size ? { ...f, progress: 100, complete: true } : f
     ));
@@ -188,6 +191,8 @@ const UploadInputV3 = ({
   }, []);
 
   const wrappedOnUploadComplete = useCallback((response, dzId, dzData) => {
+    // Mark all uploading files as complete when upload completes (sync or async)
+    setUploadingFiles(prev => prev.map(f => ({ ...f, complete: true })));
     if (onUploadComplete) onUploadComplete(response, dzId, dzData);
   }, [onUploadComplete]);
 
