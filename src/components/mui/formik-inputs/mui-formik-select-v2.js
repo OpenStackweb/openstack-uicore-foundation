@@ -28,7 +28,7 @@ const MuiFormikSelectV2 = ({ name, label, placeholder, options, ...rest }) => {
         // eslint-disable-next-line react/jsx-props-no-spreading
         {...rest}
         renderValue={(selected) => {
-          if (!selected) {
+          if (selected == null || selected === "") {
             return <em>{finalPlaceholder}</em>;
           }
           const selectedOption = options.find(
