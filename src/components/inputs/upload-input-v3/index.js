@@ -151,18 +151,18 @@ const UploadInputV3 = ({
 
   // Mark as complete instead of removing — keep it visible until value is updated by the parent
   const handleFileCompleted = useCallback((file) => {
+    // Skip marking complete for async processing (HTTP 202) — file stays "Loading" until polling confirms
+    if (file._asyncProcessing) return;
+
     setUploadingFiles(prev => prev.map(f =>
       f.name === file.name && f.size === file.size ? { ...f, progress: 100, complete: true } : f
     ));
   }, []);
 
-  // Once the parent updates value, remove the matching completed file from uploadingFiles
+  // Once the parent updates value, remove all completed files from uploadingFiles
   useEffect(() => {
     if (uploadingFiles.length === 0 || value.length === 0) return;
-    setUploadingFiles(prev => prev.filter(f => {
-      if (!f.complete) return true;
-      return !value.some(v => v.filename === f.name);
-    }));
+    setUploadingFiles(prev => prev.filter(f => !f.complete));
   }, [value]);
 
   const handleFileError = useCallback((file, message) => {
@@ -191,6 +191,9 @@ const UploadInputV3 = ({
   }, []);
 
   const wrappedOnUploadComplete = useCallback((response, dzId, dzData) => {
+    // Mark fully-uploaded rows complete (covers HTTP 202 flow where handleFileCompleted was skipped).
+    // Guard against flipping rows whose bytes are still in flight when maxFiles > 1.
+    setUploadingFiles(prev => prev.map(f => (f.progress >= 100 ? { ...f, complete: true } : f)));
     if (onUploadComplete) onUploadComplete(response, dzId, dzData);
   }, [onUploadComplete]);
 
