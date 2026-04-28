@@ -18,12 +18,12 @@ import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
 import { currencyAmountFromCents } from "../../../../utils/money";
 
-const RefundRow = ({ refund, colGap = 1, trailing = 0, rowSx = {} }) => {
+const RefundRow = ({ refund, colGap = 1, trailing = 0 }) => {
 
   if (!refund) return null;
 
   return (
-    <TableRow sx={rowSx}>
+    <TableRow sx={{ backgroundColor: "#EF6C0014" }}>
       <TableCell>{T.translate("mui_table.ref")}</TableCell>
       <TableCell>
         <Typography

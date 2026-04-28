@@ -20,12 +20,12 @@ import Typography from "@mui/material/Typography";
 import { currencyAmountFromCents } from "../../../../utils/money";
 import { DATETIME_FORMAT, MILLISECONDS_IN_SECOND } from "../../../../utils/constants";
 
-const PaymentRow = ({ payment, colGap = 1, trailing = 0, rowSx = {} }) => {
+const PaymentRow = ({ payment, colGap = 1, trailing = 0 }) => {
 
   if (!payment) return null;
 
   return (
-    <TableRow sx={rowSx}>
+    <TableRow sx={{backgroundColor: "#2E7D3214"}}>
       <TableCell>{T.translate("mui_table.pay")}</TableCell>
       <TableCell>
         <Typography

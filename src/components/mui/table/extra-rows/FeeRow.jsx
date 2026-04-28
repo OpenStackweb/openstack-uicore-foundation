@@ -18,11 +18,11 @@ import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
 import { currencyAmountFromCents } from "../../../../utils/money";
 
-const FeeRow = ({ fee, colGap = 3, trailing = 0, rowSx = {} }) => {
+const FeeRow = ({ fee, colGap = 3, trailing = 0 }) => {
   if (!fee) return null;
 
   return (
-    <TableRow sx={rowSx}>
+    <TableRow>
       <TableCell>{T.translate("mui_table.payfee")}</TableCell>
       <TableCell>
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
