@@ -58,7 +58,14 @@
     "rows_per_page": "Rows per page",
     "sorted_desc": "sorted descending",
     "sorted_asc": "sorted ascending",
-    "total": "Total"
+    "total": "Total",
+    "pay": "PAY",
+    "payment": "Payment",
+    "paid_via": "Paid via",
+    "ref": "REF",
+    "refund": "Refund",
+    "payfee": "PAYFEE",
+    "amount_due": "AMOUNT DUE"
   },
   "meta_fields": {
     "delete_value_warning": "Please verify you want to delete the added value",
