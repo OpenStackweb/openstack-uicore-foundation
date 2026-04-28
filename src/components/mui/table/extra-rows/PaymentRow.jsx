@@ -20,7 +20,7 @@ import Typography from "@mui/material/Typography";
 import { currencyAmountFromCents } from "../../../../utils/money";
 import { DATETIME_FORMAT, MILLISECONDS_IN_SECOND } from "../../../../utils/constants";
 
-const PaymentRow = ({ payment, rowSx = {} }) => {
+const PaymentRow = ({ payment, colGap = 1, trailing = 0, rowSx = {} }) => {
 
   if (!payment) return null;
 
@@ -45,7 +45,10 @@ const PaymentRow = ({ payment, rowSx = {} }) => {
           {moment(payment.created * MILLISECONDS_IN_SECOND).format(DATETIME_FORMAT)}
         </Typography>
       </TableCell>
-      <TableCell />
+      {[...Array(colGap)].map((_, i) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <TableCell key={`pay-col-gap-${i}`} />
+      ))}
       <TableCell>
         <Typography
           variant="body2"
@@ -54,6 +57,10 @@ const PaymentRow = ({ payment, rowSx = {} }) => {
           -{currencyAmountFromCents(payment.amount)}
         </Typography>
       </TableCell>
+      {[...Array(trailing)].map((_, i) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <TableCell key={`pay-trailing-col-${i}`} sx={{ width: 40 }} />
+      ))}
     </TableRow>
   );
 };

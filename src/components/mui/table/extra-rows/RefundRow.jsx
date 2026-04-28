@@ -18,7 +18,7 @@ import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
 import { currencyAmountFromCents } from "../../../../utils/money";
 
-const RefundRow = ({ refund, rowSx = {} }) => {
+const RefundRow = ({ refund, colGap = 1, trailing = 0, rowSx = {} }) => {
 
   if (!refund) return null;
 
@@ -43,7 +43,10 @@ const RefundRow = ({ refund, rowSx = {} }) => {
           {refund.status}
         </Typography>
       </TableCell>
-      <TableCell />
+      {[...Array(colGap)].map((_, i) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <TableCell key={`ref-col-gap-${i}`} />
+      ))}
       <TableCell>
         <Typography
           variant="body2"
@@ -52,6 +55,10 @@ const RefundRow = ({ refund, rowSx = {} }) => {
           -{currencyAmountFromCents(refund.amount)}
         </Typography>
       </TableCell>
+      {[...Array(trailing)].map((_, i) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <TableCell key={`ref-trailing-col-${i}`} sx={{ width: 40 }} />
+      ))}
     </TableRow>
   );
 };

@@ -18,7 +18,7 @@ import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
 import { currencyAmountFromCents } from "../../../../utils/money";
 
-const FeeRow = ({ fee, rowSx = {} }) => {
+const FeeRow = ({ fee, colGap = 3, trailing = 0, rowSx = {} }) => {
   if (!fee) return null;
 
   return (
@@ -29,9 +29,10 @@ const FeeRow = ({ fee, rowSx = {} }) => {
           {fee.title}
         </Typography>
       </TableCell>
-      <TableCell />
-      <TableCell />
-      <TableCell />
+      {[...Array(colGap)].map((_, i) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <TableCell key={`fee-col-gap-${i}`} />
+      ))}
       <TableCell>
         <Typography
           variant="body2"
@@ -40,6 +41,10 @@ const FeeRow = ({ fee, rowSx = {} }) => {
           {currencyAmountFromCents(fee.amount)}
         </Typography>
       </TableCell>
+      {[...Array(trailing)].map((_, i) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <TableCell key={`fee-trailing-col-${i}`} sx={{ width: 40 }} />
+      ))}
     </TableRow>
   );
 };
