@@ -23,10 +23,7 @@ const RefundRow = ({ refund, rowSx = {} }) => {
   if (!refund) return null;
 
   return (
-    <TableRow
-      key={`refund-row-${refund.id}`}
-      sx={rowSx}
-    >
+    <TableRow sx={rowSx}>
       <TableCell>{T.translate("mui_table.ref")}</TableCell>
       <TableCell>
         <Typography

@@ -23,7 +23,7 @@ import {
 import Value from "../components/Value";
 import Heading from "../components/Heading";
 
-const TableCard = ({ title, rows, columns }) => (
+const TableCard = ({ title, rows = [], columns = [] }) => (
   <Card
     sx={{ minWidth: 275, borderRadius: "10px", height: "100%" }}
     variant="outlined"

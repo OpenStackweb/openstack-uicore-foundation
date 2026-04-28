@@ -22,7 +22,7 @@ const FeeRow = ({ fee, rowSx = {} }) => {
   if (!fee) return null;
 
   return (
-    <TableRow key={`fee-row-${fee.id}`} sx={rowSx}>
+    <TableRow sx={rowSx}>
       <TableCell>{T.translate("mui_table.payfee")}</TableCell>
       <TableCell>
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
