@@ -127,24 +127,24 @@ const AdditionalInput = ({
             <Grid2 container spacing={2} sx={{ alignItems: "start", mt: 2 }}>
               <Grid2 size={4}>
                 <MuiFormikTextField
+                  id={buildFieldName("minimum_quantity")}
                   name={buildFieldName("minimum_quantity")}
-                  placeholder={T.translate(
-                    "additional_inputs.placeholders.minimum_quantity"
-                  )}
                   type="number"
                   margin="none"
                   fullWidth
+                  label={T.translate("additional_inputs.minimum")}
+                  placeholder={T.translate("additional_inputs.placeholders.minimum_quantity")}
                 />
               </Grid2>
               <Grid2 size={4}>
                 <MuiFormikTextField
+                  id={buildFieldName("maximum_quantity")}
                   name={buildFieldName("maximum_quantity")}
-                  placeholder={T.translate(
-                    "additional_inputs.placeholders.maximum_quantity"
-                  )}
                   type="number"
                   margin="none"
                   fullWidth
+                  label={T.translate("additional_inputs.maximum")}
+                  placeholder={T.translate("additional_inputs.placeholders.maximum_quantity")}
                 />
               </Grid2>
             </Grid2>
