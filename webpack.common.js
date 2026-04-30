@@ -107,6 +107,7 @@ module.exports = {
         'components/mui/formik-inputs/async-select': './src/components/mui/formik-inputs/mui-formik-async-select.js',
         'components/mui/formik-inputs/checkbox-group': './src/components/mui/formik-inputs/mui-formik-checkbox-group.js',
         'components/mui/formik-inputs/checkbox': './src/components/mui/formik-inputs/mui-formik-checkbox.js',
+        'components/mui/formik-inputs/color-input': './src/components/mui/formik-inputs/mui-formik-color-input.js',
         'components/mui/formik-inputs/datepicker': './src/components/mui/formik-inputs/mui-formik-datepicker.js',
         'components/mui/formik-inputs/discount-field': './src/components/mui/formik-inputs/mui-formik-discountfield.js',
         'components/mui/formik-inputs/dropdown-checkbox': './src/components/mui/formik-inputs/mui-formik-dropdown-checkbox.js',
