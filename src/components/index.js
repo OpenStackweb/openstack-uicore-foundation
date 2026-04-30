@@ -84,6 +84,7 @@ export {TotalRow as MuiTotalRow, NotesRow as MuiNotesRow} from './mui/table/extr
 export {default as MuiFormikAsyncSelect} from './mui/formik-inputs/mui-formik-async-select'
 export {default as MuiFormikCheckboxGroup} from './mui/formik-inputs/mui-formik-checkbox-group'
 export {default as MuiFormikCheckbox} from './mui/formik-inputs/mui-formik-checkbox'
+export {default as MuiFormikColorInput} from './mui/formik-inputs/mui-formik-color-input'
 export {default as MuiFormikDatepicker} from './mui/formik-inputs/mui-formik-datepicker'
 export {default as MuiFormikDiscountField} from './mui/formik-inputs/mui-formik-discountfield'
 export {default as MuiFormikDropdownCheckbox} from './mui/formik-inputs/mui-formik-dropdown-checkbox'
