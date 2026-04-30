@@ -14,7 +14,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { TextField, IconButton, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import ClearIcon from "@mui/icons-material/Clear";
+import CancelIcon from "@mui/icons-material/Cancel";
 import debounce from "lodash/debounce";
 import { DEBOUNCE_WAIT } from "../../utils/constants";
 
@@ -59,23 +59,18 @@ const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) =
       value={searchTerm}
       placeholder={placeholder}
       slotProps={{
-        input: {          
-          startAdornment: debounced && (
+        input: {
+          startAdornment: (
             <InputAdornment position="start">
               <SearchIcon sx={{ color: "#0000008F" }} />
             </InputAdornment>
           ),
           endAdornment: (
             <InputAdornment position="end">
-              {searchTerm ? (
-                <IconButton size="small" onClick={handleClear}>
-                  <ClearIcon fontSize="small" sx={{ color: "#0000008F" }} />
+              {searchTerm && (
+                <IconButton onClick={handleClear} disableRipple>
+                  <CancelIcon sx={{ color: "#0000008F" }} />
                 </IconButton>
-              ) : 
-              (
-                !debounced && <SearchIcon
-                  sx={{ mr: 1, color: "#0000008F", position: "absolute", right: 0 }}
-                />
               )}
             </InputAdornment>
           )
@@ -86,8 +81,9 @@ const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) =
       fullWidth
       sx={{
         "& .MuiOutlinedInput-root": {
-          height: "36px"
-        }
+          height: "36px",
+          paddingX: 1
+        },        
       }}
     />
   );
