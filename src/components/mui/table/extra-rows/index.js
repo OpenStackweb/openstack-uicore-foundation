@@ -13,3 +13,6 @@
 
 export { default as TotalRow } from "./TotalRow";
 export { default as NotesRow } from "./NotesRow";
+export { default as FeeRow } from "./FeeRow";
+export { default as PaymentRow } from "./PaymentRow";
+export { default as RefundRow } from "./RefundRow";

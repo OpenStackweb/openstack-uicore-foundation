@@ -1,6 +1,6 @@
 {
     "name": "openstack-uicore-foundation",
-    "version": "5.0.15",
+    "version": "5.0.17-beta.4",
     "description": "ui reactjs components for openstack marketing site",
     "main": "lib/openstack-uicore-foundation.js",
     "scripts": {
