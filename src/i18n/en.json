@@ -79,6 +79,8 @@
     "type": "Field Type",
     "required": "Required",
     "delete_warning": "Are you sure you want to delete meta field ",
+    "minimum": "Minimum",
+    "maximum": "Maximum",
     "placeholders": {
       "title": "Field Title",
       "type": "Select...",
