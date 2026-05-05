@@ -20,7 +20,15 @@ import {
 } from "@mui/material";
 import { useField } from "formik";
 import { DEBOUNCE_WAIT_250 } from "../../../utils/constants";
+import PropTypes from "prop-types";
 
+/**
+ * Async Autocomplete with two modes:
+ * - Remote (default): fetches options from API on each user input (debounced).
+ * - Local (localFilter=true): fetches once on mount and filters options client-side.
+ * Note: localFilter mode assumes stable queryParams (set once on mount).
+ * If queryParams need to change, remount the component instead.
+ */
 const MuiFormikAsyncAutocomplete = ({
   name,
   queryFunction,
@@ -32,7 +40,7 @@ const MuiFormikAsyncAutocomplete = ({
   formatSelectedValue = null,
   queryParams = [],
   isMulti = false,
-  defaultOptions
+  localFilter = false
 }) => {
   const [field, meta, helpers] = useField(name);
   const [options, setOptions] = useState([]);
@@ -59,7 +67,7 @@ const MuiFormikAsyncAutocomplete = ({
   };
 
   useEffect(() => {
-    if (!defaultOptions && searchTerm) {
+    if (!localFilter && searchTerm) {
       const delayDebounce = setTimeout(() => {
         fetchOptions(searchTerm);
       }, DEBOUNCE_WAIT_250);
@@ -100,10 +108,10 @@ const MuiFormikAsyncAutocomplete = ({
       fullWidth
       getOptionLabel={(option) => option.label || ""}
       isOptionEqualToValue={(option, value) => option.value === value.value}
-      onInputChange={!defaultOptions ? (e, newInput) => setSearchTerm(newInput) : undefined}
+      onInputChange={!localFilter ? (e, newInput) => setSearchTerm(newInput) : undefined}
       filterOptions={
         // only apply filterOptions for "local" search
-        defaultOptions
+        localFilter
           ? (options, { inputValue }) =>
             options.filter((opt) =>
               opt.label.toLowerCase().includes(inputValue.toLowerCase())
@@ -145,6 +153,14 @@ const MuiFormikAsyncAutocomplete = ({
       )}
     />
   );
+};
+
+MuiFormikAsyncAutocomplete.propTypes = {
+  name: PropTypes.string.isRequired,
+  queryFunction: PropTypes.func.isRequired,
+  formatOption: PropTypes.func,
+  queryParams: PropTypes.array,
+  localFilter: PropTypes.bool,
 };
 
 export default MuiFormikAsyncAutocomplete;

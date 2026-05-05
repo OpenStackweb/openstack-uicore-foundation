@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { TextField } from "@mui/material";
 import { useField } from "formik";
@@ -6,23 +6,26 @@ import { useField } from "formik";
 const MuiFormikColorInput = ({ name, ...rest }) => {
   const [field, meta, helpers] = useField(name);
   const [localValue, setLocalValue] = useState(field.value || "#000000");
-
-  useEffect(() => {
-    setLocalValue(field.value || "#000000");
-  }, [field.value]);
+  const isDirtyRef = useRef(false);
 
   const handleChange = (e) => {
     setLocalValue(e.target.value);
+    isDirtyRef.current = true;
   };
 
   const handleBlur = (e) => {
-    helpers.setValue(e.target.value);
+    field.onBlur(e);
     helpers.setTouched(true);
+    if (isDirtyRef.current) {
+      helpers.setValue(localValue);
+      isDirtyRef.current = false;
+    }
   };
 
   return (
     <TextField
       type="color"
+      name={field.name}
       value={localValue}
       onChange={handleChange}
       onBlur={handleBlur}
@@ -31,7 +34,7 @@ const MuiFormikColorInput = ({ name, ...rest }) => {
       fullWidth
       sx={{
         "& input[type='color']::-webkit-color-swatch-wrapper": {
-          padding: "2px",
+          padding: "2px"
         }
       }}
       {...rest}
