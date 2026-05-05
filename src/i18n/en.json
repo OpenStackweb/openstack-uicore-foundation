@@ -65,6 +65,8 @@
     "ref": "REF",
     "refund": "Refund",
     "payfee": "PAYFEE",
+    "dis": "DIS",
+    "discount": "Discount",
     "amount_due": "AMOUNT DUE",
     "note": "NOTE"
   },
