@@ -65,7 +65,8 @@
     "ref": "REF",
     "refund": "Refund",
     "payfee": "PAYFEE",
-    "amount_due": "AMOUNT DUE"
+    "amount_due": "AMOUNT DUE",
+    "note": "NOTE"
   },
   "meta_fields": {
     "delete_value_warning": "Please verify you want to delete the added value",
