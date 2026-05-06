@@ -2,23 +2,30 @@ import React, { useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { TextField } from "@mui/material";
 import { useField } from "formik";
+import { DEBOUNCE_WAIT_150 } from "../../../utils/constants";
 
 const MuiFormikColorInput = ({ name, ...rest }) => {
   const [field, meta, helpers] = useField(name);
   const [localValue, setLocalValue] = useState(field.value || "#000000");
-  const isDirtyRef = useRef(false);
+  const debounceRef = useRef(null);
 
   const handleChange = (e) => {
-    setLocalValue(e.target.value);
-    isDirtyRef.current = true;
+    const value = e.target.value;
+    setLocalValue(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      helpers.setValue(value);
+      debounceRef.current = null;
+    }, DEBOUNCE_WAIT_150);
   };
 
   const handleBlur = (e) => {
     field.onBlur(e);
     helpers.setTouched(true);
-    if (isDirtyRef.current) {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
       helpers.setValue(localValue);
-      isDirtyRef.current = false;
     }
   };
 
