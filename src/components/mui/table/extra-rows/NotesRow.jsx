@@ -15,15 +15,22 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import * as React from "react";
 import { Typography } from "@mui/material";
+import T from "i18n-react";
 
-const NotesRow = ({ colCount, note }) => (
+const NotesRow = ({ colCount, note, showCode = false }) => {
+  const colSpan = showCode ? colCount - 1 : colCount;
+  return (
     <TableRow>
-      <TableCell sx={{ fontWeight: 800 }} colSpan={colCount}>
-        <Typography variant="body2" sx={{ color: "text.secondary" }}>
+      {showCode && (
+        <TableCell>{T.translate("mui_table.note")}</TableCell>
+      )}
+      <TableCell sx={{fontWeight: 800}} colSpan={colSpan}>
+        <Typography variant="body2" sx={{color: "text.secondary"}}>
           {note}
         </Typography>
       </TableCell>
     </TableRow>
   );
+}
 
 export default NotesRow;
