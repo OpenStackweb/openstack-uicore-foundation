@@ -27,7 +27,8 @@ const MuiFormikUpload = ({
   id,
   name,
   onDelete,
-  maxFiles = MAX_INVENTORY_IMAGES_UPLOAD_QTY
+  maxFiles = MAX_INVENTORY_IMAGES_UPLOAD_QTY,
+  allowedExtensions
 }) => {
   const [field, meta, helpers] = useField(name);
 
@@ -35,7 +36,7 @@ const MuiFormikUpload = ({
     max_size: MAX_INVENTORY_IMAGE_UPLOAD_SIZE,
     max_uploads_qty: maxFiles,
     type: {
-      allowed_extensions: ALLOWED_INVENTORY_IMAGE_FORMATS
+      allowed_extensions: allowedExtensions || ALLOWED_INVENTORY_IMAGE_FORMATS
     }
   };
 
@@ -108,7 +109,8 @@ MuiFormikUpload.propTypes = {
   id: PropTypes.string,
   name: PropTypes.string.isRequired,
   onDelete: PropTypes.func,
-  maxFiles: PropTypes.number
+  maxFiles: PropTypes.number,
+  allowedExtensions: PropTypes.arrayOf(PropTypes.string)
 };
 
 export default MuiFormikUpload;
