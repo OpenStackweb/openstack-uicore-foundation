@@ -91,7 +91,9 @@ const FormItemTable = ({
       (mf) => mf.class_field === "Item" && mf.is_required
     );
     const hasMissingFields = requiredFields.some((mf) => {
-      const value = values[`i-${row.form_item_id}-c-item-f-${mf.type_id}`];
+      const value = values[`i-${row.form_item_id}-c-Item-f-${mf.type_id}`];
+      if (mf.type === "CheckBoxList") return !Array.isArray(value) || value.length === 0;
+      if (mf.type === "CheckBox") return value !== true;
       return value === undefined || value === null || value === "";
     });
 
