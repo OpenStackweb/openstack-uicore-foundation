@@ -13,14 +13,7 @@
 
 import React from "react";
 import T from "i18n-react/dist/i18n-react";
-import {
-  FeeRow,
-  NotesRow,
-  PaymentRow,
-  RefundRow,
-  DiscountRow,
-  TotalRow
-} from "../table/extra-rows";
+import {DiscountRow, FeeRow, NotesRow, PaymentRow, RefundRow, TotalRow} from "../table/extra-rows";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -32,10 +25,10 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import Table from "@mui/material/Table";
 import TableHead from "@mui/material/TableHead";
-import { currencyAmountFromCents } from "../../../utils/money";
-import { SPONSOR_FORMS_METAFIELD_CLASS } from "../../../utils/constants";
+import {currencyAmountFromCents} from "../../../utils/money";
+import {SPONSOR_FORMS_METAFIELD_CLASS} from "../../../utils/constants";
 
-const mapOrderData = (forms) => {
+const mapOrderData = (forms, showItemDescription) => {
   if (!forms) return [];
 
   return forms.map((form) => ({
@@ -50,26 +43,28 @@ const mapOrderData = (forms) => {
         const itemDetails = [it.type?.name];
 
         // item details
-        itemDetails.push(
-          ...formMetaFields.map((mf) => {
-            const val =
-              mf.values?.length > 0
-                ? mf.values.find((v) => v.id === mf.current_value)?.name
-                : mf.current_value;
-            return (
-              <div key={`mf-list-${it.id}-${mf.id}`}>
-                {mf.name}: {val}
-              </div>
-            );
-          })
-        );
+        if (showItemDescription) {
+          itemDetails.push(
+            ...formMetaFields.map((mf) => {
+              const val =
+                mf.values?.length > 0
+                  ? mf.values.find((v) => v.id === mf.current_value)?.name
+                  : mf.current_value;
+              return (
+                <div key={`mf-list-${it.id}-${mf.id}`}>
+                  {mf.name}: {val}
+                </div>
+              );
+            })
+          );
 
-        itemDetails.push(<br key={`mf-list-${it.id}-spacer`} />); // spacer
-        itemDetails.push(
-          <div key={`mf-list-${it.id}-total`}>
-            {T.translate("sponsor_order_grid.total")}: {it.quantity}
-          </div>
-        );
+          itemDetails.push(<br key={`mf-list-${it.id}-spacer`}/>); // spacer
+          itemDetails.push(
+            <div key={`mf-list-${it.id}-total`}>
+              {T.translate("sponsor_order_grid.total")}: {it.quantity}
+            </div>
+          );
+        }
 
         const amount = currencyAmountFromCents(it.amount || 0);
         const lineId = it.line_id;
@@ -91,17 +86,17 @@ const mapOrderData = (forms) => {
 };
 
 const SponsorOrderGrid = ({
-  lines,
-  notes,
-  payments,
-  refunds,
-  fees,
-  total,
-  amountDue,
-  withDescription = false,
-  onCancelForm,
-  onUndoCancelForm
-}) => {
+                            lines,
+                            notes,
+                            payments,
+                            refunds,
+                            fees,
+                            total,
+                            amountDue,
+                            withDescription = false,
+                            onCancelForm,
+                            onUndoCancelForm
+                          }) => {
   const data = mapOrderData(lines, withDescription);
   const showActionCol = onCancelForm && onUndoCancelForm;
   const trailingCols = showActionCol ? 1 : 0;
@@ -142,7 +137,7 @@ const SponsorOrderGrid = ({
         if (row.cancelled) {
           return (
             <IconButton size="large" onClick={() => onUndoCancelForm(row)}>
-              <ArrowBackIcon fontSize="large" sx={{ mr: 2 }} />{" "}
+              <ArrowBackIcon fontSize="large" sx={{mr: 2}}/>{" "}
               {T.translate("general.undo").toUpperCase()}
             </IconButton>
           );
@@ -150,7 +145,7 @@ const SponsorOrderGrid = ({
 
         return (
           <IconButton size="large" onClick={() => onCancelForm(row)}>
-            <DeleteIcon fontSize="large" />
+            <DeleteIcon fontSize="large"/>
           </IconButton>
         );
       }
@@ -158,15 +153,15 @@ const SponsorOrderGrid = ({
   }
 
   return (
-    <Box sx={{ width: "100%" }}>
-      <Paper elevation={0} sx={{ width: "100%", mb: 2 }}>
+    <Box sx={{width: "100%"}}>
+      <Paper elevation={0} sx={{width: "100%", mb: 2}}>
         <TableContainer
           component={Paper}
-          sx={{ borderRadius: 0, boxShadow: "none" }}
+          sx={{borderRadius: 0, boxShadow: "none"}}
         >
           <Table>
             {/* TABLE HEADER */}
-            <TableHead sx={{ backgroundColor: "#EAEAEA" }}>
+            <TableHead sx={{backgroundColor: "#EAEAEA"}}>
               <TableRow>
                 {columns.map((col) => (
                   <TableCell key={col.columnKey} align={col.align ?? "left"}>
@@ -191,12 +186,12 @@ const SponsorOrderGrid = ({
                       <TableCell
                         key={col.columnKey}
                         align={col.align ?? "left"}
-                        sx={{ fontWeight: "normal" }}
+                        sx={{fontWeight: "normal"}}
                       >
                         {col.render ? (
                           col.render(row)
                         ) : (
-                          <span style={{ fontWeight: "normal" }}>
+                          <span style={{fontWeight: "normal"}}>
                             {row[col.columnKey]}
                           </span>
                         )}
@@ -218,7 +213,7 @@ const SponsorOrderGrid = ({
               })}
               {fees &&
                 fees.map((fee) => (
-                  <FeeRow fee={fee} key={`fee-row-${fee.id}`} trailing={1} />
+                  <FeeRow fee={fee} key={`fee-row-${fee.id}`} trailing={1}/>
                 ))}
               {refunds &&
                 refunds.map((refund) => (
@@ -254,7 +249,7 @@ const SponsorOrderGrid = ({
                     : null
                 }
                 targetCol="amount"
-                rowSx={{ backgroundColor: "#F1F3F5" }}
+                rowSx={{backgroundColor: "#F1F3F5"}}
               />
 
               {data.length === 0 && (

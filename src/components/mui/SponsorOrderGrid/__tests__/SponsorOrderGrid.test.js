@@ -165,7 +165,7 @@ describe("SponsorOrderGrid", () => {
         }
       ]
     });
-    render(<SponsorOrderGrid lines={[makeForm({ items: [item] })]} total={0} />);
+    render(<SponsorOrderGrid lines={[makeForm({ items: [item] })]} total={0} withDescription />);
     expect(screen.getByText(/Booth Size/)).toBeInTheDocument();
   });
 });
