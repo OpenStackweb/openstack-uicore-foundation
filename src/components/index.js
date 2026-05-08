@@ -116,6 +116,7 @@ export {default as MuiOrderSummary} from './mui/OrderSummary'
 export {default as MuiStatusChip} from './mui/StatusChip'
 export {default as MuiUploadBtn} from './mui/UploadBtn'
 export {default as MuiUploadDialog} from './mui/UploadDialog'
+export {default as MuiInfoNote} from './mui/InfoNote'
 
 // these include 3rd party deps
 // export {default as ExtraQuestionsForm } from './extra-questions/index.js';
