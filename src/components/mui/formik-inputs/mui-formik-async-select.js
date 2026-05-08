@@ -32,7 +32,6 @@ import PropTypes from "prop-types";
 const MuiFormikAsyncAutocomplete = ({
   name,
   queryFunction,
-  multiple = false,
   placeholder = "Select...",
   plainValue = false,
   hiddenOptions = [],
@@ -47,7 +46,7 @@ const MuiFormikAsyncAutocomplete = ({
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const value = field.value || (multiple ? [] : null);
+  const value = field.value || (isMulti ? [] : null);
   const error = meta.touched && meta.error;
 
   const fetchOptions = async (input = "") => {
@@ -81,7 +80,7 @@ const MuiFormikAsyncAutocomplete = ({
   }, []);
 
   const handleChange = (event, selected) => {
-    if (!multiple) {
+    if (!isMulti) {
       const selectedValue = plainValue ? selected?.value || "" : selected;
       helpers.setValue(selectedValue);
       return;
@@ -90,10 +89,10 @@ const MuiFormikAsyncAutocomplete = ({
     const selectedItems = plainValue
       ? selected.map((s) => s.value)
       : selected.map((s) =>
-          formatSelectedValue
-            ? formatSelectedValue(s)
-            : { id: parseInt(s.value), name: s.label }
-        );
+        formatSelectedValue
+          ? formatSelectedValue(s)
+          : { id: parseInt(s.value), name: s.label }
+      );
 
     helpers.setValue(selectedItems);
   };
@@ -114,7 +113,9 @@ const MuiFormikAsyncAutocomplete = ({
         localFilter
           ? (options, { inputValue }) =>
             options.filter((opt) =>
-              opt.label.toLowerCase().includes(inputValue.toLowerCase())
+              String(opt.label ?? "").toLowerCase().includes(
+                String(inputValue ?? "").toLowerCase()
+              )
             )
           : undefined
       }
@@ -147,7 +148,7 @@ const MuiFormikAsyncAutocomplete = ({
       )}
       renderOption={(props, option, { selected }) => (
         <li {...props}>
-          {multiple && <Checkbox checked={selected} sx={{ mr: 1 }} />}
+          {isMulti && <Checkbox checked={selected} sx={{ mr: 1 }} />}
           {option.label}
         </li>
       )}
@@ -157,6 +158,7 @@ const MuiFormikAsyncAutocomplete = ({
 
 MuiFormikAsyncAutocomplete.propTypes = {
   name: PropTypes.string.isRequired,
+  isMulti: PropTypes.bool,
   queryFunction: PropTypes.func.isRequired,
   formatOption: PropTypes.func,
   queryParams: PropTypes.array,
