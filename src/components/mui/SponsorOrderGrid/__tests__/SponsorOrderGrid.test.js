@@ -59,12 +59,12 @@ const defaultProps = {
 describe("SponsorOrderGrid", () => {
   test("renders column headers", () => {
     render(<SponsorOrderGrid {...defaultProps} />);
-    expect(screen.getByText("order_details_grid.code")).toBeInTheDocument();
-    expect(screen.getByText("order_details_grid.contents")).toBeInTheDocument();
-    expect(screen.getByText("order_details_grid.addon")).toBeInTheDocument();
-    expect(screen.getByText("order_details_grid.details")).toBeInTheDocument();
-    expect(screen.getByText("order_details_grid.rate")).toBeInTheDocument();
-    expect(screen.getByText("order_details_grid.amount")).toBeInTheDocument();
+    expect(screen.getByText("sponsor_order_grid.code")).toBeInTheDocument();
+    expect(screen.getByText("sponsor_order_grid.contents")).toBeInTheDocument();
+    expect(screen.getByText("sponsor_order_grid.addon")).toBeInTheDocument();
+    expect(screen.getByText("sponsor_order_grid.details")).toBeInTheDocument();
+    expect(screen.getByText("sponsor_order_grid.rate")).toBeInTheDocument();
+    expect(screen.getByText("sponsor_order_grid.amount")).toBeInTheDocument();
   });
 
   test("renders item code and name", () => {
@@ -98,7 +98,7 @@ describe("SponsorOrderGrid", () => {
   test("does not render action column when callbacks are absent", () => {
     render(<SponsorOrderGrid {...defaultProps} />);
     expect(
-      screen.queryByText("order_details_grid.action")
+      screen.queryByText("sponsor_order_grid.action")
     ).not.toBeInTheDocument();
   });
 
@@ -110,7 +110,7 @@ describe("SponsorOrderGrid", () => {
         onUndoCancelForm={jest.fn()}
       />
     );
-    expect(screen.getByText("order_details_grid.action")).toBeInTheDocument();
+    expect(screen.getByText("sponsor_order_grid.action")).toBeInTheDocument();
   });
 
   test("renders delete button for active item and calls onCancelForm on click", () => {
@@ -149,7 +149,7 @@ describe("SponsorOrderGrid", () => {
   test("uses amountDue label when amountDue prop is provided", () => {
     render(<SponsorOrderGrid lines={[]} amountDue={5000} />);
     expect(
-      screen.getByText("order_details_grid.amount_due")
+      screen.getByText("sponsor_order_grid.amount_due")
     ).toBeInTheDocument();
   });
 

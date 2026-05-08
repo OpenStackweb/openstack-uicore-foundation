@@ -67,7 +67,7 @@ const mapOrderData = (forms) => {
         itemDetails.push(<br key={`mf-list-${it.id}-spacer`} />); // spacer
         itemDetails.push(
           <div key={`mf-list-${it.id}-total`}>
-            {T.translate("order_details_grid.total")}: {it.quantity}
+            {T.translate("sponsor_order_grid.total")}: {it.quantity}
           </div>
         );
 
@@ -109,34 +109,34 @@ const SponsorOrderGrid = ({
   const columns = [
     {
       columnKey: "code",
-      header: T.translate("order_details_grid.code")
+      header: T.translate("sponsor_order_grid.code")
     },
     {
       columnKey: "name",
-      header: T.translate("order_details_grid.contents")
+      header: T.translate("sponsor_order_grid.contents")
     },
     {
       columnKey: "addon_name",
-      header: T.translate("order_details_grid.addon")
+      header: T.translate("sponsor_order_grid.addon")
     },
     {
       columnKey: "item_name",
-      header: T.translate("order_details_grid.details")
+      header: T.translate("sponsor_order_grid.details")
     },
     {
       columnKey: "rate",
-      header: T.translate("order_details_grid.rate")
+      header: T.translate("sponsor_order_grid.rate")
     },
     {
       columnKey: "amount",
-      header: T.translate("order_details_grid.amount")
+      header: T.translate("sponsor_order_grid.amount")
     }
   ];
 
   if (showActionCol) {
     columns.push({
       columnKey: "actions",
-      header: T.translate("order_details_grid.action"),
+      header: T.translate("sponsor_order_grid.action"),
       align: "center",
       render: (row) => {
         if (row.cancelled) {
@@ -250,7 +250,7 @@ const SponsorOrderGrid = ({
                 total={total || amountDue}
                 label={
                   amountDue
-                    ? T.translate("order_details_grid.amount_due")
+                    ? T.translate("sponsor_order_grid.amount_due")
                     : null
                 }
                 targetCol="amount"

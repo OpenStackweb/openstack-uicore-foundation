@@ -121,5 +121,17 @@
     "button_cta": "PAY {amount}",
     "title": "Select a payment method",
     "payment_confirmation_error": "Payment confirmation failed"
+  },
+  "sponsor_order_grid": {
+    "code": "Code",
+    "contents": "Contents",
+    "addon": "Add-on",
+    "details": "Details",
+    "discount": "Discount",
+    "amount": "Amount",
+    "amount_due": "AMOUNT DUE",
+    "total": "Total",
+    "rate": "Rate",
+    "action": "Action"
   }
 }
