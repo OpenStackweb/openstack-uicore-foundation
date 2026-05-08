@@ -140,6 +140,7 @@ module.exports = {
         'components/mui/loading-overlay': './src/components/mui/LoadingOverlay/index.jsx',
         'components/mui/nav-bar': './src/components/mui/NavBar/index.js',
         'components/mui/order-summary': './src/components/mui/OrderSummary/index.jsx',
+        'components/mui/sponsor-order-grid': './src/components/mui/SponsorOrderGrid/index.js',
         'components/mui/status-chip': './src/components/mui/StatusChip/index.js',
         'components/mui/stripe-payment': './src/components/mui/StripePayment/index.jsx',
         'components/mui/upload-btn': './src/components/mui/UploadBtn/index.js',

@@ -12,24 +12,26 @@
  * */
 
 import {
-    CENTS_FACTOR,
-    THREE_DECIMAL_PLACES,
-    TWO_DECIMAL_PLACES,
-    ZERO_INT,
-    ONE_CENT
+  BPS,
+  CENTS_FACTOR,
+  DISCOUNT_TYPES,
+  ONE_CENT,
+  THREE_DECIMAL_PLACES,
+  TWO_DECIMAL_PLACES,
+  ZERO_INT
 } from "./constants";
 
 const CURRENCY_SYMBOL = {
-    USD: "$",
-    EUR: "€",
-    GBP: "£",
-    CAD: "C$",
-    AUD: "A$",
-    NZD: "NZ$",
-    CHF: "CHF",
-    ARS: "AR$",
-    BRL: "R$",
-    MXN: "MX$",
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  CAD: "C$",
+  AUD: "A$",
+  NZD: "NZ$",
+  CHF: "CHF",
+  ARS: "AR$",
+  BRL: "R$",
+  MXN: "MX$",
 };
 
 /**
@@ -54,54 +56,54 @@ const CURRENCY_SYMBOL = {
  * - Throws on invalid formats (does not silently return 0).
  */
 export function amountToCents(amount) {
-    if (amount == null) throw new Error("amount is required");
+  if (amount == null) throw new Error("amount is required");
 
-    let s = String(amount).trim();
+  let s = String(amount).trim();
 
-    // Normalize common separators:
-    // - "1,234.56" => "1234.56" (remove thousands separators)
-    // - "1234,56"  => "1234.56" (convert decimal comma to dot)
-    if (s.includes(",") && s.includes(".")) {
-        s = s.replace(/,/g, "");
-    } else if (s.includes(",") && !s.includes(".")) {
-        s = s.replace(",", ".");
-    }
+  // Normalize common separators:
+  // - "1,234.56" => "1234.56" (remove thousands separators)
+  // - "1234,56"  => "1234.56" (convert decimal comma to dot)
+  if (s.includes(",") && s.includes(".")) {
+    s = s.replace(/,/g, "");
+  } else if (s.includes(",") && !s.includes(".")) {
+    s = s.replace(",", ".");
+  }
 
-    // Validate: digits optionally followed by '.' and more digits
-    if (!/^\d+(\.\d+)?$/.test(s)) {
-        throw new Error(`Invalid money format: "${amount}"`);
-    }
+  // Validate: digits optionally followed by '.' and more digits
+  if (!/^\d+(\.\d+)?$/.test(s)) {
+    throw new Error(`Invalid money format: "${amount}"`);
+  }
 
-    const [intPart, fracRaw = ""] = s.split(".");
+  const [intPart, fracRaw = ""] = s.split(".");
 
-    // Pad at least 3 fractional digits so we can:
-    // - take 2 digits for cents
-    // - take the 3rd digit to decide rounding
-    const fracPadded = (`${fracRaw  }000`);
+  // Pad at least 3 fractional digits so we can:
+  // - take 2 digits for cents
+  // - take the 3rd digit to decide rounding
+  const fracPadded = (`${fracRaw}000`);
 
-    const tenths = fracPadded[0] ?? "0";      // 1st decimal digit
-    const hundredths = fracPadded[1] ?? "0";  // 2nd decimal digit (cents)
-    const thousandths = fracPadded[2] ?? "0"; // 3rd decimal digit (rounding decision)
+  const tenths = fracPadded[0] ?? "0";      // 1st decimal digit
+  const hundredths = fracPadded[1] ?? "0";  // 2nd decimal digit (cents)
+  const thousandths = fracPadded[2] ?? "0"; // 3rd decimal digit (rounding decision)
 
-    // If there are more than 3 decimals, we track if any non-zero exists after the 3rd.
-    // This can matter for policies like bankers rounding; here it's mainly informational.
-    const trailing =
-        fracRaw.length > THREE_DECIMAL_PLACES
-            ? fracRaw.slice(THREE_DECIMAL_PLACES)
-            : "";
-    const hasTrailingNonZero = /[1-9]/.test(trailing);
+  // If there are more than 3 decimals, we track if any non-zero exists after the 3rd.
+  // This can matter for policies like bankers rounding; here it's mainly informational.
+  const trailing =
+    fracRaw.length > THREE_DECIMAL_PLACES
+      ? fracRaw.slice(THREE_DECIMAL_PLACES)
+      : "";
+  const hasTrailingNonZero = /[1-9]/.test(trailing);
 
-    // Build cents as integer: (dollars * 100) + (first two decimal digits)
-    let cents = BigInt(intPart) * CENTS_FACTOR + BigInt(tenths + hundredths);
+  // Build cents as integer: (dollars * 100) + (first two decimal digits)
+  let cents = BigInt(intPart) * CENTS_FACTOR + BigInt(tenths + hundredths);
 
-    // Half-up rounding:
-    // - If the 3rd digit is >= 5, round up by 1 cent.
-    // - If there are more digits beyond the 3rd, "5xxx" should also round up.
-    const roundUp = thousandths > "5" || thousandths === "5" || (thousandths === "5" && hasTrailingNonZero);
+  // Half-up rounding:
+  // - If the 3rd digit is >= 5, round up by 1 cent.
+  // - If there are more digits beyond the 3rd, "5xxx" should also round up.
+  const roundUp = thousandths > "5" || thousandths === "5" || (thousandths === "5" && hasTrailingNonZero);
 
-    if (roundUp) cents += ONE_CENT;
+  if (roundUp) cents += ONE_CENT;
 
-    return Number(cents);
+  return Number(cents);
 }
 
 /**
@@ -119,36 +121,36 @@ export function amountToCents(amount) {
  * - Always returns a string with exactly 2 decimal places.
  */
 export function amountFromCents(cents) {
-    let c;
+  let c;
 
-    // Normalize input to BigInt safely
-    if (typeof cents === "bigint") {
-        c = cents;
-    } else if (typeof cents === "number") {
-        // Ensure it's a safe integer before converting to BigInt
-        if (!Number.isSafeInteger(cents)) {
-            throw new Error("cents must be a safe integer Number (or pass BigInt/string).");
-        }
-        c = BigInt(cents);
-    } else if (typeof cents === "string") {
-        const s = cents.trim();
-        if (!/^\d+$/.test(s)) {
-            throw new Error("cents string must contain digits only (e.g., '1234').");
-        }
-        c = BigInt(s);
-    } else {
-        throw new Error("cents must be a bigint, number, or numeric string.");
+  // Normalize input to BigInt safely
+  if (typeof cents === "bigint") {
+    c = cents;
+  } else if (typeof cents === "number") {
+    // Ensure it's a safe integer before converting to BigInt
+    if (!Number.isSafeInteger(cents)) {
+      throw new Error("cents must be a safe integer Number (or pass BigInt/string).");
     }
-
-    if (c < ZERO_INT) {
-        throw new Error("cents must be non-negative.");
+    c = BigInt(cents);
+  } else if (typeof cents === "string") {
+    const s = cents.trim();
+    if (!/^\d+$/.test(s)) {
+      throw new Error("cents string must contain digits only (e.g., '1234').");
     }
+    c = BigInt(s);
+  } else {
+    throw new Error("cents must be a bigint, number, or numeric string.");
+  }
 
-    const amount = c / CENTS_FACTOR;
-    const remainder = c % CENTS_FACTOR;
+  if (c < ZERO_INT) {
+    throw new Error("cents must be non-negative.");
+  }
 
-    // Always pad remainder to 2 digits
-    return `${amount.toString()}.${remainder.toString().padStart(TWO_DECIMAL_PLACES, "0")}`;
+  const amount = c / CENTS_FACTOR;
+  const remainder = c % CENTS_FACTOR;
+
+  // Always pad remainder to 2 digits
+  return `${amount.toString()}.${remainder.toString().padStart(TWO_DECIMAL_PLACES, "0")}`;
 }
 
 /**
@@ -156,14 +158,14 @@ export function amountFromCents(cents) {
  * @param currency
  * @returns {string}
  */
-export function currencyAmountFromCents(cents, currency =  "USD"){
-    if (typeof cents !== "number" || !Number.isInteger(cents)) {
-        throw new Error("cents must be an integer number");
-    }
+export function currencyAmountFromCents(cents, currency = "USD") {
+  if (typeof cents !== "number" || !Number.isInteger(cents)) {
+    throw new Error("cents must be an integer number");
+  }
 
-    const amount = amountFromCents(cents); // "12.34"
-    const symbol = CURRENCY_SYMBOL[currency] ?? "$";
-    return `${symbol}${amount}`;
+  const amount = amountFromCents(cents); // "12.34"
+  const symbol = CURRENCY_SYMBOL[currency] ?? "$";
+  return `${symbol}${amount}`;
 }
 
 /**
@@ -172,17 +174,29 @@ export function currencyAmountFromCents(cents, currency =  "USD"){
  * @returns {number} - The amount converted to cents (e.g., 30).
  */
 export const parsePrice = (priceString) => {
-    if (priceString == null) throw new Error("priceString is required");
+  if (priceString == null) throw new Error("priceString is required");
 
-    let s = String(priceString).trim();
+  let s = String(priceString).trim();
 
-    // Reject negatives explicitly (per your requirement).
-    if (s.includes("-")) throw new Error("Negative amounts are not allowed");
+  // Reject negatives explicitly (per your requirement).
+  if (s.includes("-")) throw new Error("Negative amounts are not allowed");
 
-    // Keep only digits and separators. Remove currency symbols/letters/spaces.
-    s = s.replace(/[^\d.,]/g, "");
-    if (!s) throw new Error(`Invalid price: "${priceString}"`);
+  // Keep only digits and separators. Remove currency symbols/letters/spaces.
+  s = s.replace(/[^\d.,]/g, "");
+  if (!s) throw new Error(`Invalid price: "${priceString}"`);
 
-    // Delegate exact cents conversion (no floats)
-    return amountToCents(s); // <- your safe BigInt cents converter
+  // Delegate exact cents conversion (no floats)
+  return amountToCents(s); // <- your safe BigInt cents converter
+};
+
+/**
+ * Formats a discount value in BPS or CENTS to string.
+ * @param {number} amount - The discount in BPS or CENTS(e.g., 300 = 3%).
+ * @param {string} type - The discount type: "Amount" or "Rate".
+ * @returns {string} - The discount converted to string (e.g., $5).
+ */
+export const formatDiscount = (amount, type) => {
+  if (type === DISCOUNT_TYPES.AMOUNT) return currencyAmountFromCents(amount);
+  if (type === DISCOUNT_TYPES.RATE) return `${amount / BPS}%`; // transform from bps to percentage
+  return "";
 };
