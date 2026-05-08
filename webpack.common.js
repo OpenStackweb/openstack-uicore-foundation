@@ -145,7 +145,7 @@ module.exports = {
         'components/mui/stripe-payment': './src/components/mui/StripePayment/index.jsx',
         'components/mui/upload-btn': './src/components/mui/UploadBtn/index.js',
         'components/mui/upload-dialog': './src/components/mui/UploadDialog/index.js',
-        'components/mui/info-note': './src/components/mui/InfoNote/index.js',
+        'components/mui/info-note': './src/components/mui/InfoNote/index.jsx',
 
         // models
         'models/index': './src/models',
