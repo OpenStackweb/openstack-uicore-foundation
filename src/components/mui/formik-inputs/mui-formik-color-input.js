@@ -37,12 +37,16 @@ const MuiFormikColorInput = ({ name, placeholder = "Select a color", ...rest }) 
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
       debounceRef.current = null;
-      helpers.setValue(hasValue ? localValue : null);
+      helpers.setValue(hasValue ? localValue : "");
     }
   };
 
   const handleClear = (e) => {
     e.stopPropagation();
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
     setHasValue(false);
     helpers.setValue("");
     helpers.setTouched(true);
