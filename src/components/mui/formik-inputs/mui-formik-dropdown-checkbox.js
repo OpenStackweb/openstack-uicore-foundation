@@ -82,7 +82,7 @@ const MuiFormikDropdownCheckbox = ({ name, label, placeholder, options, ...rest 
           <Checkbox checked={allSelected} />
           <ListItemText primary={T.translate("general.all")} />
         </MenuItem>
-        <Divider />
+        <Divider sx={{ m: 0 }} />
         {options.map(({ label, value }) => (
           <MenuItem key={`ckbx-ddl-${value}`} value={value}>
             <Checkbox checked={field.value?.includes(value)} />

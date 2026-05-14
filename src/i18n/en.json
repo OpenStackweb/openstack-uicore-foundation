@@ -19,6 +19,7 @@
     "unarchive": "Unarchive",
     "archive": "Archive",
     "settings": "Settings",
+    "profile": "Profile",
     "drag_and_drop": "Drag and Drop to sort items.",
     "other": "Other",
     "type_something": "Type something and press tab or enter.",
@@ -115,6 +116,10 @@
   },
   "upload_input": {
     "upload_file": "Upload file"
+  },
+  "request_modal": {
+    "no_company_match": "No company matches",
+    "create_company_access_request": "Create a new company access request for {companyName}"
   },
   "stripe_form": {
     "processing": "Processing...",
