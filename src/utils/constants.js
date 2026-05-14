@@ -3,6 +3,7 @@ export const TWO_DECIMAL_PLACES = 2;
 export const THREE_DECIMAL_PLACES = 3;
 export const ONE_CENT = 1n;
 export const ZERO_INT = 0;
+export const BPS = 100;
 
 export const CODE_200 = 200;
 
@@ -80,3 +81,8 @@ export const FILE_UPLOAD_STATUS_BKGR_COLOR = {
 
 export const DATE_FORMAT = "MM/DD/YYYY";
 export const DATETIME_FORMAT = "MM/DD/YYYY hh:mm a";
+
+export const SPONSOR_FORMS_METAFIELD_CLASS = {
+  FORM: "Form",
+  ITEM: "Item"
+};

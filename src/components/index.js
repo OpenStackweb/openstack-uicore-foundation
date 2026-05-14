@@ -76,6 +76,7 @@ export {useSnackbarMessage} from './mui/SnackbarNotification/Context'
 export {default as MuiInfiniteTable} from './mui/infinite-table'
 export {default as MuiEditableTable} from './mui/editable-table/mui-table-editable'
 export {default as MuiTable} from './mui/table/mui-table'
+export {default as MuiSponsorOrderGrid} from './mui/SponsorOrderGrid'
 export {TotalRow as MuiTotalRow, NotesRow as MuiNotesRow, FeeRow as MuiFeeRow, PaymentRow as MuiPaymentRow, RefundRow as MuiRefundRow, DiscountRow as MuiDiscountRow} from './mui/table/extra-rows'
 export {default as MuiFormikAsyncSelect} from './mui/formik-inputs/mui-formik-async-select'
 export {default as MuiFormikCheckboxGroup} from './mui/formik-inputs/mui-formik-checkbox-group'
@@ -115,6 +116,7 @@ export {default as MuiOrderSummary} from './mui/OrderSummary'
 export {default as MuiStatusChip} from './mui/StatusChip'
 export {default as MuiUploadBtn} from './mui/UploadBtn'
 export {default as MuiUploadDialog} from './mui/UploadDialog'
+export {default as MuiInfoNote} from './mui/InfoNote'
 
 // these include 3rd party deps
 // export {default as ExtraQuestionsForm } from './extra-questions/index.js';
