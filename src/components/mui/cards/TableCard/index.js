@@ -33,7 +33,7 @@ const TableCard = ({ title, rows = [], columns = [] }) => (
         {title}
       </Typography>
       <List sx={{ marginTop: "20px" }}>
-        <ListItem sx={{ display: "flex", height: 50 }}>
+        <ListItem sx={{ display: "flex", height: 50, gap: 2 }}>
           {columns.map((col, i) => (
             // eslint-disable-next-line react/no-array-index-key
             <Heading key={`col-${col.key}-${i}`}>{col.label}</Heading>
@@ -43,7 +43,7 @@ const TableCard = ({ title, rows = [], columns = [] }) => (
         {rows.map((row, i) => (
           // eslint-disable-next-line react/no-array-index-key
           <React.Fragment key={`row-${i}`}>
-            <ListItem sx={{ display: "flex", minHeight: 60 }}>
+            <ListItem sx={{ display: "flex", minHeight: 60, gap: 2 }}>
               {columns.map((col, j) => (
                 // eslint-disable-next-line react/no-array-index-key
                 <Value key={`col-val-${col.key}-${j}`}>{row[col.key]}</Value>

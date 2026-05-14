@@ -13,12 +13,19 @@
 
 import React from "react";
 import PropTypes from "prop-types";
+import T from "i18n-react/dist/i18n-react";
 import { TextField, Autocomplete, Typography } from "@mui/material";
 import { queryRegistrationCompanies } from "../../utils/query-actions";
 
 const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink, ...rest }) => {
   const [inputValue, setInputValue] = React.useState("");
   const [options, setOptions] = React.useState([]);
+
+  const noCompanyMatchText = T.translate("request_modal.no_company_match");
+  const createAccessRequestText = (companyName) =>
+    T.translate("request_modal.create_company_access_request", {
+      companyName: `"${companyName}"`
+    });
 
   React.useEffect(() => {
     if (inputValue === "") {
@@ -40,7 +47,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       setOptions(newOptions);
     }, options2Show);
     return undefined;
-  }, [value, inputValue]);
+  }, [value, inputValue, summitId, options2Show]);
 
   return (
     <Autocomplete
@@ -69,18 +76,18 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       onChange={(_, newValue) => {
         let tmpValue = newValue?.inputValue || newValue;
         // if new option is selected ...
-        if (newValue && typeof newValue === 'object' && newValue.inputValue) {          
+        if (newValue && typeof newValue === "object" && newValue.inputValue) {
           tmpValue = {
             id: 0,
             name: newValue.inputValue
           };
-        }       
+        }
         setOptions(tmpValue ? [tmpValue, ...options] : options);
         let ev = {
           target: {
             id: name,
             value: tmpValue,
-            type: 'companyinput'
+            type: "companyinput"
           }
         };
         onChange(ev);
@@ -90,15 +97,24 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       }}
       filterOptions={(options, params) => {
         const { inputValue } = params;
+        const trimmedInput = inputValue.trim();
         const filtered = [...options];
+
         // Suggest the creation of a new value
         const isExisting = options.some(
-          (option) => inputValue === option.title
+          (option) => {
+            if (typeof option === "string") {
+              return option.toLowerCase() === trimmedInput.toLowerCase();
+            }
+
+            return option.name?.toLowerCase() === trimmedInput.toLowerCase();
+          }
         );
-        if (inputValue !== "" && !isExisting) {
+
+        if (trimmedInput !== "" && !isExisting) {
           filtered.push({
-            inputValue,
-            name: `Select "${inputValue}"`
+            inputValue: trimmedInput,
+            name: noCompanyMatchText
           });
         }
 
@@ -115,20 +131,48 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
           helperText={helperText}
           error={error}
           margin="normal"
-          InputLabelProps={{ shrink: disableShrink }}
+          InputLabelProps={disableShrink ? { shrink: false } : undefined}
         />
       )}
       renderOption={(props, option) => {
         const { key, ...optionProps } = props;
+        const isCreateOption = Boolean(option.inputValue);
+
         return (
           // eslint-disable-next-line react/jsx-props-no-spreading
-          <li key={key} {...optionProps}>
-            <Typography
-              variant="body2"
-              sx={{ fontSize: "1em", color: "text.secondary" }}
-            >
-              {option.name}
-            </Typography>
+          <li
+            key={key}
+            {...optionProps}
+            style={{
+              ...(isCreateOption
+                ? {
+                    borderTop: "1px solid rgba(0,0,0,0.12)",
+                    display: "block",
+                    padding: "10px 15px"
+                  }
+                : {})
+            }}
+          >
+            {isCreateOption ? (
+              <>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  {noCompanyMatchText}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "primary.main", fontWeight: 500 }}
+                >
+                  {createAccessRequestText(option.inputValue)}
+                </Typography>
+              </>
+            ) : (
+              <Typography
+                variant="body2"
+                sx={{ color: "text.secondary", padding: "5px 0" }}
+              >
+                {option.name}
+              </Typography>
+            )}
           </li>
         );
       }}

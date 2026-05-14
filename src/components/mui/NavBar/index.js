@@ -16,7 +16,15 @@ import {AppBar, Box, Toolbar, Typography} from "@mui/material";
 import AuthButton from "../AuthButton";
 import styles from "./styles.module.scss";
 
-const NavBar = ({title, profilePic, isLoggedUser, onClickLogin, initLogOut}) => {
+const NavBar = ({
+                 title,
+                 profilePic,
+                 profileEmail,
+                 profileName,
+                 isLoggedUser,
+                 onClickLogin,
+                 initLogOut
+               }) => {
   return (
     <AppBar
       position="relative"
@@ -37,6 +45,8 @@ const NavBar = ({title, profilePic, isLoggedUser, onClickLogin, initLogOut}) => 
           <AuthButton
             isLoggedUser={isLoggedUser}
             picture={profilePic}
+            profileEmail={profileEmail}
+            profileName={profileName}
             doLogin={onClickLogin}
             initLogOut={initLogOut}
           />

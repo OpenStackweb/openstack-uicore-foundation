@@ -13,11 +13,13 @@
 
 import React from "react";
 import { Button, Box } from "@mui/material";
-import T from "i18n-react";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import T from "i18n-react/dist/i18n-react";
 
 const CartButton = ({ itemCount, onClick, sx, disabled }) => {
   return (
     <Button
+      startIcon={<ShoppingCartIcon />}
       endIcon={
         !disabled && (
           <Box

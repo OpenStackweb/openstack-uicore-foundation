@@ -64,7 +64,7 @@ describe("AuthButton", () => {
   });
 
   test("shows sign out button after clicking user menu", async () => {
-    const { container } = render(
+    render(
       <AuthButton
         isLoggedUser={true}
         doLogin={jest.fn()}
@@ -72,13 +72,13 @@ describe("AuthButton", () => {
         picture="http://example.com/pic.jpg"
       />
     );
-    await userEvent.click(container.firstChild);
-    expect(screen.getByRole("button", { name: /buttons\.sign_out/i })).toBeInTheDocument();
+    await userEvent.click(screen.getByTestId("user-menu-button"));
+    expect(await screen.findByRole("menuitem", { name: /buttons\.sign_out/i })).toBeInTheDocument();
   });
 
   test("calls initLogOut when sign out button is clicked", async () => {
     const initLogOut = jest.fn();
-    const { container } = render(
+    render(
       <AuthButton
         isLoggedUser={true}
         doLogin={jest.fn()}
@@ -86,8 +86,8 @@ describe("AuthButton", () => {
         picture=""
       />
     );
-    await userEvent.click(container.firstChild);
-    await userEvent.click(screen.getByRole("button", { name: /buttons\.sign_out/i }));
+    await userEvent.click(screen.getByTestId("user-menu-button"));
+    await userEvent.click(await screen.findByRole("menuitem", { name: /buttons\.sign_out/i }));
     expect(initLogOut).toHaveBeenCalledTimes(1);
   });
 });
