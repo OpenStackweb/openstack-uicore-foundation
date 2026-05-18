@@ -3,6 +3,7 @@
  */
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
+import "@testing-library/jest-dom";
 import Dropdown from "../Dropdown";
 
 jest.mock("i18n-react/dist/i18n-react", () => ({
