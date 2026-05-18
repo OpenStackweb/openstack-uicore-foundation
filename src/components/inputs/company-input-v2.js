@@ -56,6 +56,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       name={name}
       options={options}
       autoComplete
+      autoSelect
       freeSolo
       includeInputInList
       filterSelectedOptions
@@ -81,6 +82,10 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
             id: 0,
             name: newValue.inputValue
           };
+        }
+        // autoSelect commits the raw typed/autofilled string on blur; normalize to {id, name}.
+        if (typeof tmpValue === "string" && tmpValue.trim()) {
+          tmpValue = { id: 0, name: tmpValue.trim() };
         }
         setOptions(tmpValue ? [tmpValue, ...options] : options);
         let ev = {
