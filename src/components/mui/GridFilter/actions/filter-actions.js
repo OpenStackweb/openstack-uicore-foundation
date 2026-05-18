@@ -1,4 +1,4 @@
-import { createAction } from "openstack-uicore-foundation/lib/utils/actions";
+import { createAction } from "../../../../utils/actions";
 import { JOIN_OPERATORS } from "../utils";
 
 export const SAVE_FILTERS = "SAVE_FILTERS";
