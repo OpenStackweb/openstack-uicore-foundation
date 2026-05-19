@@ -19,7 +19,7 @@ import UploadInputV3 from "../../inputs/upload-input-v3";
 import { useField } from "formik";
 import {
   ALLOWED_INVENTORY_IMAGE_FORMATS,
-  MAX_INVENTORY_IMAGE_UPLOAD_SIZE,
+  BYTES_PER_MB,
   MAX_INVENTORY_IMAGES_UPLOAD_QTY
 } from "../../../utils/constants";
 
@@ -28,12 +28,13 @@ const MuiFormikUpload = ({
   name,
   onDelete,
   maxFiles = MAX_INVENTORY_IMAGES_UPLOAD_QTY,
+  maxSize = 500 * BYTES_PER_MB, // bytes, default 500 MB
   allowedExtensions
 }) => {
   const [field, meta, helpers] = useField(name);
 
   const mediaType = {
-    max_size: MAX_INVENTORY_IMAGE_UPLOAD_SIZE,
+    max_size: maxSize,
     max_uploads_qty: maxFiles,
     type: {
       allowed_extensions: allowedExtensions || ALLOWED_INVENTORY_IMAGE_FORMATS
@@ -72,7 +73,7 @@ const MuiFormikUpload = ({
 
   const handleRemove = (imageFile) => {
     const updated = (field.value || []).filter(
-      (i) => i.filename !== imageFile.name
+      (i) => (i.file_name ?? i.filename) !== imageFile.name
     );
     helpers.setValue(updated);
     if (onDelete) {
@@ -110,6 +111,7 @@ MuiFormikUpload.propTypes = {
   name: PropTypes.string.isRequired,
   onDelete: PropTypes.func,
   maxFiles: PropTypes.number,
+  maxSize: PropTypes.number,
   allowedExtensions: PropTypes.arrayOf(PropTypes.string)
 };
 
