@@ -91,6 +91,7 @@ export {default as MuiFormikQuantityField} from './mui/formik-inputs/mui-formik-
 export {default as MuiFormikRadioGroup} from './mui/formik-inputs/mui-formik-radio-group'
 export {default as MuiFormikSelectGroup} from './mui/formik-inputs/mui-formik-select-group'
 export {default as MuiFormikSelect} from './mui/formik-inputs/mui-formik-select'
+export {default as MuiFormikSelectV2} from './mui/formik-inputs/mui-formik-select-v2'
 export {default as MuiFormikSummitAddonSelect} from './mui/formik-inputs/mui-formik-summit-addon-select'
 export {default as MuiFormikSwitch} from './mui/formik-inputs/mui-formik-switch'
 export {default as MuiFormikTextField} from './mui/formik-inputs/mui-formik-textfield'
