@@ -5,7 +5,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import { useField } from "formik";
 import { DEBOUNCE_WAIT_150 } from "../../../utils/constants";
 
-const MuiFormikColorInput = ({ name, placeholder = "Select a color", ...rest }) => {
+const MuiFormikColorInput = ({ name, placeholder = "Select a color", InputProps: restInputProps, ...rest }) => {
   const [field, meta, helpers] = useField(name);
   const [hasValue, setHasValue] = useState(Boolean(field.value));
   const [localValue, setLocalValue] = useState(field.value || "#000000");
@@ -14,7 +14,7 @@ const MuiFormikColorInput = ({ name, placeholder = "Select a color", ...rest }) 
   useEffect(() => {
     setHasValue(Boolean(field.value));
     if (field.value && field.value !== localValue) setLocalValue(field.value);
-  }, [field.value]);
+  }, [field.value, localValue]);
 
   useEffect(() => () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -63,15 +63,17 @@ const MuiFormikColorInput = ({ name, placeholder = "Select a color", ...rest }) 
         error={meta.touched && Boolean(meta.error)}
         helperText={meta.touched && meta.error}
         fullWidth
-        InputProps={hasValue ? {
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton size="small" onClick={handleClear} edge="end" disableRipple>
-                <ClearIcon fontSize="small" />
-              </IconButton>
-            </InputAdornment>
-          ),
-        } : undefined}
+        InputProps={{
+          ...(hasValue ? {
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={handleClear} edge="end" disableRipple>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ),
+          } : {}), ...restInputProps
+        }}
         sx={{
           "& input[type='color']::-webkit-color-swatch-wrapper": { padding: "2px" },
         }}

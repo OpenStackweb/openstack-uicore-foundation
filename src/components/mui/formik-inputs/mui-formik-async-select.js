@@ -107,7 +107,7 @@ const MuiFormikAsyncAutocomplete = ({
       fullWidth
       getOptionLabel={(option) => option.label || ""}
       isOptionEqualToValue={(option, value) => option.value === value.value}
-      onInputChange={!localFilter ? (e, newInput) => setSearchTerm(newInput) : undefined}
+      onInputChange={!localFilter ? (e, newInput) => setSearchTerm(newInput) : (x) => x}
       filterOptions={
         // only apply filterOptions for "local" search
         localFilter
