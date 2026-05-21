@@ -277,7 +277,7 @@ jest.mock("../../formik-inputs/mui-formik-datepicker", () => ({
 
 jest.mock("../../formik-inputs/mui-formik-select", () => ({
   __esModule: true,
-  default: ({ name, label, options, children }) => (
+  default: ({ name, label, options }) => (
     <select data-testid={`select-${name}`} name={name}>
       <option value="">{label}</option>
       {options &&
@@ -286,7 +286,6 @@ jest.mock("../../formik-inputs/mui-formik-select", () => ({
             {opt.label}
           </option>
         ))}
-      {children}
     </select>
   )
 }));
