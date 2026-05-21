@@ -48,7 +48,7 @@ const Filter = ({ id, value, criterias, onChange, onAdd, onDelete }) => {
   // auto-select the value when only one option is available for the selected criteria
   useEffect(() => {
     const options = valueSettings.props?.options;
-    if (options?.length === 1 && !value?.value) {
+    if (options?.length === 1 && value?.value == null) {
       handleChange("value", options[0].value);
     }
   }, [valueSettings.props?.options?.length, value?.criteria]);
