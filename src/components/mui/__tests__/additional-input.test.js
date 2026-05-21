@@ -22,9 +22,9 @@ import AdditionalInput from "../formik-inputs/additional-input/additional-input"
 jest.mock(
   "../formik-inputs/additional-input/meta-field-values",
   () =>
-    function MockMetaFieldValues() {
+    (function MockMetaFieldValues() {
       return <div data-testid="meta-field-values">MetaFieldValues</div>;
-    }
+    })
 );
 
 // Helper function to render the component with Formik

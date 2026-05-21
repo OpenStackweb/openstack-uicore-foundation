@@ -49,7 +49,7 @@ const RefundRow = ({ refund, balance, colGap = 0, trailing = 0 }) => {
       </TableCell>
       {[...Array(colGap)].map((_, i) => (
         // eslint-disable-next-line react/no-array-index-key
-        <TableCell key={`ref-col-gap-${i}`} />
+        (<TableCell key={`ref-col-gap-${i}`} />)
       ))}
       <TableCell align="right">
         <Typography
@@ -64,7 +64,7 @@ const RefundRow = ({ refund, balance, colGap = 0, trailing = 0 }) => {
       </TableCell>
       {[...Array(trailing)].map((_, i) => (
         // eslint-disable-next-line react/no-array-index-key
-        <TableCell key={`ref-trailing-col-${i}`} sx={{ width: 40 }} />
+        (<TableCell key={`ref-trailing-col-${i}`} sx={{ width: 40 }} />)
       ))}
     </TableRow>
   );
