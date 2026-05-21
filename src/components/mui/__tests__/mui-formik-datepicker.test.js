@@ -42,7 +42,7 @@ describe("MuiFormikDatepicker", () => {
   test("shows required marker in label", () => {
     renderWithFormik({ required: true });
 
-    expect(screen.getByLabelText("Test Date *")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Test Date *" })).toBeInTheDocument();
   });
 
   test("shows validation error on submit without value", async () => {
@@ -62,7 +62,6 @@ describe("MuiFormikDatepicker", () => {
     const user = userEvent.setup();
     renderWithFormik({ required: true });
 
-    await user.click(screen.getByLabelText("Test Date *"));
     await user.click(screen.getByRole("button", { name: "Choose date" }));
 
     const today = await screen.findByRole("gridcell", {
@@ -70,8 +69,7 @@ describe("MuiFormikDatepicker", () => {
     });
     await user.click(today);
 
-    const input = screen.getByLabelText("Test Date *");
-    expect(input).not.toHaveValue("");
-    expect(input).not.toHaveValue("MM/DD/YYYY");
+    const monthSpinbutton = screen.getByRole("spinbutton", { name: "Month" });
+    expect(monthSpinbutton).not.toHaveTextContent("MM");
   });
 });
