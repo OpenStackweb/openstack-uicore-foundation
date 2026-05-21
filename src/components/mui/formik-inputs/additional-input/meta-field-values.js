@@ -14,7 +14,7 @@
 import React from "react";
 import T from "i18n-react/dist/i18n-react";
 import { useFormikContext } from "formik";
-import { Box, Button, Grid2, Divider, IconButton } from "@mui/material";
+import { Box, Button, Grid, Divider, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import DragAndDropList from "../../dnd-list";
@@ -107,7 +107,7 @@ const MetaFieldValues = ({
 
     return (
       <Box key={val.id || `value-${valueIndex}`}>
-        <Grid2
+        <Grid
           container
           spacing={2}
           sx={{
@@ -121,7 +121,7 @@ const MetaFieldValues = ({
             py: 2
           }}
         >
-          <Grid2 size={4}>
+          <Grid size={4}>
             <MuiFormikTextField
               name={buildValueFieldName(valueIndex, "name")}
               placeholder={T.translate(
@@ -130,8 +130,8 @@ const MetaFieldValues = ({
               margin="none"
               fullWidth
             />
-          </Grid2>
-          <Grid2 size={4}>
+          </Grid>
+          <Grid size={4}>
             <MuiFormikTextField
               name={buildValueFieldName(valueIndex, "value")}
               placeholder={T.translate(
@@ -139,19 +139,21 @@ const MetaFieldValues = ({
               )}
               margin="none"
               fullWidth
-              InputProps={{
-                endAdornment: (
-                  <IconButton
-                    onClick={() => handleRemoveValue(val, valueIndex)}
-                    aria-label="remove value"
-                  >
-                    <CloseIcon />
-                  </IconButton>
-                )
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <IconButton
+                      onClick={() => handleRemoveValue(val, valueIndex)}
+                      aria-label="remove value"
+                    >
+                      <CloseIcon />
+                    </IconButton>
+                  )
+                }
               }}
             />
-          </Grid2>
-          <Grid2 size={4}>
+          </Grid>
+          <Grid size={4}>
             <MuiFormikCheckbox
               name={buildValueFieldName(valueIndex, "is_default")}
               label={T.translate("meta_fields.is_default")}
@@ -159,8 +161,8 @@ const MetaFieldValues = ({
                 handleDefaultChange(valueIndex, e.target.checked)
               }
             />
-          </Grid2>
-        </Grid2>
+          </Grid>
+        </Grid>
         <Divider />
       </Box>
     );
@@ -176,7 +178,7 @@ const MetaFieldValues = ({
         updateOrderKey="order"
         droppableId={`droppable-values-${fieldIndex}`}
       />
-      <Grid2 container spacing={2} sx={{ mt: 2 }} offset={4}>
+      <Grid container spacing={2} sx={{ mt: 2 }} offset={4}>
         <Button
           startIcon={<AddIcon />}
           disabled={isMetafieldValueIncomplete()}
@@ -185,7 +187,7 @@ const MetaFieldValues = ({
         >
           {T.translate("meta_fields.add_value")}
         </Button>
-      </Grid2>
+      </Grid>
     </Box>
   );
 };
