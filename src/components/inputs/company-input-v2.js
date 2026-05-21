@@ -137,6 +137,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
           error={error}
           margin="normal"
           slotProps={{
+            ...params.slotProps,
             inputLabel: disableShrink ? { shrink: false } : undefined
           }}
         />
