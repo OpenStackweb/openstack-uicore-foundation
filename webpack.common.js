@@ -160,6 +160,7 @@ module.exports = {
         'i18n': './src/i18n/i18n.js',
         'utils/questions-set': './src/utils/questions-set.js',
         'utils/money': './src/utils/money.js',
+        'utils/use-event-callback': './src/utils/use-event-callback.js',
     },
     output: {
         path: path.resolve(__dirname, 'lib'),
