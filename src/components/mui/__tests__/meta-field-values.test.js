@@ -25,7 +25,7 @@ jest.mock("../showConfirmDialog", () => jest.fn());
 jest.mock(
   "../dnd-list",
   () =>
-    function MockDragAndDropList({ items, renderItem }) {
+    (function MockDragAndDropList({ items, renderItem }) {
       return (
         <div data-testid="dnd-list">
           {items.map((item, index) => (
@@ -35,7 +35,7 @@ jest.mock(
           ))}
         </div>
       );
-    }
+    })
 );
 
 // Helper function to render the component with Formik
