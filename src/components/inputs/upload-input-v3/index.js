@@ -23,7 +23,7 @@ import {
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import { DropzoneV3 } from './dropzone-v3';
 import ProgressiveImg from '../../progressive-img';
