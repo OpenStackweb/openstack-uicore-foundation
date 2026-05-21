@@ -130,7 +130,12 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
                     const trimmed = tmpValue.trim();
                     tmpValue = findExistingByName(options, trimmed) || { id: 0, name: trimmed };
                 }
-                setOptions(tmpValue ? [tmpValue, ...options] : options);
+                // Prepend the committed value but drop any existing entry with
+                // the same id; otherwise resolving to an existing company would
+                // produce a duplicate row when the dropdown next opens.
+                setOptions(tmpValue
+                    ? [tmpValue, ...options.filter((o) => o?.id !== tmpValue?.id)]
+                    : options);
                 onChange({
                     target: {
                         id: name,
@@ -161,6 +166,10 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
             )}
             renderOption={(props, option) => {
                 const { key, ...optionProps } = props;
+                // Mirror getOptionLabel: string options come through when the
+                // consumer passes value as a plain string. Without this guard
+                // those rows render empty.
+                const label = typeof option === "string" ? option : option?.name;
                 return (
                     // eslint-disable-next-line react/jsx-props-no-spreading
                     <li key={key} {...optionProps}>
@@ -168,7 +177,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
                             variant="body2"
                             sx={{ fontSize: "1em", color: "text.secondary", padding: "5px 0" }}
                         >
-                            {option.name}
+                            {label}
                         </Typography>
                     </li>
                 );
