@@ -1,4 +1,6 @@
 /**
+ * @jest-environment jsdom
+ *
  * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -6,13 +8,24 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-import {
+import React from "react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import "@testing-library/jest-dom";
+
+import CompanyInputV2, {
     isCompanyObject,
     isExistingCompany,
     isNewCompany,
     findExistingByName,
     normalizeCompanyValue
 } from "../company-input-v2";
+
+// Mock the API helper so tests can drive the callback synchronously.
+jest.mock("../../../utils/query-actions", () => ({
+    queryRegistrationCompanies: jest.fn()
+}));
+// eslint-disable-next-line import/first
+import { queryRegistrationCompanies } from "../../../utils/query-actions";
 
 describe("isCompanyObject", () => {
     it("returns true for objects with a name string", () => {
@@ -133,5 +146,102 @@ describe("normalizeCompanyValue", () => {
         expect(normalizeCompanyValue({ id: 5 })).toBeNull();
         expect(normalizeCompanyValue({ id: 0, name: "" })).toBeNull();
         expect(normalizeCompanyValue({ id: 0, name: "   " })).toBeNull();
+    });
+});
+
+describe("CompanyInputV2 integration", () => {
+    beforeEach(() => {
+        queryRegistrationCompanies.mockReset();
+    });
+
+    // Helper: render the component inside a controlled wrapper so we can react
+    // to onChange the same way a real form would (updating `value`).
+    const renderControlled = ({ initialValue = null, onChange } = {}) => {
+        let setValue;
+        const Wrapper = () => {
+            const [value, _setValue] = React.useState(initialValue);
+            setValue = _setValue;
+            return (
+                <CompanyInputV2
+                    summitId={1}
+                    name="company"
+                    value={value}
+                    onChange={(ev) => {
+                        if (onChange) onChange(ev);
+                        // Mirror what a real form does: write the value back.
+                        _setValue(ev.target.value);
+                    }}
+                />
+            );
+        };
+        const utils = render(<Wrapper />);
+        return { ...utils, getValue: () => setValue };
+    };
+
+    it("on blur commits the canonical existing match when the typed text matches case-insensitively", () => {
+        // Capture the API callback so we can resolve it manually.
+        let resolveQuery;
+        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
+            resolveQuery = cb;
+        });
+
+        const onChange = jest.fn();
+        renderControlled({ onChange });
+        const input = screen.getByRole("combobox");
+
+        // Type "tipit": triggers onInputChange -> effect -> queryRegistrationCompanies
+        fireEvent.change(input, { target: { value: "tipit" } });
+        // Resolve the API with the canonical company.
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }]); });
+
+        // Blur: autoSelect commits the typed string; our onChange handler maps
+        // it to the canonical option via findExistingByName.
+        fireEvent.blur(input);
+
+        // Find the call where the canonical value landed.
+        const committed = onChange.mock.calls
+            .map((c) => c[0].target.value)
+            .find((v) => v && typeof v === "object" && v.id === 1);
+        expect(committed).toEqual({ id: 1, name: "Tipit" });
+    });
+
+    it("auto-replaces a free-text commit with the canonical match when the API response arrives after blur", () => {
+        // Withhold the API callback to simulate the network being slower than blur.
+        let resolveQuery;
+        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
+            resolveQuery = cb;
+        });
+
+        const onChange = jest.fn();
+        // Start with the free-text commit already in place (what happens when
+        // blur fires before the response).
+        renderControlled({ initialValue: { id: 0, name: "tipit" }, onChange });
+        const input = screen.getByRole("combobox");
+
+        // Type to populate inputValue so the effect kicks in.
+        fireEvent.change(input, { target: { value: "tipit" } });
+
+        // Now the response arrives with the canonical option.
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }]); });
+
+        // The component should have called onChange with the canonical option.
+        const promoted = onChange.mock.calls
+            .map((c) => c[0].target.value)
+            .find((v) => v && typeof v === "object" && v.id === 1);
+        expect(promoted).toEqual({ id: 1, name: "Tipit" });
+    });
+
+    it("does not render the clear icon when the value is an empty-name object", () => {
+        queryRegistrationCompanies.mockImplementation(() => {});
+        render(
+            <CompanyInputV2
+                summitId={1}
+                name="company"
+                value={{ id: 0, name: "" }}
+                onChange={() => {}}
+            />
+        );
+        // MUI's clear button uses aria-label="Clear".
+        expect(screen.queryByLabelText("Clear")).not.toBeInTheDocument();
     });
 });
