@@ -61,7 +61,13 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
             return undefined;
         }
 
+        // Guard against the in-flight callback firing after the user clears the
+        // field (or types something else): without this, a late response would
+        // call onChange with the previous typed value and clobber the clear.
+        let cancelled = false;
         queryRegistrationCompanies(summitId, inputValue, (results) => {
+            if (cancelled) return;
+
             let newOptions = [];
 
             if (normalizedValue) {
@@ -87,7 +93,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
                 }
             }
         }, options2Show);
-        return undefined;
+        return () => { cancelled = true; };
     }, [normalizedValue, inputValue, summitId, options2Show, onChange, name]);
 
     return (
