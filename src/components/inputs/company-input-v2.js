@@ -13,31 +13,74 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import T from "i18n-react/dist/i18n-react";
 import { TextField, Autocomplete, Typography } from "@mui/material";
 import { queryRegistrationCompanies } from "../../utils/query-actions";
+import useEventCallback from "../../utils/use-event-callback";
+
+// Any well-formed company object (has a name string).
+export const isCompanyObject = (o) =>
+    !!o && typeof o === "object" && typeof o.name === "string";
+
+// A company already in the database (positive id assigned by the API).
+export const isExistingCompany = (o) => isCompanyObject(o) && o.id > 0;
+
+// A company name the user typed that isn't in the database yet
+// (id === 0 is the sentinel autoSelect uses for free-text values).
+export const isNewCompany = (o) => isCompanyObject(o) && o.id === 0 && !!o.name.trim();
+
+// Find an existing company in `candidates` whose name matches `name`
+// case-insensitively. Returns null if `name` is empty or no match found.
+export const findExistingByName = (candidates, name) => {
+    const trimmed = name?.trim().toLowerCase();
+    if (!trimmed) return null;
+    return (candidates || []).find(
+        (c) => isExistingCompany(c) && c.name.toLowerCase() === trimmed
+    ) || null;
+};
+
+// Treat empty strings, null/undefined, and empty-name objects as no selection.
+// MUI's Autocomplete renders the clear (x) icon whenever value is truthy, so
+// without this an empty-name object would keep the clear icon visible on hover
+// of an apparently empty field.
+export const normalizeCompanyValue = (v) => {
+    if (!v) return null;
+    if (typeof v === "string") return v.trim() ? v : null;
+    if (typeof v === "object" && typeof v.name === "string" && v.name.trim()) return v;
+    return null;
+};
 
 const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink, ...rest }) => {
     const [inputValue, setInputValue] = React.useState("");
     const [options, setOptions] = React.useState([]);
 
-    const noCompanyMatchText = T.translate("request_modal.no_company_match");
-    const createAccessRequestText = (companyName) =>
-        T.translate("request_modal.create_company_access_request", {
-            companyName: `"${companyName}"`
-        });
+    // Memoised so the effect below doesn't re-run on every render.
+    const normalizedValue = React.useMemo(() => normalizeCompanyValue(value), [value]);
+
+    // Stable wrapper around the parent's onChange. Consumers commonly pass an
+    // inline arrow function (new identity each render), so depending on
+    // `onChange` directly in the effect below would re-run it every render and
+    // cause an infinite loop of network calls.
+    const fireChange = useEventCallback((nextValue) => {
+        onChange({ target: { id: name, value: nextValue, type: "companyinput" } });
+    });
 
     React.useEffect(() => {
         if (inputValue === "") {
-            setOptions(value ? [value] : []);
+            setOptions(normalizedValue ? [normalizedValue] : []);
             return undefined;
         }
 
+        // Guard against the in-flight callback firing after the user clears the
+        // field (or types something else): without this, a late response would
+        // call onChange with the previous typed value and clobber the clear.
+        let cancelled = false;
         queryRegistrationCompanies(summitId, inputValue, (results) => {
+            if (cancelled) return;
+
             let newOptions = [];
 
-            if (value) {
-                newOptions = [value];
+            if (normalizedValue) {
+                newOptions = [normalizedValue];
             }
 
             if (results) {
@@ -45,9 +88,20 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
             }
 
             setOptions(newOptions);
+
+            // If the user typed and blurred faster than the API responded, the
+            // free-text commit already happened. Once the response arrives, if
+            // there is a case-insensitive existing match, replace the free-text
+            // value with the canonical option.
+            if (isNewCompany(normalizedValue)) {
+                const match = findExistingByName(results, normalizedValue.name);
+                if (match) {
+                    fireChange(match);
+                }
+            }
         }, options2Show);
-        return undefined;
-    }, [value, inputValue, summitId, options2Show]);
+        return () => { cancelled = true; };
+    }, [normalizedValue, inputValue, summitId, options2Show, fireChange]);
 
     return (
         <Autocomplete
@@ -60,71 +114,42 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
             freeSolo
             includeInputInList
             filterSelectedOptions
-            value={value}
+            value={normalizedValue}
             onBlur={() => { if (onBlur) onBlur(name) }}
             getOptionLabel={(option) => {
-                // Value selected with enter, right from the input
-                if (typeof option === "string") {
-                    return option;
-                }
-                // Add "xxx" option created dynamically
-                if (option.inputValue) {
-                    return option.inputValue;
-                }
-                // Regular option
+                if (typeof option === "string") return option;
                 return option.name;
             }}
             onChange={(_, newValue) => {
-                let tmpValue = newValue?.inputValue || newValue;
-                // if new option is selected ...
-                if (newValue && typeof newValue === "object" && newValue.inputValue) {
-                    tmpValue = {
-                        id: 0,
-                        name: newValue.inputValue
-                    };
-                }
-                // autoSelect commits the raw typed/autofilled string on blur; normalize to {id, name}.
+                let tmpValue = newValue;
+                // autoSelect commits the raw typed/autofilled string on blur. If the
+                // string matches an existing company case-insensitively, pick that
+                // option (so typing "tipit" tabs out to "Tipit"). Otherwise commit
+                // the typed value as a free-text {id: 0, name} entry.
                 if (typeof tmpValue === "string" && tmpValue.trim()) {
-                    tmpValue = { id: 0, name: tmpValue.trim() };
+                    const trimmed = tmpValue.trim();
+                    tmpValue = findExistingByName(options, trimmed) || { id: 0, name: trimmed };
                 }
-                setOptions(tmpValue ? [tmpValue, ...options] : options);
-                let ev = {
+                // Prepend the committed value but drop any existing entry with
+                // the same id; otherwise resolving to an existing company would
+                // produce a duplicate row when the dropdown next opens.
+                setOptions(tmpValue
+                    ? [tmpValue, ...options.filter((o) => o?.id !== tmpValue?.id)]
+                    : options);
+                onChange({
                     target: {
                         id: name,
                         value: tmpValue,
                         type: "companyinput"
                     }
-                };
-                onChange(ev);
+                });
             }}
             onInputChange={(_, newInputValue) => {
                 setInputValue(newInputValue);
             }}
-            filterOptions={(options, params) => {
-                const { inputValue } = params;
-                const trimmedInput = inputValue.trim();
-                const filtered = [...options];
-
-                // Suggest the creation of a new value
-                const isExisting = options.some(
-                    (option) => {
-                        if (typeof option === "string") {
-                            return option.toLowerCase() === trimmedInput.toLowerCase();
-                        }
-
-                        return option.name?.toLowerCase() === trimmedInput.toLowerCase();
-                    }
-                );
-
-                if (trimmedInput !== "" && !isExisting) {
-                    filtered.push({
-                        inputValue: trimmedInput,
-                        name: noCompanyMatchText
-                    });
-                }
-
-                return filtered;
-            }}
+            // The API already filters server-side; disable MUI's client-side filtering
+            // so all returned matches stay visible regardless of substring match.
+            filterOptions={(opts) => opts}
             renderInput={(params) => (
                 <TextField
                     /* eslint-disable-next-line react/jsx-props-no-spreading */
@@ -141,43 +166,19 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
             )}
             renderOption={(props, option) => {
                 const { key, ...optionProps } = props;
-                const isCreateOption = Boolean(option.inputValue);
-
+                // Mirror getOptionLabel: string options come through when the
+                // consumer passes value as a plain string. Without this guard
+                // those rows render empty.
+                const label = typeof option === "string" ? option : option?.name;
                 return (
                     // eslint-disable-next-line react/jsx-props-no-spreading
-                    <li
-                        key={key}
-                        {...optionProps}
-                        style={{
-                            ...(isCreateOption
-                                ? {
-                                    borderTop: "1px solid rgba(0,0,0,0.12)",
-                                    display: "block",
-                                    padding: "10px 15px"
-                                }
-                                : {})
-                        }}
-                    >
-                        {isCreateOption ? (
-                            <>
-                                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                                    {noCompanyMatchText}
-                                </Typography>
-                                <Typography
-                                    variant="body2"
-                                    sx={{ color: "primary.main", fontWeight: 500 }}
-                                >
-                                    {createAccessRequestText(option.inputValue)}
-                                </Typography>
-                            </>
-                        ) : (
-                            <Typography
-                                variant="body2"
-                                sx={{ color: "text.secondary", padding: "5px 0" }}
-                            >
-                                {option.name}
-                            </Typography>
-                        )}
+                    <li key={key} {...optionProps}>
+                        <Typography
+                            variant="body2"
+                            sx={{ fontSize: "1em", color: "text.secondary", padding: "5px 0" }}
+                        >
+                            {label}
+                        </Typography>
                     </li>
                 );
             }}
