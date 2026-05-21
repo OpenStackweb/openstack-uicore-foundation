@@ -23,6 +23,10 @@ export const isCompanyObject = (o) =>
 // A company already in the database (positive id assigned by the API).
 export const isExistingCompany = (o) => isCompanyObject(o) && o.id > 0;
 
+// A company name the user typed that isn't in the database yet
+// (id === 0 is the sentinel autoSelect uses for free-text values).
+export const isNewCompany = (o) => isCompanyObject(o) && o.id === 0 && !!o.name.trim();
+
 // Find an existing company in `candidates` whose name matches `name`
 // case-insensitively. Returns null if `name` is empty or no match found.
 export const findExistingByName = (candidates, name) => {
@@ -69,9 +73,22 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
             }
 
             setOptions(newOptions);
+
+            // If the user typed and blurred faster than the API responded, the
+            // free-text commit already happened. Once the response arrives, if
+            // there is a case-insensitive existing match, replace the free-text
+            // value with the canonical option.
+            if (isNewCompany(normalizedValue)) {
+                const match = findExistingByName(results, normalizedValue.name);
+                if (match) {
+                    onChange({
+                        target: { id: name, value: match, type: "companyinput" }
+                    });
+                }
+            }
         }, options2Show);
         return undefined;
-    }, [normalizedValue, inputValue, summitId, options2Show]);
+    }, [normalizedValue, inputValue, summitId, options2Show, onChange, name]);
 
     return (
         <Autocomplete

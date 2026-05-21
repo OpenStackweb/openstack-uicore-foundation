@@ -9,6 +9,7 @@
 import {
     isCompanyObject,
     isExistingCompany,
+    isNewCompany,
     findExistingByName,
     normalizeCompanyValue
 } from "../company-input-v2";
@@ -46,6 +47,28 @@ describe("isExistingCompany", () => {
         expect(isExistingCompany({ name: "Tipit" })).toBe(false); // no id
         expect(isExistingCompany({ id: -1, name: "Tipit" })).toBe(false);
         expect(isExistingCompany({ id: 5 })).toBe(false); // no name
+    });
+});
+
+describe("isNewCompany", () => {
+    it("returns true for free-text entries with a non-empty name", () => {
+        expect(isNewCompany({ id: 0, name: "Acme" })).toBe(true);
+        expect(isNewCompany({ id: 0, name: "  Acme  " })).toBe(true);
+    });
+
+    it("returns false for existing companies (id > 0)", () => {
+        expect(isNewCompany({ id: 1, name: "Tipit" })).toBe(false);
+    });
+
+    it("returns false for empty or whitespace-only names", () => {
+        expect(isNewCompany({ id: 0, name: "" })).toBe(false);
+        expect(isNewCompany({ id: 0, name: "   " })).toBe(false);
+    });
+
+    it("returns false for non-objects or missing name", () => {
+        expect(isNewCompany(null)).toBe(false);
+        expect(isNewCompany({ id: 0 })).toBe(false);
+        expect(isNewCompany("Acme")).toBe(false);
     });
 });
 
