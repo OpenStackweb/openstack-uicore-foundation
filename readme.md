@@ -18,5 +18,9 @@ import 'sweetalert2/dist/sweetalert2.css';
 1 - yarn build && yarn publish
 
 
+## React compatibility
+
+`createExternalStore` (and the clock context built on it) uses the `use-sync-external-store` shim for React 16/17 compatibility. When React is upgraded to 18+, replace the shim with the native import from `react` and remove the `use-sync-external-store` dependency from package.json.
+
 ## Troubleshoot
 For Python 3.13 and above, yarn install will not work until you install this lib: sudo apt install python3-setuptools
