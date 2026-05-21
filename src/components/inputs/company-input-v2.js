@@ -15,6 +15,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { TextField, Autocomplete, Typography } from "@mui/material";
 import { queryRegistrationCompanies } from "../../utils/query-actions";
+import useEventCallback from "../../utils/use-event-callback";
 
 // Any well-formed company object (has a name string).
 export const isCompanyObject = (o) =>
@@ -55,6 +56,14 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
     // Memoised so the effect below doesn't re-run on every render.
     const normalizedValue = React.useMemo(() => normalizeCompanyValue(value), [value]);
 
+    // Stable wrapper around the parent's onChange. Consumers commonly pass an
+    // inline arrow function (new identity each render), so depending on
+    // `onChange` directly in the effect below would re-run it every render and
+    // cause an infinite loop of network calls.
+    const fireChange = useEventCallback((nextValue) => {
+        onChange({ target: { id: name, value: nextValue, type: "companyinput" } });
+    });
+
     React.useEffect(() => {
         if (inputValue === "") {
             setOptions(normalizedValue ? [normalizedValue] : []);
@@ -87,14 +96,12 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
             if (isNewCompany(normalizedValue)) {
                 const match = findExistingByName(results, normalizedValue.name);
                 if (match) {
-                    onChange({
-                        target: { id: name, value: match, type: "companyinput" }
-                    });
+                    fireChange(match);
                 }
             }
         }, options2Show);
         return () => { cancelled = true; };
-    }, [normalizedValue, inputValue, summitId, options2Show, onChange, name]);
+    }, [normalizedValue, inputValue, summitId, options2Show, fireChange]);
 
     return (
         <Autocomplete
