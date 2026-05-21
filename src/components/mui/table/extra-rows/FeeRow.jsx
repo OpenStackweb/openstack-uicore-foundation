@@ -31,7 +31,7 @@ const FeeRow = ({ fee, colGap = 3, trailing = 0 }) => {
       </TableCell>
       {[...Array(colGap)].map((_, i) => (
         // eslint-disable-next-line react/no-array-index-key
-        <TableCell key={`fee-col-gap-${i}`} />
+        (<TableCell key={`fee-col-gap-${i}`} />)
       ))}
       <TableCell>
         <Typography
@@ -43,7 +43,7 @@ const FeeRow = ({ fee, colGap = 3, trailing = 0 }) => {
       </TableCell>
       {[...Array(trailing)].map((_, i) => (
         // eslint-disable-next-line react/no-array-index-key
-        <TableCell key={`fee-trailing-col-${i}`} sx={{ width: 40 }} />
+        (<TableCell key={`fee-trailing-col-${i}`} sx={{ width: 40 }} />)
       ))}
     </TableRow>
   );

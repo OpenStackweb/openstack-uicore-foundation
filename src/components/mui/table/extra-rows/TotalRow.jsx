@@ -39,7 +39,7 @@ const TotalRow = ({ columns, targetCol, total, trailing = 0, label = null, rowSx
       })}
       {[...Array(trailing)].map((_, i) => (
         // eslint-disable-next-line react/no-array-index-key
-        <TableCell key={`extra-row-total-${i}`} sx={{ width: 40 }} />
+        (<TableCell key={`extra-row-total-${i}`} sx={{ width: 40 }} />)
       ))}
     </TableRow>
   );

@@ -26,9 +26,11 @@ const MuiFormikQuantityField = ({ ...props }) => (
         e.nativeEvent.stopImmediatePropagation();
       }
     }}
-    inputProps={{
-      min: 0,
-      inputMode: "numeric"
+    slotProps={{
+      htmlInput: {
+        min: 0,
+        inputMode: "numeric"
+      }
     }}
     // eslint-disable-next-line react/jsx-props-no-spreading
     {...props}

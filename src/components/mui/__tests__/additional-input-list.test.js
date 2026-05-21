@@ -25,13 +25,15 @@ jest.mock("../showConfirmDialog", () => jest.fn());
 jest.mock(
   "../formik-inputs/additional-input/additional-input",
   () =>
-    function MockAdditionalInput({
-      item,
-      itemIdx,
-      onAdd,
-      onDelete,
-      isAddDisabled
-    }) {
+    (function MockAdditionalInput(
+      {
+        item,
+        itemIdx,
+        onAdd,
+        onDelete,
+        isAddDisabled
+      }
+    ) {
       return (
         <div data-testid={`additional-input-${itemIdx}`}>
           <span data-testid={`item-name-${itemIdx}`}>{item.name}</span>
@@ -51,7 +53,7 @@ jest.mock(
           </button>
         </div>
       );
-    }
+    })
 );
 
 // Helper function to render the component with Formik
