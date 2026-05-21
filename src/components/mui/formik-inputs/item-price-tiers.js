@@ -18,7 +18,7 @@ import {
   Box,
   Checkbox,
   FormControlLabel,
-  Grid2,
+  Grid,
   InputLabel,
   TextField
 } from "@mui/material";
@@ -46,11 +46,11 @@ const ItemPriceTiers = ({ readOnly = false }) => {
   };
 
   return (
-    <Grid2 container spacing={2} size={12}>
+    <Grid container spacing={2} size={12}>
       {TIERS.map(({ field, label }) => {
         const isEnabled = enabled[field];
         return (
-          <Grid2 key={field} size={4}>
+          <Grid key={field} size={4}>
             <Box
               sx={{
                 display: "flex",
@@ -66,10 +66,12 @@ const ItemPriceTiers = ({ readOnly = false }) => {
                     onChange={(ev) => handleToggle(field, ev.target.checked)}
                     size="small"
                     disabled={readOnly}
-                    inputProps={{
-                      "aria-label": `${T.translate(label)} ${T.translate(
-                        "general.not_available"
-                      )}`
+                    slotProps={{
+                      input: {
+                        "aria-label": `${T.translate(label)} ${T.translate(
+                          "general.not_available"
+                        )}`
+                      }
                     }}
                   />
                 }
@@ -93,10 +95,10 @@ const ItemPriceTiers = ({ readOnly = false }) => {
                 />
               )}
             </Box>
-          </Grid2>
+          </Grid>
         );
       })}
-    </Grid2>
+    </Grid>
   );
 };
 
