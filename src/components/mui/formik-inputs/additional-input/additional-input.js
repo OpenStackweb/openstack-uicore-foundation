@@ -44,10 +44,18 @@ const AdditionalInput = ({
   entityId,
   isAddDisabled
 }) => {
-  const { errors, touched, values } = useFormikContext();
+  const { errors, touched, values, setFieldValue } = useFormikContext();
 
   const buildFieldName = (fieldName) => `${baseName}[${itemIdx}].${fieldName}`;
   const currentType = getIn(values, buildFieldName("type"));
+
+  const handleTypeChange = (e) => {
+    const newType = e.target.value;
+    setFieldValue(buildFieldName("type"), newType);
+    if (!METAFIELD_TYPES_WITH_OPTIONS.includes(newType)) {
+      setFieldValue(buildFieldName("values"), []);
+    }
+  };
 
   const fieldErrors = getIn(errors, `${baseName}[${itemIdx}]`);
   const fieldTouched = getIn(touched, `${baseName}[${itemIdx}]`);
@@ -91,6 +99,7 @@ const AdditionalInput = ({
                 placeholder={T.translate(
                   "additional_inputs.placeholders.type"
                 )}
+                onChange={handleTypeChange}
               >
                 {METAFIELD_TYPES.map((fieldType) => (
                   <MenuItem key={fieldType} value={fieldType}>

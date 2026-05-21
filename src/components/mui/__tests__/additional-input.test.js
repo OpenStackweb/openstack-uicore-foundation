@@ -12,9 +12,9 @@
  * */
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Formik, Form } from "formik";
+import { Formik, Form, useFormikContext } from "formik";
 import "@testing-library/jest-dom";
 import AdditionalInput from "../formik-inputs/additional-input/additional-input";
 
@@ -213,6 +213,94 @@ describe("AdditionalInput", () => {
 
       const addButton = screen.getByRole("button", { name: /add/i });
       expect(addButton).not.toBeDisabled();
+    });
+  });
+
+  describe("handleTypeChange", () => {
+    test("clears values when switching from an options-based type to a non-options type", async () => {
+      const itemWithValues = {
+        ...defaultItem,
+        type: "CheckBoxList",
+        values: [{ value: "opt1", name: "Option 1", is_default: false }]
+      };
+
+      const TestWrapper = () => {
+        const { values } = useFormikContext();
+        return (
+          <>
+            <AdditionalInput
+              {...defaultProps}
+              item={itemWithValues}
+            />
+            <div data-testid="values-count">
+              {values.meta_fields[0].values.length}
+            </div>
+          </>
+        );
+      };
+
+      render(
+        <Formik
+          initialValues={{ meta_fields: [itemWithValues] }}
+          onSubmit={jest.fn()}
+        >
+          <Form>
+            <TestWrapper />
+          </Form>
+        </Formik>
+      );
+
+      expect(screen.getByTestId("values-count")).toHaveTextContent("1");
+
+      await userEvent.click(screen.getByRole("combobox"));
+      await userEvent.click(await screen.findByRole("option", { name: "CheckBox" }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("values-count")).toHaveTextContent("0");
+      });
+    });
+
+    test("preserves values when switching between options-based types", async () => {
+      const itemWithValues = {
+        ...defaultItem,
+        type: "CheckBoxList",
+        values: [{ value: "opt1", name: "Option 1", is_default: false }]
+      };
+
+      const TestWrapper = () => {
+        const { values } = useFormikContext();
+        return (
+          <>
+            <AdditionalInput
+              {...defaultProps}
+              item={itemWithValues}
+            />
+            <div data-testid="values-count">
+              {values.meta_fields[0].values.length}
+            </div>
+          </>
+        );
+      };
+
+      render(
+        <Formik
+          initialValues={{ meta_fields: [itemWithValues] }}
+          onSubmit={jest.fn()}
+        >
+          <Form>
+            <TestWrapper />
+          </Form>
+        </Formik>
+      );
+
+      expect(screen.getByTestId("values-count")).toHaveTextContent("1");
+
+      await userEvent.click(screen.getByRole("combobox"));
+      await userEvent.click(await screen.findByRole("option", { name: "ComboBox" }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("values-count")).toHaveTextContent("1");
+      });
     });
   });
 
