@@ -90,7 +90,7 @@
         "react-select": "^2.4.3",
         "react-star-ratings": "^2.3.0",
         "react-tooltip": "^5.28.0",
-        "redux": "^3.7.2",
+        "redux": "^4.2.1",
         "redux-mock-store": "^1.5.4",
         "redux-persist": "^5.10.0",
         "redux-thunk": "^2.3.0",

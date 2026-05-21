@@ -8,11 +8,11 @@ export const OPERATORS = {
     value: "@@",
     label: T.translate("grid_filter.operators.like_start")
   },
-  HAS: { value: ">>", label: T.translate("grid_filter.operators.has") }, // not available on API
+  HAS: { value: ">>", label: T.translate("grid_filter.operators.has") }, // not available on API, only use with customParser
   HAS_NOT: {
     value: "!>>",
     label: T.translate("grid_filter.operators.has_not")
-  }, // not available on API
+  }, // not available on API, only use with customParser
   LESS: { value: "<", label: T.translate("grid_filter.operators.less") },
   LESS_OR_EQUAL: {
     value: "<=",
