@@ -55,10 +55,12 @@ describe('ClockProvider', () => {
 
 describe('useClock', () => {
     it('throws when used outside ClockProvider', () => {
-        const orig = console.error;
-        console.error = jest.fn();
-        expect(() => render(<ClockReader />)).toThrow();
-        console.error = orig;
+        const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        try {
+            expect(() => render(<ClockReader />)).toThrow();
+        } finally {
+            errorSpy.mockRestore();
+        }
     });
 
     it('returns null before the first tick', () => {
@@ -77,10 +79,12 @@ describe('useClock', () => {
 
 describe('useClockSelector', () => {
     it('throws when used outside ClockProvider', () => {
-        const orig = console.error;
-        console.error = jest.fn();
-        expect(() => render(<SelectorReader select={(t) => t} />)).toThrow();
-        console.error = orig;
+        const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        try {
+            expect(() => render(<SelectorReader select={(t) => t} />)).toThrow();
+        } finally {
+            errorSpy.mockRestore();
+        }
     });
 
     it('computes derived value from the latest tick', () => {
