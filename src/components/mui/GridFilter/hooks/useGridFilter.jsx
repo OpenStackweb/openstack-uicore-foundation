@@ -5,7 +5,7 @@ import { JOIN_OPERATORS } from "../utils";
 const useGridFilter = (id) => {
   const dispatch = useDispatch();
   const allFilters = useSelector(
-    (state) => state.allGridFiltersState.allFilters
+    (state) => state.allGridFiltersState?.allFilters ?? []
   );
   const filter = allFilters.find((f) => f.id === id) || {};
   const {
