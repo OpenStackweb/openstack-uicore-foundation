@@ -9,7 +9,8 @@
 import {
     isCompanyObject,
     isExistingCompany,
-    findExistingByName
+    findExistingByName,
+    normalizeCompanyValue
 } from "../company-input-v2";
 
 describe("isCompanyObject", () => {
@@ -84,5 +85,30 @@ describe("findExistingByName", () => {
     it("returns null when only free-text entries are present", () => {
         const freeTextOnly = [{ id: 0, name: "Acme" }];
         expect(findExistingByName(freeTextOnly, "Acme")).toBeNull();
+    });
+});
+
+describe("normalizeCompanyValue", () => {
+    it("returns the value unchanged when it has a real name", () => {
+        const v = { id: 1, name: "Tipit" };
+        expect(normalizeCompanyValue(v)).toBe(v);
+        expect(normalizeCompanyValue("Tipit")).toBe("Tipit");
+    });
+
+    it("returns null for null/undefined", () => {
+        expect(normalizeCompanyValue(null)).toBeNull();
+        expect(normalizeCompanyValue(undefined)).toBeNull();
+    });
+
+    it("returns null for empty strings", () => {
+        expect(normalizeCompanyValue("")).toBeNull();
+        expect(normalizeCompanyValue("   ")).toBeNull();
+    });
+
+    it("returns null for objects with no name or empty name", () => {
+        expect(normalizeCompanyValue({})).toBeNull();
+        expect(normalizeCompanyValue({ id: 5 })).toBeNull();
+        expect(normalizeCompanyValue({ id: 0, name: "" })).toBeNull();
+        expect(normalizeCompanyValue({ id: 0, name: "   " })).toBeNull();
     });
 });

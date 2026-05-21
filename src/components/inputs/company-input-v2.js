@@ -33,21 +33,35 @@ export const findExistingByName = (candidates, name) => {
     ) || null;
 };
 
+// Treat empty strings, null/undefined, and empty-name objects as no selection.
+// MUI's Autocomplete renders the clear (x) icon whenever value is truthy, so
+// without this an empty-name object would keep the clear icon visible on hover
+// of an apparently empty field.
+export const normalizeCompanyValue = (v) => {
+    if (!v) return null;
+    if (typeof v === "string") return v.trim() ? v : null;
+    if (typeof v === "object" && typeof v.name === "string" && v.name.trim()) return v;
+    return null;
+};
+
 const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink, ...rest }) => {
     const [inputValue, setInputValue] = React.useState("");
     const [options, setOptions] = React.useState([]);
 
+    // Memoised so the effect below doesn't re-run on every render.
+    const normalizedValue = React.useMemo(() => normalizeCompanyValue(value), [value]);
+
     React.useEffect(() => {
         if (inputValue === "") {
-            setOptions(value ? [value] : []);
+            setOptions(normalizedValue ? [normalizedValue] : []);
             return undefined;
         }
 
         queryRegistrationCompanies(summitId, inputValue, (results) => {
             let newOptions = [];
 
-            if (value) {
-                newOptions = [value];
+            if (normalizedValue) {
+                newOptions = [normalizedValue];
             }
 
             if (results) {
@@ -57,7 +71,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
             setOptions(newOptions);
         }, options2Show);
         return undefined;
-    }, [value, inputValue, summitId, options2Show]);
+    }, [normalizedValue, inputValue, summitId, options2Show]);
 
     return (
         <Autocomplete
@@ -70,7 +84,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
             freeSolo
             includeInputInList
             filterSelectedOptions
-            value={value}
+            value={normalizedValue}
             onBlur={() => { if (onBlur) onBlur(name) }}
             getOptionLabel={(option) => {
                 if (typeof option === "string") return option;
