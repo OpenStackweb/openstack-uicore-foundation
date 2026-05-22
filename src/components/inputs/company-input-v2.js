@@ -136,7 +136,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
           helperText={helperText}
           error={error}
           margin="normal"
-          InputLabelProps={disableShrink ? { shrink: false } : undefined}
+          InputLabelProps={disableShrink ? { shrink: false } : params.InputLabelProps}
         />
       )}
       renderOption={(props, option) => {
