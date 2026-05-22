@@ -206,28 +206,31 @@ describe("CompanyInputV2 integration", () => {
     });
 
     it("auto-replaces a free-text commit with the canonical match when the API response arrives after blur", () => {
-        // Withhold the API callback to simulate the network being slower than blur.
+        // Withhold the API callback so we control when the response "arrives".
         queryRegistrationCompanies.mockImplementation(() => {});
 
         const onChange = jest.fn();
-        // Start with the free-text commit already in place (what happens when
-        // blur fires before the response).
-        renderControlled({ initialValue: { id: 0, name: "tipit" }, onChange });
+        renderControlled({ onChange });
         const input = screen.getByRole("combobox");
 
-        // Type to populate inputValue so the effect kicks in.
+        // Type "tipit": fires onInputChange, populates inputValue, triggers the effect.
         fireEvent.change(input, { target: { value: "tipit" } });
 
-        // Pull the captured callback from the mock's most recent call rather
-        // than via a closure variable: avoids races where the effect hasn't
-        // committed by the time we try to resolve it.
+        // Blur: autoSelect commits the typed string as free-text { id: 0, name: "tipit" }
+        // via the wrapper's onChange handler, which writes it back to value. The
+        // value change re-runs the effect with the new normalizedValue closure.
+        fireEvent.blur(input);
+        onChange.mockClear();
+
+        // Pull the API callback from the most recent effect run (the one with
+        // the post-blur normalizedValue captured in its closure).
         expect(queryRegistrationCompanies).toHaveBeenCalled();
         const [, , cb] = queryRegistrationCompanies.mock.calls[queryRegistrationCompanies.mock.calls.length - 1];
 
-        // Now the response arrives with the canonical option.
+        // Now the API response arrives with the canonical option. The effect
+        // sees the active value is a free-text match and auto-replaces it.
         act(() => { cb([{ id: 1, name: "Tipit" }]); });
 
-        // The component should have called onChange with the canonical option.
         const promoted = onChange.mock.calls
             .map((c) => c[0].target.value)
             .find((v) => v && typeof v === "object" && v.id === 1);
