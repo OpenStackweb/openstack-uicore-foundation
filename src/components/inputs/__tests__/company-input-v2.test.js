@@ -207,10 +207,7 @@ describe("CompanyInputV2 integration", () => {
 
     it("auto-replaces a free-text commit with the canonical match when the API response arrives after blur", () => {
         // Withhold the API callback to simulate the network being slower than blur.
-        let resolveQuery;
-        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
-            resolveQuery = cb;
-        });
+        queryRegistrationCompanies.mockImplementation(() => {});
 
         const onChange = jest.fn();
         // Start with the free-text commit already in place (what happens when
@@ -221,8 +218,14 @@ describe("CompanyInputV2 integration", () => {
         // Type to populate inputValue so the effect kicks in.
         fireEvent.change(input, { target: { value: "tipit" } });
 
+        // Pull the captured callback from the mock's most recent call rather
+        // than via a closure variable: avoids races where the effect hasn't
+        // committed by the time we try to resolve it.
+        expect(queryRegistrationCompanies).toHaveBeenCalled();
+        const [, , cb] = queryRegistrationCompanies.mock.calls[queryRegistrationCompanies.mock.calls.length - 1];
+
         // Now the response arrives with the canonical option.
-        act(() => { resolveQuery([{ id: 1, name: "Tipit" }]); });
+        act(() => { cb([{ id: 1, name: "Tipit" }]); });
 
         // The component should have called onChange with the canonical option.
         const promoted = onChange.mock.calls
