@@ -38,7 +38,7 @@ const GlobalQuantityField = ({
     const val = parseInt(e.target.value, 10);
     if (isNaN(val)) { helpers.setValue(0); return; }
     const max = row.quantity_limit_per_sponsor;
-    const clamped = max !== undefined ? Math.min(Math.max(val, 0), max) : Math.max(val, 0);
+    const clamped = max ? Math.min(Math.max(val, 0), max) : Math.max(val, 0);
     helpers.setValue(clamped);
   };
 

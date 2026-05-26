@@ -109,7 +109,7 @@ describe("GlobalQuantityField", () => {
     );
   });
 
-  test("clamps all values to 0 when quantity_limit_per_sponsor is 0", async () => {
+  test("does not apply upper bound when quantity_limit_per_sponsor is 0 (unlimited)", async () => {
     const onSubmit = jest.fn();
     const zeroLimitRow = { ...row, quantity_limit_per_sponsor: 0 };
     renderField({ row: zeroLimitRow }, onSubmit);
@@ -120,7 +120,7 @@ describe("GlobalQuantityField", () => {
       await userEvent.click(submitButton);
     });
     expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ [fieldName]: 0 }),
+      expect.objectContaining({ [fieldName]: 3 }),
       expect.anything()
     );
   });
