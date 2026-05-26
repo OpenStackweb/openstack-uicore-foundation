@@ -128,36 +128,36 @@ const FormItemTable = ({
       <Table>
         <TableHead>
           <TableRow sx={{ backgroundColor: "#EAEDF4" }}>
-            <TableCell>
+            <TableCell sx={{ minWidth: 40 }}>
               {T.translate("sponsor_edit_form.code")}
             </TableCell>
-            <TableCell>
+            <TableCell sx={{ minWidth: 120 }}>
               {T.translate("sponsor_edit_form.description")}
             </TableCell>
             <TableCell sx={{ minWidth: 120 }}>
               {T.translate("sponsor_edit_form.custom_rate")}
             </TableCell>
-            <TableCell>
+            <TableCell sx={{ minWidth: 40 }}>
               {T.translate("sponsor_edit_form.early_bird_rate")}
             </TableCell>
-            <TableCell>
+            <TableCell sx={{ minWidth: 40 }}>
               {T.translate("sponsor_edit_form.standard_rate")}
             </TableCell>
-            <TableCell>
+            <TableCell sx={{ minWidth: 40 }}>
               {T.translate("sponsor_edit_form.onsite_rate")}
             </TableCell>
             {extraColumns.map((exc) => (
-              <TableCell key={`colhead-${exc.type_id}`}>{exc.name}</TableCell>
+              <TableCell key={`colhead-${exc.type_id}`} sx={{ minWidth: 200 }}>{exc.name}</TableCell>
             ))}
             <TableCell sx={{ minWidth: 120 }}>
               {T.translate("sponsor_edit_form.qty")}
             </TableCell>
             <TableCell sx={{ minWidth: 40 }} />
             {/* item level extra field */}
-            <TableCell sx={{ minWidth: 120 }}>
+            <TableCell sx={{ minWidth: 40 }}>
               {T.translate("sponsor_edit_form.total")}
             </TableCell>
-            <TableCell sx={{ minWidth: 120 }}>
+            <TableCell sx={{ minWidth: 40 }}>
               {T.translate("sponsor_edit_form.notes")}
             </TableCell>
           </TableRow>
@@ -208,7 +208,6 @@ const FormItemTable = ({
               {extraColumns.map((exc) => (
                 <TableCell
                   key={`datacell-${row.form_item_id}-${exc.type_id}`}
-                  sx={{ minWidth: 200 }}
                 >
                   <ItemTableField
                     field={exc}
