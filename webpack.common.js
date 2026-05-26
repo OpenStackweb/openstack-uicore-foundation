@@ -117,6 +117,7 @@ module.exports = {
         'components/mui/formik-inputs/radio-group': './src/components/mui/formik-inputs/mui-formik-radio-group.js',
         'components/mui/formik-inputs/select-group': './src/components/mui/formik-inputs/mui-formik-select-group.js',
         'components/mui/formik-inputs/select': './src/components/mui/formik-inputs/mui-formik-select.js',
+        'components/mui/formik-inputs/select-v2': './src/components/mui/formik-inputs/mui-formik-select-v2.js',
         'components/mui/formik-inputs/summit-addon-select': './src/components/mui/formik-inputs/mui-formik-summit-addon-select.js',
         'components/mui/formik-inputs/switch': './src/components/mui/formik-inputs/mui-formik-switch.js',
         'components/mui/formik-inputs/textfield': './src/components/mui/formik-inputs/mui-formik-textfield.js',
