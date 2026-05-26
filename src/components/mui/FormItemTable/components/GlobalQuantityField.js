@@ -34,6 +34,15 @@ const GlobalQuantityField = ({
     helpers.setTouched(true);
   }, [value]);
 
+  const handleChange = (e) => {
+    const val = parseInt(e.target.value, 10);
+    const max = row.quantity_limit_per_sponsor;
+    if (!isNaN(val)) {
+      const clamped = max !== undefined ? Math.min(Math.max(val, 0), max) : Math.max(val, 0);
+      helpers.setValue(clamped);
+    }
+  };
+
   return (
     <MuiFormikTextField
       name={name}
@@ -41,6 +50,7 @@ const GlobalQuantityField = ({
       size="small"
       type="number"
       disabled={disabled}
+      onChange={handleChange}
       slotProps={{
         htmlInput: {
           readOnly: isReadOnly,
