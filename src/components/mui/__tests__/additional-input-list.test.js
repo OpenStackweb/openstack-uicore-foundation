@@ -149,6 +149,47 @@ describe("AdditionalInputList", () => {
         expect(screen.getByTestId("field-count")).toHaveTextContent("2");
       });
     });
+
+    test("new meta field starts with empty values when an existing field already has values", async () => {
+      let capturedFields = null;
+
+      const TestWrapper = () => {
+        const { values } = useFormikContext();
+        capturedFields = values.meta_fields;
+        return <AdditionalInputList {...defaultProps} />;
+      };
+
+      render(
+        <Formik
+          initialValues={{
+            meta_fields: [
+              {
+                id: 1,
+                name: "Color",
+                type: "CheckBoxList",
+                is_required: false,
+                minimum_quantity: 0,
+                maximum_quantity: 0,
+                values: [{ name: "Red", value: "red", is_default: false }]
+              }
+            ]
+          }}
+          onSubmit={jest.fn()}
+        >
+          <Form>
+            <TestWrapper />
+          </Form>
+        </Formik>
+      );
+
+      const addButton = screen.getByTestId("add-btn-0");
+      await userEvent.click(addButton);
+
+      await waitFor(() => {
+        expect(capturedFields).toHaveLength(2);
+        expect(capturedFields[1].values).toEqual([]);
+      });
+    });
   });
 
   describe("handleRemove", () => {
