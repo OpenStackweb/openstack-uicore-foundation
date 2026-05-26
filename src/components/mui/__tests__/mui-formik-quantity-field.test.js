@@ -100,6 +100,82 @@ describe("MuiFormikQuantityField", () => {
     );
   });
 
+  it("must reset to 0 when field is cleared", async () => {
+    const onSubmit = jest.fn();
+
+    renderWithFormik({ label: "some field", onSubmit }, { testField: 5 });
+
+    const field = screen.getByLabelText("some field");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      fireEvent.change(field, { target: { value: "" } });
+      await userEvent.click(submitButton);
+    });
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ testField: 0 }),
+      expect.anything()
+    );
+  });
+
+  it("must clamp to 0 when down-arrow decrements below min", async () => {
+    const onSubmit = jest.fn();
+
+    renderWithFormik({ label: "some field", onSubmit }, { testField: 0 });
+
+    const field = screen.getByLabelText("some field");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      fireEvent.change(field, { target: { value: "-1" } });
+      await userEvent.click(submitButton);
+    });
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ testField: 0 }),
+      expect.anything()
+    );
+  });
+
+  it("must clamp all typed values to 0 when max is 0", async () => {
+    const onSubmit = jest.fn();
+
+    renderWithFormik(
+      { label: "some field", max: 0, onSubmit },
+      { testField: 0 }
+    );
+
+    const field = screen.getByLabelText("some field");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      fireEvent.change(field, { target: { value: "5" } });
+      await userEvent.click(submitButton);
+    });
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ testField: 0 }),
+      expect.anything()
+    );
+  });
+
+  it("must not apply upper bound when max is not provided", async () => {
+    const onSubmit = jest.fn();
+
+    renderWithFormik({ label: "some field", onSubmit }, { testField: 0 });
+
+    const field = screen.getByLabelText("some field");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      await userEvent.clear(field);
+      await userEvent.type(field, "9999");
+      await userEvent.click(submitButton);
+    });
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ testField: 9999 }),
+      expect.anything()
+    );
+  });
+
   it("must clamp value to max when max is provided", async () => {
     const onSubmit = jest.fn();
 

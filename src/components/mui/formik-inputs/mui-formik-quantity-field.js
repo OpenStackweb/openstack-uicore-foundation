@@ -23,11 +23,10 @@ const MuiFormikQuantityField = ({ name, min, max, ...props }) => {
 
   const handleChange = (e) => {
     const val = parseInt(e.target.value, 10);
-    if (!isNaN(val)) {
-      const effectiveMin = min ?? 0;
-      const clamped = max != null ? Math.min(Math.max(val, effectiveMin), max) : Math.max(val, effectiveMin);
-      helpers.setValue(clamped);
-    }
+    const effectiveMin = min ?? 0;
+    if (isNaN(val)) { helpers.setValue(effectiveMin); return; }
+    const clamped = max != null ? Math.min(Math.max(val, effectiveMin), max) : Math.max(val, effectiveMin);
+    helpers.setValue(clamped);
   };
 
   return (
