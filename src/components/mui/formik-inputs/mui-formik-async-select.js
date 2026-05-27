@@ -20,33 +20,25 @@ import {
 } from "@mui/material";
 import { useField } from "formik";
 import { DEBOUNCE_WAIT_250 } from "../../../utils/constants";
-import PropTypes from "prop-types";
 
-/**
- * Async Autocomplete with two modes:
- * - Remote (default): fetches options from API on each user input (debounced).
- * - Local (localFilter=true): fetches once on mount and filters options client-side.
- * Note: localFilter mode assumes stable queryParams (set once on mount).
- * If queryParams need to change, remount the component instead.
- */
 const MuiFormikAsyncAutocomplete = ({
   name,
   queryFunction,
+  multiple = false,
   placeholder = "Select...",
   plainValue = false,
   hiddenOptions = [],
   formatOption = (item) => ({ value: item.id.toString(), label: item.name }),
   formatSelectedValue = null,
   queryParams = [],
-  isMulti = false,
-  localFilter = false
+  isMulti = false
 }) => {
   const [field, meta, helpers] = useField(name);
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const value = field.value || (isMulti ? [] : null);
+  const value = field.value || (multiple ? [] : null);
   const error = meta.touched && meta.error;
 
   const fetchOptions = async (input = "") => {
@@ -66,7 +58,7 @@ const MuiFormikAsyncAutocomplete = ({
   };
 
   useEffect(() => {
-    if (!localFilter && searchTerm) {
+    if (searchTerm) {
       const delayDebounce = setTimeout(() => {
         fetchOptions(searchTerm);
       }, DEBOUNCE_WAIT_250);
@@ -80,7 +72,7 @@ const MuiFormikAsyncAutocomplete = ({
   }, []);
 
   const handleChange = (event, selected) => {
-    if (!isMulti) {
+    if (!multiple) {
       const selectedValue = plainValue ? selected?.value || "" : selected;
       helpers.setValue(selectedValue);
       return;
@@ -89,10 +81,10 @@ const MuiFormikAsyncAutocomplete = ({
     const selectedItems = plainValue
       ? selected.map((s) => s.value)
       : selected.map((s) =>
-        formatSelectedValue
-          ? formatSelectedValue(s)
-          : { id: parseInt(s.value), name: s.label }
-      );
+          formatSelectedValue
+            ? formatSelectedValue(s)
+            : { id: parseInt(s.value), name: s.label }
+        );
 
     helpers.setValue(selectedItems);
   };
@@ -107,18 +99,7 @@ const MuiFormikAsyncAutocomplete = ({
       fullWidth
       getOptionLabel={(option) => option.label || ""}
       isOptionEqualToValue={(option, value) => option.value === value.value}
-      onInputChange={!localFilter ? (e, newInput) => setSearchTerm(newInput) : (x) => x}
-      filterOptions={
-        // only apply filterOptions for "local" search
-        localFilter
-          ? (options, { inputValue }) =>
-            options.filter((opt) =>
-              String(opt.label ?? "").toLowerCase().includes(
-                String(inputValue ?? "").toLowerCase()
-              )
-            )
-          : undefined
-      }
+      onInputChange={(e, newInput) => setSearchTerm(newInput)}
       renderInput={(params) => (
         <TextField
           {...params}
@@ -148,21 +129,12 @@ const MuiFormikAsyncAutocomplete = ({
       )}
       renderOption={(props, option, { selected }) => (
         <li {...props}>
-          {isMulti && <Checkbox checked={selected} sx={{ mr: 1 }} />}
+          {multiple && <Checkbox checked={selected} sx={{ mr: 1 }} />}
           {option.label}
         </li>
       )}
     />
   );
-};
-
-MuiFormikAsyncAutocomplete.propTypes = {
-  name: PropTypes.string.isRequired,
-  isMulti: PropTypes.bool,
-  queryFunction: PropTypes.func.isRequired,
-  formatOption: PropTypes.func,
-  queryParams: PropTypes.array,
-  localFilter: PropTypes.bool,
 };
 
 export default MuiFormikAsyncAutocomplete;

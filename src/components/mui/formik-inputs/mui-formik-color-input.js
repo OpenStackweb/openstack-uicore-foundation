@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
+import T from "i18n-react";
 import PropTypes from "prop-types";
 import { Box, IconButton, InputAdornment, TextField } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import { useField } from "formik";
-import { DEBOUNCE_WAIT_150 } from "../../../utils/constants";
+import { DEBOUNCE_WAIT_250 } from "../../../utils/constants";
 
-const MuiFormikColorInput = ({ name, placeholder = "Select a color", InputProps: restInputProps, ...rest }) => {
+const MuiFormikColorInput = ({ name, placeholder = T.translate("color_picker.placeholder"), InputProps: restInputProps, ...rest }) => {
   const [field, meta, helpers] = useField(name);
   const [hasValue, setHasValue] = useState(Boolean(field.value));
   const [localValue, setLocalValue] = useState(field.value || "#000000");
@@ -28,7 +29,7 @@ const MuiFormikColorInput = ({ name, placeholder = "Select a color", InputProps:
     debounceRef.current = setTimeout(() => {
       helpers.setValue(value);
       debounceRef.current = null;
-    }, DEBOUNCE_WAIT_150);
+    }, DEBOUNCE_WAIT_250);
   };
 
   const handleBlur = (e) => {
