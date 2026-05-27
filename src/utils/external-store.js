@@ -119,9 +119,12 @@ export function createExternalStore(name = 'ExternalStore') {
      *   <Provider>{(emit) => <Source onUpdate={emit} />}</Provider>
      *
      * Or pass children normally if you wire emit externally.
+     *
+     * Pass `initialValue` to seed the store synchronously so that hooks
+     * called before the first emit see a real value instead of null.
      */
-    const Provider = ({ children }) => {
-        const valueRef = useRef(null);
+    const Provider = ({ initialValue = null, children }) => {
+        const valueRef = useRef(initialValue);
         const listenersRef = useRef(new Set());
 
         const subscribe = useCallback((callback) => {

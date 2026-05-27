@@ -53,6 +53,24 @@ describe('createExternalStore', () => {
             render(<TestProvider><div /></TestProvider>);
             expect(typeof emit).toBe('function');
         });
+
+        it('seeds the store with initialValue when provided', () => {
+            render(
+                <store.Provider initialValue="seeded">
+                    <ValueDisplay />
+                </store.Provider>
+            );
+            expect(screen.getByTestId('value')).toHaveTextContent('seeded');
+        });
+
+        it('runs the selector against initialValue before first emit', () => {
+            render(
+                <store.Provider initialValue={10}>
+                    <SelectorDisplay compute={(v) => v * 2} />
+                </store.Provider>
+            );
+            expect(screen.getByTestId('selector')).toHaveTextContent('20');
+        });
     });
 
     describe('useValue', () => {
