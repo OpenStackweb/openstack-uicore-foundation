@@ -136,7 +136,7 @@ describe("MuiFormikQuantityField", () => {
     );
   });
 
-  it("must clamp all typed values to 0 when max is 0", async () => {
+  it("must treat max=0 as unlimited and allow any value above min", async () => {
     const onSubmit = jest.fn();
 
     renderWithFormik(
@@ -152,7 +152,7 @@ describe("MuiFormikQuantityField", () => {
     });
 
     expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ testField: 0 }),
+      expect.objectContaining({ testField: 5 }),
       expect.anything()
     );
   });
@@ -172,6 +172,25 @@ describe("MuiFormikQuantityField", () => {
 
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({ testField: 9999 }),
+      expect.anything()
+    );
+  });
+
+  it("must strip leading zeros", async () => {
+    const onSubmit = jest.fn();
+
+    renderWithFormik({ label: "some field", onSubmit }, { testField: 1 });
+
+    const field = screen.getByLabelText("some field");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      fireEvent.change(field, { target: { value: "01" } });
+      await userEvent.click(submitButton);
+    });
+
+    expect(field).toHaveDisplayValue("1");
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ testField: 1 }),
       expect.anything()
     );
   });

@@ -24,8 +24,13 @@ const MuiFormikQuantityField = ({ name, min, max, ...props }) => {
   const handleChange = (e) => {
     const val = parseInt(e.target.value, 10);
     const effectiveMin = min ?? 0;
-    if (isNaN(val)) { helpers.setValue(effectiveMin); return; }
-    const clamped = max != null ? Math.min(Math.max(val, effectiveMin), max) : Math.max(val, effectiveMin);
+    // React intentionally skips syncing controlled number inputs during typing
+    // to avoid cursor/composition issues. Setting e.target.value directly
+    // forces the DOM to normalize the displayed value (e.g. strip leading zeros,
+    // clamp to max) before React's reconciliation runs.
+    if (isNaN(val)) { e.target.value = effectiveMin; helpers.setValue(effectiveMin); return; }
+    const clamped = max ? Math.min(Math.max(val, effectiveMin), max) : Math.max(val, effectiveMin);
+    e.target.value = clamped;
     helpers.setValue(clamped);
   };
 
@@ -43,7 +48,7 @@ const MuiFormikQuantityField = ({ name, min, max, ...props }) => {
       slotProps={{
         htmlInput: {
           min: min ?? 0,
-          ...(max != null ? { max } : {})
+          ...(max ? { max } : {})
         }
       }}
       // eslint-disable-next-line react/jsx-props-no-spreading

@@ -109,7 +109,7 @@ describe("GlobalQuantityField", () => {
     );
   });
 
-  test("clamps all values to 0 when quantity_limit_per_sponsor is 0", async () => {
+  test("does not apply upper bound when quantity_limit_per_sponsor is 0 (unlimited)", async () => {
     const onSubmit = jest.fn();
     const zeroLimitRow = { ...row, quantity_limit_per_sponsor: 0 };
     renderField({ row: zeroLimitRow }, onSubmit);
@@ -120,7 +120,23 @@ describe("GlobalQuantityField", () => {
       await userEvent.click(submitButton);
     });
     expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ [fieldName]: 0 }),
+      expect.objectContaining({ [fieldName]: 3 }),
+      expect.anything()
+    );
+  });
+
+  test("strips leading zeros", async () => {
+    const onSubmit = jest.fn();
+    renderField({ value: 1 }, onSubmit);
+    const input = screen.getByRole("spinbutton");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      fireEvent.change(input, { target: { value: "01" } });
+      await userEvent.click(submitButton);
+    });
+    expect(input).toHaveDisplayValue("1");
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ [fieldName]: 1 }),
       expect.anything()
     );
   });
