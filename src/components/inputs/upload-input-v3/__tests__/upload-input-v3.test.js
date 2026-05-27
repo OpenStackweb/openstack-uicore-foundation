@@ -288,6 +288,52 @@ describe('UploadInputV3', () => {
     });
   });
 
+  describe('File Preview and Download', () => {
+    test('renders a preview image linked to the file', () => {
+      const files = [{ filename: 'image.png', size: 102400, public_url: 'https://cdn.example.com/image.png' }];
+      render(<UploadInputV3 {...defaultProps} value={files} />);
+      const img = screen.getByRole('img', { name: 'image.png' });
+      expect(img).toHaveAttribute('src', 'https://cdn.example.com/image.png');
+      const previewLink = img.closest('a');
+      expect(previewLink).toHaveAttribute('href', 'https://cdn.example.com/image.png');
+      expect(previewLink).toHaveAttribute('target', '_blank');
+      expect(previewLink).not.toHaveAttribute('download');
+    });
+
+    test('prefers private_url and falls back to public_url when private_url is "#"', () => {
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[{
+        filename: 'a.png', size: 1024,
+        private_url: 'https://private.example.com/a.png',
+        public_url: 'https://cdn.example.com/a.png',
+      }]} />);
+      expect(screen.getByRole('img', { name: 'a.png' })).toHaveAttribute('src', 'https://private.example.com/a.png');
+
+      rerender(<UploadInputV3 {...defaultProps} value={[{
+        filename: 'a.png', size: 1024,
+        private_url: '#',
+        public_url: 'https://cdn.example.com/a.png',
+      }]} />);
+      expect(screen.getByRole('img', { name: 'a.png' })).toHaveAttribute('src', 'https://cdn.example.com/a.png');
+    });
+
+    test('filename is a download link with correct href', () => {
+      const files = [{ filename: 'document.pdf', size: 102400, public_url: 'https://cdn.example.com/document.pdf' }];
+      const { container } = render(<UploadInputV3 {...defaultProps} value={files} />);
+      const downloadLink = container.querySelector('a[download]');
+      expect(downloadLink).toHaveAttribute('href', 'https://cdn.example.com/document.pdf');
+      expect(downloadLink).toHaveAttribute('target', '_blank');
+      expect(downloadLink).toHaveTextContent('document.pdf');
+    });
+
+    test('preview image falls back to file_icon on load error', () => {
+      const files = [{ filename: 'document.pdf', size: 102400, public_url: 'https://cdn.example.com/document.pdf' }];
+      render(<UploadInputV3 {...defaultProps} value={files} />);
+      const img = screen.getByRole('img', { name: 'document.pdf' });
+      fireEvent.error(img);
+      expect(img).not.toHaveAttribute('src', 'https://cdn.example.com/document.pdf');
+    });
+  });
+
   describe('Edge Cases', () => {
     test('handles empty value array', () => {
       const { container } = render(<UploadInputV3 {...defaultProps} value={[]} />);
