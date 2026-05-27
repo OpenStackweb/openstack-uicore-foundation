@@ -25,6 +25,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CloseIcon from "@mui/icons-material/Close";
 import { DropzoneV3 } from './dropzone-v3';
+import ProgressiveImg from '../../progressive-img';
 import file_icon from '../upload-input/file.png';
 import './index.less';
 
@@ -42,7 +43,7 @@ const UploadInputV3 = ({
   id,
   parallelChunkUploads = false,
   maxConcurrentChunks = 6,
-  onError = () => {},
+  onError = () => { },
   getAllowedExtensions = null,
   getMaxSize = null,
   error,
@@ -372,7 +373,7 @@ const UploadInputV3 = ({
           {value.map((file, index) => {
             const filename = file.filename;
             const fileSize = formatFileSize(file.size);
-            let src = file?.private_url || file?.public_url;
+            let src = file?.private_url || file?.public_url || file?.file_url;
             if (src === '#') src = file?.public_url;
             // custom replace for dropbox case ( download vs raw)
             const previewSrc = src ? src.replace("?dl=0", "?raw=1") : filename;
@@ -383,12 +384,11 @@ const UploadInputV3 = ({
                 sx={fileRowSx}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mr: 2, width: 64, height: 64, flexShrink: 0 }}>
-                  <a href={src} target="_blank" rel="noreferrer" title="Preview file">
-                    <img
-                      src={previewSrc}
+                  <a href={src} target="_blank" title="See Preview">
+                    <ProgressiveImg
                       alt={filename}
-                      onError={(e) => { e.target.src = file_icon; }}
-                      style={{ width: 70, height: 70, objectFit: 'contain', display: 'block', borderRadius: 4 }}
+                      src={previewSrc}
+                      placeholderSrc={file_icon}
                     />
                   </a>
                 </Box>
@@ -399,6 +399,7 @@ const UploadInputV3 = ({
                     href={src}
                     target="_blank"
                     rel="noreferrer"
+                    title="Preview file"
                     download
                     variant="body2"
                     fontWeight={500}
