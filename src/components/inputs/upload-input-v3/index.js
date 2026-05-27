@@ -25,6 +25,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CloseIcon from "@mui/icons-material/Close";
 import { DropzoneV3 } from './dropzone-v3';
+import file_icon from '../upload-input/file.png';
 import './index.less';
 
 const UploadInputV3 = ({
@@ -371,21 +372,37 @@ const UploadInputV3 = ({
           {value.map((file, index) => {
             const filename = file.filename;
             const fileSize = formatFileSize(file.size);
+            let src = file?.private_url || file?.public_url;
+            if (src === '#') src = file?.public_url;
+            // custom replace for dropbox case ( download vs raw)
+            const previewSrc = src ? src.replace("?dl=0", "?raw=1") : filename;
 
             return (
               <Box
                 key={`uploaded-${index}`}
                 sx={fileRowSx}
               >
-                <Box sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', mr: 2, minWidth: 32 }}>
-                  <UploadFileIcon fontSize="medium" />
+                <Box sx={{ display: 'flex', alignItems: 'center', mr: 2, width: 64, height: 64, flexShrink: 0 }}>
+                  <a href={src} target="_blank" rel="noreferrer" title="Preview file">
+                    <img
+                      src={previewSrc}
+                      alt={filename}
+                      onError={(e) => { e.target.src = file_icon; }}
+                      style={{ width: 70, height: 70, objectFit: 'contain', display: 'block', borderRadius: 4 }}
+                    />
+                  </a>
                 </Box>
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography
+                    component="a"
+                    href={src}
+                    target="_blank"
+                    rel="noreferrer"
+                    download
                     variant="body2"
                     fontWeight={500}
-                    sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                   >
                     {filename}
                   </Typography>
