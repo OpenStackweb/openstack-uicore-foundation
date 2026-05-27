@@ -136,7 +136,7 @@ describe("MuiFormikQuantityField", () => {
     );
   });
 
-  it("must clamp all typed values to 0 when max is 0", async () => {
+  it("must treat max=0 as unlimited and allow any value above min", async () => {
     const onSubmit = jest.fn();
 
     renderWithFormik(
@@ -152,7 +152,7 @@ describe("MuiFormikQuantityField", () => {
     });
 
     expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ testField: 0 }),
+      expect.objectContaining({ testField: 5 }),
       expect.anything()
     );
   });
