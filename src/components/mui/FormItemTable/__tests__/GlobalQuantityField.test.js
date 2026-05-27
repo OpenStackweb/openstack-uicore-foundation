@@ -125,6 +125,22 @@ describe("GlobalQuantityField", () => {
     );
   });
 
+  test("strips leading zeros", async () => {
+    const onSubmit = jest.fn();
+    renderField({ value: 1 }, onSubmit);
+    const input = screen.getByRole("spinbutton");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      fireEvent.change(input, { target: { value: "01" } });
+      await userEvent.click(submitButton);
+    });
+    expect(input).toHaveDisplayValue("1");
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ [fieldName]: 1 }),
+      expect.anything()
+    );
+  });
+
   test("does not apply upper bound when quantity_limit_per_sponsor is undefined", async () => {
     const onSubmit = jest.fn();
     const unlimitedRow = { form_item_id: 1 };

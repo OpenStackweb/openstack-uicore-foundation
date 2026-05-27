@@ -176,6 +176,25 @@ describe("MuiFormikQuantityField", () => {
     );
   });
 
+  it("must strip leading zeros", async () => {
+    const onSubmit = jest.fn();
+
+    renderWithFormik({ label: "some field", onSubmit }, { testField: 1 });
+
+    const field = screen.getByLabelText("some field");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      fireEvent.change(field, { target: { value: "01" } });
+      await userEvent.click(submitButton);
+    });
+
+    expect(field).toHaveDisplayValue("1");
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ testField: 1 }),
+      expect.anything()
+    );
+  });
+
   it("must clamp value to max when max is provided", async () => {
     const onSubmit = jest.fn();
 

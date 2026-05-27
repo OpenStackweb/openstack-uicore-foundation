@@ -36,9 +36,14 @@ const GlobalQuantityField = ({
 
   const handleChange = (e) => {
     const val = parseInt(e.target.value, 10);
-    if (isNaN(val)) { helpers.setValue(0); return; }
+    // React intentionally skips syncing controlled number inputs during typing
+    // to avoid cursor/composition issues. Setting e.target.value directly
+    // forces the DOM to normalize the displayed value (e.g. strip leading zeros,
+    // clamp to max) before React's reconciliation runs.
+    if (isNaN(val)) { e.target.value = 0; helpers.setValue(0); return; }
     const max = row.quantity_limit_per_sponsor;
     const clamped = max ? Math.min(Math.max(val, 0), max) : Math.max(val, 0);
+    e.target.value = clamped;
     helpers.setValue(clamped);
   };
 
