@@ -91,6 +91,7 @@
 import React, { createContext, useContext, useRef, useCallback, useMemo as reactUseMemo } from 'react';
 // Shim for React 16/17 compatibility, falls back to native in React 18+
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
+import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector';
 
 const strictEqual = (a, b) => a === b;
 
@@ -165,36 +166,13 @@ export function createExternalStore(name = 'ExternalStore') {
      */
     const useSelector = (compute, isEqual = strictEqual) => {
         const { subscribe, getSnapshot } = useStoreContext();
-
-        const lastResultRef = useRef(null);
-        const lastValueRef = useRef(null);
-        const lastComputeRef = useRef(compute);
-
-        // Invalidate cache when compute function changes
-        if (lastComputeRef.current !== compute) {
-            lastComputeRef.current = compute;
-            lastValueRef.current = null;
-        }
-
-        const getComputedValue = useCallback(() => {
-            const value = getSnapshot();
-
-            if (value === lastValueRef.current) {
-                return lastResultRef.current;
-            }
-
-            const newResult = compute(value);
-            lastValueRef.current = value;
-
-            if (lastResultRef.current !== null && isEqual(lastResultRef.current, newResult)) {
-                return lastResultRef.current;
-            }
-
-            lastResultRef.current = newResult;
-            return newResult;
-        }, [getSnapshot, compute, isEqual]);
-
-        return useSyncExternalStore(subscribe, getComputedValue);
+        return useSyncExternalStoreWithSelector(
+            subscribe,
+            getSnapshot,
+            getSnapshot,
+            compute,
+            isEqual
+        );
     };
 
     return { Provider, useValue, useSelector };
