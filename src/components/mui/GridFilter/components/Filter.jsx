@@ -34,6 +34,11 @@ const Filter = ({ id, value, criterias, onChange, onAdd, onDelete }) => {
   const valueSettings = criteriaObj?.values || {};
   const defaultValue = valueSettings.props?.multiple ? [] : "";
 
+  const valueOptions =
+    typeof valueSettings.props?.options === "function"
+      ? valueSettings.props.options(value?.value)
+      : valueSettings.props?.options;
+
   const handleChange = (prop, val) => {
     onChange({ ...value, [prop]: val });
   };
@@ -47,11 +52,10 @@ const Filter = ({ id, value, criterias, onChange, onAdd, onDelete }) => {
 
   // auto-select the value when only one option is available for the selected criteria
   useEffect(() => {
-    const options = valueSettings.props?.options;
-    if (options?.length === 1 && value?.value == null) {
-      handleChange("value", options[0].value);
+    if (valueOptions?.length === 1 && value?.value == null) {
+      handleChange("value", valueOptions[0].value);
     }
-  }, [valueSettings.props?.options?.length, value?.criteria]);
+  }, [valueOptions?.length, value?.criteria]);
 
   const isAddDisabled =
     value?.criteria == null ||
@@ -102,6 +106,7 @@ const Filter = ({ id, value, criterias, onChange, onAdd, onDelete }) => {
             disabled={!value?.criteria}
             // eslint-disable-next-line react/jsx-props-no-spreading
             {...valueSettings.props}
+            options={valueOptions}
             onChange={handleChangeValue}
           />
         </Box>
@@ -156,7 +161,14 @@ Filter.propTypes = {
       ),
       values: PropTypes.shape({
         type: PropTypes.string.isRequired,
-        props: PropTypes.object.isRequired
+        props: PropTypes.shape({
+          options: PropTypes.oneOfType([
+            PropTypes.arrayOf(PropTypes.object),
+            PropTypes.func
+          ]),
+          multiple: PropTypes.bool,
+          placeholder: PropTypes.string
+        })
       })
     })
   ).isRequired,

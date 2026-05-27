@@ -33,6 +33,9 @@ import { JOIN_OPERATORS, OPERATORS, EMPTY_FILTER } from "./utils";
 
 const OPERATOR_VALUES = Object.values(OPERATORS).map((op) => op.value);
 
+
+// For usage INSTRUCTIONS see readme.md in this directory.
+
 const GridFilter = ({ id, criterias, hideJoinOperators = false, onApply, saveFilters }) => {
   const { joinOperator, filterCount, valuesWithIds } = useGridFilter(id);
   const valuesString = useMemo(
@@ -206,11 +209,13 @@ GridFilter.propTypes = {
       })
     })
   ).isRequired,
+  hideJoinOperators: PropTypes.bool,
   onApply: PropTypes.func,
   saveFilters: PropTypes.func.isRequired
 };
 
 GridFilter.defaultProps = {
+  hideJoinOperators: false,
   onApply: () => {}
 };
 

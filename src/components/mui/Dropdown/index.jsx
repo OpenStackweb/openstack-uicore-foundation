@@ -63,7 +63,7 @@ const Dropdown = ({
         }}
       >
         {options?.map((op) => (
-          <MenuItem key={`selectop-${op.value}`} value={op.value}>
+          <MenuItem key={`selectop-${op.value}`} value={op.value} disabled={op.disabled}>
             {op.label}
           </MenuItem>
         ))}
@@ -83,7 +83,8 @@ Dropdown.propTypes = {
     PropTypes.shape({
       value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
         .isRequired,
-      label: PropTypes.string.isRequired
+      label: PropTypes.string.isRequired,
+      disabled: PropTypes.bool
     })
   ).isRequired,
   label: PropTypes.string,

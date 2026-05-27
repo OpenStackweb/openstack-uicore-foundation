@@ -9,6 +9,13 @@
 
 Mount `<GridFilter>` with a unique `id` and a `criterias` array. Each criteria defines the column key, display label, which operators are allowed, and how the value input should render.
 
+| Prop               | Type      | Default | Description                                                   |
+| ------------------ | --------- | ------- | ------------------------------------------------------------- |
+| `id`               | `string`  | —       | Unique identifier; scopes filter state in the Redux store     |
+| `criterias`        | `array`   | —       | Criteria definitions (see below)                              |
+| `hideJoinOperators`| `bool`    | `false` | Hides the All / Any toggle so the join operator is fixed      |
+| `onApply`          | `func`    | `()=>{}`| Called with `(filters, joinOperator)` when the user applies   |
+
 ```jsx
 import { GridFilter, OPERATORS } from "components/GridFilter";
 
@@ -38,6 +45,7 @@ import { GridFilter, OPERATORS } from "components/GridFilter";
       values: {
         type: "select",
         props: {
+          // options can also be a function — see "dynamic options" section below
           options: [...selectionStatusOptions],
           placeholder: "Filter by Selection Status"
         }
@@ -127,6 +135,61 @@ const { filterValues, parsedFilter, joinOperator, filterCount } =
 | `resetFilters` | Function — clears all active filters from the store |
 
 The hook reads from `allGridFiltersState` in the Redux store, so it stays in sync with whatever was last applied via the dialog.
+
+# hideJoinOperators
+
+By default the dialog shows an **All / Any** toggle that lets the user choose whether filters are ANDed or ORed together. Pass `hideJoinOperators` to hide it — useful when you always want a fixed join behavior (the default remains `"all"`).
+
+```jsx
+<GridFilter
+  id="speakers-filter"
+  criterias={criterias}
+  hideJoinOperators
+  onApply={handleApply}
+/>
+```
+
+# dynamic options
+
+`values.props.options` accepts either a static array or a **function** `(currentValue) => options[]`. When a function is provided it is called on every render with the current filter value, so individual options can be disabled based on what the user has already selected.
+
+Each option in the returned array may include a `disabled: true` field; the corresponding menu item will be rendered as non-selectable.
+
+```jsx
+{
+  key: "selection_status",
+  label: "Selection Status",
+  operators: [OPERATORS.IS],
+  values: {
+    type: "select",
+    props: {
+      options: (currentValue) => {
+        const combinedOptions = [
+          "only_rejected", "only_accepted", "only_alternate",
+          "accepted_alternate", "accepted_rejected", "alternate_rejected"
+        ];
+        const hasCombined =
+          Array.isArray(currentValue) &&
+          currentValue.some((v) => combinedOptions.includes(v));
+        const hasSingle =
+          Array.isArray(currentValue) &&
+          currentValue.some((v) => !combinedOptions.includes(v));
+
+        return selectionStatusOptions.map((opt) => ({
+          ...opt,
+          disabled:
+            (hasCombined && !currentValue.includes(opt.value)) ||
+            (hasSingle && combinedOptions.includes(opt.value))
+        }));
+      },
+      placeholder: "Filter by Selection Status",
+      multiple: true
+    }
+  }
+}
+```
+
+A static array still works exactly as before — the function form is opt-in.
 
 # custom parser
 

@@ -36,7 +36,8 @@ ValueInput.propTypes = {
     PropTypes.shape({
       value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
         .isRequired,
-      label: PropTypes.string.isRequired
+      label: PropTypes.string.isRequired,
+      disabled: PropTypes.bool
     })
   ),
   label: PropTypes.string,
