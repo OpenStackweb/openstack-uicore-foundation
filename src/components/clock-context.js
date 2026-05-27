@@ -51,7 +51,7 @@ const { Provider, useValue: useClock, useSelector: useClockSelector } = createEx
  * @param {React.ReactNode} children - Child components
  */
 export const ClockProvider = ({ timezone, now, children }) => (
-    <Provider>
+    <Provider initialValue={now}>
         {(emit) => (
             <>
                 <Clock onTick={emit} timezone={timezone} now={now} />
