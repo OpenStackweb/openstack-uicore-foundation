@@ -33,7 +33,7 @@ import { JOIN_OPERATORS, OPERATORS, EMPTY_FILTER } from "./utils";
 
 const OPERATOR_VALUES = Object.values(OPERATORS).map((op) => op.value);
 
-const GridFilter = ({ id, criterias, onApply, saveFilters }) => {
+const GridFilter = ({ id, criterias, hideJoinOperators = false, onApply, saveFilters }) => {
   const { joinOperator, filterCount, valuesWithIds } = useGridFilter(id);
   const valuesString = useMemo(
     () => valuesWithIds.map((v) => v.id).join(","),
@@ -137,12 +137,14 @@ const GridFilter = ({ id, criterias, onApply, saveFilters }) => {
             >
               {T.translate("grid_filter.filter_by")}
             </Typography>
-            <ToggleButtons
-              options={Object.values(JOIN_OPERATORS)}
-              value={andOrAny}
-              onChange={setAndOrAny}
-              name="and-or-any"
-            />
+            {!hideJoinOperators && (
+              <ToggleButtons
+                options={Object.values(JOIN_OPERATORS)}
+                value={andOrAny}
+                onChange={setAndOrAny}
+                name="and-or-any"
+              />
+            )}
             <Typography
               variant="body1"
               sx={{ fontSize: 16, lineHeight: "32px" }}
