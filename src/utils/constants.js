@@ -7,6 +7,7 @@ export const BPS = 100;
 
 export const CODE_200 = 200;
 
+export const DEBOUNCE_WAIT_150 = 150;
 export const DEBOUNCE_WAIT_250 = 250;
 export const DEBOUNCE_WAIT = 500;
 

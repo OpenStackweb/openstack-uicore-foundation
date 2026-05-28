@@ -138,5 +138,8 @@
     "total": "Total",
     "rate": "Rate",
     "action": "Action"
+  },
+  "color_picker": {
+    "placeholder": "Select a color"
   }
 }
