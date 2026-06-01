@@ -44,12 +44,11 @@ const MetaFieldValues = ({
   };
 
   const handleAddValue = () => {
-    const newFields = [...metaFields];
-    newFields[fieldIndex].values.push({
-      value: "",
-      name: "",
-      is_default: false
-    });
+    const newFields = metaFields.map((f, i) =>
+      i === fieldIndex
+        ? { ...f, values: [...f.values, { value: "", name: "", is_default: false }] }
+        : f
+    );
     setFieldValue(baseName, newFields);
   };
 

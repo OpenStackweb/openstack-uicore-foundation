@@ -13,27 +13,49 @@
 
 import React from "react";
 import PropTypes from "prop-types";
+import { useField } from "formik";
 import MuiFormikTextField from "./mui-formik-textfield";
 
 const BLOCKED_KEYS = ["e", "E", "+", "-"];
 
-const MuiFormikQuantityField = ({ ...props }) => (
-  <MuiFormikTextField
-    type="number"
-    onKeyDown={(e) => {
-      if (BLOCKED_KEYS.includes(e.key)) {
-        e.nativeEvent.preventDefault();
-        e.nativeEvent.stopImmediatePropagation();
-      }
-    }}
-    inputProps={{
-      min: 0,
-      inputMode: "numeric"
-    }}
-    // eslint-disable-next-line react/jsx-props-no-spreading
-    {...props}
-  />
-);
+const MuiFormikQuantityField = ({ name, min, max, ...props }) => {
+  const [, , helpers] = useField(name);
+
+  const handleChange = (e) => {
+    const val = parseInt(e.target.value, 10);
+    const effectiveMin = min ?? 0;
+    // React intentionally skips syncing controlled number inputs during typing
+    // to avoid cursor/composition issues. Setting e.target.value directly
+    // forces the DOM to normalize the displayed value (e.g. strip leading zeros,
+    // clamp to max) before React's reconciliation runs.
+    if (isNaN(val)) { e.target.value = effectiveMin; helpers.setValue(effectiveMin); return; }
+    const clamped = max ? Math.min(Math.max(val, effectiveMin), max) : Math.max(val, effectiveMin);
+    e.target.value = clamped;
+    helpers.setValue(clamped);
+  };
+
+  return (
+    <MuiFormikTextField
+      name={name}
+      type="number"
+      onKeyDown={(e) => {
+        if (BLOCKED_KEYS.includes(e.key)) {
+          e.nativeEvent.preventDefault();
+          e.nativeEvent.stopImmediatePropagation();
+        }
+      }}
+      onChange={handleChange}
+      slotProps={{
+        htmlInput: {
+          min: min ?? 0,
+          ...(max ? { max } : {})
+        }
+      }}
+      // eslint-disable-next-line react/jsx-props-no-spreading
+      {...props}
+    />
+  );
+};
 
 MuiFormikQuantityField.propTypes = {
   name: PropTypes.string.isRequired,

@@ -31,6 +31,7 @@ module.exports = {
         'components/table-sortable': './src/components/table-sortable/SortableTable.js',
         'components/attendance-tracker': './src/components/attendance-tracker.js',
         'components/clock': './src/components/clock.js',
+        'components/clock-context': './src/components/clock-context.js',
         'components/exclusive-wrapper': './src/components/exclusive-wrapper.js',
         'components/video-stream': './src/components/video-stream.js',
         'components/inputs/action-dropdown': './src/components/inputs/action-dropdown/index.js',
@@ -87,6 +88,9 @@ module.exports = {
         'components/mui/custom-alert': './src/components/mui/custom-alert.js',
         'components/mui/dnd-list': './src/components/mui/dnd-list.js',
         'components/mui/dropdown-checkbox': './src/components/mui/dropdown-checkbox.js',
+        'components/mui/dropdown': './src/components/mui/Dropdown',
+        'components/mui/toggle-buttons': './src/components/mui/ToggleButtons',
+        'components/mui/round-button': './src/components/mui/RoundButton',
         'components/mui/menu-button': './src/components/mui/menu-button.js',
         'components/mui/search-input': './src/components/mui/search-input.js',
         'components/mui/show-confirm-dialog': './src/components/mui/showConfirmDialog.js',
@@ -117,6 +121,7 @@ module.exports = {
         'components/mui/formik-inputs/radio-group': './src/components/mui/formik-inputs/mui-formik-radio-group.js',
         'components/mui/formik-inputs/select-group': './src/components/mui/formik-inputs/mui-formik-select-group.js',
         'components/mui/formik-inputs/select': './src/components/mui/formik-inputs/mui-formik-select.js',
+        'components/mui/formik-inputs/select-v2': './src/components/mui/formik-inputs/mui-formik-select-v2.js',
         'components/mui/formik-inputs/summit-addon-select': './src/components/mui/formik-inputs/mui-formik-summit-addon-select.js',
         'components/mui/formik-inputs/switch': './src/components/mui/formik-inputs/mui-formik-switch.js',
         'components/mui/formik-inputs/textfield': './src/components/mui/formik-inputs/mui-formik-textfield.js',
@@ -146,6 +151,7 @@ module.exports = {
         'components/mui/upload-btn': './src/components/mui/UploadBtn/index.js',
         'components/mui/upload-dialog': './src/components/mui/UploadDialog/index.js',
         'components/mui/info-note': './src/components/mui/InfoNote/index.jsx',
+        'components/mui/grid-filter': './src/components/mui/GridFilter/index.js',
 
         // models
         'models/index': './src/models',
@@ -161,6 +167,7 @@ module.exports = {
         'utils/questions-set': './src/utils/questions-set.js',
         'utils/money': './src/utils/money.js',
         'utils/use-event-callback': './src/utils/use-event-callback.js',
+        'utils/external-store': './src/utils/external-store.js',
     },
     output: {
         path: path.resolve(__dirname, 'lib'),

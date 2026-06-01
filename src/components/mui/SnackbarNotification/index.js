@@ -42,20 +42,21 @@ const SnackbarNotification = ({
   const messageContext = useMemo(() => ({ successMessage, errorMessage }), []);
 
   const clearMessage = () => {
-    setMsgData({});
     clearSnackbarMessage();
+    setMsgData({});
   };
 
   const onClose = () => {
     setOpen(false);
-    setTimeout(clearMessage, NOTIFICATION_TIMEOUT);
+  };
+
+  const handleExited = () => {
+    clearMessage();
   };
 
   useEffect(() => {
     if (!empty(msgData.html)) {
       setOpen(true);
-    } else {
-      setOpen(false);
     }
   }, [msgData]);
 
@@ -71,6 +72,7 @@ const SnackbarNotification = ({
       <Snackbar
         open={open}
         onClose={onClose}
+        onExited={handleExited}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         autoHideDuration={NOTIFICATION_TIMEOUT}
       >

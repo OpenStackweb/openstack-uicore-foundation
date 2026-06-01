@@ -12,7 +12,8 @@
  * */
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, act, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Formik, Form } from "formik";
 import "@testing-library/jest-dom";
 import GlobalQuantityField from "../components/GlobalQuantityField";
@@ -20,9 +21,9 @@ import GlobalQuantityField from "../components/GlobalQuantityField";
 const row = { form_item_id: 1, quantity_limit_per_sponsor: 5 };
 const fieldName = `i-${row.form_item_id}-c-global-f-quantity`;
 
-const renderField = (props = {}) =>
+const renderField = (props = {}, onSubmit = jest.fn()) =>
   render(
-    <Formik initialValues={{ [fieldName]: 0 }} onSubmit={jest.fn()}>
+    <Formik initialValues={{ [fieldName]: 0 }} onSubmit={onSubmit}>
       <Form>
         <GlobalQuantityField
           row={row}
@@ -30,6 +31,7 @@ const renderField = (props = {}) =>
           value={0}
           {...props}
         />
+        <button type="submit">submit</button>
       </Form>
     </Formik>
   );
@@ -60,5 +62,98 @@ describe("GlobalQuantityField", () => {
     renderField({ extraColumns: [{ type: "Text" }] });
     const input = screen.getByRole("spinbutton");
     expect(input).not.toHaveAttribute("readonly");
+  });
+
+  test("clamps value to quantity_limit_per_sponsor when user types above it", async () => {
+    const onSubmit = jest.fn();
+    renderField({}, onSubmit);
+    const input = screen.getByRole("spinbutton");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      fireEvent.change(input, { target: { value: "10" } });
+      await userEvent.click(submitButton);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ [fieldName]: 5 }),
+      expect.anything()
+    );
+  });
+
+  test("resets to 0 (not silent no-op) when field is cleared", async () => {
+    const onSubmit = jest.fn();
+    renderField({ value: 5 }, onSubmit);
+    const input = screen.getByRole("spinbutton");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      fireEvent.change(input, { target: { value: "" } });
+      await userEvent.click(submitButton);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ [fieldName]: 0 }),
+      expect.anything()
+    );
+  });
+
+  test("stays at 0 (not negative) when down-arrow decrements from 0", async () => {
+    const onSubmit = jest.fn();
+    renderField({}, onSubmit);
+    const input = screen.getByRole("spinbutton");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      fireEvent.change(input, { target: { value: "-1" } });
+      await userEvent.click(submitButton);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ [fieldName]: 0 }),
+      expect.anything()
+    );
+  });
+
+  test("does not apply upper bound when quantity_limit_per_sponsor is 0 (unlimited)", async () => {
+    const onSubmit = jest.fn();
+    const zeroLimitRow = { ...row, quantity_limit_per_sponsor: 0 };
+    renderField({ row: zeroLimitRow }, onSubmit);
+    const input = screen.getByRole("spinbutton");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      fireEvent.change(input, { target: { value: "3" } });
+      await userEvent.click(submitButton);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ [fieldName]: 3 }),
+      expect.anything()
+    );
+  });
+
+  test("strips leading zeros", async () => {
+    const onSubmit = jest.fn();
+    renderField({ value: 1 }, onSubmit);
+    const input = screen.getByRole("spinbutton");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      fireEvent.change(input, { target: { value: "01" } });
+      await userEvent.click(submitButton);
+    });
+    expect(input).toHaveDisplayValue("1");
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ [fieldName]: 1 }),
+      expect.anything()
+    );
+  });
+
+  test("does not apply upper bound when quantity_limit_per_sponsor is undefined", async () => {
+    const onSubmit = jest.fn();
+    const unlimitedRow = { form_item_id: 1 };
+    renderField({ row: unlimitedRow }, onSubmit);
+    const input = screen.getByRole("spinbutton");
+    const submitButton = screen.getByText("submit");
+    await act(async () => {
+      fireEvent.change(input, { target: { value: "100" } });
+      await userEvent.click(submitButton);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ [fieldName]: 100 }),
+      expect.anything()
+    );
   });
 });
