@@ -88,6 +88,9 @@ module.exports = {
         'components/mui/custom-alert': './src/components/mui/custom-alert.js',
         'components/mui/dnd-list': './src/components/mui/dnd-list.js',
         'components/mui/dropdown-checkbox': './src/components/mui/dropdown-checkbox.js',
+        'components/mui/dropdown': './src/components/mui/Dropdown',
+        'components/mui/toggle-buttons': './src/components/mui/ToggleButtons',
+        'components/mui/round-button': './src/components/mui/RoundButton',
         'components/mui/menu-button': './src/components/mui/menu-button.js',
         'components/mui/search-input': './src/components/mui/search-input.js',
         'components/mui/show-confirm-dialog': './src/components/mui/showConfirmDialog.js',
@@ -148,6 +151,7 @@ module.exports = {
         'components/mui/upload-btn': './src/components/mui/UploadBtn/index.js',
         'components/mui/upload-dialog': './src/components/mui/UploadDialog/index.js',
         'components/mui/info-note': './src/components/mui/InfoNote/index.jsx',
+        'components/mui/grid-filter': './src/components/mui/GridFilter/index.js',
 
         // models
         'models/index': './src/models',
