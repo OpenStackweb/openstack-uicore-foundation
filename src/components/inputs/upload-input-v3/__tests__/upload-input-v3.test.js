@@ -31,6 +31,19 @@ jest.mock('../dropzone-v3', () => ({
   },
 }));
 
+jest.mock('i18n-react/dist/i18n-react', () => {
+  const en = require('../../../../i18n/en.json');
+  return {
+    __esModule: true,
+    default: {
+      translate: (key) => {
+        const value = key.split('.').reduce((obj, part) => obj?.[part], en);
+        return value ?? key;
+      }
+    }
+  };
+});
+
 describe('UploadInputV3', () => {
   const defaultProps = {
     value: [],
@@ -285,6 +298,51 @@ describe('UploadInputV3', () => {
       expect(container.querySelector('.dropzone-mock')).toBeInTheDocument();
       expect(screen.getByText('doc1.pdf')).toBeInTheDocument();
       expect(screen.getByText('doc2.pdf')).toBeInTheDocument();
+    });
+  });
+
+  describe('File Preview and Download', () => {
+    test('renders a preview image linked to the file', () => {
+      const files = [{ filename: 'image.png', size: 102400, public_url: 'https://cdn.example.com/image.png' }];
+      render(<UploadInputV3 {...defaultProps} value={files} />);
+      const img = screen.getByRole('img', { name: 'image.png' });
+      const previewLink = img.closest('a');
+      expect(previewLink).toHaveAttribute('href', 'https://cdn.example.com/image.png');
+      expect(previewLink).toHaveAttribute('target', '_blank');
+      expect(previewLink).not.toHaveAttribute('download');
+    });
+
+    test('prefers private_url and falls back to public_url when private_url is "#"', () => {
+      const { rerender, container } = render(<UploadInputV3 {...defaultProps} value={[{
+        filename: 'a.png', size: 1024,
+        private_url: 'https://private.example.com/a.png',
+        public_url: 'https://cdn.example.com/a.png',
+      }]} />);
+      expect(container.querySelector('a[download]')).toHaveAttribute('href', 'https://private.example.com/a.png');
+
+      rerender(<UploadInputV3 {...defaultProps} value={[{
+        filename: 'a.png', size: 1024,
+        private_url: '#',
+        public_url: 'https://cdn.example.com/a.png',
+      }]} />);
+      expect(container.querySelector('a[download]')).toHaveAttribute('href', 'https://cdn.example.com/a.png');
+    });
+
+    test('filename is a download link with correct href', () => {
+      const files = [{ filename: 'document.pdf', size: 102400, public_url: 'https://cdn.example.com/document.pdf' }];
+      const { container } = render(<UploadInputV3 {...defaultProps} value={files} />);
+      const downloadLink = container.querySelector('a[download]');
+      expect(downloadLink).toHaveAttribute('href', 'https://cdn.example.com/document.pdf');
+      expect(downloadLink).toHaveAttribute('target', '_blank');
+      expect(downloadLink).toHaveTextContent('document.pdf');
+    });
+
+    test('preview image falls back to file_icon on load error', () => {
+      const files = [{ filename: 'document.pdf', size: 102400, public_url: 'https://cdn.example.com/document.pdf' }];
+      render(<UploadInputV3 {...defaultProps} value={files} />);
+      const img = screen.getByRole('img', { name: 'document.pdf' });
+      fireEvent.error(img);
+      expect(img).not.toHaveAttribute('src', 'https://cdn.example.com/document.pdf');
     });
   });
 

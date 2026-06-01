@@ -139,6 +139,15 @@
     "rate": "Rate",
     "action": "Action"
   },
+  "upload_input_v3": {
+      "no_post_url": "No Post URL",
+      "upload_disabled": "Upload has been disabled by administrators.",
+      "click_upload": "Click to upload",
+      "drag_and_drop": "or drag and drop",
+      "see_preview": "See Preview",
+      "preview_file": "Preview file",
+      "complete": "Complete"
+  },
   "grid_filter": {
     "filter_by": "Filter by ",
     "following": " one of the following: ",
