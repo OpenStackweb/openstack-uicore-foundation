@@ -12,6 +12,7 @@
  **/
 
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import T from "i18n-react/dist/i18n-react";
 import {
   Box,
   Typography,
@@ -205,14 +206,14 @@ const UploadInputV3 = ({
     if (!postUrl) {
       return (
         <Alert severity="error" sx={{ borderRadius: 2 }}>
-          No Post URL
+          {T.translate("upload_input_v3.no_post_url")}
         </Alert>
       );
     }
     if (!canAdd) {
       return (
         <Alert severity="warning" sx={{ borderRadius: 2 }}>
-          Upload has been disabled by administrators.
+          {T.translate("upload_input_v3.upload_disabled")}
         </Alert>
       );
     }
@@ -238,7 +239,7 @@ const UploadInputV3 = ({
         <Box className="dz-custom-content">
           <UploadFileIcon className="dz-custom-icon" />
           <Typography variant="body2" className="dz-custom-message">
-            <span className="dz-click-text">Click to upload</span> or drag and drop
+            <span className="dz-click-text">{T.translate("upload_input_v3.click_upload")}</span> {T.translate("upload_input_v3.drag_and_drop")}
           </Typography>
           {(extDisplay || maxSize) && (
             <Typography variant="caption" className="dz-custom-hint">
@@ -384,7 +385,7 @@ const UploadInputV3 = ({
                 sx={fileRowSx}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mr: 2, width: 64, height: 64, flexShrink: 0 }}>
-                  <a href={src} target="_blank" title="See Preview">
+                  <a href={src} target="_blank" title={T.translate("upload_input_v3.see_preview")}>
                     <ProgressiveImg
                       alt={filename}
                       src={previewSrc}
@@ -399,7 +400,7 @@ const UploadInputV3 = ({
                     href={src}
                     target="_blank"
                     rel="noreferrer"
-                    title="Preview file"
+                    title={T.translate("upload_input_v3.preview_file")}
                     download
                     variant="body2"
                     fontWeight={500}
@@ -408,7 +409,7 @@ const UploadInputV3 = ({
                     {filename}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {fileSize} · Complete
+                    {fileSize} · {T.translate("upload_input_v3.complete")}
                   </Typography>
                 </Box>
 
