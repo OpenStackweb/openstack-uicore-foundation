@@ -31,6 +31,19 @@ jest.mock('../dropzone-v3', () => ({
   },
 }));
 
+jest.mock('i18n-react/dist/i18n-react', () => {
+  const en = require('../../../../i18n/en.json');
+  return {
+    __esModule: true,
+    default: {
+      translate: (key) => {
+        const value = key.split('.').reduce((obj, part) => obj?.[part], en);
+        return value ?? key;
+      }
+    }
+  };
+});
+
 describe('UploadInputV3', () => {
   const defaultProps = {
     value: [],
