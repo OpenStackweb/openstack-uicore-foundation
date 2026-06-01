@@ -161,13 +161,14 @@ describe("MuiFormikUpload", () => {
       expect(onDelete).toHaveBeenCalledWith(42);
     });
 
-    test("does not call onDelete when prop is not provided", async () => {
+    test("removes file from formik state even when onDelete is not provided", async () => {
       const images = [{ id: 1, file_name: "photo.jpg" }];
       renderWithFormik({}, { images });
 
-      await expect(
-        userEvent.click(screen.getByTestId("remove-0"))
-      ).resolves.not.toThrow();
+      await userEvent.click(screen.getByTestId("remove-0"));
+
+      const values = JSON.parse(screen.getByTestId("values").textContent);
+      expect(values.images).toHaveLength(0);
     });
   });
 });
