@@ -83,7 +83,10 @@ const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) =
         "& .MuiOutlinedInput-root": {
           height: "36px",
           paddingX: 1
-        },        
+        },
+        "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(0, 0, 0, 0.23)" },
+        "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(0, 0, 0, 0.23)" },
+        "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "primary.main" }
       }}
     />
   );

@@ -21,6 +21,7 @@ import {
   MenuItem,
   Select
 } from "@mui/material";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useField } from "formik";
 import T from "i18n-react/dist/i18n-react";
 
@@ -59,6 +60,7 @@ const MuiFormikDropdownCheckbox = ({ name, label, placeholder, options, ...rest 
         label={label}
         labelId={`${name}-label`}
         multiple
+        IconComponent={KeyboardArrowDownIcon}
         value={field.value || []}
         onChange={handleChange}
         onBlur={field.onBlur}

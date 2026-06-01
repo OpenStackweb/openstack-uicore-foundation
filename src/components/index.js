@@ -1,3 +1,4 @@
+import './mui/input-border.less';
 export {default as AjaxLoader} from './ajaxloader';
 export {default as RawHTML} from './raw-html';
 export {default as FreeTextSearch} from './free-text-search';

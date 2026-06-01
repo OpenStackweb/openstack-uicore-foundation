@@ -20,6 +20,7 @@ import {
   Radio,
   Select
 } from "@mui/material";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useField } from "formik";
 import T from "i18n-react/dist/i18n-react";
 
@@ -44,6 +45,7 @@ const MuiFormikDropdownRadio = ({ name, label, options, placeholder, ...rest }) 
         name={name}
         label={label}
         labelId={`${name}-label`}
+        IconComponent={KeyboardArrowDownIcon}
         value={field.value || ""}
         onChange={handleChange}
         displayEmpty

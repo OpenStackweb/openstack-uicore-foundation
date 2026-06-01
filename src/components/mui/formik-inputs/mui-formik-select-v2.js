@@ -8,6 +8,7 @@ import {
   MenuItem,
   InputLabel
 } from "@mui/material";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useField } from "formik";
 
 const MuiFormikSelectV2 = ({ name, label, placeholder, options, ...rest }) => {
@@ -23,6 +24,7 @@ const MuiFormikSelectV2 = ({ name, label, placeholder, options, ...rest }) => {
         label={label}
         labelId={`${name}-label`}
         displayEmpty
+        IconComponent={KeyboardArrowDownIcon}
         // eslint-disable-next-line react/jsx-props-no-spreading
         {...field}
         // eslint-disable-next-line react/jsx-props-no-spreading
