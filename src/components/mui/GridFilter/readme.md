@@ -33,7 +33,7 @@ import { GridFilter, OPERATORS } from "components/GridFilter";
             { value: 1, label: "OpenStack" },
             { value: 2, label: "FnTech" }
           ],
-          multi: true,
+          multiple: true,
           placeholder: "Select Tracks"
         }
       }
@@ -138,7 +138,9 @@ The hook reads from `allGridFiltersState` in the Redux store, so it stays in syn
 
 # hideJoinOperators
 
-By default the dialog shows an **All / Any** toggle that lets the user choose whether filters are ANDed or ORed together. Pass `hideJoinOperators` to hide it — useful when you always want a fixed join behavior (the default remains `"all"`).
+By default the dialog shows an **All / Any** toggle that lets the user choose whether filters are ANDed or ORed together. Pass `hideJoinOperators` to hide the toggle UI — but note that this **only removes the control from the dialog; it does not change the active join operator**. The dialog always initializes from the join operator last persisted in the Redux store (which defaults to `"all"` on first load). If the user previously applied filters with `"any"` and that value is still in the store, it will continue to be used when the toggle is hidden — silently producing OR-joined results.
+
+If you need a guaranteed fixed join behavior after hiding the toggle, call `resetFilters()` (from `useGridFilter`) before or after mounting the component to flush the store back to `"all"`.
 
 ```jsx
 <GridFilter

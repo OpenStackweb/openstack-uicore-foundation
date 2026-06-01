@@ -7,7 +7,7 @@ import "@testing-library/jest-dom";
 import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
 import thunk from "redux-thunk";
-import { GridFilter, OPERATORS } from "../GridFilter";
+import { GridFilter, OPERATORS, JOIN_OPERATORS, SAVE_FILTERS } from "../GridFilter";
 import Filter from "../GridFilter/components/Filter";
 
 jest.mock("i18n-react/dist/i18n-react", () => ({
@@ -232,5 +232,156 @@ describe("Filter - options as a function", () => {
       "aria-disabled",
       "true"
     );
+  });
+});
+
+// ─── parseFilter / handleSubmit ──────────────────────────────────────────────
+//
+// These are private closures; exercised by seeding the Redux store with filter
+// values so useGridFilter returns them, opening the dialog, and clicking Apply.
+
+describe("GridFilter – parseFilter / handleSubmit", () => {
+  // Build a mock store that makes useGridFilter("test-filter") return the given values.
+  const makeFilterStore = (filterValues, joinOperator = JOIN_OPERATORS.ALL) =>
+    mockStore({
+      allGridFiltersState: {
+        allFilters: [{ id: "test-filter", filterValues, joinOperator, parsedFilter: [] }]
+      }
+    });
+
+  const renderWithFilters = (filterValues, opts = {}) => {
+    const { joinOperator = JOIN_OPERATORS.ALL, onApply = jest.fn(), criterias: c } = opts;
+    const store = makeFilterStore(filterValues, joinOperator);
+    render(
+      <Provider store={store}>
+        <GridFilter
+          id="test-filter"
+          criterias={c ?? criterias}
+          onApply={onApply}
+        />
+      </Provider>
+    );
+    return { onApply, store };
+  };
+
+  // FilterButton renders a Chip when filterCount > 0; its label span contains
+  // "${n} grid_filter.filters". Clicking the span bubbles to the Chip's onClick.
+  const openFilterDialog = () =>
+    fireEvent.click(screen.getByText(/\d+ grid_filter\.filters/));
+
+  const applyFilters = () =>
+    fireEvent.click(screen.getByText("grid_filter.apply_filters"));
+
+  describe("filter serialization", () => {
+    test("single value → criteria+operator+value", () => {
+      const { onApply } = renderWithFilters([
+        { criteria: "sponsor", operator: "==", value: "alice" }
+      ]);
+
+      openFilterDialog();
+      applyFilters();
+
+      const [filters, joinOp] = onApply.mock.calls[0];
+      expect(filters).toHaveLength(1);
+      expect(filters[0].parsed).toEqual(["sponsor==alice"]);
+      expect(joinOp).toBe(JOIN_OPERATORS.ALL);
+    });
+
+    test("array value → items joined with ||", () => {
+      const { onApply } = renderWithFilters([
+        { criteria: "track", operator: "==", value: [1, 2, 3] }
+      ]);
+
+      openFilterDialog();
+      applyFilters();
+
+      const [filters] = onApply.mock.calls[0];
+      expect(filters[0].parsed).toEqual(["track==1||2||3"]);
+    });
+
+    test("delegates to customParser and uses its return value as parsed", () => {
+      const customParser = jest.fn().mockReturnValue(["custom==result"]);
+      const c = [
+        {
+          key: "status",
+          label: "Status",
+          operators: [OPERATORS.IS],
+          values: { type: "text", props: {} },
+          customParser
+        }
+      ];
+
+      const { onApply } = renderWithFilters(
+        [{ criteria: "status", operator: "==", value: "active" }],
+        { criterias: c }
+      );
+
+      openFilterDialog();
+      applyFilters();
+
+      expect(customParser).toHaveBeenCalledWith(
+        expect.objectContaining({ criteria: "status", operator: "==", value: "active" })
+      );
+      const [filters] = onApply.mock.calls[0];
+      expect(filters[0].parsed).toEqual(["custom==result"]);
+    });
+  });
+
+  describe("handleSubmit filter predicate", () => {
+    test.each([
+      // value: null avoids a render crash: with criteria=null there is no type, so ValueInput
+      // falls back to Dropdown with options=null; a non-null value would hit options.find(null).
+      ["null criteria",  { criteria: null,     operator: "==", value: null }],
+      ["null operator",  { criteria: "sponsor", operator: null, value: "v" }],
+      ["null value",     { criteria: "sponsor", operator: "==", value: null }],
+      ["empty string",   { criteria: "sponsor", operator: "==", value: "" }],
+      ["empty array",    { criteria: "track",   operator: "==", value: [] }]
+    ])("strips %s; valid sibling survives", (_, badFilter) => {
+      const { onApply } = renderWithFilters([
+        badFilter,
+        { criteria: "sponsor", operator: "==", value: "valid" }
+      ]);
+
+      openFilterDialog();
+      applyFilters();
+
+      const [filters] = onApply.mock.calls[0];
+      expect(filters).toHaveLength(1);
+      expect(filters[0].value).toBe("valid");
+    });
+  });
+
+  describe("action contracts", () => {
+    test("saveFilters and onApply both receive the parsed payload and active join operator", () => {
+      const onApply = jest.fn();
+      const { store } = renderWithFilters(
+        [{ criteria: "sponsor", operator: "=@", value: "bob" }],
+        { joinOperator: JOIN_OPERATORS.ANY, onApply }
+      );
+
+      openFilterDialog();
+      applyFilters();
+
+      const expectedFilter = expect.objectContaining({
+        criteria: "sponsor",
+        operator: "=@",
+        value: "bob",
+        parsed: ["sponsor=@bob"]
+      });
+
+      // The saveFilters thunk dispatches {type: SAVE_FILTERS, payload: {...}} to the store.
+      const savedAction = store.getActions().find((a) => a.type === SAVE_FILTERS);
+      expect(savedAction).toBeDefined();
+      expect(savedAction.payload).toMatchObject({
+        id: "test-filter",
+        joinOperator: JOIN_OPERATORS.ANY,
+        filters: expect.arrayContaining([expectedFilter])
+      });
+
+      expect(onApply).toHaveBeenCalledWith(
+        expect.arrayContaining([expectedFilter]),
+        JOIN_OPERATORS.ANY
+      );
+    });
   });
 });
