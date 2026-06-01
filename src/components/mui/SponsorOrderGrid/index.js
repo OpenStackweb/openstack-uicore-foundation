@@ -26,7 +26,8 @@ import TableCell from "@mui/material/TableCell";
 import Table from "@mui/material/Table";
 import TableHead from "@mui/material/TableHead";
 import {currencyAmountFromCents} from "../../../utils/money";
-import {SPONSOR_FORMS_METAFIELD_CLASS} from "../../../utils/constants";
+import {SPONSOR_FORMS_METAFIELD_CLASS, SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../utils/constants";
+import TransactionType from "./components/TransactionType";
 
 const mapOrderData = (forms, showItemDescription) => {
   if (!forms) return [];
@@ -69,16 +70,17 @@ const mapOrderData = (forms, showItemDescription) => {
         const amount = currencyAmountFromCents(it.amount || 0);
         const lineId = it.line_id;
         const cancelled = !!it.canceled_by_id;
-        const rate = currencyAmountFromCents(it.current_rate || 0);
+        const type = cancelled ? SPONSOR_ORDER_GRID_ITEM_TYPES.CANCELLED : SPONSOR_ORDER_GRID_ITEM_TYPES.CHARGE;
 
         return {
           id: lineId,
           code: form.code,
           name: form.name,
-          rate,
+          type,
           addon_name: form.addon_name,
           item_name: itemDetails,
           amount,
+          amountValue: it.amount,
           cancelled
         };
       })
@@ -92,7 +94,6 @@ const SponsorOrderGrid = ({
                             refunds,
                             fees,
                             total,
-                            amountDue,
                             withDescription = false,
                             onCancelForm,
                             onUndoCancelForm
@@ -100,6 +101,16 @@ const SponsorOrderGrid = ({
   const data = mapOrderData(lines, withDescription);
   const showActionCol = onCancelForm && onUndoCancelForm;
   const trailingCols = showActionCol ? 1 : 0;
+  let balance = 0;
+
+  console.log("DATA: ", data, fees, payments, refunds, total);
+
+  const calculateBalance = (rowAmount, op = 1) => {
+    console.log("CALCULATE BALANCE: ", balance, rowAmount, op);
+    balance = balance + (rowAmount * op);
+    return balance;
+    // return currencyAmountFromCents(balance);
+  }
 
   const columns = [
     {
@@ -107,50 +118,22 @@ const SponsorOrderGrid = ({
       header: T.translate("sponsor_order_grid.code")
     },
     {
+      columnKey: "type",
+      header: T.translate("sponsor_order_grid.type"),
+      render: (row) => (<TransactionType type={row.type}/>)
+    },
+    {
       columnKey: "name",
-      header: T.translate("sponsor_order_grid.contents")
-    },
-    {
-      columnKey: "addon_name",
-      header: T.translate("sponsor_order_grid.addon")
-    },
-    {
-      columnKey: "item_name",
       header: T.translate("sponsor_order_grid.details")
     },
     {
-      columnKey: "rate",
-      header: T.translate("sponsor_order_grid.rate")
-    },
-    {
       columnKey: "amount",
-      header: T.translate("sponsor_order_grid.amount")
+      header: T.translate("sponsor_order_grid.amount"),
+      align: "right"
     }
   ];
 
-  if (showActionCol) {
-    columns.push({
-      columnKey: "actions",
-      header: T.translate("sponsor_order_grid.action"),
-      align: "center",
-      render: (row) => {
-        if (row.cancelled) {
-          return (
-            <IconButton size="large" onClick={() => onUndoCancelForm(row)}>
-              <ArrowBackIcon fontSize="large" sx={{mr: 2}}/>{" "}
-              {T.translate("general.undo").toUpperCase()}
-            </IconButton>
-          );
-        }
-
-        return (
-          <IconButton size="large" onClick={() => onCancelForm(row)}>
-            <DeleteIcon fontSize="large"/>
-          </IconButton>
-        );
-      }
-    });
-  }
+  const colCount = columns.length + 1 + trailingCols; // 1 for balance, 1 for action col
 
   return (
     <Box sx={{width: "100%"}}>
@@ -168,13 +151,21 @@ const SponsorOrderGrid = ({
                     {col.header}
                   </TableCell>
                 ))}
+                <TableCell key="balance" align="right">
+                  {T.translate("sponsor_order_grid.balance")}
+                </TableCell>
+                {showActionCol && (
+                  <TableCell key="actions" align="center">
+                    {T.translate("sponsor_order_grid.action")}
+                  </TableCell>
+                )}
               </TableRow>
             </TableHead>
             <TableBody>
               {data.map((form) => {
                 const rows = form.items.map((row) => (
                   <TableRow
-                    key={row.id}
+                    key={`grid-row-${row.id}`}
                     sx={{
                       ...(row.cancelled && {
                         color: "text.secondary",
@@ -182,79 +173,122 @@ const SponsorOrderGrid = ({
                       })
                     }}
                   >
-                    {columns.map((col) => (
-                      <TableCell
-                        key={col.columnKey}
-                        align={col.align ?? "left"}
-                        sx={{fontWeight: "normal"}}
-                      >
-                        {col.render ? (
-                          col.render(row)
-                        ) : (
-                          <span style={{fontWeight: "normal"}}>
+                    {(() => {
+                      const cols = columns.map((col) => (
+                        <TableCell
+                          key={`grid-col-${row.id}-${col.columnKey}`}
+                          align={col.align ?? "left"}
+                          sx={{fontWeight: "normal"}}
+                        >
+                          {col.render ? (
+                            col.render(row)
+                          ) : (
+                            <span style={{fontWeight: "normal"}}>
                             {row[col.columnKey]}
                           </span>
-                        )}
-                      </TableCell>
-                    ))}
+                          )}
+                        </TableCell>
+                      ));
+
+                      console.log("ROW: ", row);
+
+                      // BALANCE COLUMN
+                      cols.push(
+                        <TableCell
+                          key={`grid-col-${row.id}-balance`}
+                          align="right"
+                          sx={{fontWeight: "normal"}}
+                        >
+                          <span style={{fontWeight: "normal"}}>
+                            {calculateBalance(row.cancelled ? 0 : row.amountValue)}
+                          </span>
+                        </TableCell>
+                      )
+
+                      // ACTION COLUMN
+                      if (showActionCol) {
+                        cols.push(
+                          <TableCell
+                            key="balance"
+                            align="right"
+                            sx={{fontWeight: "normal"}}
+                          >
+                          <span style={{fontWeight: "normal"}}>
+                            {row.cancelled ? (
+                              <IconButton size="large" onClick={() => onUndoCancelForm(row)}>
+                                <ArrowBackIcon fontSize="large" sx={{mr: 2}}/>{" "}
+                                {T.translate("general.undo").toUpperCase()}
+                              </IconButton>
+                            ) : (
+                              <IconButton size="large" onClick={() => onCancelForm(row)}>
+                                <DeleteIcon fontSize="large"/>
+                              </IconButton>
+                            )}
+                          </span>
+                          </TableCell>
+                        )
+                      }
+
+                      return cols;
+                    })()}
+
                   </TableRow>
                 ));
 
                 rows.push(
                   <DiscountRow
                     key={`discount-row-${form.id}`}
-                    discount={form.discount}
-                    discountTotal={form.discount_total}
+                    discount={form.discount_total}
                     trailing={trailingCols}
+                    balance={calculateBalance(form.discount_in_cents, -1)}
                   />
                 );
 
                 return rows;
               })}
-              {fees &&
-                fees.map((fee) => (
-                  <FeeRow fee={fee} key={`fee-row-${fee.id}`} trailing={1}/>
-                ))}
-              {refunds &&
-                refunds.map((refund) => (
-                  <RefundRow
-                    refund={refund}
-                    key={`refund-row-${refund.id}`}
-                    trailing={trailingCols}
-                  />
-                ))}
-              {payments &&
-                payments.map((payment) => (
-                  <PaymentRow
-                    payment={payment}
-                    key={`payment-row-${payment.id}`}
-                    trailing={trailingCols}
-                  />
-                ))}
-              {notes &&
-                notes.map((note) => (
-                  <NotesRow
-                    note={note.content}
-                    colCount={columns.length}
-                    key={`note-row-${note.id}`}
-                    showCode
-                  />
-                ))}
+              {fees && fees.map((fee) => (
+                <FeeRow
+                  key={`fee-row-${fee.id}`}
+                  balance={calculateBalance(fee.amount)}
+                  fee={fee}
+                  trailing={1}
+                />
+              ))}
+              {refunds && refunds.map((refund) => (
+                <RefundRow
+                  key={`refund-row-${refund.id}`}
+                  refund={refund}
+                  balance={calculateBalance(refund.amount, -1)}
+                  trailing={trailingCols}
+                />
+              ))}
+              {payments && payments.map((payment) => (
+                <PaymentRow
+                  key={`payment-row-${payment.id}`}
+                  payment={payment}
+                  balance={calculateBalance(payment.amount, -1)}
+                  trailing={trailingCols}
+                />
+              ))}
+              {notes && notes.map((note) => (
+                <NotesRow
+                  key={`note-row-${note.id}`}
+                  note={note.content}
+                  colCount={colCount}
+                  showCode
+                />
+              ))}
+
               <TotalRow
-                columns={columns}
-                total={total || amountDue}
-                label={
-                  amountDue
-                    ? T.translate("sponsor_order_grid.amount_due")
-                    : null
-                }
-                targetCol="amount"
+                total={total}
+                label={T.translate("sponsor_order_grid.amount_due")}
+                trailing={trailingCols}
                 rowSx={{backgroundColor: "#F1F3F5"}}
               />
 
               {data.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={columns.length} align="center">
+                  <TableCell colSpan={colCount} align="center">
                     {T.translate("mui_table.no_items")}
                   </TableCell>
                 </TableRow>

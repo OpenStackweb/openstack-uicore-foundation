@@ -17,13 +17,18 @@ import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
 import { currencyAmountFromCents } from "../../../../utils/money";
+import TransactionType from "../../SponsorOrderGrid/components/TransactionType";
+import {SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../../utils/constants";
 
-const FeeRow = ({ fee, colGap = 3, trailing = 0 }) => {
+const FeeRow = ({ fee, balance, colGap = 0, trailing = 0 }) => {
   if (!fee) return null;
 
   return (
     <TableRow>
       <TableCell>{T.translate("mui_table.payfee")}</TableCell>
+      <TableCell>
+        <TransactionType type={SPONSOR_ORDER_GRID_ITEM_TYPES.CHARGE} />
+      </TableCell>
       <TableCell>
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
           {fee.title}
@@ -39,6 +44,14 @@ const FeeRow = ({ fee, colGap = 3, trailing = 0 }) => {
           sx={{ color: "success.main", fontWeight: 500 }}
         >
           {currencyAmountFromCents(fee.amount)}
+        </Typography>
+      </TableCell>
+      <TableCell>
+        <Typography
+          variant="body2"
+          sx={{ color: "text.secondary", fontWeight: 500 }}
+        >
+          {balance}
         </Typography>
       </TableCell>
       {[...Array(trailing)].map((_, i) => (

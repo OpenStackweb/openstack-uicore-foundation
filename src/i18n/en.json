@@ -129,9 +129,10 @@
   },
   "sponsor_order_grid": {
     "code": "Code",
-    "contents": "Contents",
+    "type": "Type",
     "addon": "Add-on",
     "details": "Details",
+    "balance": "Balance",
     "discount": "Discount",
     "amount": "Amount",
     "amount_due": "AMOUNT DUE",

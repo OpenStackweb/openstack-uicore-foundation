@@ -18,9 +18,10 @@ import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
 import { currencyAmountFromCents } from "../../../../utils/money";
-import { DATETIME_FORMAT, MILLISECONDS_IN_SECOND } from "../../../../utils/constants";
+import {DATETIME_FORMAT, MILLISECONDS_IN_SECOND, SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../../utils/constants";
+import TransactionType from "../../SponsorOrderGrid/components/TransactionType";
 
-const PaymentRow = ({ payment, colGap = 1, trailing = 0 }) => {
+const PaymentRow = ({ payment, balance, colGap = 0, trailing = 0 }) => {
 
   if (!payment) return null;
 
@@ -28,19 +29,19 @@ const PaymentRow = ({ payment, colGap = 1, trailing = 0 }) => {
     <TableRow sx={{backgroundColor: "#2E7D3214"}}>
       <TableCell>{T.translate("mui_table.pay")}</TableCell>
       <TableCell>
-        <Typography
-          variant="body2"
-          sx={{ color: "success.main", fontWeight: 500 }}
-        >
-          {T.translate("mui_table.payment")}
-        </Typography>
+        <TransactionType type={SPONSOR_ORDER_GRID_ITEM_TYPES.PAYMENT}>
+          <Typography
+            variant="body2"
+            sx={{ color: "success.main", fontWeight: 500 }}
+          >
+            {T.translate("mui_table.payment")}
+          </Typography>
+        </TransactionType>
       </TableCell>
       <TableCell>
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           {T.translate("mui_table.paid_via")} {payment.method}
         </Typography>
-      </TableCell>
-      <TableCell>
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           {moment(payment.created * MILLISECONDS_IN_SECOND).format(DATETIME_FORMAT)}
         </Typography>
@@ -54,7 +55,15 @@ const PaymentRow = ({ payment, colGap = 1, trailing = 0 }) => {
           variant="body2"
           sx={{ color: "success.main", fontWeight: 500 }}
         >
-          -{currencyAmountFromCents(payment.amount)}
+          {currencyAmountFromCents(payment.amount)}
+        </Typography>
+      </TableCell>
+      <TableCell>
+        <Typography
+          variant="body2"
+          sx={{ color: "text.secondary", fontWeight: 500 }}
+        >
+          {balance}
         </Typography>
       </TableCell>
       {[...Array(trailing)].map((_, i) => (

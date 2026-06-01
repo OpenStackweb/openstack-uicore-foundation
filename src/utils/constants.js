@@ -86,3 +86,11 @@ export const SPONSOR_FORMS_METAFIELD_CLASS = {
   FORM: "Form",
   ITEM: "Item"
 };
+
+export const SPONSOR_ORDER_GRID_ITEM_TYPES = {
+  CHARGE: "Charge",
+  PAYMENT: "Payment",
+  REFUND: "Refund",
+  DISCOUNT: "Discount",
+  CANCELLED: "Cancelled"
+};

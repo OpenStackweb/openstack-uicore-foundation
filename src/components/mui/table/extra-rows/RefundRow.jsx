@@ -17,8 +17,10 @@ import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
 import { currencyAmountFromCents } from "../../../../utils/money";
+import {SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../../utils/constants";
+import TransactionType from "../../SponsorOrderGrid/components/TransactionType";
 
-const RefundRow = ({ refund, colGap = 1, trailing = 0 }) => {
+const RefundRow = ({ refund, balance, colGap = 0, trailing = 0 }) => {
 
   if (!refund) return null;
 
@@ -26,21 +28,18 @@ const RefundRow = ({ refund, colGap = 1, trailing = 0 }) => {
     <TableRow sx={{ backgroundColor: "#EF6C0014" }}>
       <TableCell>{T.translate("mui_table.ref")}</TableCell>
       <TableCell>
-        <Typography
-          variant="body2"
-          sx={{ color: "warning.main", fontWeight: 500 }}
-        >
-          {T.translate("mui_table.refund")}
-        </Typography>
+        <TransactionType type={SPONSOR_ORDER_GRID_ITEM_TYPES.REFUND}>
+          <Typography
+            variant="body2"
+            sx={{ color: "warning.main", fontWeight: 500 }}
+          >
+            {T.translate("mui_table.refund")}
+          </Typography>
+        </TransactionType>
       </TableCell>
       <TableCell>
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
-          {refund.reason}
-        </Typography>
-      </TableCell>
-      <TableCell>
-        <Typography variant="body2" sx={{ color: "text.secondary" }}>
-          {refund.status}
+          {refund.reason} {refund.status}
         </Typography>
       </TableCell>
       {[...Array(colGap)].map((_, i) => (
@@ -52,7 +51,15 @@ const RefundRow = ({ refund, colGap = 1, trailing = 0 }) => {
           variant="body2"
           sx={{ color: "warning.main", fontWeight: 500 }}
         >
-          -{currencyAmountFromCents(refund.amount)}
+          {currencyAmountFromCents(refund.amount)}
+        </Typography>
+      </TableCell>
+      <TableCell>
+        <Typography
+          variant="body2"
+          sx={{ color: "text.secondary", fontWeight: 500 }}
+        >
+          {balance}
         </Typography>
       </TableCell>
       {[...Array(trailing)].map((_, i) => (
