@@ -15,31 +15,27 @@ import React from "react";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import T from "i18n-react/dist/i18n-react";
+import {currencyAmountFromCents} from "../../../../utils/money";
 
-const TotalRow = ({ columns, targetCol, total, trailing = 0, label = null, rowSx = {} }) => {
+const TotalRow = ({ total, colGap = 3, trailing = 0, label = null, rowSx = {} }) => {
 
   const totalLabel = label || T.translate("mui_table.total");
 
   return (
     <TableRow sx={rowSx}>
-      {columns.map((col, i) => {
-        if (i === 0)
-          return (
-            <TableCell key={col.columnKey} sx={{ fontWeight: 800, textTransform: "uppercase" }}>
-              {totalLabel}
-            </TableCell>
-          );
-        if (col.columnKey === targetCol)
-          return (
-            <TableCell key={col.columnKey} sx={{ fontWeight: 800 }}>
-              {total}
-            </TableCell>
-          );
-        return <TableCell key={col.columnKey} />;
-      })}
+      <TableCell sx={{ fontWeight: 800, textTransform: "uppercase" }}>
+        {totalLabel}
+      </TableCell>
+      {[...Array(colGap)].map((_, i) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <TableCell key={`total-gap-col-${i}`} />
+      ))}
+      <TableCell sx={{ fontWeight: 800 }}>
+        {currencyAmountFromCents(total)}
+      </TableCell>
       {[...Array(trailing)].map((_, i) => (
         // eslint-disable-next-line react/no-array-index-key
-        <TableCell key={`extra-row-total-${i}`} sx={{ width: 40 }} />
+        <TableCell key={`total-trailing-col-${i}`} />
       ))}
     </TableRow>
   );
