@@ -73,7 +73,9 @@ const MuiFormikUpload = ({
 
   const handleRemove = (imageFile) => {
     const updated = (field.value || []).filter(
-      (i) => (i.file_name ?? i.filename) !== imageFile.name
+      (i) =>
+        (i.file_name ?? i.filename ?? i.file_path ?? i.file_url) !==
+        imageFile.filename
     );
     helpers.setValue(updated);
     if (onDelete) {
