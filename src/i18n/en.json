@@ -138,7 +138,8 @@
     "amount_due": "AMOUNT DUE",
     "total": "Total",
     "rate": "Rate",
-    "action": "Action"
+    "action": "Action",
+    "cancel_info_note": "Active order items can be canceled. Canceled items show an undo action to restore them. Refund and payment rows are display-only."
   },
   "upload_input_v3": {
       "no_post_url": "No Post URL",

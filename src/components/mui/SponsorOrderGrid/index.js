@@ -16,7 +16,7 @@ import T from "i18n-react/dist/i18n-react";
 import {DiscountRow, FeeRow, NotesRow, PaymentRow, RefundRow, TotalRow} from "../table/extra-rows";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import UndoIcon from '@mui/icons-material/Undo';
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import TableContainer from "@mui/material/TableContainer";
@@ -26,10 +26,13 @@ import TableCell from "@mui/material/TableCell";
 import Table from "@mui/material/Table";
 import TableHead from "@mui/material/TableHead";
 import {currencyAmountFromCents} from "../../../utils/money";
-import {SPONSOR_FORMS_METAFIELD_CLASS, SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../utils/constants";
+import {SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../utils/constants";
 import TransactionType from "./components/TransactionType";
+import BalanceValue from "./components/BalanceValue";
+import InfoNote from "../InfoNote";
+import Typography from "@mui/material/Typography";
 
-const mapOrderData = (forms, showItemDescription) => {
+const mapOrderData = (forms) => {
   if (!forms) return [];
 
   return forms.map((form) => ({
@@ -37,36 +40,14 @@ const mapOrderData = (forms, showItemDescription) => {
     items: form.items
       .filter((it) => it.quantity)
       .map((it) => {
-        const formMetaFields = it.meta_fields.filter(
-          (mf) => mf.class_field === SPONSOR_FORMS_METAFIELD_CLASS.FORM
-        );
-
-        const itemDetails = [it.type?.name];
-
-        // item details
-        if (showItemDescription) {
-          itemDetails.push(
-            ...formMetaFields.map((mf) => {
-              const val =
-                mf.values?.length > 0
-                  ? mf.values.find((v) => v.id === mf.current_value)?.name
-                  : mf.current_value;
-              return (
-                <div key={`mf-list-${it.id}-${mf.id}`}>
-                  {mf.name}: {val}
-                </div>
-              );
-            })
-          );
-
-          itemDetails.push(<br key={`mf-list-${it.id}-spacer`}/>); // spacer
-          itemDetails.push(
-            <div key={`mf-list-${it.id}-total`}>
-              {T.translate("sponsor_order_grid.total")}: {it.quantity}
-            </div>
-          );
-        }
-
+        const itemDetails = [
+          <Typography key={`item-details-${it.id}`} variant="body1">
+            {form.name} - {it.type?.name}
+          </Typography>,
+          <Typography key={`item-total-${it.id}`} variant="body1" sx={{ color: "text.disabled" }}>
+            {T.translate("sponsor_order_grid.total")}: {it.quantity}
+          </Typography>
+        ];
         const amount = currencyAmountFromCents(it.amount || 0);
         const lineId = it.line_id;
         const cancelled = !!it.canceled_by_id;
@@ -75,10 +56,10 @@ const mapOrderData = (forms, showItemDescription) => {
         return {
           id: lineId,
           code: form.code,
-          name: form.name,
+          name: `${form.name} - ${it.type?.name}`,
           type,
           addon_name: form.addon_name,
-          item_name: itemDetails,
+          details: itemDetails,
           amount,
           amountValue: it.amount,
           cancelled
@@ -94,22 +75,17 @@ const SponsorOrderGrid = ({
                             refunds,
                             fees,
                             total,
-                            withDescription = false,
                             onCancelForm,
                             onUndoCancelForm
                           }) => {
-  const data = mapOrderData(lines, withDescription);
-  const showActionCol = onCancelForm && onUndoCancelForm;
-  const trailingCols = showActionCol ? 1 : 0;
+  const data = mapOrderData(lines);
+  const canCancel = onCancelForm && onUndoCancelForm;
+  const trailingCols = canCancel ? 1 : 0;
   let balance = 0;
 
-  console.log("DATA: ", data, fees, payments, refunds, total);
-
   const calculateBalance = (rowAmount, op = 1) => {
-    console.log("CALCULATE BALANCE: ", balance, rowAmount, op);
     balance = balance + (rowAmount * op);
     return balance;
-    // return currencyAmountFromCents(balance);
   }
 
   const columns = [
@@ -123,7 +99,7 @@ const SponsorOrderGrid = ({
       render: (row) => (<TransactionType type={row.type}/>)
     },
     {
-      columnKey: "name",
+      columnKey: "details",
       header: T.translate("sponsor_order_grid.details")
     },
     {
@@ -136,11 +112,30 @@ const SponsorOrderGrid = ({
   const colCount = columns.length + 1 + trailingCols; // 1 for balance, 1 for action col
 
   return (
-    <Box sx={{width: "100%"}}>
-      <Paper elevation={0} sx={{width: "100%", mb: 2}}>
+    <Box
+      sx={{
+        width: "100%",
+        padding: 0,
+        border: "1px solid #EEE",
+        borderRadius: "8px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+        mb: 3,
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        "& *": {fontFamily: "inherit"},
+      }}
+    >
+      {canCancel && (
+        <InfoNote
+          message={T.translate(
+            "sponsor_order_grid.cancel_info_note"
+          )}
+          sx={{m: 2}}
+        />
+      )}
+      <Paper elevation={0} sx={{width: "100%", p: 0}}>
         <TableContainer
           component={Paper}
-          sx={{borderRadius: 0, boxShadow: "none"}}
+          sx={{borderRadius: "8px", boxShadow: "none"}}
         >
           <Table>
             {/* TABLE HEADER */}
@@ -154,23 +149,20 @@ const SponsorOrderGrid = ({
                 <TableCell key="balance" align="right">
                   {T.translate("sponsor_order_grid.balance")}
                 </TableCell>
-                {showActionCol && (
+                {canCancel && (
                   <TableCell key="actions" align="center">
                     {T.translate("sponsor_order_grid.action")}
                   </TableCell>
                 )}
               </TableRow>
             </TableHead>
-            <TableBody>
+            <TableBody sx={{"& td": {fontWeight: "normal"}}}>
               {data.map((form) => {
                 const rows = form.items.map((row) => (
                   <TableRow
                     key={`grid-row-${row.id}`}
                     sx={{
-                      ...(row.cancelled && {
-                        color: "text.secondary",
-                        textDecoration: "line-through"
-                      })
+                      ...(row.cancelled && {bgcolor: "#FAFAFA"})
                     }}
                   >
                     {(() => {
@@ -178,53 +170,50 @@ const SponsorOrderGrid = ({
                         <TableCell
                           key={`grid-col-${row.id}-${col.columnKey}`}
                           align={col.align ?? "left"}
-                          sx={{fontWeight: "normal"}}
+                          sx={{
+                            ...(row.cancelled && {
+                              color: "text.disabled",
+                              ...(col.columnKey !== "type" && {textDecoration: "line-through"})
+                            })
+                          }}
                         >
                           {col.render ? (
                             col.render(row)
                           ) : (
-                            <span style={{fontWeight: "normal"}}>
-                            {row[col.columnKey]}
-                          </span>
+                            row[col.columnKey]
                           )}
                         </TableCell>
                       ));
-
-                      console.log("ROW: ", row);
 
                       // BALANCE COLUMN
                       cols.push(
                         <TableCell
                           key={`grid-col-${row.id}-balance`}
                           align="right"
-                          sx={{fontWeight: "normal"}}
+                          sx={{
+                            ...(row.cancelled && {color: "text.disabled"})
+                          }}
                         >
-                          <span style={{fontWeight: "normal"}}>
-                            {calculateBalance(row.cancelled ? 0 : row.amountValue)}
-                          </span>
+                          <BalanceValue value={calculateBalance(row.amountValue)}/>
                         </TableCell>
                       )
 
                       // ACTION COLUMN
-                      if (showActionCol) {
+                      if (canCancel) {
                         cols.push(
                           <TableCell
                             key="balance"
                             align="right"
-                            sx={{fontWeight: "normal"}}
                           >
-                          <span style={{fontWeight: "normal"}}>
                             {row.cancelled ? (
                               <IconButton size="large" onClick={() => onUndoCancelForm(row)}>
-                                <ArrowBackIcon fontSize="large" sx={{mr: 2}}/>{" "}
-                                {T.translate("general.undo").toUpperCase()}
+                                <UndoIcon fontSize="large" sx={{color: "primary.dark"}}/>
                               </IconButton>
                             ) : (
                               <IconButton size="large" onClick={() => onCancelForm(row)}>
                                 <DeleteIcon fontSize="large"/>
                               </IconButton>
                             )}
-                          </span>
                           </TableCell>
                         )
                       }
@@ -238,7 +227,8 @@ const SponsorOrderGrid = ({
                 rows.push(
                   <DiscountRow
                     key={`discount-row-${form.id}`}
-                    discount={form.discount_total}
+                    discount={form.discount}
+                    discountCents={form.discount_total}
                     trailing={trailingCols}
                     balance={calculateBalance(form.discount_in_cents, -1)}
                   />
@@ -283,7 +273,7 @@ const SponsorOrderGrid = ({
                 total={total}
                 label={T.translate("sponsor_order_grid.amount_due")}
                 trailing={trailingCols}
-                rowSx={{backgroundColor: "#F1F3F5"}}
+                rowSx={{backgroundColor: "#F1F3F5", "& td": {borderBottom: "none"}}}
               />
 
               {data.length === 0 && (

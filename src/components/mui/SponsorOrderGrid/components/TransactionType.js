@@ -8,10 +8,10 @@ import {SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../../utils/constants";
 import {Box} from "@mui/material";
 
 const iconMap = {
-  [SPONSOR_ORDER_GRID_ITEM_TYPES.CHARGE]: {icon: ArrowUpwardIcon, color: "warning.main"},
-  [SPONSOR_ORDER_GRID_ITEM_TYPES.PAYMENT]: {icon: ArrowDownwardIcon, color: "success.main"},
-  [SPONSOR_ORDER_GRID_ITEM_TYPES.DISCOUNT]: {icon: ArrowDownwardIcon, color: "success.main"},
-  [SPONSOR_ORDER_GRID_ITEM_TYPES.REFUND]: {icon: RefreshIcon, color: "error.main"},
+  [SPONSOR_ORDER_GRID_ITEM_TYPES.CHARGE]: {icon: ArrowUpwardIcon, color: "warning.light"},
+  [SPONSOR_ORDER_GRID_ITEM_TYPES.PAYMENT]: {icon: ArrowDownwardIcon, color: "success.light"},
+  [SPONSOR_ORDER_GRID_ITEM_TYPES.DISCOUNT]: {icon: ArrowDownwardIcon, color: "success.light"},
+  [SPONSOR_ORDER_GRID_ITEM_TYPES.REFUND]: {icon: RefreshIcon, color: "warning.light"},
   [SPONSOR_ORDER_GRID_ITEM_TYPES.CANCELLED]: {icon: DoNotDisturbIcon, color: "default"},
 }
 
