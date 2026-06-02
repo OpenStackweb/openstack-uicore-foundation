@@ -72,7 +72,7 @@ const SnackbarNotification = ({
       <Snackbar
         open={open}
         onClose={onClose}
-        onExited={handleExited}
+        slotProps={{ transition: { onExited: handleExited } }}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         autoHideDuration={NOTIFICATION_TIMEOUT}
       >
