@@ -22,7 +22,6 @@ import {
   InputLabel
 } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useField } from "formik";
 
 const MuiFormikSelect = ({
@@ -53,7 +52,6 @@ const MuiFormikSelect = ({
       <Select
         name={name}
         id={name}
-        IconComponent={KeyboardArrowDownIcon}
         // eslint-disable-next-line react/jsx-props-no-spreading
         {...field}
         labelId={`${name}-label`}
