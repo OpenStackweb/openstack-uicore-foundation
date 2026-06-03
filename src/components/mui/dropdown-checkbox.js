@@ -22,7 +22,6 @@ import {
   OutlinedInput,
   Select
 } from "@mui/material";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 const DropdownCheckbox = ({
   name,
@@ -66,7 +65,6 @@ const DropdownCheckbox = ({
         labelId={`${name}_label`}
         name={name}
         multiple
-        IconComponent={KeyboardArrowDownIcon}
         value={value}
         onChange={handleChange}
         {...rest}
