@@ -128,6 +128,7 @@
     "payment_confirmation_error": "Payment confirmation failed"
   },
   "sponsor_order_grid": {
+    "title": "Order Items Ledger",
     "code": "Code",
     "type": "Type",
     "addon": "Add-on",
@@ -139,7 +140,14 @@
     "total": "Total",
     "rate": "Rate",
     "action": "Action",
-    "cancel_info_note": "Active order items can be canceled. Canceled items show an undo action to restore them. Refund and payment rows are display-only."
+    "cancel_info_note": "Active order items can be canceled. Canceled items show an undo action to restore them. Refund and payment rows are display-only.",
+    "cancelled_by": "Cancelled {date} by {user}",
+    "cancelled_items": "Cancelled items ({count}):",
+    "reconciliation": "Reconciliation",
+    "cancelled": "Cancelled",
+    "refunded": "Refunded",
+    "retained": "Retained as cancellation fee",
+    "credited": "Credited to Payment Method"
   },
   "upload_input_v3": {
       "no_post_url": "No Post URL",
