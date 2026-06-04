@@ -159,13 +159,22 @@ export function amountFromCents(cents) {
  * @returns {string}
  */
 export function currencyAmountFromCents(cents, currency = "USD") {
+  let result = "!ERROR";
+
   if (typeof cents !== "number" || !Number.isInteger(cents)) {
-    throw new Error("cents must be an integer number");
+    console.error("ERROR - currencyAmountFromCents: cents must be an integer number");
+    return result;
   }
 
-  const amount = amountFromCents(cents); // "12.34"
-  const symbol = CURRENCY_SYMBOL[currency] ?? "$";
-  return `${symbol}${amount}`;
+  try {
+    const amount = amountFromCents(cents); // "12.34"
+    const symbol = CURRENCY_SYMBOL[currency] ?? "$";
+    result = `${symbol}${amount}`;
+  } catch (e) {
+    console.error(`ERROR - currencyAmountFromCents: ${e}`);
+  }
+
+  return result;
 }
 
 /**
