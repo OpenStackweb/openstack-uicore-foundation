@@ -20,10 +20,11 @@ import {currencyAmountFromCents} from "../../../../utils/money";
 
 const TotalRow = ({total, colGap = 3, trailing = 0, label = null, rowSx = {}}) => {
   const totalLabel = label || T.translate("mui_table.total");
-  const isNegative = total < 0;
+  const safetotal = total ?? 0;
+  const isNegative = safetotal < 0;
   const sign = isNegative ? "-" : "";
-  const color = isNegative ? "primary.dark" : (total === 0 ? "text.primary" : "error.main");
-  const totalStr = `${sign}${currencyAmountFromCents(Math.abs(total))}`;
+  const color = isNegative ? "primary.dark" : (safetotal === 0 ? "text.primary" : "error.main");
+  const totalStr = `${sign}${currencyAmountFromCents(Math.abs(safetotal))}`;
 
   return (
     <TableRow sx={rowSx}>

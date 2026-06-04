@@ -28,10 +28,12 @@ const iconMap = {
 }
 
 const TransactionType = ({type, children}) => {
-  const Icon = iconMap[type].icon;
+  const meta = iconMap[type];
+  if (!meta) return null;
+  const Icon = meta.icon;
   return (
     <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-      <Icon sx={{color: iconMap[type].color}} />
+      <Icon sx={{color: meta.color}} />
       {children || type}
     </Box>
   );

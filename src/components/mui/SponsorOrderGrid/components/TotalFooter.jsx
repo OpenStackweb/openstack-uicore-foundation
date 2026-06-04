@@ -18,10 +18,11 @@ import T from "i18n-react/dist/i18n-react";
 import {currencyAmountFromCents} from "../../../../utils/money";
 
 const TotalFooter = ({total}) => {
-  const isNegative = total < 0;
+  const safetotal = total ?? 0;
+  const isNegative = safetotal < 0;
   const sign = isNegative ? "-" : "";
-  const color = isNegative ? "primary.dark" : (total === 0 ? "text.primary" : "error.main");
-  const totalStr = `${sign}${currencyAmountFromCents(Math.abs(total))}`;
+  const color = isNegative ? "primary.dark" : (safetotal === 0 ? "text.primary" : "error.main");
+  const totalStr = `${sign}${currencyAmountFromCents(Math.abs(safetotal))}`;
 
   return (
     <Box sx={{

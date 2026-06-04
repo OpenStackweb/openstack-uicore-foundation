@@ -24,7 +24,7 @@ import BalanceValue from "../../SponsorOrderGrid/components/BalanceValue";
 
 const DiscountRow = ({ discount, discountCents, balance, colGap = 0, trailing = 0 }) => {
 
-  if (discountCents === 0) return null;
+  if (!discountCents) return null;
 
   return (
     <TableRow sx={{backgroundColor: "#2E7D3214"}}>

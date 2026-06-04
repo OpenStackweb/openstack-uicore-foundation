@@ -30,6 +30,7 @@ const CancelledItems = ({cancelledItems, sx = {}}) => {
       </Typography>
       {cancelledItems.map((item) => (
         <Link
+          key={`cancelled-item-${item.id}`}
           variant="body1"
           href={`#item-${item.id}`}
           sx={{mr: 1, color: "text.disabled", textDecorationColor: "rgba(0, 0, 0, 0.38)"}}

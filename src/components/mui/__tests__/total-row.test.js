@@ -31,38 +31,38 @@ const renderInTable = (props) =>
   render(
     <table>
       <tbody>
-        <TotalRow columns={columns} {...props} />
+        <TotalRow {...props} />
       </tbody>
     </table>
   );
 
 describe("TotalRow", () => {
   test("renders 'TOTAL' label key in first column", () => {
-    renderInTable({ targetCol: "quantity", total: 42 });
+    renderInTable({ total: 4200 });
     expect(screen.getByText("mui_table.total")).toBeInTheDocument();
   });
 
-  test("renders total value in the targetCol", () => {
-    renderInTable({ targetCol: "quantity", total: 42 });
-    expect(screen.getByText("42")).toBeInTheDocument();
+  test("renders formatted total amount in cents", () => {
+    renderInTable({ total: 4200 });
+    expect(screen.getByText("$42.00")).toBeInTheDocument();
   });
 
-  test("renders correct number of cells (one per column)", () => {
-    const { container } = renderInTable({ targetCol: "quantity", total: 10 });
+  test("renders correct number of cells based on colGap", () => {
+    const { container } = renderInTable({ total: 1000, colGap: columns.length - 2 });
     expect(container.querySelectorAll("td")).toHaveLength(columns.length);
   });
 
   test("renders extra trailing cells when trailing prop is provided", () => {
     const { container } = renderInTable({
-      targetCol: "quantity",
-      total: 10,
+      total: 1000,
+      colGap: columns.length - 2,
       trailing: 2
     });
     expect(container.querySelectorAll("td")).toHaveLength(columns.length + 2);
   });
 
-  test("renders string totals", () => {
-    renderInTable({ targetCol: "price", total: "$1,234" });
-    expect(screen.getByText("$1,234")).toBeInTheDocument();
+  test("renders negative total with sign", () => {
+    renderInTable({ total: -5000 });
+    expect(screen.getByText("-$50.00")).toBeInTheDocument();
   });
 });

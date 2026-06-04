@@ -21,6 +21,7 @@ import {currencyAmountFromCents} from "../../../../utils/money";
 const ReconciliationBox = ({cancelledTotal, refundsTotal, retained, credited}) => {
   const totalColor = retained > 0 ? "error.dark" : "success.dark";
   const totalLabel = retained > 0 ? "retained" : (credited > 0 ? "credited" : "balance");
+  const totalValue = retained > 0 ? retained : (credited > 0 ? credited : retained);
 
   return (
     <Box sx={{maxWidth: 400, mt: 2, mb: 3}}>
@@ -32,7 +33,7 @@ const ReconciliationBox = ({cancelledTotal, refundsTotal, retained, credited}) =
           {T.translate("sponsor_order_grid.cancelled")}
         </Typography>
         <Typography variant="body1">
-          {currencyAmountFromCents(cancelledTotal)}
+          {currencyAmountFromCents(cancelledTotal ?? 0)}
         </Typography>
       </Box>
       <Box sx={{display: "flex", justifyContent: "space-between"}}>
@@ -40,7 +41,7 @@ const ReconciliationBox = ({cancelledTotal, refundsTotal, retained, credited}) =
           {T.translate("sponsor_order_grid.refunded")}
         </Typography>
         <Typography variant="body1">
-          {currencyAmountFromCents(refundsTotal)}
+          {currencyAmountFromCents(refundsTotal ?? 0)}
         </Typography>
       </Box>
       <Divider sx={{my: 1}}/>
@@ -49,7 +50,7 @@ const ReconciliationBox = ({cancelledTotal, refundsTotal, retained, credited}) =
           {T.translate(`sponsor_order_grid.${totalLabel}`)}
         </Typography>
         <Typography variant="body2" sx={{color: totalColor}}>
-          {currencyAmountFromCents(retained)}
+          {currencyAmountFromCents(totalValue ?? 0)}
         </Typography>
       </Box>
 

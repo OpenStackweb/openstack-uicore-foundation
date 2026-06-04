@@ -227,7 +227,7 @@ const SponsorOrderGrid = ({
                     if (canCancel) {
                       cols.push(
                         <TableCell
-                          key="balance"
+                          key="action"
                           align="right"
                         >
                           {row.cancelled ? (
@@ -249,13 +249,14 @@ const SponsorOrderGrid = ({
                 </TableRow>
               ));
 
+              const discountCents = form.discount_in_cents ?? 0;
               rows.push(
                 <DiscountRow
                   key={`discount-row-${form.id}`}
                   discount={form.discount}
-                  discountCents={form.discount_total}
+                  discountCents={discountCents}
                   trailing={trailingCols}
-                  balance={calculateBalance(form.discount_in_cents, -1)}
+                  balance={calculateBalance(discountCents, -1)}
                 />
               );
 
