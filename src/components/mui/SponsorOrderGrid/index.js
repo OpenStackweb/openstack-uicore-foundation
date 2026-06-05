@@ -137,8 +137,8 @@ const SponsorOrderGrid = ({
   const colCount = columns.length + 1 + trailingCols; // 1 for balance, 1 for action col
 
   const paymentsAndRefundsOrdered = [
-    ...payments?.map((payment) => ({...payment, type: "payment"})),
-    ...refunds?.map((refund) => ({...refund, type: "refund"}))
+    ...payments?.map((payment) => ({...payment, type: "payment"})) || [],
+    ...refunds?.map((refund) => ({...refund, type: "refund"})) || []
   ].sort((a, b) => a.created - b.created);
 
   return (
