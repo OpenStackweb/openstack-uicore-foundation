@@ -136,6 +136,11 @@ const SponsorOrderGrid = ({
 
   const colCount = columns.length + 1 + trailingCols; // 1 for balance, 1 for action col
 
+  const paymentsAndRefundsOrdered = [
+    ...payments?.map((payment) => ({...payment, type: "payment"})),
+    ...refunds?.map((refund) => ({...refund, type: "refund"}))
+  ].sort((a, b) => a.created - b.created);
+
   return (
     <Box sx={{mt: 1}}>
       <Box sx={{display: "flex", flexDirection: "row", justifyContent: "space-between", mb: 2}}>
@@ -262,6 +267,7 @@ const SponsorOrderGrid = ({
 
               return rows;
             })}
+
             {fees && fees.map((fee) => (
               <FeeRow
                 key={`fee-row-${fee.id}`}
@@ -270,22 +276,29 @@ const SponsorOrderGrid = ({
                 trailing={trailingCols}
               />
             ))}
-            {refunds && refunds.map((refund) => (
-              <RefundRow
-                key={`refund-row-${refund.id}`}
-                refund={refund}
-                balance={calculateBalance(refund.amount, -1)}
-                trailing={trailingCols}
-              />
-            ))}
-            {payments && payments.map((payment) => (
-              <PaymentRow
-                key={`payment-row-${payment.id}`}
-                payment={payment}
-                balance={calculateBalance(payment.amount, -1)}
-                trailing={trailingCols}
-              />
-            ))}
+
+            {paymentsAndRefundsOrdered.map((item) => {
+              if (item.type === "payment") {
+                return (
+                  <PaymentRow
+                    key={`payment-row-${item.id}`}
+                    payment={item}
+                    balance={calculateBalance(item.amount, -1)}
+                    trailing={trailingCols}
+                  />
+                )
+              } else if (item.type === "refund") {
+                return (
+                  <RefundRow
+                    key={`refund-row-${item.id}`}
+                    refund={item}
+                    balance={calculateBalance(item.amount)}
+                    trailing={trailingCols}
+                  />
+                )
+              }
+            })}
+
             {notes && notes.map((note) => (
               <NotesRow
                 key={`note-row-${note.id}`}
