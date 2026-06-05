@@ -346,6 +346,143 @@ describe('UploadInputV3', () => {
     });
   });
 
+  describe('Image Preview', () => {
+    test('shows thumbnail preview image during upload when onThumbnail fires', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo.jpg', size: 136000 });
+      });
+      act(() => {
+        dropzoneCallbacks.onThumbnail({ name: 'photo.jpg', size: 136000 }, 'data:image/jpeg;base64,abc123');
+      });
+      const img = screen.getByRole('img', { name: 'photo.jpg' });
+      expect(img).toHaveAttribute('src', 'data:image/jpeg;base64,abc123');
+    });
+
+    test('shows no preview image before onThumbnail fires (non-image or slow thumbnail)', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'document.pdf', size: 50000 });
+      });
+      expect(screen.queryByRole('img', { name: 'document.pdf' })).not.toBeInTheDocument();
+    });
+
+    test('preserves dataURL preview after value updates with server-renamed filename', () => {
+      const dataURL = 'data:image/jpeg;base64,abc123';
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} />);
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo.jpg', size: 136000 });
+        dropzoneCallbacks.onThumbnail({ name: 'photo.jpg', size: 136000 }, dataURL);
+      });
+      act(() => {
+        dropzoneCallbacks.onFileCompleted({ name: 'photo.jpg', size: 136000 });
+      });
+
+      rerender(<UploadInputV3 {...defaultProps} value={[{ filename: 'server_246_abc123.jpg', size: 136000 }]} />);
+
+      const img = screen.getByRole('img', { name: 'server_246_abc123.jpg' });
+      expect(img).toHaveAttribute('src', dataURL);
+    });
+
+    test('does not assign cancelled file preview to the next upload', () => {
+      const dataURL_A = 'data:image/jpeg;base64,aaaa';
+      const dataURL_B = 'data:image/jpeg;base64,bbbb';
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
+
+      // Upload file A and generate its thumbnail
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo-a.jpg', size: 10000 });
+      });
+      act(() => {
+        dropzoneCallbacks.onThumbnail({ name: 'photo-a.jpg', size: 10000 }, dataURL_A);
+      });
+
+      // Cancel file A via the delete button
+      act(() => {
+        fireEvent.click(screen.getByRole('button'));
+      });
+
+      // Upload file B and generate its thumbnail
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo-b.jpg', size: 20000 });
+      });
+      act(() => {
+        dropzoneCallbacks.onThumbnail({ name: 'photo-b.jpg', size: 20000 }, dataURL_B);
+      });
+      act(() => {
+        dropzoneCallbacks.onFileCompleted({ name: 'photo-b.jpg', size: 20000 });
+      });
+
+      rerender(<UploadInputV3 {...defaultProps} value={[{ filename: 'server_photo_b.jpg', size: 20000 }]} maxFiles={2} />);
+
+      const img = screen.getByRole('img', { name: 'server_photo_b.jpg' });
+      expect(img).toHaveAttribute('src', dataURL_B);
+      expect(img).not.toHaveAttribute('src', dataURL_A);
+    });
+
+    test('matches preview by filename stem when server reorders parallel uploads', () => {
+      const dataURL_A = 'data:image/jpeg;base64,aaaa';
+      const dataURL_B = 'data:image/jpeg;base64,bbbb';
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
+
+      // Both files added and thumbnails generated
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'sunset.jpg', size: 10000 });
+        dropzoneCallbacks.onThumbnail({ name: 'sunset.jpg', size: 10000 }, dataURL_A);
+        dropzoneCallbacks.onAddedFile({ name: 'portrait.jpg', size: 20000 });
+        dropzoneCallbacks.onThumbnail({ name: 'portrait.jpg', size: 20000 }, dataURL_B);
+      });
+      act(() => {
+        dropzoneCallbacks.onFileCompleted({ name: 'sunset.jpg', size: 10000 });
+        dropzoneCallbacks.onFileCompleted({ name: 'portrait.jpg', size: 20000 });
+      });
+
+      // Server returns them in REVERSE order — portrait before sunset
+      // Server filenames contain the original stem (common pattern: prefix_stem_hash.ext)
+      rerender(<UploadInputV3 {...defaultProps} maxFiles={2} value={[
+        { filename: '246_portrait_abc123.jpg', size: 20000 },
+        { filename: '246_sunset_def456.jpg', size: 10000 },
+      ]} />);
+
+      expect(screen.getByRole('img', { name: '246_portrait_abc123.jpg' })).toHaveAttribute('src', dataURL_B);
+      expect(screen.getByRole('img', { name: '246_sunset_def456.jpg' })).toHaveAttribute('src', dataURL_A);
+    });
+
+    test('does not assign errored file preview to the next upload', () => {
+      const dataURL_A = 'data:image/jpeg;base64,aaaa';
+      const dataURL_B = 'data:image/jpeg;base64,bbbb';
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
+
+      // Upload file A, thumbnail fires, then it errors
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo-a.jpg', size: 10000 });
+        dropzoneCallbacks.onThumbnail({ name: 'photo-a.jpg', size: 10000 }, dataURL_A);
+      });
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'photo-a.jpg', size: 10000 }, 'Upload failed');
+      });
+
+      // Dismiss the error, then upload file B
+      act(() => {
+        fireEvent.click(screen.getByRole('button'));
+      });
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo-b.jpg', size: 20000 });
+        dropzoneCallbacks.onThumbnail({ name: 'photo-b.jpg', size: 20000 }, dataURL_B);
+      });
+      act(() => {
+        dropzoneCallbacks.onFileCompleted({ name: 'photo-b.jpg', size: 20000 });
+      });
+
+      rerender(<UploadInputV3 {...defaultProps} value={[{ filename: 'server_photo_b.jpg', size: 20000 }]} maxFiles={2} />);
+
+      const img = screen.getByRole('img', { name: 'server_photo_b.jpg' });
+      expect(img).toHaveAttribute('src', dataURL_B);
+      expect(img).not.toHaveAttribute('src', dataURL_A);
+    });
+  });
+
   describe('Edge Cases', () => {
     test('handles empty value array', () => {
       const { container } = render(<UploadInputV3 {...defaultProps} value={[]} />);

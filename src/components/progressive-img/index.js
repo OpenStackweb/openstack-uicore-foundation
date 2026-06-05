@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-import React,{ useState, useEffect, useRef } from "react";
+import React,{ useState, useEffect } from "react";
 import styles from './index.module.scss';
 import pdf_icon from "../inputs/upload-input/pdf.png";
 import mov_icon from "../inputs/upload-input/mov.png";
@@ -26,23 +26,31 @@ import file_icon from "../inputs/upload-input/file.png";
  * @constructor
  */
 const ProgressiveImg = ({ placeholderSrc, src, ...props }) => {
-    const isCancelled = useRef(false);
-    const [imgSrc, setImgSrc] = useState(placeholderSrc || src);
-    const [customClass, setCustomClass] = useState(styles.loading);
+    const isDataURL = src?.startsWith('data:');
+    const [imgSrc, setImgSrc] = useState(isDataURL ? src : (placeholderSrc || src));
+    const [customClass, setCustomClass] = useState(isDataURL ? styles.loaded : styles.loading);
 
     useEffect(() => {
+        // dataURLs are already in memory — no async loading needed
+        if (src?.startsWith('data:')) {
+            setImgSrc(src);
+            setCustomClass(styles.loaded);
+            return;
+        }
+
+        let cancelled = false;
         const img = new Image();
-        const ext =  src ? src.split('.').pop() : null;
+        const ext = src ? src.split('.').pop() : null;
         img.src = src;
 
         img.onload = () => {
-            if (isCancelled.current) return
-            setImgSrc(src)
-            setCustomClass(styles.loaded)
+            if (cancelled) return;
+            setImgSrc(src);
+            setCustomClass(styles.loaded);
         };
 
         img.onerror = () => {
-            if (isCancelled.current) return
+            if (cancelled) return;
             img.onerror = null;
             if(ext && ext.toString().toLowerCase().includes('pdf'))
                 setImgSrc(pdf_icon)
@@ -54,11 +62,11 @@ const ProgressiveImg = ({ placeholderSrc, src, ...props }) => {
                 setImgSrc(csv_icon);
             else
                 setImgSrc(file_icon);
-            setCustomClass(styles.loaded)
+            setCustomClass(styles.loaded);
         };
 
         return () => {
-            isCancelled.current = true;
+            cancelled = true;
         };
     }, [src]);
 
