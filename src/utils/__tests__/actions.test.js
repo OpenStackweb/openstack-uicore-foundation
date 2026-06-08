@@ -1,7 +1,6 @@
 import {authErrorHandler, snackbarErrorHandler, SET_SNACKBAR_MESSAGE} from "../actions";
 import { CLEAR_SESSION_STATE } from "../../components/security/actions";
 import configureMockStore from 'redux-mock-store';
-import request from 'superagent/lib/client';
 import Swal from 'sweetalert2';
 import thunk from 'redux-thunk'
 
