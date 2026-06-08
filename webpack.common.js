@@ -238,6 +238,7 @@ module.exports = {
                     {
                         loader: 'sass-loader',
                         options: {
+                            api: 'modern-compiler',
                             sourceMap: false
                         }
                     }
@@ -246,7 +247,7 @@ module.exports = {
             {
                 test: /\.scss/,
                 exclude: /\.module\.scss/,
-                use: [MiniCssExtractPlugin.loader, "css-loader", 'sass-loader']
+                use: [MiniCssExtractPlugin.loader, "css-loader", { loader: 'sass-loader', options: { api: 'modern-compiler' } }]
             },
             {
                 test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
