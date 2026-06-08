@@ -11,13 +11,12 @@
  * limitations under the License.
  **/
 
-import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ProgressiveImg from '../index';
 
 describe('ProgressiveImg', () => {
-  describe('dataURL src', () => {
+  describe('local src (dataURL / blob URL)', () => {
     test('renders dataURL immediately without placeholder or blur', () => {
       const dataURL = 'data:image/jpeg;base64,abc123';
       render(<ProgressiveImg src={dataURL} alt="test image" placeholderSrc="placeholder.png" />);
@@ -27,15 +26,24 @@ describe('ProgressiveImg', () => {
       expect(img.className).not.toContain('loading');
     });
 
-    test('updates immediately when src changes to a dataURL', () => {
+    test('renders blob URL immediately without placeholder or blur', () => {
+      const blobURL = 'blob:photo.jpg';
+      render(<ProgressiveImg src={blobURL} alt="test image" placeholderSrc="placeholder.png" />);
+      const img = screen.getByRole('img', { name: 'test image' });
+      expect(img).toHaveAttribute('src', blobURL);
+      expect(img.className).toContain('loaded');
+      expect(img.className).not.toContain('loading');
+    });
+
+    test('updates immediately when src changes to a local URL', () => {
       const serverURL = 'https://cdn.example.com/photo.jpg';
-      const dataURL = 'data:image/jpeg;base64,abc123';
+      const blobURL = 'blob:photo.jpg';
       const { rerender } = render(<ProgressiveImg src={serverURL} alt="test image" placeholderSrc="placeholder.png" />);
 
-      rerender(<ProgressiveImg src={dataURL} alt="test image" placeholderSrc="placeholder.png" />);
+      rerender(<ProgressiveImg src={blobURL} alt="test image" placeholderSrc="placeholder.png" />);
 
       const img = screen.getByRole('img', { name: 'test image' });
-      expect(img).toHaveAttribute('src', dataURL);
+      expect(img).toHaveAttribute('src', blobURL);
       expect(img.className).toContain('loaded');
     });
   });

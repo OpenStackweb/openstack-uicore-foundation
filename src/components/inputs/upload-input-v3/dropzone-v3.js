@@ -24,7 +24,6 @@ export const DropzoneV3 = ({
   onFileRemoved,
   onFileCompleted,
   onFileError,
-  onThumbnail,
   onDropzoneReady,
   eventHandlers = {},
   children,
@@ -39,10 +38,6 @@ export const DropzoneV3 = ({
     addedfile: (file) => {
       if (onAddedFile) onAddedFile(file);
       if (eventHandlers.addedfile) eventHandlers.addedfile(file);
-    },
-    thumbnail: (file, dataURL) => {
-      if (onThumbnail) onThumbnail(file, dataURL);
-      if (eventHandlers.thumbnail) eventHandlers.thumbnail(file, dataURL);
     },
     removedfile: (file) => {
       if (onFileRemoved) onFileRemoved(file);

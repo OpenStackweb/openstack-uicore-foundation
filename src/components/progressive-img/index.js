@@ -26,13 +26,13 @@ import file_icon from "../inputs/upload-input/file.png";
  * @constructor
  */
 const ProgressiveImg = ({ placeholderSrc, src, ...props }) => {
-    const isDataURL = src?.startsWith('data:');
-    const [imgSrc, setImgSrc] = useState(isDataURL ? src : (placeholderSrc || src));
-    const [customClass, setCustomClass] = useState(isDataURL ? styles.loaded : styles.loading);
+    const isLocal = src?.startsWith('data:') || src?.startsWith('blob:');
+    const [imgSrc, setImgSrc] = useState(isLocal ? src : (placeholderSrc || src));
+    const [customClass, setCustomClass] = useState(isLocal ? styles.loaded : styles.loading);
 
     useEffect(() => {
-        // dataURLs are already in memory — no async loading needed
-        if (src?.startsWith('data:')) {
+        // dataURLs and blob URLs are already in memory — no async loading needed
+        if (src?.startsWith('data:') || src?.startsWith('blob:')) {
             setImgSrc(src);
             setCustomClass(styles.loaded);
             return;

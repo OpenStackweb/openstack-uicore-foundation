@@ -30,6 +30,19 @@ import ProgressiveImg from '../../progressive-img';
 import file_icon from '../upload-input/file.png';
 import './index.less';
 
+const fileRowSx = {
+  display: 'flex',
+  alignItems: 'center',
+  py: 1.5,
+  mb: 1,
+};
+
+const formatFileSize = (bytes) => {
+  if (!bytes) return '0 KB';
+  if (bytes >= 1024 * 1024) return `${Math.round(bytes / (1024 * 1024))} MB`;
+  return `${Math.round(bytes / 1024)} KB`;
+};
+
 const UploadInputV3 = ({
   value = [],
   onRemove,
@@ -55,28 +68,16 @@ const UploadInputV3 = ({
   const [uploadingFiles, setUploadingFiles] = useState([]);
   const [errorFiles, setErrorFiles] = useState([]);
   const [filePreviews, setFilePreviews] = useState({});
-  const prevValueRef = useRef(value);
-  const pendingPreviewsRef = useRef([]);
 
-  const getDefaultAllowedExtensions = useCallback(() => {
-    return mediaType && mediaType.type
-      ? mediaType?.type?.allowed_extensions.map((ext) => `.${ext.toLowerCase()}`).join(",")
-      : '';
-  }, [mediaType]);
+  const allowedExt = useMemo(() => {
+    if (getAllowedExtensions) return getAllowedExtensions();
+    return mediaType?.type?.allowed_extensions?.map(ext => `.${ext.toLowerCase()}`).join(',') ?? '';
+  }, [getAllowedExtensions, mediaType]);
 
-  const getDefaultMaxSize = useCallback(() => {
-    return mediaType ? mediaType?.max_size / (1024 * 1024) : 100;
-  }, [mediaType]);
-
-  const allowedExt = useMemo(() =>
-    getAllowedExtensions ? getAllowedExtensions() : getDefaultAllowedExtensions(),
-    [getAllowedExtensions, getDefaultAllowedExtensions]
-  );
-
-  const maxSize = useMemo(() =>
-    getMaxSize ? getMaxSize() : getDefaultMaxSize(),
-    [getMaxSize, getDefaultMaxSize]
-  );
+  const maxSize = useMemo(() => {
+    if (getMaxSize) return getMaxSize();
+    return mediaType ? mediaType.max_size / (1024 * 1024) : 100;
+  }, [getMaxSize, mediaType]);
 
   const canUpload = useMemo(() =>
     !maxFiles || value.length < maxFiles,
@@ -116,13 +117,7 @@ const UploadInputV3 = ({
     media_upload: value,
   }), [mediaType, value]);
 
-  const formatFileSize = useCallback((bytes) => {
-    if (!bytes) return '0 KB';
-    if (bytes >= 1024 * 1024) return `${Math.round(bytes / (1024 * 1024))} MB`;
-    return `${Math.round(bytes / 1024)} KB`;
-  }, []);
-
-  const formatExtensionsDisplay = useCallback(() => {
+  const extDisplay = useMemo(() => {
     if (!allowedExt) return '';
     const exts = allowedExt.split(',')
       .map(e => e.trim().replace('.', '').toUpperCase())
@@ -134,22 +129,21 @@ const UploadInputV3 = ({
 
   const handleRemove = useCallback((file) => (ev) => {
     ev.preventDefault();
+    const blobUrl = filePreviews[file.filename];
+    if (blobUrl) {
+      URL.revokeObjectURL(blobUrl);
+      setFilePreviews(prev => { const next = { ...prev }; delete next[file.filename]; return next; });
+    }
     onRemove(file);
-  }, [onRemove]);
+  }, [onRemove, filePreviews]);
 
   const handleDropzoneReady = useCallback((dz) => {
     dropzoneInstanceRef.current = dz;
   }, []);
 
   const handleAddedFile = useCallback((file) => {
-    setUploadingFiles(prev => [...prev, { name: file.name, size: file.size, progress: 0, complete: false, previewUrl: null }]);
-  }, []);
-
-  const handleThumbnail = useCallback((file, dataURL) => {
-    pendingPreviewsRef.current.push({ name: file.name, size: file.size, dataURL });
-    setUploadingFiles(prev => prev.map(f =>
-      f.name === file.name && f.size === file.size ? { ...f, previewUrl: dataURL } : f
-    ));
+    const previewUrl = file.type?.startsWith('image/') ? URL.createObjectURL(file) : null;
+    setUploadingFiles(prev => [...prev, { name: file.name, size: file.size, progress: 0, complete: false, previewUrl }]);
   }, []);
 
   const handleUploadProgress = useCallback((file, progress) => {
@@ -172,40 +166,17 @@ const UploadInputV3 = ({
     ));
   }, []);
 
-  // Once the parent updates value, remove completed uploading files and assign local previews to new files
   useLayoutEffect(() => {
-    const prevValue = prevValueRef.current;
-    prevValueRef.current = value;
-
     if (uploadingFiles.length === 0 || value.length === 0) return;
-
-    // Detect files newly added to value and assign queued dataURL previews (keyed by server filename)
-    const prevFilenames = new Set(prevValue.map(f => f.filename));
-    const newFiles = value.filter(f => !prevFilenames.has(f.filename));
-    if (newFiles.length > 0 && pendingPreviewsRef.current.length > 0) {
-      const matchedNames = new Set();
-      const avail = (pred) => pendingPreviewsRef.current.find(e => !matchedNames.has(e.name) && pred(e));
-      const updates = Object.fromEntries(newFiles.flatMap(f => {
-        const entry =
-          avail(e => e.name === f.filename) ??
-          avail(e => { const s = e.name.replace(/\.[^.]+$/, ''); return s && f.filename.includes(s); }) ??
-          avail(() => true);
-        if (!entry?.dataURL) return [];
-        matchedNames.add(entry.name);
-        return [[f.filename, entry.dataURL]];
-      }));
-      pendingPreviewsRef.current = pendingPreviewsRef.current.filter(e => !matchedNames.has(e.name));
-      if (Object.keys(updates).length > 0) setFilePreviews(prev => ({ ...prev, ...updates }));
-    }
-
     setUploadingFiles(prev => prev.filter(f => !f.complete));
   }, [value]);
 
   const handleFileError = useCallback((file, message) => {
-    pendingPreviewsRef.current = pendingPreviewsRef.current.filter(
-      p => !(p.name === file.name && p.size === file.size)
-    );
-    setUploadingFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
+    setUploadingFiles(prev => {
+      const entry = prev.find(f => f.name === file.name && f.size === file.size);
+      if (entry?.previewUrl) URL.revokeObjectURL(entry.previewUrl);
+      return prev.filter(f => !(f.name === file.name && f.size === file.size));
+    });
     setErrorFiles(prev => [...prev, { name: file.name, size: file.size, message }]);
   }, []);
 
@@ -220,26 +191,31 @@ const UploadInputV3 = ({
   }, []);
 
   const handleDeleteUploading = useCallback((file) => {
-    pendingPreviewsRef.current = pendingPreviewsRef.current.filter(
-      p => !(p.name === file.name && p.size === file.size)
-    );
+    setUploadingFiles(prev => {
+      const entry = prev.find(f => f.name === file.name && f.size === file.size);
+      if (entry?.previewUrl) URL.revokeObjectURL(entry.previewUrl);
+      return prev.filter(f => !(f.name === file.name && f.size === file.size));
+    });
     if (dropzoneInstanceRef.current) {
       const dzFile = dropzoneInstanceRef.current.files?.find(
         f => f.name === file.name && f.size === file.size
       );
       if (dzFile) dropzoneInstanceRef.current.removeFile(dzFile);
     }
-    setUploadingFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
   }, []);
 
   const wrappedOnUploadComplete = useCallback((response, dzId, dzData) => {
     // Mark fully-uploaded rows complete (covers HTTP 202 flow where handleFileCompleted was skipped).
     // Guard against flipping rows whose bytes are still in flight when maxFiles > 1.
-    setUploadingFiles(prev => prev.map(f => (f.progress >= 100 ? { ...f, complete: true } : f)));
+    setUploadingFiles(prev => {
+      if (response?.name && response?.size) {
+        const entry = prev.find(f => f.size === response.size && f.previewUrl);
+        if (entry) setFilePreviews(p => ({ ...p, [response.name]: entry.previewUrl }));
+      }
+      return prev.map(f => (f.progress >= 100 ? { ...f, complete: true } : f));
+    });
     if (onUploadComplete) onUploadComplete(response, dzId, dzData);
   }, [onUploadComplete]);
-
-  const extDisplay = formatExtensionsDisplay();
 
   const renderDropzone = () => {
     if (!postUrl) {
@@ -269,7 +245,6 @@ const UploadInputV3 = ({
         onError={onError}
         onDropzoneReady={handleDropzoneReady}
         onAddedFile={handleAddedFile}
-        onThumbnail={handleThumbnail}
         onUploadProgress={handleUploadProgress}
         onFileRemoved={handleFileRemoved}
         onFileCompleted={handleFileCompleted}
@@ -290,13 +265,6 @@ const UploadInputV3 = ({
         </Box>
       </DropzoneV3>
     );
-  };
-
-  const fileRowSx = {
-    display: 'flex',
-    alignItems: 'center',
-    py: 1.5,
-    mb: 1,
   };
 
   return (
@@ -428,7 +396,6 @@ const UploadInputV3 = ({
             if (src === '#') src = file?.public_url;
             // custom replace for dropbox case ( download vs raw)
             const serverPreviewSrc = src ? src.replace("?dl=0", "?raw=1") : filename;
-            // use the local dataURL preview from this session's upload if available
             const previewSrc = filePreviews[filename] || serverPreviewSrc;
 
             return (
