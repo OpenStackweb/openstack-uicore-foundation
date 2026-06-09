@@ -24,8 +24,8 @@ const NotesRow = ({ colCount, note, showCode = false }) => {
       {showCode && (
         <TableCell>{T.translate("mui_table.note")}</TableCell>
       )}
-      <TableCell sx={{fontWeight: 800}} colSpan={colSpan}>
-        <Typography variant="body2" sx={{color: "text.secondary"}}>
+      <TableCell colSpan={colSpan}>
+        <Typography variant="body1" sx={{color: "text.secondary"}}>
           {note}
         </Typography>
       </TableCell>

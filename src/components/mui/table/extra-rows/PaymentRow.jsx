@@ -18,9 +18,11 @@ import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
 import { currencyAmountFromCents } from "../../../../utils/money";
-import { DATETIME_FORMAT, MILLISECONDS_IN_SECOND } from "../../../../utils/constants";
+import {DATETIME_FORMAT, MILLISECONDS_IN_SECOND, SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../../utils/constants";
+import TransactionType from "../../SponsorOrderGrid/components/TransactionType";
+import BalanceValue from "../../SponsorOrderGrid/components/BalanceValue";
 
-const PaymentRow = ({ payment, colGap = 1, trailing = 0 }) => {
+const PaymentRow = ({ payment, balance, colGap = 0, trailing = 0 }) => {
 
   if (!payment) return null;
 
@@ -28,20 +30,20 @@ const PaymentRow = ({ payment, colGap = 1, trailing = 0 }) => {
     <TableRow sx={{backgroundColor: "#2E7D3214"}}>
       <TableCell>{T.translate("mui_table.pay")}</TableCell>
       <TableCell>
-        <Typography
-          variant="body2"
-          sx={{ color: "success.main", fontWeight: 500 }}
-        >
-          {T.translate("mui_table.payment")}
-        </Typography>
+        <TransactionType type={SPONSOR_ORDER_GRID_ITEM_TYPES.PAYMENT}>
+          <Typography
+            variant="body1"
+            sx={{ color: "success.dark" }}
+          >
+            {T.translate("mui_table.payment")}
+          </Typography>
+        </TransactionType>
       </TableCell>
       <TableCell>
-        <Typography variant="body2" sx={{ color: "text.secondary" }}>
+        <Typography variant="body1">
           {T.translate("mui_table.paid_via")} {payment.method}
         </Typography>
-      </TableCell>
-      <TableCell>
-        <Typography variant="body2" sx={{ color: "text.secondary" }}>
+        <Typography variant="body1" sx={{ color: "text.disabled" }}>
           {moment(payment.created * MILLISECONDS_IN_SECOND).format(DATETIME_FORMAT)}
         </Typography>
       </TableCell>
@@ -49,13 +51,16 @@ const PaymentRow = ({ payment, colGap = 1, trailing = 0 }) => {
         // eslint-disable-next-line react/no-array-index-key
         <TableCell key={`pay-col-gap-${i}`} />
       ))}
-      <TableCell>
+      <TableCell align="right">
         <Typography
-          variant="body2"
-          sx={{ color: "success.main", fontWeight: 500 }}
+          variant="body1"
+          sx={{ color: "success.dark" }}
         >
-          -{currencyAmountFromCents(payment.amount)}
+          {currencyAmountFromCents(payment.amount)}
         </Typography>
+      </TableCell>
+      <TableCell align="right">
+        <BalanceValue value={balance} />
       </TableCell>
       {[...Array(trailing)].map((_, i) => (
         // eslint-disable-next-line react/no-array-index-key

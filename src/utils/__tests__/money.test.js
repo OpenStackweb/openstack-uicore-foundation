@@ -120,15 +120,15 @@ describe("parsePrice()", () => {
 });
 
 describe("currencyAmountFromCents (integration, no mocks)", () => {
-    it("throws if cents is not a number", () => {
-        expect(() => currencyAmountFromCents("10")).toThrow("cents must be an integer number");
-        expect(() => currencyAmountFromCents(null)).toThrow("cents must be an integer number");
-        expect(() => currencyAmountFromCents(undefined)).toThrow("cents must be an integer number");
+    it("returns error string if cents is not a number", () => {
+        expect(currencyAmountFromCents("10")).toBe("!ERROR");
+        expect(currencyAmountFromCents(null)).toBe("!ERROR");
+        expect(currencyAmountFromCents(undefined)).toBe("!ERROR");
     });
 
-    it("throws if cents is not an integer", () => {
-        expect(() => currencyAmountFromCents(10.5)).toThrow("cents must be an integer number");
-        expect(() => currencyAmountFromCents(NaN)).toThrow("cents must be an integer number");
+    it("returns error string if cents is not an integer", () => {
+        expect(currencyAmountFromCents(10.5)).toBe("!ERROR");
+        expect(currencyAmountFromCents(NaN)).toBe("!ERROR");
     });
 
     it("formats USD by default", () => {
@@ -153,6 +153,6 @@ describe("currencyAmountFromCents (integration, no mocks)", () => {
     });
 
     it("handles negative cents", () => {
-        expect( () => currencyAmountFromCents(-123, "USD")).toThrow("cents must be non-negative.");
+        expect(currencyAmountFromCents(-123, "USD")).toBe("!ERROR");
     });
 });

@@ -45,7 +45,7 @@ describe("PaymentRow", () => {
 
   test("renders the formatted payment amount", () => {
     renderInTable({ payment: { method: "Visa", amount: 2000, created: PAYMENT_TIMESTAMP } });
-    expect(screen.getByText("-$20.00")).toBeInTheDocument();
+    expect(screen.getByText("$20.00")).toBeInTheDocument();
   });
 
   test("renders the payment method", () => {

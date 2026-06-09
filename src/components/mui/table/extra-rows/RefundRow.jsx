@@ -17,8 +17,12 @@ import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
 import { currencyAmountFromCents } from "../../../../utils/money";
+import {DATETIME_FORMAT, MILLISECONDS_IN_SECOND, SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../../utils/constants";
+import TransactionType from "../../SponsorOrderGrid/components/TransactionType";
+import BalanceValue from "../../SponsorOrderGrid/components/BalanceValue";
+import moment from "moment-timezone";
 
-const RefundRow = ({ refund, colGap = 1, trailing = 0 }) => {
+const RefundRow = ({ refund, balance, colGap = 0, trailing = 0 }) => {
 
   if (!refund) return null;
 
@@ -26,20 +30,20 @@ const RefundRow = ({ refund, colGap = 1, trailing = 0 }) => {
     <TableRow sx={{ backgroundColor: "#EF6C0014" }}>
       <TableCell>{T.translate("mui_table.ref")}</TableCell>
       <TableCell>
-        <Typography
-          variant="body2"
-          sx={{ color: "warning.main", fontWeight: 500 }}
-        >
-          {T.translate("mui_table.refund")}
-        </Typography>
+        <TransactionType type={SPONSOR_ORDER_GRID_ITEM_TYPES.REFUND}>
+          <Typography
+            variant="body1"
+            sx={{ color: "warning.dark" }}
+          >
+            {T.translate("mui_table.refund")}
+          </Typography>
+        </TransactionType>
       </TableCell>
       <TableCell>
-        <Typography variant="body2" sx={{ color: "text.secondary" }}>
+        <Typography variant="body1">
           {refund.reason}
         </Typography>
-      </TableCell>
-      <TableCell>
-        <Typography variant="body2" sx={{ color: "text.secondary" }}>
+        <Typography variant="body1" sx={{ color: "text.disabled" }}>
           {refund.status}
         </Typography>
       </TableCell>
@@ -47,13 +51,16 @@ const RefundRow = ({ refund, colGap = 1, trailing = 0 }) => {
         // eslint-disable-next-line react/no-array-index-key
         <TableCell key={`ref-col-gap-${i}`} />
       ))}
-      <TableCell>
+      <TableCell align="right">
         <Typography
-          variant="body2"
-          sx={{ color: "warning.main", fontWeight: 500 }}
+          variant="body1"
+          sx={{ color: "warning.dark" }}
         >
-          -{currencyAmountFromCents(refund.amount)}
+          {currencyAmountFromCents(refund.amount)}
         </Typography>
+      </TableCell>
+      <TableCell align="right">
+        <BalanceValue value={balance} />
       </TableCell>
       {[...Array(trailing)].map((_, i) => (
         // eslint-disable-next-line react/no-array-index-key
