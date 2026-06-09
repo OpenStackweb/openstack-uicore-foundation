@@ -17,15 +17,21 @@ import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
 import { currencyAmountFromCents } from "../../../../utils/money";
+import TransactionType from "../../SponsorOrderGrid/components/TransactionType";
+import {SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../../utils/constants";
+import BalanceValue from "../../SponsorOrderGrid/components/BalanceValue";
 
-const FeeRow = ({ fee, colGap = 3, trailing = 0 }) => {
+const FeeRow = ({ fee, balance, colGap = 0, trailing = 0 }) => {
   if (!fee) return null;
 
   return (
     <TableRow>
       <TableCell>{T.translate("mui_table.payfee")}</TableCell>
       <TableCell>
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+        <TransactionType type={SPONSOR_ORDER_GRID_ITEM_TYPES.CHARGE} />
+      </TableCell>
+      <TableCell>
+        <Typography variant="body1">
           {fee.title}
         </Typography>
       </TableCell>
@@ -33,13 +39,13 @@ const FeeRow = ({ fee, colGap = 3, trailing = 0 }) => {
         // eslint-disable-next-line react/no-array-index-key
         <TableCell key={`fee-col-gap-${i}`} />
       ))}
-      <TableCell>
-        <Typography
-          variant="body2"
-          sx={{ color: "success.main", fontWeight: 500 }}
-        >
+      <TableCell align="right">
+        <Typography variant="body1">
           {currencyAmountFromCents(fee.amount)}
         </Typography>
+      </TableCell>
+      <TableCell align="right">
+        <BalanceValue value={balance} />
       </TableCell>
       {[...Array(trailing)].map((_, i) => (
         // eslint-disable-next-line react/no-array-index-key

@@ -42,7 +42,7 @@ describe("RefundRow", () => {
 
   test("renders the formatted refund amount", () => {
     renderInTable({ refund: { reason: "Duplicate", status: "completed", amount: 3000 } });
-    expect(screen.getByText("-$30.00")).toBeInTheDocument();
+    expect(screen.getByText("$30.00")).toBeInTheDocument();
   });
 
   test("renders the refund reason", () => {

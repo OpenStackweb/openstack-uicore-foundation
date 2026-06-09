@@ -21,7 +21,12 @@ jest.mock("../../../../utils/money", () => ({
 }));
 
 jest.mock("../../../../utils/constants", () => ({
+  ...jest.requireActual("../../../../utils/constants"),
   SPONSOR_FORMS_METAFIELD_CLASS: { FORM: "Form", ITEM: "Item" }
+}));
+
+jest.mock("../../../../utils/methods", () => ({
+  formatEpoch: () => "2026-01-01"
 }));
 
 import React from "react";
@@ -33,9 +38,8 @@ const makeItem = (overrides = {}) => ({
   line_id: 1,
   quantity: 1,
   amount: 10000,
-  current_rate: 5000,
   canceled_by_id: null,
-  type: { name: "Booth" },
+  type: { name: "Booth", code: "BOOTH" },
   meta_fields: [],
   ...overrides
 });
@@ -44,62 +48,63 @@ const makeForm = (overrides = {}) => ({
   id: 10,
   code: "GOLD",
   name: "Gold Sponsor",
-  addon_name: "Premium",
   discount: null,
-  discount_total: null,
+  discount_in_cents: null,
   items: [makeItem()],
   ...overrides
 });
 
 const defaultProps = {
-  lines: [makeForm()],
-  total: 10000
+  order: {
+    forms: [makeForm()],
+    total: 10000
+  }
 };
 
 describe("SponsorOrderGrid", () => {
   test("renders column headers", () => {
     render(<SponsorOrderGrid {...defaultProps} />);
     expect(screen.getByText("sponsor_order_grid.code")).toBeInTheDocument();
-    expect(screen.getByText("sponsor_order_grid.contents")).toBeInTheDocument();
-    expect(screen.getByText("sponsor_order_grid.addon")).toBeInTheDocument();
+    expect(screen.getByText("sponsor_order_grid.type")).toBeInTheDocument();
     expect(screen.getByText("sponsor_order_grid.details")).toBeInTheDocument();
-    expect(screen.getByText("sponsor_order_grid.rate")).toBeInTheDocument();
     expect(screen.getByText("sponsor_order_grid.amount")).toBeInTheDocument();
+    expect(screen.getByText("sponsor_order_grid.balance")).toBeInTheDocument();
   });
 
-  test("renders item code and name", () => {
+  test("renders item form code", () => {
     render(<SponsorOrderGrid {...defaultProps} />);
     expect(screen.getByText("GOLD")).toBeInTheDocument();
-    expect(screen.getByText("Gold Sponsor")).toBeInTheDocument();
   });
 
-  test("renders formatted amount and rate", () => {
+  test("renders item name in details column", () => {
     render(<SponsorOrderGrid {...defaultProps} />);
-    expect(screen.getByText("$100.00")).toBeInTheDocument();
-    expect(screen.getByText("$50.00")).toBeInTheDocument();
+    expect(screen.getByText(/Booth/)).toBeInTheDocument();
   });
 
-  test("renders no-items message when lines is empty", () => {
-    render(<SponsorOrderGrid lines={[]} total={0} />);
+  test("renders formatted charge amount", () => {
+    render(<SponsorOrderGrid {...defaultProps} />);
+    expect(screen.getAllByText("$100.00").length).toBeGreaterThan(0);
+  });
+
+  test("renders no-items message when forms is empty", () => {
+    render(<SponsorOrderGrid order={{ forms: [], total: 0 }} />);
     expect(screen.getByText("mui_table.no_items")).toBeInTheDocument();
   });
 
-  test("renders no-items message when lines is undefined", () => {
-    render(<SponsorOrderGrid total={0} />);
+  test("renders no-items message when forms is undefined", () => {
+    render(<SponsorOrderGrid order={{ total: 0 }} />);
     expect(screen.getByText("mui_table.no_items")).toBeInTheDocument();
   });
 
   test("filters out items with zero quantity", () => {
-    const lines = [makeForm({ items: [makeItem({ quantity: 0 })] })];
-    render(<SponsorOrderGrid lines={lines} total={0} />);
+    const order = { forms: [makeForm({ items: [makeItem({ quantity: 0 })] })], total: 0 };
+    render(<SponsorOrderGrid order={order} />);
     expect(screen.queryByText("$100.00")).not.toBeInTheDocument();
   });
 
   test("does not render action column when callbacks are absent", () => {
     render(<SponsorOrderGrid {...defaultProps} />);
-    expect(
-      screen.queryByText("sponsor_order_grid.action")
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("sponsor_order_grid.action")).not.toBeInTheDocument();
   });
 
   test("renders action column header when both callbacks are provided", () => {
@@ -122,21 +127,17 @@ describe("SponsorOrderGrid", () => {
         onUndoCancelForm={jest.fn()}
       />
     );
-    const deleteButton = screen.getByTestId
-      ? document.querySelector('[data-testid="DeleteIcon"]')
-      : null;
-    const button = document.querySelector("button[aria-label]") || document.querySelector("tbody button");
+    const button = document.querySelector("tbody button");
     fireEvent.click(button);
     expect(onCancelForm).toHaveBeenCalledTimes(1);
   });
 
   test("renders undo button for cancelled item and calls onUndoCancelForm on click", () => {
     const onUndoCancelForm = jest.fn();
-    const lines = [makeForm({ items: [makeItem({ canceled_by_id: 99 })] })];
+    const order = { forms: [makeForm({ items: [makeItem({ canceled_by_id: 99 })] })], total: 0 };
     render(
       <SponsorOrderGrid
-        lines={lines}
-        total={0}
+        order={order}
         onCancelForm={jest.fn()}
         onUndoCancelForm={onUndoCancelForm}
       />
@@ -146,26 +147,26 @@ describe("SponsorOrderGrid", () => {
     expect(onUndoCancelForm).toHaveBeenCalledTimes(1);
   });
 
-  test("uses amountDue label when amountDue prop is provided", () => {
-    render(<SponsorOrderGrid lines={[]} amountDue={5000} />);
-    expect(
-      screen.getByText("sponsor_order_grid.amount_due")
-    ).toBeInTheDocument();
+  test("renders amount_due label in total row", () => {
+    render(<SponsorOrderGrid order={{ forms: [], total: 5000 }} />);
+    expect(screen.getByText("sponsor_order_grid.amount_due")).toBeInTheDocument();
   });
 
-  test("renders meta_field values in item details", () => {
-    const item = makeItem({
-      meta_fields: [
-        {
-          id: 1,
-          name: "Booth Size",
-          class_field: "Form",
-          current_value: "Large",
-          values: []
-        }
-      ]
-    });
-    render(<SponsorOrderGrid lines={[makeForm({ items: [item] })]} total={0} withDescription />);
-    expect(screen.getByText(/Booth Size/)).toBeInTheDocument();
+  test("renders reconciliation section when withReconciliation is true", () => {
+    const order = {
+      forms: [],
+      total: 10000,
+      retained: 2000,
+      credited_to_payment_method: 0,
+      cancelled_total: 5000,
+      refunds_total: 3000
+    };
+    render(<SponsorOrderGrid order={order} withReconciliation />);
+    expect(screen.getByText("sponsor_order_grid.reconciliation")).toBeInTheDocument();
+  });
+
+  test("does not render reconciliation section by default", () => {
+    render(<SponsorOrderGrid order={{ forms: [], total: 0 }} />);
+    expect(screen.queryByText("sponsor_order_grid.reconciliation")).not.toBeInTheDocument();
   });
 });
