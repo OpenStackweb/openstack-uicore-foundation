@@ -43,14 +43,14 @@ const mapOrderData = (forms) => {
     ...form,
     items: form.items
       .filter((it) => it.quantity)
-      .map((it) => {
+      .map((it, i) => {
         const amount = currencyAmountFromCents(it.amount || 0);
-        const lineId = it.line_id;
+        const itemId = it.type?.id || `${form.id}-${i}`;
         const cancelled = !!it.canceled_by_id;
         const type = cancelled ? SPONSOR_ORDER_GRID_ITEM_TYPES.CANCELLED : SPONSOR_ORDER_GRID_ITEM_TYPES.CHARGE;
 
         return {
-          id: lineId,
+          id: itemId,
           formCode: form.code,
           itemName: it.type?.name,
           itemCode: it.type?.code,
@@ -78,17 +78,17 @@ const SponsorOrderGrid = ({
                           }) => {
 
   const {
-    forms,
-    fees,
-    payments,
-    refunds,
-    notes,
-    total,
-    retained,
-    credited_to_payment_method: credited,
-    cancelled_total: cancelledTotal,
-    refunds_total: refundsTotal
-  } = order;
+    forms = [],
+    fees = [],
+    payments = [],
+    refunds = [],
+    notes = [],
+    total = 0,
+    retained = 0,
+    credited_to_payment_method: credited = 0,
+    cancelled_total: cancelledTotal = 0,
+    refunds_total: refundsTotal = 0
+  } = order || {};
   const data = mapOrderData(forms);
   const cancelledItems = data.flatMap((form) => form.items.filter((it) => it.cancelled));
   const canCancel = onCancelForm && onUndoCancelForm;
