@@ -197,6 +197,57 @@ describe("MuiTable", () => {
     expect(onPerPageChange).toHaveBeenCalledWith(20);
   });
 
+  describe("disableProp", () => {
+    const disabledData = [
+      { id: 1, name: "Alice", role: "Dev", is_disabled: true },
+      { id: 2, name: "Bob", role: "PM", is_disabled: false }
+    ];
+    const disabledOptions = { sortCol: "", sortDir: 1, disableProp: "is_disabled" };
+
+    test("disables edit button for rows where disableProp is truthy", () => {
+      setup({ data: disabledData, onEdit: jest.fn(), options: disabledOptions });
+      const buttons = screen.getAllByTestId("action-edit");
+      expect(buttons[0]).toBeDisabled();
+      expect(buttons[1]).not.toBeDisabled();
+    });
+
+    test("disables delete button for rows where disableProp is truthy", () => {
+      setup({ data: disabledData, onDelete: jest.fn(), options: disabledOptions });
+      const buttons = screen.getAllByTestId("action-delete");
+      expect(buttons[0]).toBeDisabled();
+      expect(buttons[1]).not.toBeDisabled();
+    });
+
+    test("disables select button for rows where disableProp is truthy", () => {
+      setup({ data: disabledData, onSelect: jest.fn(), options: disabledOptions });
+      const buttons = screen.getAllByTestId("action-select");
+      expect(buttons[0]).toBeDisabled();
+      expect(buttons[1]).not.toBeDisabled();
+    });
+
+    test("disables archive button for rows where disableProp is truthy and not 'is_archived'", () => {
+      setup({ data: disabledData, onArchive: jest.fn(), options: disabledOptions });
+      const buttons = screen.getAllByTestId("action-archive");
+      expect(buttons[0]).toBeDisabled();
+      expect(buttons[1]).not.toBeDisabled();
+    });
+
+    test("does not disable archive button when disableProp is 'is_archived'", () => {
+      const archivedData = [
+        { id: 1, name: "Alice", role: "Dev", is_archived: true },
+        { id: 2, name: "Bob", role: "PM", is_archived: false }
+      ];
+      setup({
+        data: archivedData,
+        onArchive: jest.fn(),
+        options: { sortCol: "", sortDir: 1, disableProp: "is_archived" }
+      });
+      const buttons = screen.getAllByTestId("action-archive");
+      expect(buttons[0]).not.toBeDisabled();
+      expect(buttons[1]).not.toBeDisabled();
+    });
+  });
+
   test("renders boolean true as CheckIcon", () => {
     const boolCols = [{ columnKey: "active", header: "Active" }];
     render(
