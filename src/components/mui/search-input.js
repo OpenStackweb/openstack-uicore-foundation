@@ -79,15 +79,15 @@ const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) =
       onChange={(ev) => handleChange(ev.target.value)}
       onKeyDown={handleKeyDown}
       fullWidth
-      sx={{
+      sx={(theme) => ({
         "& .MuiOutlinedInput-root": {
           height: "36px",
-          paddingX: 1
-        },
-        "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(0, 0, 0, 0.23)" },
-        "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(0, 0, 0, 0.23)" },
-        "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "primary.main" }
-      }}
+          paddingX: 1,
+          "--TextField-brandBorderColor": "rgba(0, 0, 0, 0.23)",
+          "--TextField-brandBorderHoverColor": "rgba(0, 0, 0, 0.23)",
+          "--TextField-brandBorderFocusedColor": theme.palette.primary.main
+        }
+      })}
     />
   );
 };

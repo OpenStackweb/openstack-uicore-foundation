@@ -11,22 +11,24 @@
  * limitations under the License.
  * */
 
-import { createTheme } from "@mui/material/styles";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
-const uiCoreThemeOverrides = {
+export const MuiBaseCustomTheme = {
   components: {
     MuiOutlinedInput: {
       styleOverrides: {
-        notchedOutline: {
-          borderColor: "#000"
-        },
         root: {
-          "&:hover .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#000"
+          "--TextField-brandBorderColor": "#000",
+          "--TextField-brandBorderHoverColor": "#000",
+          "--TextField-brandBorderFocusedColor": "#000",
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "var(--TextField-brandBorderColor)"
+          },
+          "&:hover:not(.Mui-disabled, .Mui-error) .MuiOutlinedInput-notchedOutline": {
+            borderColor: "var(--TextField-brandBorderHoverColor)"
           },
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#000"
+            borderColor: "var(--TextField-brandBorderFocusedColor)"
           }
         }
       }
@@ -45,5 +47,3 @@ const uiCoreThemeOverrides = {
     }
   }
 };
-
-export const CustomThemeBase = createTheme(uiCoreThemeOverrides);
