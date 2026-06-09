@@ -47,7 +47,10 @@ const ARCHIVED_CELL_SX = {
 const ACTION_CELL_SX = {
   p: 0,
   textAlign: "center",
-  verticalAlign: "middle"
+  verticalAlign: "middle",
+  width: 40,
+  minWidth: 40,
+  maxWidth: 40
 };
 
 const MuiTable = ({
@@ -102,12 +105,32 @@ const MuiTable = ({
 
   const {sortCol, sortDir} = options;
 
-  const getArchivedCellSx = (row) =>
-    options.disableProp && row[options.disableProp] ? ARCHIVED_CELL_SX : null;
+  const getDisabledSx = (row) =>
+    options.disableProp && row[options.disableProp] ? ARCHIVED_CELL_SX : {};
 
-  const getCellSx = (row, baseSx = {}) => ({
-    ...baseSx,
-    ...(getArchivedCellSx(row) || {})
+  const getHeaderSx = (col) => ({
+    ...(col.width && {
+      width: col.width,
+      minWidth: col.width,
+      maxWidth: col.width
+    }),
+    ...(col.headSx || {}),
+  })
+
+  const getCellSx = (row, col) => ({
+    fontWeight: "normal",
+    ...(col.width && {
+      width: col.width,
+      minWidth: col.width,
+      maxWidth: col.width
+    }),
+    ...(col.cellSx || {}),
+    ...getDisabledSx(row)
+  });
+
+  const getActionCellSx = (row) => ({
+    ...ACTION_CELL_SX,
+    ...getDisabledSx(row)
   });
 
   const handleDelete = async (item) => {
@@ -143,7 +166,7 @@ const MuiTable = ({
       );
     }
 
-    return <span style={{ fontWeight: "normal" }}>{row[col.columnKey]}</span>;
+    return <span style={{fontWeight: "normal"}}>{row[col.columnKey]}</span>;
   };
 
   return (
@@ -160,11 +183,7 @@ const MuiTable = ({
                 {columns.map((col) => (
                   <TableCell
                     key={col.columnKey}
-                    sx={{
-                      width: col.width,
-                      minWidth: col.width,
-                      maxWidth: col.width
-                    }}
+                    sx={getHeaderSx(col)}
                     align={col.align ?? "left"}
                   >
                     {col.sortable ? (
@@ -191,10 +210,10 @@ const MuiTable = ({
                     )}
                   </TableCell>
                 ))}
-                {onEdit && <TableCell sx={{...ACTION_CELL_SX, width: 40, minWidth: 40, maxWidth: 40}}/>}
+                {onEdit && <TableCell sx={ACTION_CELL_SX}/>}
                 {onArchive && <TableCell sx={{...ACTION_CELL_SX, width: 80, minWidth: 80, maxWidth: 80}}/>}
-                {onDelete && <TableCell sx={{...ACTION_CELL_SX, width: 40, minWidth: 40, maxWidth: 40}}/>}
-                {onSelect && <TableCell sx={{...ACTION_CELL_SX, width: 40, minWidth: 40, maxWidth: 40}}/>}
+                {onDelete && <TableCell sx={ACTION_CELL_SX}/>}
+                {onSelect && <TableCell sx={ACTION_CELL_SX}/>}
               </TableRow>
             </TableHead>
 
@@ -207,15 +226,8 @@ const MuiTable = ({
                     <TableCell
                       key={col.columnKey}
                       align={col.align ?? "left"}
-                      className={`${
-                        col.dottedBorder && styles.dottedBorderLeft
-                      } ${col.className}`}
-                      sx={getCellSx(row, {
-                        width: col.width,
-                        minWidth: col.width,
-                        maxWidth: col.width,
-                        fontWeight: "normal"
-                      })}
+                      className={`${col.dottedBorder && styles.dottedBorderLeft} ${col.className}`}
+                      sx={getCellSx(row, col)}
                     >
                       {renderCell(row, col)}
                     </TableCell>
@@ -225,23 +237,23 @@ const MuiTable = ({
                     <TableCell
                       align="center"
                       className={styles.dottedBorderLeft}
-                      sx={getCellSx(row, {...ACTION_CELL_SX, width: 40, minWidth: 40, maxWidth: 40})}
+                      sx={getActionCellSx(row)}
                     >
                       <IconButton
                         size="medium"
                         onClick={() => onEdit(row)}
-                        sx={{ padding: 0 }}
+                        sx={{padding: 0}}
                         data-testid="action-edit"
+                        disabled={options.disableProp && row[options.disableProp]}
                       >
-                        <EditIcon fontSize="large" />
+                        <EditIcon fontSize="large"/>
                       </IconButton>
                     </TableCell>
                   )}
-                  {/* Archive column */}
                   {onArchive && (
                     <TableCell
                       align="center"
-                      sx={getCellSx(row, {...ACTION_CELL_SX, width: 80, minWidth: 80, maxWidth: 80})}
+                      sx={{...getActionCellSx(row), width: 80, minWidth: 80, maxWidth: 80}}
                       className={styles.dottedBorderLeft}
                     >
                       <Button
@@ -258,6 +270,8 @@ const MuiTable = ({
                           padding: 0,
                           color: "rgba(0,0,0,0.56)"
                         }}
+                        // bypass disabled if disableProp is "is_archived"
+                        disabled={options.disableProp && options.disableProp !== "is_archived" && row[options.disableProp]}
                       >
                         {row.is_archived
                           ? T.translate("general.unarchive")
@@ -270,14 +284,15 @@ const MuiTable = ({
                     <TableCell
                       align="center"
                       className={styles.dottedBorderLeft}
-                      sx={getCellSx(row, {...ACTION_CELL_SX, width: 40, minWidth: 40, maxWidth: 40})}
+                      sx={getActionCellSx(row)}
                     >
                       {canDelete(row) && (
                         <IconButton
                           size="medium"
                           onClick={() => handleDelete(row)}
                           data-testid="action-delete"
-                          sx={{ padding: 0 }}
+                          sx={{padding: 0}}
+                          disabled={options.disableProp && row[options.disableProp]}
                         >
                           <DeleteIcon fontSize="large"/>
                         </IconButton>
@@ -287,14 +302,15 @@ const MuiTable = ({
                   {onSelect && (
                     <TableCell
                       align="center"
-                      sx={getCellSx(row, {...ACTION_CELL_SX, width: 40, minWidth: 40, maxWidth: 40})}
+                      sx={getActionCellSx(row)}
                       className={styles.dottedBorderLeft}
                     >
                       <IconButton
                         size="medium"
                         onClick={() => onSelect(row)}
                         data-testid="action-select"
-                        sx={{ padding: 0 }}
+                        sx={{padding: 0}}
+                        disabled={options.disableProp && row[options.disableProp]}
                       >
                         <ArrowForwardIcon/>
                       </IconButton>
