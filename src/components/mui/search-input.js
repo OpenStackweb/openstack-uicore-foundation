@@ -79,12 +79,15 @@ const SearchInput = ({ term, onSearch, placeholder = "Search...", debounced }) =
       onChange={(ev) => handleChange(ev.target.value)}
       onKeyDown={handleKeyDown}
       fullWidth
-      sx={{
+      sx={(theme) => ({
         "& .MuiOutlinedInput-root": {
           height: "36px",
-          paddingX: 1
-        },        
-      }}
+          paddingX: 1,
+          "--TextField-brandBorderColor": "rgba(0, 0, 0, 0.23)",
+          "--TextField-brandBorderHoverColor": "rgba(0, 0, 0, 0.23)",
+          "--TextField-brandBorderFocusedColor": theme.palette.primary.main
+        }
+      })}
     />
   );
 };

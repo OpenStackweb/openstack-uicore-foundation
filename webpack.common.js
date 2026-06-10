@@ -168,6 +168,7 @@ module.exports = {
         'utils/money': './src/utils/money.js',
         'utils/use-event-callback': './src/utils/use-event-callback.js',
         'utils/external-store': './src/utils/external-store.js',
+        'utils/theme': './src/utils/theme.js',
     },
     output: {
         path: path.resolve(__dirname, 'lib'),
