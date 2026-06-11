@@ -177,7 +177,7 @@ const MetaFieldValues = ({
         updateOrderKey="order"
         droppableId={`droppable-values-${fieldIndex}`}
       />
-      <Grid container spacing={2} sx={{ mt: 2 }} offset={4}>
+      <Grid container spacing={2} sx={{ mt: 2 }}>
         <Button
           startIcon={<AddIcon />}
           disabled={isMetafieldValueIncomplete()}
