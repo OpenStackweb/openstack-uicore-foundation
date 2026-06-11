@@ -38,6 +38,7 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
+import EllipsisTooltip from "../ellipsis-tooltip";
 
 const MuiTableSortable = ({
   columns = [],
@@ -209,7 +210,9 @@ const MuiTableSortable = ({
                             }}
                           >
                             {/* Main content columns */}
-                            {columns.map((col) => (
+                            {columns.map((col) => {
+                              const cellContent = col.render?.(row) || <span>{row[col.columnKey]}</span>;
+                              return (
                               <TableCell
                                 key={col.columnKey}
                                 align={col.align ?? "left"}
@@ -218,9 +221,16 @@ const MuiTableSortable = ({
                                 } ${col.className}`}
                                 sx={{ fontWeight: "normal" }}
                               >
-                                {col.render?.(row) || row[col.columnKey]}
+                                {col.ellipsis ? (
+                                  <EllipsisTooltip title={cellContent}>
+                                    {cellContent}
+                                  </EllipsisTooltip>
+                                ) : (
+                                  cellContent
+                                )}
                               </TableCell>
-                            ))}
+                              );
+                            })}
                             {/* Edit column */}
                             {onEdit && (
                               <TableCell

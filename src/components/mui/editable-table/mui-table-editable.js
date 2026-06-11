@@ -36,6 +36,7 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
+import EllipsisTooltip from "../ellipsis-tooltip";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",
@@ -289,7 +290,11 @@ const MuiTableEditable = ({
             <TableBody>
               {data.map((row) => (
                 <TableRow key={row.id}>
-                  {columns.map((col) => (
+                  {columns.map((col) => {
+                    const cellContent = col.render
+                      ? col.render(row)
+                      : <span style={{ fontWeight: "normal" }}>{row[col.columnKey]}</span>;
+                    return (
                     <TableCell
                       key={`${row.id}-${col.columnKey}`}
                       onClick={() => handleCellClick(row, col.columnKey)}
@@ -317,15 +322,16 @@ const MuiTableEditable = ({
                           }
                           validation={col.validation}
                         />
-                      ) : col.render ? (
-                        col.render(row)
+                      ) : col.ellipsis ? (
+                        <EllipsisTooltip title={cellContent}>
+                          {cellContent}
+                        </EllipsisTooltip>
                       ) : (
-                        <span style={{ fontWeight: "normal" }}>
-                          {row[col.columnKey]}
-                        </span>
+                        cellContent
                       )}
                     </TableCell>
-                  ))}
+                  );
+                  })}
                   {onEdit && (
                     <TableCell
                       sx={getCellSx(row)}
