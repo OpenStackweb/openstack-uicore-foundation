@@ -38,6 +38,7 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
+import EllipsisTooltip from "../ellipsis-tooltip";
 
 const MuiTableSortable = ({
   columns = [],
@@ -218,7 +219,13 @@ const MuiTableSortable = ({
                                 } ${col.className}`}
                                 sx={{ fontWeight: "normal" }}
                               >
-                                {col.render?.(row) || row[col.columnKey]}
+                                {col.ellipsis ? (
+                                  <EllipsisTooltip title={String(row[col.columnKey] ?? "")}>
+                                    {col.render?.(row) || <span>{row[col.columnKey]}</span>}
+                                  </EllipsisTooltip>
+                                ) : (
+                                  col.render?.(row) || row[col.columnKey]
+                                )}
                               </TableCell>
                             ))}
                             {/* Edit column */}

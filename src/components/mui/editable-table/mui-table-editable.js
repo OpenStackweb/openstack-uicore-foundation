@@ -36,6 +36,7 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
+import EllipsisTooltip from "../ellipsis-tooltip";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",
@@ -317,6 +318,10 @@ const MuiTableEditable = ({
                           }
                           validation={col.validation}
                         />
+                      ) : col.ellipsis ? (
+                        <EllipsisTooltip title={String(row[col.columnKey] ?? "")}>
+                          {col.render ? col.render(row) : <span style={{ fontWeight: "normal" }}>{row[col.columnKey]}</span>}
+                        </EllipsisTooltip>
                       ) : col.render ? (
                         col.render(row)
                       ) : (

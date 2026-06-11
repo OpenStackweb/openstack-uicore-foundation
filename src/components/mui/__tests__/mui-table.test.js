@@ -265,4 +265,17 @@ describe("MuiTable", () => {
     // MUI CheckIcon renders an SVG; just ensure no error
     expect(screen.getByRole("cell", { hidden: true })).toBeInTheDocument();
   });
+
+  describe("ellipsis column prop", () => {
+    test("wraps cell in truncating span when ellipsis is true", () => {
+      const cols = [{ columnKey: "name", header: "Name", ellipsis: true }];
+      setup({ columns: cols });
+      const wrapper = screen.getByText("Alice").parentElement;
+      expect(wrapper).toHaveStyle({
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap"
+      });
+    });    
+  });
 });
