@@ -12,7 +12,7 @@
  * */
 
 import React, { useEffect, useState } from "react";
-import { MenuItem, Select } from "@mui/material";
+import { FormControl, FormHelperText, MenuItem, Select } from "@mui/material";
 import PropTypes from "prop-types";
 import { querySummitAddons } from "../../utils/query-actions";
 
@@ -21,7 +21,8 @@ const SummitAddonSelect = ({
   summitId,
   placeholder = "Select...",
   onChange,
-  inputProps = {}
+  error = false,
+  helperText = ""
 }) => {
   const [options, setOptions] = useState([]);
 
@@ -40,27 +41,28 @@ const SummitAddonSelect = ({
   };
 
   return (
-    <Select
-      fullWidth
-      value={value}
-      onChange={handleChange}
-      displayEmpty
-      renderValue={(selected) => {
-        if (!selected) {
-          return <span style={{ color: "#aaa" }}>{placeholder}</span>;
-        }
-        const match = options.find((opt) => opt.value === selected);
-        return match ? match.label : selected;
-      }}
-      // eslint-disable-next-line react/jsx-props-no-spreading
-      {...inputProps}
-    >
-      {options.map((option) => (
-        <MenuItem key={option.value} value={option.value}>
-          {option.label}
-        </MenuItem>
-      ))}
-    </Select>
+    <FormControl fullWidth error={error}>
+      <Select
+        fullWidth
+        value={value}
+        onChange={handleChange}
+        displayEmpty
+        renderValue={(selected) => {
+          if (!selected) {
+            return <span style={{ color: "#aaa" }}>{placeholder}</span>;
+          }
+          const match = options.find((opt) => opt.value === selected);
+          return match ? match.label : selected;
+        }}
+      >
+        {options.map((option) => (
+          <MenuItem key={option.value} value={option.value}>
+            {option.label}
+          </MenuItem>
+        ))}
+      </Select>
+      {helperText && <FormHelperText>{helperText}</FormHelperText>}
+    </FormControl>
   );
 };
 
@@ -68,7 +70,9 @@ SummitAddonSelect.propTypes = {
   value: PropTypes.string,
   summitId: PropTypes.number.isRequired,
   placeholder: PropTypes.string,
-  onChange: PropTypes.func.isRequired
+  onChange: PropTypes.func.isRequired,
+  error: PropTypes.bool,
+  helperText: PropTypes.string
 };
 
 export default SummitAddonSelect;
