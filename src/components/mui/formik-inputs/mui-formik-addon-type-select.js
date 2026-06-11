@@ -18,8 +18,7 @@ import AddonTypeSelect from "../addon-type-select";
 
 const MuiFormikAddonTypeSelect = ({
   name,
-  placeholder = "Select...",
-  inputProps = {}
+  placeholder = "Select..."
 }) => {
   const [field, meta, helpers] = useField(name);
 
@@ -29,19 +28,15 @@ const MuiFormikAddonTypeSelect = ({
       name={name}
       onChange={helpers.setValue}
       placeholder={placeholder}
-      inputProps={{
-        error: meta.touched && Boolean(meta.error),
-        helperText: meta.touched && meta.error,
-        ...inputProps
-      }}
+      error={meta.touched && Boolean(meta.error)}
+      helperText={meta.touched ? meta.error : ""}
     />
   );
 };
 
 MuiFormikAddonTypeSelect.propTypes = {
   name: PropTypes.string.isRequired,
-  placeholder: PropTypes.string,
-  inputProps: PropTypes.object
+  placeholder: PropTypes.string
 };
 
 export default MuiFormikAddonTypeSelect;
