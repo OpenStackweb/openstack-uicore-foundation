@@ -210,7 +210,9 @@ const MuiTableSortable = ({
                             }}
                           >
                             {/* Main content columns */}
-                            {columns.map((col) => (
+                            {columns.map((col) => {
+                              const cellContent = col.render?.(row) || <span>{row[col.columnKey]}</span>;
+                              return (
                               <TableCell
                                 key={col.columnKey}
                                 align={col.align ?? "left"}
@@ -220,14 +222,15 @@ const MuiTableSortable = ({
                                 sx={{ fontWeight: "normal" }}
                               >
                                 {col.ellipsis ? (
-                                  <EllipsisTooltip title={String(row[col.columnKey] ?? "")}>
-                                    {col.render?.(row) || <span>{row[col.columnKey]}</span>}
+                                  <EllipsisTooltip title={cellContent}>
+                                    {cellContent}
                                   </EllipsisTooltip>
                                 ) : (
-                                  col.render?.(row) || row[col.columnKey]
+                                  cellContent
                                 )}
                               </TableCell>
-                            ))}
+                              );
+                            })}
                             {/* Edit column */}
                             {onEdit && (
                               <TableCell

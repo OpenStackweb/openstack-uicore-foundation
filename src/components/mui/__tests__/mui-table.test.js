@@ -267,15 +267,33 @@ describe("MuiTable", () => {
   });
 
   describe("ellipsis column prop", () => {
-    test("wraps cell in truncating span when ellipsis is true", () => {
-      const cols = [{ columnKey: "name", header: "Name", ellipsis: true }];
-      setup({ columns: cols });
-      const wrapper = screen.getByText("Alice").parentElement;
-      expect(wrapper).toHaveStyle({
+    beforeEach(() => {
+      jest.spyOn(Element.prototype, "scrollWidth", "get").mockReturnValue(200);
+      jest.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(100);
+    });
+    afterEach(() => jest.restoreAllMocks());
+
+    test("wraps cell in truncating span", () => {
+      setup({ columns: [{ columnKey: "name", header: "Name", ellipsis: true }] });
+      expect(screen.getByText("Alice").parentElement).toHaveStyle({
         overflow: "hidden",
         textOverflow: "ellipsis",
         whiteSpace: "nowrap"
       });
-    });    
+    });
+
+    test("tooltip shows raw value when col.render is absent", async () => {
+      setup({ columns: [{ columnKey: "name", header: "Name", ellipsis: true }] });
+      await userEvent.hover(screen.getByText("Alice").parentElement);
+      expect(await screen.findByRole("tooltip")).toHaveTextContent("Alice");
+    });
+
+    test("tooltip matches rendered output when col.render transforms data", async () => {
+      const cols = [{ columnKey: "name", header: "Name", ellipsis: true, render: (row) => <span>Formatted: {row.name}</span> }];
+      setup({ columns: cols });
+      const cell = screen.getByText("Formatted: Alice");
+      await userEvent.hover(cell.parentElement);
+      expect(await screen.findByRole("tooltip")).toHaveTextContent("Formatted: Alice");
+    });
   });
 });

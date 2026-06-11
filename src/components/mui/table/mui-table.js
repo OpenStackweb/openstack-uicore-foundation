@@ -169,7 +169,7 @@ const MuiTable = ({
 
     if (col.ellipsis) {
       return (
-        <EllipsisTooltip title={String(row[col.columnKey] ?? "")}>
+        <EllipsisTooltip title={content}>
           {content}
         </EllipsisTooltip>
       );

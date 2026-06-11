@@ -290,7 +290,11 @@ const MuiTableEditable = ({
             <TableBody>
               {data.map((row) => (
                 <TableRow key={row.id}>
-                  {columns.map((col) => (
+                  {columns.map((col) => {
+                    const cellContent = col.render
+                      ? col.render(row)
+                      : <span style={{ fontWeight: "normal" }}>{row[col.columnKey]}</span>;
+                    return (
                     <TableCell
                       key={`${row.id}-${col.columnKey}`}
                       onClick={() => handleCellClick(row, col.columnKey)}
@@ -319,18 +323,15 @@ const MuiTableEditable = ({
                           validation={col.validation}
                         />
                       ) : col.ellipsis ? (
-                        <EllipsisTooltip title={String(row[col.columnKey] ?? "")}>
-                          {col.render ? col.render(row) : <span style={{ fontWeight: "normal" }}>{row[col.columnKey]}</span>}
+                        <EllipsisTooltip title={cellContent}>
+                          {cellContent}
                         </EllipsisTooltip>
-                      ) : col.render ? (
-                        col.render(row)
                       ) : (
-                        <span style={{ fontWeight: "normal" }}>
-                          {row[col.columnKey]}
-                        </span>
+                        cellContent
                       )}
                     </TableCell>
-                  ))}
+                  );
+                  })}
                   {onEdit && (
                     <TableCell
                       sx={getCellSx(row)}
