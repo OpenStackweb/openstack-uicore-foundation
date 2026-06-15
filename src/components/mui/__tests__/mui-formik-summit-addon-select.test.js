@@ -15,12 +15,13 @@ jest.mock("../summit-addon-select", () => {
   const React = require("react");
   return {
     __esModule: true,
-    default: ({ value, placeholder, inputProps }) => (
+    default: ({ value, placeholder, error, helperText }) => (
       <div
         data-testid="summit-addon-select"
         data-value={value}
         data-placeholder={placeholder}
-        data-error={inputProps?.error ? "true" : "false"}
+        data-error={error ? "true" : "false"}
+        data-helper-text={helperText}
       >
         {placeholder}
       </div>

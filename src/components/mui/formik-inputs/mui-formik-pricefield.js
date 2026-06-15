@@ -104,12 +104,12 @@ const MuiFormikPriceField = ({
       slotProps={{
         input: {
           startAdornment: <InputAdornment position="start">$</InputAdornment>
+        },
+        htmlInput: {
+          min: 0,
+          inputMode: "decimal",
+          ...inputProps
         }
-      }}
-      inputProps={{
-        min: 0,
-        inputMode: "decimal",
-        ...inputProps
       }}
       onKeyDown={handleKeyDown}
       // eslint-disable-next-line react/jsx-props-no-spreading
