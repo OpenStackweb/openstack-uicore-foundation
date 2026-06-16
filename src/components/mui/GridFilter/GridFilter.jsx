@@ -63,6 +63,8 @@ const GridFilter = ({ id, criterias, hideJoinOperators = false, onApply, saveFil
       return parser(filter);
     }
 
+    // TODO: use escapeFilterValue
+
     const value = Array.isArray(filter.value)
       ? filter.value.join("||")
       : filter.value;
