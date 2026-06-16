@@ -27,7 +27,9 @@ export const OPERATORS = {
   BETWEEN_STRICT: {
     value: "()",
     label: T.translate("grid_filter.operators.between_strict")
-  }
+  },
+  BEFORE: { value: "<=", label: T.translate("grid_filter.operators.before") },
+  AFTER: { value: ">=", label: T.translate("grid_filter.operators.after") }
 };
 
 export const JOIN_OPERATORS = {
