@@ -185,5 +185,8 @@
       "all": "all",
       "any": "any"
     }
+  },
+  "grid_display": {
+    "open_control": "Open column display control"
   }
 }
