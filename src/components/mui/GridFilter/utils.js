@@ -43,3 +43,8 @@ export const EMPTY_FILTER = {
   value: null,
   id: "new"
 };
+
+// ValueInput types whose stored value is an option object (or array of
+// option objects), not a plain scalar — these always require a customParser
+// since the default parseFilter only knows how to serialize scalars.
+export const ASYNC_VALUE_TYPES = ["asyncSelect", "speaker", "company"];

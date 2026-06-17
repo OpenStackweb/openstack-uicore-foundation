@@ -183,7 +183,16 @@
       "between": "between",
       "between_strict": "between strict",
       "all": "all",
-      "any": "any"
+      "any": "any",
+      "before": "before",
+      "after": "after"
+    },
+    "placeholders": {
+      "number": "Type a number",
+      "date": "Select a date",
+      "speaker": "Type a speaker name",
+      "company": "Type a company name",
+      "async": "Type and select"
     }
   }
 }
