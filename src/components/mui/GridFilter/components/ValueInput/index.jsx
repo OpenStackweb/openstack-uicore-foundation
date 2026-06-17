@@ -15,8 +15,21 @@ import React from "react";
 import TextField from "@mui/material/TextField";
 import PropTypes from "prop-types";
 import Dropdown from "../../../Dropdown";
+import DateTimeInput from "./DateTimeInput";
+import NumberInput from "./NumberInput";
+import AsyncSelectInput from "./AsyncSelectInput";
+import SpeakerSelectInput from "./SpeakerSelectInput";
+import CompanySelectInput from "./CompanySelectInput";
 
-const INPUT_TYPE_MAP = { text: TextField, select: Dropdown };
+const INPUT_TYPE_MAP = {
+  text: TextField,
+  select: Dropdown,
+  datetime: DateTimeInput,
+  number: NumberInput,
+  asyncSelect: AsyncSelectInput,
+  speaker: SpeakerSelectInput,
+  company: CompanySelectInput
+};
 
 const ValueInput = ({ type, ...rest }) => {
   const Component = type ? INPUT_TYPE_MAP[type] : Dropdown; // use dropdown as a placeholder
@@ -26,11 +39,14 @@ const ValueInput = ({ type, ...rest }) => {
 
 ValueInput.propTypes = {
   id: PropTypes.string.isRequired,
-  type: PropTypes.string.isRequired,
+  // not required: the trailing "new" filter row has no criteria selected
+  // yet, so there's no type to pass — ValueInput falls back to Dropdown.
+  type: PropTypes.string,
   value: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.number,
-    PropTypes.array
+    PropTypes.array,
+    PropTypes.object
   ]),
   options: PropTypes.arrayOf(
     PropTypes.shape({
@@ -46,6 +62,7 @@ ValueInput.propTypes = {
 };
 
 ValueInput.defaultProps = {
+  type: null,
   value: null,
   label: "",
   placeholder: "",

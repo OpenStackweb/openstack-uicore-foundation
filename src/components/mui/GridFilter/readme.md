@@ -193,6 +193,92 @@ Each option in the returned array may include a `disabled: true` field; the corr
 
 A static array still works exactly as before — the function form is opt-in.
 
+# datetime values
+
+For date/time criteria, use `type: "datetime"`. It renders a single MUI `DateTimePicker` and stores the value as a unix timestamp (seconds), consistent with how dates are represented elsewhere in this app. Use `props.mode` to control which views are shown — the stored value is always a unix timestamp regardless of mode.
+
+| `mode`     | Shows         |
+| ---------- | ------------- |
+| `date`     | date only     |
+| `time`     | time only     |
+| `datetime` | date and time (default) |
+
+```jsx
+{
+  key: "created",
+  label: "Created",
+  operators: [OPERATORS.BEFORE, OPERATORS.AFTER],
+  values: {
+    type: "datetime",
+    props: { mode: "date" }
+  }
+}
+```
+
+# numeric values
+
+For numeric criteria, use `type: "number"`. It renders a `TextField` of `type="number"` and stores/emits the value as an actual `Number` (not a string). Optional props: `min`, `max` (clamped on change), and `integer` (blocks decimal entry and the `e`/`E` exponent keys).
+
+```jsx
+{
+  key: "attendees",
+  label: "Attendees",
+  operators: [OPERATORS.GREATER, OPERATORS.LESS],
+  values: {
+    type: "number",
+    props: { min: 0, integer: true }
+  }
+}
+```
+
+# async select values
+
+For criteria backed by a remote search-as-you-type lookup, use `type: "asyncSelect"` (generic) or one of the preset entity types: `type: "speaker"` or `type: "company"`. These render a MUI `Autocomplete` and **always store the full selected option object** (or array of objects, when `multiple`) as `{ value, label, raw }` — `raw` is the untouched API entity, so a `customParser` can pull whatever field it needs (`.raw.id`, `.raw.name`, etc.).
+
+**`customParser` is mandatory for these types** — there is no default/shipped parser, even for `speaker`/`company`. The default `parseFilter` only knows how to serialize plain scalars; an object run through it produces `criteria==[object Object]`. If a criteria uses an async type and has no `customParser`, `GridFilter` logs a `console.error` to catch the mistake early — it does not throw or block applying filters.
+
+Common props (generic `asyncSelect`):
+
+| Prop | Description |
+| --- | --- |
+| `queryFunction(input, callback)` | required — fetches results; `callback(rawItems)` receives a plain array of raw API objects |
+| `formatOption(item) => {value, label}` | maps a raw item to display shape (default: `{value: item.id, label: item.name}`) |
+| `multiple` | allow selecting more than one option |
+| `debounceWait` | debounce delay in ms before querying on typing (default: `DEBOUNCE_WAIT_250`) |
+| `minSearchLength` | skip querying until the input reaches this length (default: `0`) |
+
+```jsx
+{
+  key: "created_by_company",
+  label: "Submitter Company",
+  operators: [OPERATORS.IS],
+  values: {
+    type: "company",
+    props: { multiple: true }
+  },
+  customParser: (f) => [
+    `created_by_company==${f.value.map((c) => escapeFilterValue(c.raw.name)).join("||")}`
+  ]
+}
+```
+
+`speaker` additionally accepts `summitId` (scopes the default query to a summit) and `company`/`speaker` both accept a `queryFunction` override for non-default scoped queries (e.g. `querySpeakerCompany`, `queryAllCompanies`):
+
+```jsx
+{
+  key: "speaker_id",
+  label: "Speaker",
+  operators: [OPERATORS.IS],
+  values: {
+    type: "speaker",
+    props: { summitId: currentSummit.id, multiple: true }
+  },
+  customParser: (f) => [
+    `speaker_id==${f.value.map((s) => s.value).join("||")}`
+  ]
+}
+```
+
 # custom parser
 
 For criteria that require non-standard API encoding, provide a `customParser` function on the criteria object. It receives the filter and must return an array of API filter strings. See the `selection_status` example in the usage section above.

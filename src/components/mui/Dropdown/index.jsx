@@ -86,7 +86,7 @@ Dropdown.propTypes = {
       label: PropTypes.string.isRequired,
       disabled: PropTypes.bool
     })
-  ).isRequired,
+  ),
   label: PropTypes.string,
   placeholder: PropTypes.string,
   onChange: PropTypes.func.isRequired
@@ -95,7 +95,8 @@ Dropdown.propTypes = {
 Dropdown.defaultProps = {
   value: null,
   label: "",
-  placeholder: ""
+  placeholder: "",
+  options: null
 };
 
 export default Dropdown;

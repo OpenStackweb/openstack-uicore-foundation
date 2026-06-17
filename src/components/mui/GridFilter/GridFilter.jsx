@@ -29,7 +29,7 @@ import Filter from "./components/Filter";
 import FilterButton from "./components/FilterButton";
 import { saveFilters } from "./actions/filter-actions";
 import useGridFilter from "./hooks/useGridFilter";
-import { JOIN_OPERATORS, OPERATORS, EMPTY_FILTER } from "./utils";
+import { JOIN_OPERATORS, OPERATORS, EMPTY_FILTER, ASYNC_VALUE_TYPES } from "./utils";
 
 const OPERATOR_VALUES = Object.values(OPERATORS).map((op) => op.value);
 
@@ -55,9 +55,14 @@ const GridFilter = ({ id, criterias, hideJoinOperators = false, onApply, saveFil
   }, [valuesString, joinOperator, openModal]);
 
   const parseFilter = (filter) => {
-    const parser = criterias.find(
-      ({ key }) => key === filter.criteria
-    )?.customParser;
+    const criteria = criterias.find(({ key }) => key === filter.criteria);
+    const parser = criteria?.customParser;
+
+    if (!parser && ASYNC_VALUE_TYPES.includes(criteria?.values?.type)) {
+      console.error(
+        `GridFilter: criteria "${filter.criteria}" uses async value type "${criteria.values.type}" but defines no customParser — its value will not serialize into the API filter string correctly.`
+      );
+    }
 
     if (parser) {
       return parser(filter);
