@@ -21,13 +21,22 @@ const useGridFilter = (id) => {
 
   const resetFilters = () => dispatch(saveFilters(id));
 
+  // Lets the host push filters into the store from outside the dialog —
+  // e.g. applying a previously saved filter. The shape it expects matches
+  // what GridFilter persists itself: [{ criteria, operator, value, parsed }],
+  // so a saved filter's `criteria` array (as returned by the API) can be
+  // passed through directly.
+  const setFilters = (filters = [], joinOperator = JOIN_OPERATORS.ALL) =>
+    dispatch(saveFilters(id, filters, joinOperator));
+
   return {
     filterValues,
     filterCount: filterValues.length,
     joinOperator,
     parsedFilter,
     valuesWithIds,
-    resetFilters
+    resetFilters,
+    setFilters
   };
 };
 
