@@ -133,8 +133,29 @@ const { filterValues, parsedFilter, joinOperator, filterCount } =
 | `joinOperator` | `"all"` or `"any"`                                  |
 | `filterCount`  | Number of active filters (useful for badge counts)  |
 | `resetFilters` | Function — clears all active filters from the store |
+| `setFilters`   | Function `(filters, joinOperator?) => void` — pushes filters into the store from outside the dialog |
 
 The hook reads from `allGridFiltersState` in the Redux store, so it stays in sync with whatever was last applied via the dialog.
+
+# setting filters from the host (e.g. applying a saved filter)
+
+`setFilters(filters, joinOperator)` lets the host populate a `GridFilter`'s state without going through the dialog UI — for example, when the user picks a previously saved filter from some other "saved filters" feature. It writes straight to the Redux store under the hook's `id`, the same place `GridFilter` itself writes to on Apply.
+
+`filters` must be an array shaped like `[{ criteria, operator, value, parsed }]` — the same shape `GridFilter` produces internally and the shape returned in `onApply`. `parsed` should already contain the resolved API filter strings (`GridFilter` does not re-run `customParser` for filters set this way, since it has no React component instance to read `criterias`/`customParser` from at that point).
+
+If your saved filters are persisted via an API that round-trips exactly what `onApply` produced (criteria/operator/value/parsed per row), the saved `criteria` array can be passed to `setFilters` unmodified:
+
+```js
+import useGridFilter from "components/GridFilter/hooks/useGridFilter";
+
+const { setFilters } = useGridFilter("speakers-filter");
+
+const applySavedFilter = (savedFilter) => {
+  setFilters(savedFilter.criteria);
+};
+```
+
+Once set, `GridFilter`'s badge count and dialog rows pick the values up automatically (same as if the user had applied them by hand), and `parsedFilter` from the hook is immediately available to refetch data with — `setFilters` does not call `onApply`, so trigger any necessary refetch yourself after calling it.
 
 # hideJoinOperators
 
