@@ -124,6 +124,7 @@ export {default as MuiDropdown} from './mui/Dropdown'
 export {default as MuiRoundButton} from './mui/RoundButton'
 export {default as MuiToggleButtons} from './mui/ToggleButtons'
 export {GridFilter as MuiGridFilter, OPERATORS as FILTER_OPERATORS, JOIN_OPERATORS as FILTER_JOIN_OPERATORS, EMPTY_FILTER as FILTER_EMPTY_FILTER, useGridFilter, allFiltersReducer, saveFilters as saveGridFilters, SAVE_FILTERS } from './mui/GridFilter'
+export {MuiBaseCustomTheme} from './mui/MuiBaseCustomTheme'
 
 // these include 3rd party deps
 // export {default as ExtraQuestionsForm } from './extra-questions/index.js';
