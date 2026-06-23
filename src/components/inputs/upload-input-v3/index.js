@@ -142,7 +142,7 @@ const UploadInputV3 = ({
   const handleAddedFile = useCallback((file) => {
     setUploadingFiles(prev => [...prev, { name: file.name, size: file.size, progress: 0, complete: false }]);
     if (onUploadStart) onUploadStart(file);
-  }, []);
+  }, [onUploadStart]);
 
   const handleUploadProgress = useCallback((file, progress) => {
     setUploadingFiles(prev => prev.map(f =>
