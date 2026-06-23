@@ -20,7 +20,6 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
-import TablePagination from "@mui/material/TablePagination";
 import TableSortLabel from "@mui/material/TableSortLabel";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
@@ -30,13 +29,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { visuallyHidden } from "@mui/utils";
 import styles from "./mui-table-editable.module.less";
 
-import {
-  DEFAULT_PER_PAGE,
-  FIFTY_PER_PAGE,
-  TWENTY_PER_PAGE
-} from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
 import TableCellContent from "../table/table-cell-content";
+import CustomTablePagination from "../table/CustomTablePagination";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",
@@ -162,24 +157,6 @@ const MuiTableEditable = ({
 }) => {
   // State to track which cell is currently being edited
   const [editingCell, setEditingCell] = React.useState(null);
-
-  const handleChangePage = (_, newPage) => {
-    onPageChange(newPage + 1);
-  };
-
-  const handleChangeRowsPerPage = (ev) => {
-    onPerPageChange(ev.target.value);
-  };
-
-  const basePerPageOptions = [
-    DEFAULT_PER_PAGE,
-    TWENTY_PER_PAGE,
-    FIFTY_PER_PAGE
-  ];
-
-  const customPerPageOptions = basePerPageOptions.includes(perPage)
-    ? basePerPageOptions
-    : [...basePerPageOptions, perPage].sort((a, b) => a - b);
 
   const { sortCol, sortDir } = options;
 
@@ -382,28 +359,15 @@ const MuiTableEditable = ({
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={customPerPageOptions}
-          component="div"
-          count={totalRows ?? data.length}
-          rowsPerPage={perPage}
-          page={currentPage - 1}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage={T.translate("mui_table.rows_per_page")}
-          sx={{
-            ".MuiTablePagination-toolbar": {
-              alignItems: "baseline",
-              marginTop: "1.6rem"
-            },
-            ".MuiTablePagination-spacer": {
-              display: "none"
-            },
-            ".MuiTablePagination-displayedRows": {
-              marginLeft: "auto"
-            }
-          }}
-        />
+        {perPage && currentPage && onPageChange && (
+          <CustomTablePagination
+            totalRows={totalRows ?? data.length}
+            perPage={perPage}
+            currentPage={currentPage}
+            onPageChange={onPageChange}
+            onPerPageChange={onPerPageChange}
+          />
+        )}
       </Paper>
     </Box>
   );
