@@ -154,7 +154,7 @@ const FormItemTable = ({
             </TableCell>
             <TableCell sx={{ minWidth: 40 }} />
             {/* item level extra field */}
-            <TableCell sx={{ minWidth: 40 }}>
+            <TableCell sx={{ minWidth: 120 }}>
               {T.translate("sponsor_edit_form.total")}
             </TableCell>
             <TableCell sx={{ minWidth: 40 }}>
@@ -276,6 +276,7 @@ const FormItemTable = ({
                 fullWidth
                 label=""
                 size="small"
+                margin="none"
                 inCents
               />
             </TableCell>
