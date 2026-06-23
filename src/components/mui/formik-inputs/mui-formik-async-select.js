@@ -31,7 +31,8 @@ const MuiFormikAsyncAutocomplete = ({
   formatOption = (item) => ({ value: item.id.toString(), label: item.name }),
   formatSelectedValue = null,
   queryParams = [],
-  isMulti = false
+  isMulti = false,
+  ...rest
 }) => {
   const [field, meta, helpers] = useField(name);
   const [options, setOptions] = useState([]);
@@ -133,6 +134,7 @@ const MuiFormikAsyncAutocomplete = ({
           {option.label}
         </li>
       )}
+      {...rest}
     />
   );
 };
