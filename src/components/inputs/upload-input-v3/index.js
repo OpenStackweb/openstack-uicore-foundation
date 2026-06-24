@@ -11,7 +11,7 @@
  * limitations under the License.
  **/
 
-import React, { useState, useRef, useMemo, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useLayoutEffect, useEffect } from 'react';
 import T from "i18n-react/dist/i18n-react";
 import {
   Box,
@@ -69,6 +69,17 @@ const UploadInputV3 = ({
   const [uploadingFiles, setUploadingFiles] = useState([]);
   const [errorFiles, setErrorFiles] = useState([]);
   const [filePreviews, setFilePreviews] = useState({});
+  const filePreviewsRef = useRef({});
+  filePreviewsRef.current = filePreviews;
+  const uploadingFilesRef = useRef([]);
+  uploadingFilesRef.current = uploadingFiles;
+
+  useEffect(() => {
+    return () => {
+      Object.values(filePreviewsRef.current).forEach(url => { if (url) URL.revokeObjectURL(url); });
+      uploadingFilesRef.current.forEach(f => { if (f.previewUrl) URL.revokeObjectURL(f.previewUrl); });
+    };
+  }, []);
 
   const allowedExt = useMemo(() => {
     if (getAllowedExtensions) return getAllowedExtensions();
@@ -170,7 +181,12 @@ const UploadInputV3 = ({
 
   useLayoutEffect(() => {
     if (uploadingFiles.length === 0 || value.length === 0) return;
-    setUploadingFiles(prev => prev.filter(f => !f.complete));
+    const valueFilenames = new Set(value.map(f => f.filename));
+    setUploadingFiles(prev => prev.filter(f => {
+      if (!f.complete) return true;
+      // Only remove once the parent confirms receipt via value; untracked rows drop immediately.
+      return f.serverFilename ? !valueFilenames.has(f.serverFilename) : false;
+    }));
   }, [value]);
 
   const handleFileError = useCallback((file, message) => {
@@ -208,13 +224,20 @@ const UploadInputV3 = ({
 
   const wrappedOnUploadComplete = useCallback((response, dzId, dzData) => {
     // Mark fully-uploaded rows complete (covers HTTP 202 flow where handleFileCompleted was skipped).
-    // Guard against flipping rows whose bytes are still in flight when maxFiles > 1.
+    // Tag the specific matched row with serverFilename so the layout effect can remove it only
+    // once the parent confirms receipt via value — avoids pruning sibling rows in parallel uploads.
     setUploadingFiles(prev => {
-      if (response?.name && response?.size) {
-        const entry = prev.find(f => f.size === response.size && f.previewUrl);
-        if (entry) setFilePreviews(p => ({ ...p, [response.name]: entry.previewUrl }));
+      const serverFilename = response?.name;
+      const matchedEntry = response?.size
+        ? prev.find(f => f.size === response.size && f.previewUrl)
+        : null;
+      if (matchedEntry && serverFilename) {
+        setFilePreviews(p => ({ ...p, [serverFilename]: matchedEntry.previewUrl }));
       }
-      return prev.map(f => (f.progress >= 100 ? { ...f, complete: true } : f));
+      return prev.map(f => {
+        if (f.progress < 100) return f;
+        return { ...f, complete: true, ...(f === matchedEntry && serverFilename ? { serverFilename } : {}) };
+      });
     });
     if (onUploadComplete) onUploadComplete(response, dzId, dzData);
   }, [onUploadComplete]);
