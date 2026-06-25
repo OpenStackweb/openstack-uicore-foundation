@@ -221,8 +221,8 @@ const MuiTableSortable = ({
                                 } ${col.className}`}
                                 sx={{ fontWeight: "normal" }}
                               >
-                                {col.ellipsis ? (
-                                  <EllipsisTooltip title={cellContent}>
+                                {col.truncateText ? (
+                                  <EllipsisTooltip>
                                     {cellContent}
                                   </EllipsisTooltip>
                                 ) : (

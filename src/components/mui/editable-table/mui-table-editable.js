@@ -322,8 +322,8 @@ const MuiTableEditable = ({
                           }
                           validation={col.validation}
                         />
-                      ) : col.ellipsis ? (
-                        <EllipsisTooltip title={cellContent}>
+                      ) : col.truncateText ? (
+                        <EllipsisTooltip>
                           {cellContent}
                         </EllipsisTooltip>
                       ) : (

@@ -167,9 +167,9 @@ const MuiTable = ({
       ? col.render(row)
       : <span style={{ fontWeight: "normal" }}>{row[col.columnKey]}</span>;
 
-    if (col.ellipsis) {
+    if (col.truncateText) {
       return (
-        <EllipsisTooltip title={content}>
+        <EllipsisTooltip>
           {content}
         </EllipsisTooltip>
       );

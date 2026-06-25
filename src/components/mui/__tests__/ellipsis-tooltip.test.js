@@ -31,12 +31,12 @@ describe("EllipsisTooltip", () => {
   });
 
   test("renders children", () => {
-    render(<EllipsisTooltip title="tip"><span>content</span></EllipsisTooltip>);
+    render(<EllipsisTooltip><span>content</span></EllipsisTooltip>);
     expect(screen.getByText("content")).toBeInTheDocument();
   });
 
   test("wrapper span has truncation styles", () => {
-    render(<EllipsisTooltip title="tip"><span>content</span></EllipsisTooltip>);
+    render(<EllipsisTooltip><span>content</span></EllipsisTooltip>);
     const wrapper = screen.getByText("content").parentElement;
     expect(wrapper).toHaveStyle({
       overflow: "hidden",
@@ -49,15 +49,15 @@ describe("EllipsisTooltip", () => {
     scrollWidthSpy.mockReturnValue(200);
     offsetWidthSpy.mockReturnValue(100);
 
-    render(<EllipsisTooltip title="overflow tip"><span>long content</span></EllipsisTooltip>);
+    render(<EllipsisTooltip><span>long content</span></EllipsisTooltip>);
     await userEvent.hover(screen.getByText("long content").parentElement);
 
-    expect(await screen.findByRole("tooltip")).toHaveTextContent("overflow tip");
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("long content");
   });
 
   test("does not show tooltip when content fits", async () => {
     // scrollWidth (0) <= offsetWidth (0) → not overflowing
-    render(<EllipsisTooltip title="tip"><span>short</span></EllipsisTooltip>);
+    render(<EllipsisTooltip><span>short</span></EllipsisTooltip>);
     await userEvent.hover(screen.getByText("short").parentElement);
 
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
