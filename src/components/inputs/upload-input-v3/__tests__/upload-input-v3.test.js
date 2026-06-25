@@ -433,6 +433,27 @@ describe('UploadInputV3', () => {
       expect(screen.getByRole('img', { name: '246_sunset_def456.jpg' })).toHaveAttribute('src', 'blob:sunset.jpg');
     });
 
+    test('correctly maps previews for parallel uploads of images with identical file sizes', () => {
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'alpha.jpg', size: 10000, type: 'image/jpeg' });
+        dropzoneCallbacks.onAddedFile({ name: 'beta.jpg', size: 10000, type: 'image/jpeg' });
+        dropzoneCallbacks.onFileCompleted({ name: 'alpha.jpg', size: 10000 });
+        dropzoneCallbacks.onFileCompleted({ name: 'beta.jpg', size: 10000 });
+        dropzoneCallbacks.onUploadComplete({ name: 'server_alpha_111.jpg', size: 10000 }, 'test-upload', {});
+        dropzoneCallbacks.onUploadComplete({ name: 'server_beta_222.jpg', size: 10000 }, 'test-upload', {});
+      });
+
+      rerender(<UploadInputV3 {...defaultProps} maxFiles={2} value={[
+        { filename: 'server_alpha_111.jpg', size: 10000 },
+        { filename: 'server_beta_222.jpg', size: 10000 },
+      ]} />);
+
+      expect(screen.getByRole('img', { name: 'server_alpha_111.jpg' })).toHaveAttribute('src', 'blob:alpha.jpg');
+      expect(screen.getByRole('img', { name: 'server_beta_222.jpg' })).toHaveAttribute('src', 'blob:beta.jpg');
+    });
+
     test('revokes blob URL on error and does not assign it to the next upload', () => {
       const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
 

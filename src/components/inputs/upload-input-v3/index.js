@@ -242,7 +242,7 @@ const UploadInputV3 = ({
     setUploadingFiles(prev => {
       const serverFilename = response?.name;
       const matchedEntry = response?.size
-        ? prev.find(f => f.size === response.size && f.previewUrl)
+        ? prev.find(f => f.size === response.size && f.previewUrl && !f.serverFilename)
         : null;
       return prev.map(f => {
         if (f.progress < 100) return f;
