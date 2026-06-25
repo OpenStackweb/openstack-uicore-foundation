@@ -454,6 +454,19 @@ describe('UploadInputV3', () => {
       expect(screen.getByRole('img', { name: 'server_beta_222.jpg' })).toHaveAttribute('src', 'blob:beta.jpg');
     });
 
+    test('revokes blob URL when Dropzone fires removedfile directly without the delete button', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo.jpg', size: 50000, type: 'image/jpeg' });
+      });
+      act(() => {
+        dropzoneCallbacks.onFileRemoved({ name: 'photo.jpg', size: 50000 });
+      });
+
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:photo.jpg');
+    });
+
     test('revokes blob URL on error and does not assign it to the next upload', () => {
       const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
 
