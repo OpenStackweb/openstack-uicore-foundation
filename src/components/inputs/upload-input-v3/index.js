@@ -241,12 +241,19 @@ const UploadInputV3 = ({
     // can transfer its previewUrl to filePreviews once the parent confirms via value.
     setUploadingFiles(prev => {
       const serverFilename = response?.name;
-      const matchedEntry = response?.size
+      // Image files: match by size + unclaimed previewUrl.
+      // Non-image files: match by size among unclaimed entries (no previewUrl).
+      // Either way, only THIS file is marked complete - prevents sibling 202 files
+      // at 100% progress from being prematurely completed before their polling finishes.
+      const matchedByPreview = response?.size
         ? prev.find(f => f.size === response.size && f.previewUrl && !f.serverFilename)
         : null;
+      const match = matchedByPreview ?? (response?.size
+        ? prev.find(f => f.size === response.size && !f.previewUrl && !f.serverFilename)
+        : null);
       return prev.map(f => {
-        if (f.progress < 100) return f;
-        return { ...f, complete: true, ...(f === matchedEntry && serverFilename ? { serverFilename } : {}) };
+        if (f !== match) return f;
+        return { ...f, complete: true, ...(serverFilename ? { serverFilename } : {}) };
       });
     });
     if (onUploadComplete) onUploadComplete(response, dzId, dzData);

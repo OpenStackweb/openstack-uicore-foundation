@@ -560,12 +560,12 @@ describe('UploadInputV3', () => {
         dropzoneCallbacks.onAddedFile({ name: 'video.mp4', size: 5000000 });
       });
 
-      // All chunks finish uploading — progress reaches 100 before async polling starts
+      // All chunks finish uploading - progress reaches 100 before async polling starts
       act(() => {
         dropzoneCallbacks.onUploadProgress({ name: 'video.mp4', size: 5000000 }, 100);
       });
 
-      // handleFileCompleted fires with _asyncProcessing flag (HTTP 202 case) — file stays Loading
+      // handleFileCompleted fires with _asyncProcessing flag (HTTP 202 case) - file stays Loading
       act(() => {
         dropzoneCallbacks.onFileCompleted({ name: 'video.mp4', size: 5000000, _asyncProcessing: true });
       });
@@ -574,9 +574,9 @@ describe('UploadInputV3', () => {
       expect(screen.getByText(/Loading/)).toBeInTheDocument();
       expect(screen.queryByText(/Complete/)).not.toBeInTheDocument();
 
-      // Polling completes — onUploadComplete fires after async processing finishes
+      // Polling completes - onUploadComplete fires after async processing finishes
       act(() => {
-        dropzoneCallbacks.onUploadComplete({ name: 'video_final.mp4' }, 'test-upload', {});
+        dropzoneCallbacks.onUploadComplete({ name: 'video_final.mp4', size: 5000000 }, 'test-upload', {});
       });
 
       // Assert: file should now show "Complete"
@@ -601,12 +601,12 @@ describe('UploadInputV3', () => {
       expect(screen.getByText('file-b.png')).toBeInTheDocument();
       expect(screen.getAllByText(/Loading/)).toHaveLength(2);
 
-      // File A finishes uploading all chunks — progress reaches 100
+      // File A finishes uploading all chunks - progress reaches 100
       act(() => {
         dropzoneCallbacks.onUploadProgress({ name: 'file-a.png', size: 10000 }, 100);
       });
 
-      // File B is still mid-upload — progress at 40
+      // File B is still mid-upload - progress at 40
       act(() => {
         dropzoneCallbacks.onUploadProgress({ name: 'file-b.png', size: 20000 }, 40);
       });
@@ -621,9 +621,41 @@ describe('UploadInputV3', () => {
         dropzoneCallbacks.onUploadComplete({ name: 'file-a.png' }, 'test-upload', {});
       });
 
-      // Assert: file B should still show "Loading" — it has not finished uploading
+      // Assert: file B should still show "Loading" - it has not finished uploading
       expect(screen.getByText('file-b.png')).toBeInTheDocument();
       expect(screen.getByText(/Loading/)).toBeInTheDocument();
+    });
+
+    test('HTTP 202 parallel: onUploadComplete for one file does not prematurely mark sibling file as complete', () => {
+      // Two same-size non-image files both go through async HTTP 202 path.
+      // When polling completes for file A only, file B must stay Loading.
+      render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'clip-a.mp4', size: 8000000 });
+        dropzoneCallbacks.onAddedFile({ name: 'clip-b.mp4', size: 8000000 });
+      });
+
+      // Both hit 100% progress and get HTTP 202 - neither is complete yet
+      act(() => {
+        dropzoneCallbacks.onUploadProgress({ name: 'clip-a.mp4', size: 8000000 }, 100);
+        dropzoneCallbacks.onUploadProgress({ name: 'clip-b.mp4', size: 8000000 }, 100);
+        dropzoneCallbacks.onFileCompleted({ name: 'clip-a.mp4', size: 8000000, _asyncProcessing: true });
+        dropzoneCallbacks.onFileCompleted({ name: 'clip-b.mp4', size: 8000000, _asyncProcessing: true });
+      });
+
+      expect(screen.getAllByText(/Loading/)).toHaveLength(2);
+
+      // Only clip-a.mp4 polling finishes
+      act(() => {
+        dropzoneCallbacks.onUploadComplete({ name: 'clip-a_server.mp4', size: 8000000 }, 'test-upload', {});
+      });
+
+      // clip-b must still be Loading - it has not finished async processing
+      expect(screen.getByText('clip-b.mp4')).toBeInTheDocument();
+      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      // Only one Loading entry should remain (clip-b)
+      expect(screen.getAllByText(/Loading/)).toHaveLength(1);
     });
   });
 });
