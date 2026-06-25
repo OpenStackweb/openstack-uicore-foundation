@@ -180,8 +180,22 @@ const UploadInputV3 = ({
   }, []);
 
   useLayoutEffect(() => {
-    if (uploadingFiles.length === 0 || value.length === 0) return;
+    const currentUploading = uploadingFilesRef.current;
+    if (currentUploading.length === 0 || value.length === 0) return;
     const valueFilenames = new Set(value.map(f => f.filename));
+
+    // Transfer blob previews to filePreviews before removing confirmed entries,
+    // so the committed value row can display the preview immediately.
+    const newPreviews = {};
+    currentUploading.forEach(f => {
+      if (f.complete && f.serverFilename && f.previewUrl && valueFilenames.has(f.serverFilename)) {
+        newPreviews[f.serverFilename] = f.previewUrl;
+      }
+    });
+    if (Object.keys(newPreviews).length > 0) {
+      setFilePreviews(p => ({ ...p, ...newPreviews }));
+    }
+
     setUploadingFiles(prev => prev.filter(f => {
       if (!f.complete) return true;
       // Only remove once the parent confirms receipt via value; untracked rows drop immediately.
@@ -223,17 +237,13 @@ const UploadInputV3 = ({
   }, []);
 
   const wrappedOnUploadComplete = useCallback((response, dzId, dzData) => {
-    // Mark fully-uploaded rows complete (covers HTTP 202 flow where handleFileCompleted was skipped).
-    // Tag the specific matched row with serverFilename so the layout effect can remove it only
-    // once the parent confirms receipt via value — avoids pruning sibling rows in parallel uploads.
+    // Pure updater: tag the matched entry with serverFilename so useLayoutEffect
+    // can transfer its previewUrl to filePreviews once the parent confirms via value.
     setUploadingFiles(prev => {
       const serverFilename = response?.name;
       const matchedEntry = response?.size
         ? prev.find(f => f.size === response.size && f.previewUrl)
         : null;
-      if (matchedEntry && serverFilename) {
-        setFilePreviews(p => ({ ...p, [serverFilename]: matchedEntry.previewUrl }));
-      }
       return prev.map(f => {
         if (f.progress < 100) return f;
         return { ...f, complete: true, ...(f === matchedEntry && serverFilename ? { serverFilename } : {}) };
