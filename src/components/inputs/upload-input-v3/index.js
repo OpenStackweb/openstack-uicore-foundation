@@ -166,6 +166,8 @@ const UploadInputV3 = ({
   }, []);
 
   const handleFileRemoved = useCallback((file) => {
+    const entry = uploadingFilesRef.current.find(f => f.name === file.name && f.size === file.size);
+    if (entry?.previewUrl) URL.revokeObjectURL(entry.previewUrl);
     setUploadingFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
   }, []);
 
@@ -223,11 +225,9 @@ const UploadInputV3 = ({
   }, []);
 
   const handleDeleteUploading = useCallback((file) => {
-    setUploadingFiles(prev => {
-      const entry = prev.find(f => f.name === file.name && f.size === file.size);
-      if (entry?.previewUrl) URL.revokeObjectURL(entry.previewUrl);
-      return prev.filter(f => !(f.name === file.name && f.size === file.size));
-    });
+    const entry = uploadingFilesRef.current.find(f => f.name === file.name && f.size === file.size);
+    if (entry?.previewUrl) URL.revokeObjectURL(entry.previewUrl);
+    setUploadingFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
     if (dropzoneInstanceRef.current) {
       const dzFile = dropzoneInstanceRef.current.files?.find(
         f => f.name === file.name && f.size === file.size
