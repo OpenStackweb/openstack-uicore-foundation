@@ -454,6 +454,31 @@ describe('UploadInputV3', () => {
       expect(screen.getByRole('img', { name: 'server_beta_222.jpg' })).toHaveAttribute('src', 'blob:beta.jpg');
     });
 
+    test('original_name in response resolves preview assignment for same-size parallel images', () => {
+      // When the API returns original_name, same-size files are matched by name not size.
+      // alpha.jpg and beta.jpg are the same size - without original_name the previews
+      // could be swapped; with it they must be correct regardless of response order.
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'alpha.jpg', size: 10000, type: 'image/jpeg' });
+        dropzoneCallbacks.onAddedFile({ name: 'beta.jpg', size: 10000, type: 'image/jpeg' });
+        dropzoneCallbacks.onFileCompleted({ name: 'alpha.jpg', size: 10000 });
+        dropzoneCallbacks.onFileCompleted({ name: 'beta.jpg', size: 10000 });
+        // Server returns beta first (out-of-order), both with original_name
+        dropzoneCallbacks.onUploadComplete({ name: 'server_beta_222.jpg', size: 10000, original_name: 'beta.jpg' }, 'test-upload', {});
+        dropzoneCallbacks.onUploadComplete({ name: 'server_alpha_111.jpg', size: 10000, original_name: 'alpha.jpg' }, 'test-upload', {});
+      });
+
+      rerender(<UploadInputV3 {...defaultProps} maxFiles={2} value={[
+        { filename: 'server_alpha_111.jpg', size: 10000 },
+        { filename: 'server_beta_222.jpg', size: 10000 },
+      ]} />);
+
+      expect(screen.getByRole('img', { name: 'server_alpha_111.jpg' })).toHaveAttribute('src', 'blob:alpha.jpg');
+      expect(screen.getByRole('img', { name: 'server_beta_222.jpg' })).toHaveAttribute('src', 'blob:beta.jpg');
+    });
+
     test('revokes blob URL when Dropzone fires removedfile directly without the delete button', () => {
       render(<UploadInputV3 {...defaultProps} />);
 
