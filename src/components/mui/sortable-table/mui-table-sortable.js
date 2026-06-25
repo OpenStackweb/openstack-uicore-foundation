@@ -38,7 +38,7 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
-import EllipsisTooltip from "../ellipsis-tooltip";
+import TruncateText from "../truncate-text";
 
 const MuiTableSortable = ({
   columns = [],
@@ -222,9 +222,9 @@ const MuiTableSortable = ({
                                 sx={{ fontWeight: "normal" }}
                               >
                                 {col.truncateText ? (
-                                  <EllipsisTooltip>
-                                    {cellContent}
-                                  </EllipsisTooltip>
+                                  <TruncateText charLimit={col.truncateText}>
+                                    {col.render?.(row) ?? row[col.columnKey]}
+                                  </TruncateText>
                                 ) : (
                                   cellContent
                                 )}

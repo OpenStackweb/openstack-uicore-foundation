@@ -38,7 +38,7 @@ import showConfirmDialog from "../showConfirmDialog";
 import styles from "./mui-table.module.less";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PropTypes from "prop-types";
-import EllipsisTooltip from "../ellipsis-tooltip";
+import TruncateText from "../truncate-text";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",
@@ -163,17 +163,17 @@ const MuiTable = ({
       );
     }
 
+    if (col.truncateText) {
+      return (
+        <TruncateText charLimit={col.truncateText}>
+          {col.render ? col.render(row) : row[col.columnKey]}
+        </TruncateText>
+      );
+    }
+
     const content = col.render
       ? col.render(row)
       : <span style={{ fontWeight: "normal" }}>{row[col.columnKey]}</span>;
-
-    if (col.truncateText) {
-      return (
-        <EllipsisTooltip>
-          {content}
-        </EllipsisTooltip>
-      );
-    }
 
     return content;
   };

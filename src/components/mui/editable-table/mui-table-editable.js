@@ -36,7 +36,7 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
-import EllipsisTooltip from "../ellipsis-tooltip";
+import TruncateText from "../truncate-text";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",
@@ -323,9 +323,9 @@ const MuiTableEditable = ({
                           validation={col.validation}
                         />
                       ) : col.truncateText ? (
-                        <EllipsisTooltip>
-                          {cellContent}
-                        </EllipsisTooltip>
+                        <TruncateText charLimit={col.truncateText}>
+                          {col.render ? col.render(row) : row[col.columnKey]}
+                        </TruncateText>
                       ) : (
                         cellContent
                       )}
