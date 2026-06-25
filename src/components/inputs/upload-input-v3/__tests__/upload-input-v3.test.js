@@ -346,6 +346,176 @@ describe('UploadInputV3', () => {
     });
   });
 
+  describe('Image Preview', () => {
+    beforeEach(() => {
+      URL.createObjectURL = jest.fn(file => `blob:${file.name}`);
+      URL.revokeObjectURL = jest.fn();
+    });
+
+    afterEach(() => {
+      delete URL.createObjectURL;
+      delete URL.revokeObjectURL;
+    });
+
+    test('shows preview immediately when an image file is added', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo.jpg', size: 136000, type: 'image/jpeg' });
+      });
+      const img = screen.getByRole('img', { name: 'photo.jpg' });
+      expect(img).toHaveAttribute('src', 'blob:photo.jpg');
+    });
+
+    test('shows no preview for non-image files', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'document.pdf', size: 50000, type: 'application/pdf' });
+      });
+      expect(screen.queryByRole('img', { name: 'document.pdf' })).not.toBeInTheDocument();
+    });
+
+    test('preserves blob URL preview after value updates with server-renamed filename', () => {
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} />);
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo.jpg', size: 136000, type: 'image/jpeg' });
+        dropzoneCallbacks.onFileCompleted({ name: 'photo.jpg', size: 136000 });
+        dropzoneCallbacks.onUploadComplete({ name: 'server_photo_abc123.jpg', size: 136000 }, 'test-upload', {});
+      });
+
+      rerender(<UploadInputV3 {...defaultProps} value={[{ filename: 'server_photo_abc123.jpg', size: 136000 }]} />);
+
+      const img = screen.getByRole('img', { name: 'server_photo_abc123.jpg' });
+      expect(img).toHaveAttribute('src', 'blob:photo.jpg');
+    });
+
+    test('revokes blob URL on cancel and does not assign it to the next upload', () => {
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo-a.jpg', size: 10000, type: 'image/jpeg' });
+      });
+      act(() => { fireEvent.click(screen.getByRole('button')); });
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:photo-a.jpg');
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo-b.jpg', size: 20000, type: 'image/jpeg' });
+        dropzoneCallbacks.onFileCompleted({ name: 'photo-b.jpg', size: 20000 });
+        dropzoneCallbacks.onUploadComplete({ name: 'server_photo-b_xyz.jpg', size: 20000 }, 'test-upload', {});
+      });
+
+      rerender(<UploadInputV3 {...defaultProps} value={[{ filename: 'server_photo-b_xyz.jpg', size: 20000 }]} maxFiles={2} />);
+
+      const img = screen.getByRole('img', { name: 'server_photo-b_xyz.jpg' });
+      expect(img).toHaveAttribute('src', 'blob:photo-b.jpg');
+      expect(img).not.toHaveAttribute('src', 'blob:photo-a.jpg');
+    });
+
+    test('correctly maps previews for parallel uploads using response size', () => {
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'sunset.jpg', size: 10000, type: 'image/jpeg' });
+        dropzoneCallbacks.onAddedFile({ name: 'portrait.jpg', size: 20000, type: 'image/jpeg' });
+        dropzoneCallbacks.onFileCompleted({ name: 'sunset.jpg', size: 10000 });
+        dropzoneCallbacks.onFileCompleted({ name: 'portrait.jpg', size: 20000 });
+        // server returns files in reverse order
+        dropzoneCallbacks.onUploadComplete({ name: '246_portrait_abc123.jpg', size: 20000 }, 'test-upload', {});
+        dropzoneCallbacks.onUploadComplete({ name: '246_sunset_def456.jpg', size: 10000 }, 'test-upload', {});
+      });
+
+      rerender(<UploadInputV3 {...defaultProps} maxFiles={2} value={[
+        { filename: '246_portrait_abc123.jpg', size: 20000 },
+        { filename: '246_sunset_def456.jpg', size: 10000 },
+      ]} />);
+
+      expect(screen.getByRole('img', { name: '246_portrait_abc123.jpg' })).toHaveAttribute('src', 'blob:portrait.jpg');
+      expect(screen.getByRole('img', { name: '246_sunset_def456.jpg' })).toHaveAttribute('src', 'blob:sunset.jpg');
+    });
+
+    test('correctly maps previews for parallel uploads of images with identical file sizes', () => {
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'alpha.jpg', size: 10000, type: 'image/jpeg' });
+        dropzoneCallbacks.onAddedFile({ name: 'beta.jpg', size: 10000, type: 'image/jpeg' });
+        dropzoneCallbacks.onFileCompleted({ name: 'alpha.jpg', size: 10000 });
+        dropzoneCallbacks.onFileCompleted({ name: 'beta.jpg', size: 10000 });
+        dropzoneCallbacks.onUploadComplete({ name: 'server_alpha_111.jpg', size: 10000 }, 'test-upload', {});
+        dropzoneCallbacks.onUploadComplete({ name: 'server_beta_222.jpg', size: 10000 }, 'test-upload', {});
+      });
+
+      rerender(<UploadInputV3 {...defaultProps} maxFiles={2} value={[
+        { filename: 'server_alpha_111.jpg', size: 10000 },
+        { filename: 'server_beta_222.jpg', size: 10000 },
+      ]} />);
+
+      expect(screen.getByRole('img', { name: 'server_alpha_111.jpg' })).toHaveAttribute('src', 'blob:alpha.jpg');
+      expect(screen.getByRole('img', { name: 'server_beta_222.jpg' })).toHaveAttribute('src', 'blob:beta.jpg');
+    });
+
+    test('original_name in response resolves preview assignment for same-size parallel images', () => {
+      // When the API returns original_name, same-size files are matched by name not size.
+      // alpha.jpg and beta.jpg are the same size - without original_name the previews
+      // could be swapped; with it they must be correct regardless of response order.
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'alpha.jpg', size: 10000, type: 'image/jpeg' });
+        dropzoneCallbacks.onAddedFile({ name: 'beta.jpg', size: 10000, type: 'image/jpeg' });
+        dropzoneCallbacks.onFileCompleted({ name: 'alpha.jpg', size: 10000 });
+        dropzoneCallbacks.onFileCompleted({ name: 'beta.jpg', size: 10000 });
+        // Server returns beta first (out-of-order), both with original_name
+        dropzoneCallbacks.onUploadComplete({ name: 'server_beta_222.jpg', size: 10000, original_name: 'beta.jpg' }, 'test-upload', {});
+        dropzoneCallbacks.onUploadComplete({ name: 'server_alpha_111.jpg', size: 10000, original_name: 'alpha.jpg' }, 'test-upload', {});
+      });
+
+      rerender(<UploadInputV3 {...defaultProps} maxFiles={2} value={[
+        { filename: 'server_alpha_111.jpg', size: 10000 },
+        { filename: 'server_beta_222.jpg', size: 10000 },
+      ]} />);
+
+      expect(screen.getByRole('img', { name: 'server_alpha_111.jpg' })).toHaveAttribute('src', 'blob:alpha.jpg');
+      expect(screen.getByRole('img', { name: 'server_beta_222.jpg' })).toHaveAttribute('src', 'blob:beta.jpg');
+    });
+
+    test('revokes blob URL when Dropzone fires removedfile directly without the delete button', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo.jpg', size: 50000, type: 'image/jpeg' });
+      });
+      act(() => {
+        dropzoneCallbacks.onFileRemoved({ name: 'photo.jpg', size: 50000 });
+      });
+
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:photo.jpg');
+    });
+
+    test('revokes blob URL on error and does not assign it to the next upload', () => {
+      const { rerender } = render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo-a.jpg', size: 10000, type: 'image/jpeg' });
+        dropzoneCallbacks.onFileError({ name: 'photo-a.jpg', size: 10000 }, 'Upload failed');
+      });
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:photo-a.jpg');
+
+      act(() => { fireEvent.click(screen.getByRole('button')); });
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'photo-b.jpg', size: 20000, type: 'image/jpeg' });
+        dropzoneCallbacks.onFileCompleted({ name: 'photo-b.jpg', size: 20000 });
+        dropzoneCallbacks.onUploadComplete({ name: 'server_photo-b_xyz.jpg', size: 20000 }, 'test-upload', {});
+      });
+
+      rerender(<UploadInputV3 {...defaultProps} value={[{ filename: 'server_photo-b_xyz.jpg', size: 20000 }]} maxFiles={2} />);
+
+      const img = screen.getByRole('img', { name: 'server_photo-b_xyz.jpg' });
+      expect(img).toHaveAttribute('src', 'blob:photo-b.jpg');
+      expect(img).not.toHaveAttribute('src', 'blob:photo-a.jpg');
+    });
+  });
+
   describe('Edge Cases', () => {
     test('handles empty value array', () => {
       const { container } = render(<UploadInputV3 {...defaultProps} value={[]} />);
@@ -415,12 +585,12 @@ describe('UploadInputV3', () => {
         dropzoneCallbacks.onAddedFile({ name: 'video.mp4', size: 5000000 });
       });
 
-      // All chunks finish uploading — progress reaches 100 before async polling starts
+      // All chunks finish uploading - progress reaches 100 before async polling starts
       act(() => {
         dropzoneCallbacks.onUploadProgress({ name: 'video.mp4', size: 5000000 }, 100);
       });
 
-      // handleFileCompleted fires with _asyncProcessing flag (HTTP 202 case) — file stays Loading
+      // handleFileCompleted fires with _asyncProcessing flag (HTTP 202 case) - file stays Loading
       act(() => {
         dropzoneCallbacks.onFileCompleted({ name: 'video.mp4', size: 5000000, _asyncProcessing: true });
       });
@@ -429,9 +599,9 @@ describe('UploadInputV3', () => {
       expect(screen.getByText(/Loading/)).toBeInTheDocument();
       expect(screen.queryByText(/Complete/)).not.toBeInTheDocument();
 
-      // Polling completes — onUploadComplete fires after async processing finishes
+      // Polling completes - onUploadComplete fires after async processing finishes
       act(() => {
-        dropzoneCallbacks.onUploadComplete({ name: 'video_final.mp4' }, 'test-upload', {});
+        dropzoneCallbacks.onUploadComplete({ name: 'video_final.mp4', size: 5000000 }, 'test-upload', {});
       });
 
       // Assert: file should now show "Complete"
@@ -456,12 +626,12 @@ describe('UploadInputV3', () => {
       expect(screen.getByText('file-b.png')).toBeInTheDocument();
       expect(screen.getAllByText(/Loading/)).toHaveLength(2);
 
-      // File A finishes uploading all chunks — progress reaches 100
+      // File A finishes uploading all chunks - progress reaches 100
       act(() => {
         dropzoneCallbacks.onUploadProgress({ name: 'file-a.png', size: 10000 }, 100);
       });
 
-      // File B is still mid-upload — progress at 40
+      // File B is still mid-upload - progress at 40
       act(() => {
         dropzoneCallbacks.onUploadProgress({ name: 'file-b.png', size: 20000 }, 40);
       });
@@ -476,9 +646,41 @@ describe('UploadInputV3', () => {
         dropzoneCallbacks.onUploadComplete({ name: 'file-a.png' }, 'test-upload', {});
       });
 
-      // Assert: file B should still show "Loading" — it has not finished uploading
+      // Assert: file B should still show "Loading" - it has not finished uploading
       expect(screen.getByText('file-b.png')).toBeInTheDocument();
       expect(screen.getByText(/Loading/)).toBeInTheDocument();
+    });
+
+    test('HTTP 202 parallel: onUploadComplete for one file does not prematurely mark sibling file as complete', () => {
+      // Two same-size non-image files both go through async HTTP 202 path.
+      // When polling completes for file A only, file B must stay Loading.
+      render(<UploadInputV3 {...defaultProps} value={[]} maxFiles={2} />);
+
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'clip-a.mp4', size: 8000000 });
+        dropzoneCallbacks.onAddedFile({ name: 'clip-b.mp4', size: 8000000 });
+      });
+
+      // Both hit 100% progress and get HTTP 202 - neither is complete yet
+      act(() => {
+        dropzoneCallbacks.onUploadProgress({ name: 'clip-a.mp4', size: 8000000 }, 100);
+        dropzoneCallbacks.onUploadProgress({ name: 'clip-b.mp4', size: 8000000 }, 100);
+        dropzoneCallbacks.onFileCompleted({ name: 'clip-a.mp4', size: 8000000, _asyncProcessing: true });
+        dropzoneCallbacks.onFileCompleted({ name: 'clip-b.mp4', size: 8000000, _asyncProcessing: true });
+      });
+
+      expect(screen.getAllByText(/Loading/)).toHaveLength(2);
+
+      // Only clip-a.mp4 polling finishes
+      act(() => {
+        dropzoneCallbacks.onUploadComplete({ name: 'clip-a_server.mp4', size: 8000000 }, 'test-upload', {});
+      });
+
+      // clip-b must still be Loading - it has not finished async processing
+      expect(screen.getByText('clip-b.mp4')).toBeInTheDocument();
+      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      // Only one Loading entry should remain (clip-b)
+      expect(screen.getAllByText(/Loading/)).toHaveLength(1);
     });
   });
 });
