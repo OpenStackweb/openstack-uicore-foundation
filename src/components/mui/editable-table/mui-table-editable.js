@@ -187,7 +187,6 @@ const MuiTableEditable = ({
     options.disableProp && row[options.disableProp] ? ARCHIVED_CELL_SX : null;
 
   const getCellSx = (row, baseSx = {}) => ({
-    wordBreak: "break-all",
     ...baseSx,
     ...(getArchivedCellSx(row) || {})
   });
@@ -297,8 +296,7 @@ const MuiTableEditable = ({
                       onClick={() => handleCellClick(row, col.columnKey)}
                       sx={getCellSx(row, {
                         cursor: isEditable(col, row) ? "pointer" : "default",
-                        padding: isEditable(col, row) ? "8px 16px" : undefined,
-                        fontWeight: "normal"
+                        padding: isEditable(col, row) ? "8px 16px" : undefined
                       })}
                     >
                       {isEditable(col, row) ? (

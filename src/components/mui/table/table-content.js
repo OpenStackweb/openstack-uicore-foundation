@@ -4,28 +4,31 @@ import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import TruncateText from "../truncate-text";
 
+const contentStyle = {
+  fontWeight: "normal",
+  wordBreak: "break-all",
+};
+
 const TableContent = ({ row, col }) => {
-  if (isBoolean(row[col.columnKey])) {
-    return row[col.columnKey] ? (
-      <CheckIcon fontSize="large" />
-    ) : (
-      <CloseIcon fontSize="large" />
-    );
-  }
-
-  if (col.render) {
-    return col.render(row);
-  }
-
-  if (col.truncateText) {
-    return (
-      <TruncateText charLimit={col.truncateText}>
-        {row[col.columnKey]}
-      </TruncateText>
-    );
-  }
-
-  return <span style={{ fontWeight: "normal" }}>{row[col.columnKey]}</span>;
+  return (
+    <span style={contentStyle}>
+      {isBoolean(row[col.columnKey]) ? (
+        row[col.columnKey] ? (
+          <CheckIcon fontSize="large" />
+        ) : (
+          <CloseIcon fontSize="large" />
+        )
+      ) : col.render ? (
+        col.render(row)
+      ) : col.truncateText ? (
+        <TruncateText charLimit={col.truncateText}>
+          {row[col.columnKey]}
+        </TruncateText>
+      ) : (
+        row[col.columnKey]
+      )}
+    </span>
+  );
 };
 
 export default TableContent;

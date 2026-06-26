@@ -217,7 +217,6 @@ const MuiTableSortable = ({
                                 className={`${
                                   col.dottedBorder && styles.dottedBorderLeft
                                 } ${col.className}`}
-                                sx={{ fontWeight: "normal", wordBreak: "break-all" }}
                               >
                                 <TableContent row={row} col={col} />
                               </TableCell>

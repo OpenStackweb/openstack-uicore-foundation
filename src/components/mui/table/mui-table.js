@@ -116,8 +116,6 @@ const MuiTable = ({
   })
 
   const getCellSx = (row, col) => ({
-    fontWeight: "normal",
-    wordBreak: "break-all",
     ...(col.width && {
       width: col.width,
       minWidth: col.width,
