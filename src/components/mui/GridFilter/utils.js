@@ -27,7 +27,9 @@ export const OPERATORS = {
   BETWEEN_STRICT: {
     value: "()",
     label: T.translate("grid_filter.operators.between_strict")
-  }
+  },
+  BEFORE: { value: "<=", label: T.translate("grid_filter.operators.before") },
+  AFTER: { value: ">=", label: T.translate("grid_filter.operators.after") }
 };
 
 export const JOIN_OPERATORS = {
@@ -41,3 +43,8 @@ export const EMPTY_FILTER = {
   value: null,
   id: "new"
 };
+
+// ValueInput types whose stored value is an option object (or array of
+// option objects), not a plain scalar — these always require a customParser
+// since the default parseFilter only knows how to serialize scalars.
+export const ASYNC_VALUE_TYPES = ["asyncSelect", "speaker", "company"];

@@ -83,32 +83,37 @@ const Filter = ({ id, value, criterias, onChange, onAdd, onDelete }) => {
     <Grid2 container spacing={2} sx={{ alignItems: "center", mb: 2 }}>
       <Grid2 size={11}>
         <Box sx={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <Dropdown
-            id={`${id}-column`}
-            value={value?.criteria || ""}
-            placeholder={T.translate("grid_filter.select_criteria")}
-            options={criteriaOptions}
-            onChange={handleChangeCriteria}
-          />
-          <Dropdown
-            id={`${id}-operator`}
-            value={value?.operator || ""}
-            placeholder={T.translate("grid_filter.select_operator")}
-            options={operatorOptions}
-            disabled={!value?.criteria}
-            onChange={handleChangeOperator}
-          />
-          <ValueInput
-            id={`${id}-value`}
-            value={value?.value ?? defaultValue}
-            type={valueSettings.type}
-            placeholder={T.translate("grid_filter.select_values")}
-            disabled={!value?.criteria}
-            // eslint-disable-next-line react/jsx-props-no-spreading
-            {...valueSettings.props}
-            options={valueOptions}
-            onChange={handleChangeValue}
-          />
+          <Box sx={{ flex: "0 0 220px" }}>
+            <Dropdown
+              id={`${id}-column`}
+              value={value?.criteria || ""}
+              placeholder={T.translate("grid_filter.select_criteria")}
+              options={criteriaOptions}
+              onChange={handleChangeCriteria}
+            />
+          </Box>
+          <Box sx={{ flex: "0 0 220px" }}>
+            <Dropdown
+              id={`${id}-operator`}
+              value={value?.operator || ""}
+              placeholder={T.translate("grid_filter.select_operator")}
+              options={operatorOptions}
+              disabled={!value?.criteria}
+              onChange={handleChangeOperator}
+            />
+          </Box>
+          <Box sx={{ flex: "1 1 auto", minWidth: 0 }}>
+            <ValueInput
+              id={`${id}-value`}
+              value={value?.value ?? defaultValue}
+              type={valueSettings.type}
+              disabled={!value?.criteria}
+              // eslint-disable-next-line react/jsx-props-no-spreading
+              {...valueSettings.props}
+              options={valueOptions}
+              onChange={handleChangeValue}
+            />
+          </Box>
         </Box>
       </Grid2>
       <Grid2 size={1}>

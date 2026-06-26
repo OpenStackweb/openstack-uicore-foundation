@@ -9,10 +9,16 @@ import configureStore from "redux-mock-store";
 import thunk from "redux-thunk";
 import { GridFilter, OPERATORS, JOIN_OPERATORS, SAVE_FILTERS } from "../GridFilter";
 import Filter from "../GridFilter/components/Filter";
+import { querySpeakers, queryCompanies } from "../../../utils/query-actions";
 
 jest.mock("i18n-react/dist/i18n-react", () => ({
   __esModule: true,
   default: { translate: (key) => key }
+}));
+
+jest.mock("../../../utils/query-actions", () => ({
+  querySpeakers: jest.fn((summitId, input, callback) => callback([])),
+  queryCompanies: jest.fn((input, callback) => callback([]))
 }));
 
 // MUI Fade never fires its exit callback in jsdom (no CSS transition events),
@@ -23,6 +29,36 @@ jest.mock(
     ({ children, in: inProp }) =>
       inProp ? children : null
 );
+
+jest.mock("@mui/x-date-pickers/LocalizationProvider", () => ({
+  LocalizationProvider: ({ children }) => children
+}));
+
+jest.mock("@mui/x-date-pickers/AdapterMoment", () => ({
+  AdapterMoment: function AdapterMoment() {}
+}));
+
+// stub DateTimePicker as a plain input; clicking it fires onChange with a
+// fixed moment so tests can assert the resulting unix timestamp.
+jest.mock("@mui/x-date-pickers/DateTimePicker", () => ({
+  DateTimePicker: ({ value, onChange, views, format, slotProps }) => {
+    const React = require("react");
+    const moment = require("moment-timezone");
+    const tf = slotProps?.textField || {};
+    return (
+      <input
+        data-testid={tf.id}
+        readOnly
+        data-views={views.join(",")}
+        data-format={format}
+        placeholder={tf.placeholder}
+        value={value ? value.unix() : ""}
+        onChange={() => {}}
+        onClick={() => onChange(moment.unix(1700000000))}
+      />
+    );
+  }
+}));
 
 const mockStore = configureStore([thunk]);
 
@@ -235,6 +271,315 @@ describe("Filter - options as a function", () => {
   });
 });
 
+describe("Filter - datetime value type", () => {
+  const dateCriteria = {
+    key: "created",
+    label: "Created",
+    operators: [OPERATORS.BEFORE, OPERATORS.AFTER],
+    values: {
+      type: "datetime",
+      props: { mode: "date" }
+    }
+  };
+
+  const renderFilter = (value) =>
+    render(
+      <Filter
+        id="test"
+        value={value}
+        criterias={[dateCriteria]}
+        onChange={jest.fn()}
+        onAdd={jest.fn()}
+        onDelete={jest.fn()}
+      />
+    );
+
+  test("renders the picker with mode-specific views and format", () => {
+    renderFilter({ id: "0", criteria: "created", operator: "<=", value: null });
+
+    const input = screen.getByTestId("test-value");
+    expect(input).toHaveAttribute("data-views", "year,month,day");
+    expect(input).toHaveAttribute("data-format", "MM/DD/YYYY");
+  });
+
+  test("propagates the selected date as a unix timestamp", () => {
+    const onChange = jest.fn();
+    render(
+      <Filter
+        id="test"
+        value={{ id: "0", criteria: "created", operator: "<=", value: null }}
+        criterias={[dateCriteria]}
+        onChange={onChange}
+        onAdd={jest.fn()}
+        onDelete={jest.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId("test-value"));
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ value: 1700000000 })
+    );
+  });
+
+  test("uses the default translated placeholder when none is provided", () => {
+    renderFilter({ id: "0", criteria: "created", operator: "<=", value: null });
+
+    expect(screen.getByTestId("test-value")).toHaveAttribute(
+      "placeholder",
+      "placeholders.date"
+    );
+  });
+});
+
+describe("Filter - number value type", () => {
+  const numberCriteria = {
+    key: "attendees",
+    label: "Attendees",
+    operators: [OPERATORS.GREATER, OPERATORS.LESS],
+    values: {
+      type: "number",
+      props: { min: 0, max: 100, integer: true }
+    }
+  };
+
+  const renderFilter = (value, onChange = jest.fn()) => {
+    render(
+      <Filter
+        id="test"
+        value={value}
+        criterias={[numberCriteria]}
+        onChange={onChange}
+        onAdd={jest.fn()}
+        onDelete={jest.fn()}
+      />
+    );
+    return { onChange, input: screen.getByRole("spinbutton") };
+  };
+
+  test("renders with min/max/step attributes from props", () => {
+    const { input } = renderFilter({
+      id: "0",
+      criteria: "attendees",
+      operator: ">",
+      value: null
+    });
+
+    expect(input).toHaveAttribute("min", "0");
+    expect(input).toHaveAttribute("max", "100");
+    expect(input).toHaveAttribute("step", "1");
+  });
+
+  test("propagates a typed value as a Number", () => {
+    const { input, onChange } = renderFilter({
+      id: "0",
+      criteria: "attendees",
+      operator: ">",
+      value: null
+    });
+
+    fireEvent.change(input, { target: { value: "42" } });
+
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ value: 42 }));
+  });
+
+  test("clamps the value to max", () => {
+    const { input, onChange } = renderFilter({
+      id: "0",
+      criteria: "attendees",
+      operator: ">",
+      value: null
+    });
+
+    fireEvent.change(input, { target: { value: "500" } });
+
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ value: 100 }));
+  });
+
+  test("clears to null when the input is emptied", () => {
+    const { input, onChange } = renderFilter({
+      id: "0",
+      criteria: "attendees",
+      operator: ">",
+      value: 10
+    });
+
+    fireEvent.change(input, { target: { value: "" } });
+
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ value: null }));
+  });
+
+  test("uses the default translated placeholder when none is provided", () => {
+    const { input } = renderFilter({
+      id: "0",
+      criteria: "attendees",
+      operator: ">",
+      value: null
+    });
+
+    expect(input).toHaveAttribute("placeholder", "placeholders.number");
+  });
+});
+
+describe("Filter - asyncSelect value type", () => {
+  const makeCriteria = (queryFunction, props = {}) => [
+    {
+      key: "tag",
+      label: "Tag",
+      operators: [OPERATORS.IS],
+      values: {
+        type: "asyncSelect",
+        props: { queryFunction, multiple: true, ...props }
+      }
+    }
+  ];
+
+  test("calls queryFunction on mount with an empty search term", () => {
+    const queryFunction = jest.fn((input, callback) => callback([]));
+    render(
+      <Filter
+        id="test"
+        value={{ id: "0", criteria: "tag", operator: "==", value: [] }}
+        criterias={makeCriteria(queryFunction)}
+        onChange={jest.fn()}
+        onAdd={jest.fn()}
+        onDelete={jest.fn()}
+      />
+    );
+    expect(queryFunction).toHaveBeenCalledWith("", expect.any(Function));
+  });
+
+  test("renders a preselected value's label without re-fetching it", () => {
+    const queryFunction = jest.fn((input, callback) => callback([]));
+    render(
+      <Filter
+        id="test"
+        value={{
+          id: "0",
+          criteria: "tag",
+          operator: "==",
+          value: [{ value: 1, label: "Keynote", raw: { id: 1, name: "Keynote" } }]
+        }}
+        criterias={makeCriteria(queryFunction)}
+        onChange={jest.fn()}
+        onAdd={jest.fn()}
+        onDelete={jest.fn()}
+      />
+    );
+    expect(screen.getByText("Keynote")).toBeInTheDocument();
+  });
+
+  test("uses the default translated placeholder when none is provided", () => {
+    const queryFunction = jest.fn((input, callback) => callback([]));
+    render(
+      <Filter
+        id="test"
+        value={{ id: "0", criteria: "tag", operator: "==", value: [] }}
+        criterias={makeCriteria(queryFunction)}
+        onChange={jest.fn()}
+        onAdd={jest.fn()}
+        onDelete={jest.fn()}
+      />
+    );
+    expect(
+      screen.getByPlaceholderText("placeholders.async")
+    ).toBeInTheDocument();
+  });
+});
+
+describe("Filter - speaker value type", () => {
+  beforeEach(() => querySpeakers.mockClear());
+
+  const speakerCriteria = (props = {}) => [
+    {
+      key: "speaker_id",
+      label: "Speaker",
+      operators: [OPERATORS.IS],
+      values: { type: "speaker", props: { summitId: 42, multiple: true, ...props } }
+    }
+  ];
+
+  const renderSpeakerFilter = (props) =>
+    render(
+      <Filter
+        id="test"
+        value={{ id: "0", criteria: "speaker_id", operator: "==", value: [] }}
+        criterias={speakerCriteria(props)}
+        onChange={jest.fn()}
+        onAdd={jest.fn()}
+        onDelete={jest.fn()}
+      />
+    );
+
+  test("defaults queryFunction to querySpeakers scoped to summitId", () => {
+    renderSpeakerFilter();
+    expect(querySpeakers).toHaveBeenCalledWith(42, "", expect.any(Function));
+  });
+
+  test("a queryFunction override takes precedence over the summitId default", () => {
+    const queryFunction = jest.fn((input, callback) => callback([]));
+    renderSpeakerFilter({ queryFunction });
+    expect(queryFunction).toHaveBeenCalledWith("", expect.any(Function));
+    expect(querySpeakers).not.toHaveBeenCalled();
+  });
+
+  test("uses the speaker-specific default placeholder, not the generic async one", () => {
+    renderSpeakerFilter();
+    expect(
+      screen.getByPlaceholderText("placeholders.speaker")
+    ).toBeInTheDocument();
+  });
+});
+
+describe("Filter - company value type", () => {
+  beforeEach(() => queryCompanies.mockClear());
+
+  const companyCriteria = (props = {}) => [
+    {
+      key: "company_id",
+      label: "Company",
+      operators: [OPERATORS.IS],
+      values: { type: "company", props: { multiple: true, ...props } }
+    }
+  ];
+
+  const renderCompanyFilter = (props) =>
+    render(
+      <Filter
+        id="test"
+        value={{ id: "0", criteria: "company_id", operator: "==", value: [] }}
+        criterias={companyCriteria(props)}
+        onChange={jest.fn()}
+        onAdd={jest.fn()}
+        onDelete={jest.fn()}
+      />
+    );
+
+  test("defaults queryFunction to queryCompanies", () => {
+    renderCompanyFilter();
+    expect(queryCompanies).toHaveBeenCalledWith("", expect.any(Function));
+  });
+
+  test("a queryFunction override takes precedence over the default", () => {
+    const queryFunction = jest.fn((input, callback) => callback([]));
+    renderCompanyFilter({ queryFunction });
+    expect(queryFunction).toHaveBeenCalledWith("", expect.any(Function));
+    expect(queryCompanies).not.toHaveBeenCalled();
+  });
+
+  test("uses the company-specific default placeholder, not the generic async one", () => {
+    renderCompanyFilter();
+    expect(
+      screen.getByPlaceholderText("placeholders.company")
+    ).toBeInTheDocument();
+  });
+
+  test("a criteria-provided placeholder overrides the default", () => {
+    renderCompanyFilter({ placeholder: "Custom placeholder" });
+    expect(screen.getByPlaceholderText("Custom placeholder")).toBeInTheDocument();
+  });
+});
+
 // ─── parseFilter / handleSubmit ──────────────────────────────────────────────
 //
 // These are private closures; exercised by seeding the Redux store with filter
@@ -297,6 +642,48 @@ describe("GridFilter – parseFilter / handleSubmit", () => {
 
       const [filters] = onApply.mock.calls[0];
       expect(filters[0].parsed).toEqual(["track==1||2||3"]);
+    });
+
+    test("datetime value → unix timestamp in the API string", () => {
+      const c = [
+        {
+          key: "created",
+          label: "Created",
+          operators: [OPERATORS.BEFORE],
+          values: { type: "datetime", props: { mode: "date" } }
+        }
+      ];
+      const { onApply } = renderWithFilters(
+        [{ criteria: "created", operator: "<=", value: 1700000000 }],
+        { criterias: c }
+      );
+
+      openFilterDialog();
+      applyFilters();
+
+      const [filters] = onApply.mock.calls[0];
+      expect(filters[0].parsed).toEqual(["created<=1700000000"]);
+    });
+
+    test("number value → unquoted numeric string in the API string", () => {
+      const c = [
+        {
+          key: "attendees",
+          label: "Attendees",
+          operators: [OPERATORS.GREATER],
+          values: { type: "number", props: { min: 0 } }
+        }
+      ];
+      const { onApply } = renderWithFilters(
+        [{ criteria: "attendees", operator: ">", value: 10 }],
+        { criterias: c }
+      );
+
+      openFilterDialog();
+      applyFilters();
+
+      const [filters] = onApply.mock.calls[0];
+      expect(filters[0].parsed).toEqual(["attendees>10"]);
     });
 
     test("delegates to customParser and uses its return value as parsed", () => {
@@ -382,6 +769,63 @@ describe("GridFilter – parseFilter / handleSubmit", () => {
         expect.arrayContaining([expectedFilter]),
         JOIN_OPERATORS.ANY
       );
+    });
+  });
+
+  describe("async value types require customParser", () => {
+    const companyCriteria = (customParser) => [
+      {
+        key: "created_by_company",
+        label: "Submitter Company",
+        operators: [OPERATORS.IS],
+        values: {
+          type: "company",
+          props: { multiple: true, queryFunction: jest.fn((i, cb) => cb([])) }
+        },
+        ...(customParser ? { customParser } : {})
+      }
+    ];
+
+    const companyValue = [
+      { value: 1, label: "Acme", raw: { id: 1, name: "Acme" } }
+    ];
+
+    afterEach(() => jest.restoreAllMocks());
+
+    test("logs a console.warn when no customParser is provided", () => {
+      const errorSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+      renderWithFilters(
+        [{ criteria: "created_by_company", operator: "==", value: companyValue }],
+        { criterias: companyCriteria() }
+      );
+
+      openFilterDialog();
+      applyFilters();
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'criteria "created_by_company" uses async value type "company"'
+        )
+      );
+    });
+
+    test("does not log when a customParser is provided, and uses its return value", () => {
+      const errorSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+      const customParser = (f) => [
+        `created_by_company==${f.value.map((c) => c.raw.name).join("||")}`
+      ];
+
+      const { onApply } = renderWithFilters(
+        [{ criteria: "created_by_company", operator: "==", value: companyValue }],
+        { criterias: companyCriteria(customParser) }
+      );
+
+      openFilterDialog();
+      applyFilters();
+
+      expect(errorSpy).not.toHaveBeenCalled();
+      const [filters] = onApply.mock.calls[0];
+      expect(filters[0].parsed).toEqual(["created_by_company==Acme"]);
     });
   });
 });

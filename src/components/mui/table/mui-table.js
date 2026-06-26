@@ -24,7 +24,6 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TablePagination,
   TableRow,
   TableSortLabel
 } from "@mui/material";
@@ -33,11 +32,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import {visuallyHidden} from "@mui/utils";
-import {DEFAULT_PER_PAGE, FIFTY_PER_PAGE, TWENTY_PER_PAGE} from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
 import styles from "./mui-table.module.less";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PropTypes from "prop-types";
+import CustomTablePagination from "./CustomTablePagination";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",
@@ -77,31 +76,6 @@ const MuiTable = ({
                   }) => {
   const totalColumnsCount =
     columns.length + (onEdit ? 1 : 0) + (onDelete ? 1 : 0) + (onArchive ? 1 : 0) + (onSelect ? 1 : 0);
-
-  const handleChangePage = (_, newPage) => {
-    onPageChange(newPage + 1);
-  };
-
-  const handleChangeRowsPerPage = (ev) => {
-    onPerPageChange(ev.target.value);
-  };
-
-  const basePerPageOptions = [
-    DEFAULT_PER_PAGE,
-    TWENTY_PER_PAGE,
-    FIFTY_PER_PAGE
-  ];
-
-  const initialPerPage = React.useRef(perPage);
-
-  let customPerPageOptions = basePerPageOptions.includes(initialPerPage.current)
-    ? basePerPageOptions
-    : [...basePerPageOptions, initialPerPage.current].sort((a, b) => a - b);
-
-  // remove per page selection if no action passed
-  if (!onPerPageChange) {
-    customPerPageOptions = [initialPerPage.current];
-  }
 
   const {sortCol, sortDir} = options;
 
@@ -332,38 +306,13 @@ const MuiTable = ({
         </TableContainer>
 
         {/* PAGINATION */}
-        {perPage && currentPage && (
-          <TablePagination
-            component="div"
-            count={totalRows}
-            rowsPerPageOptions={customPerPageOptions}
-            rowsPerPage={perPage}
-            page={currentPage - 1}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage={T.translate("mui_table.rows_per_page")}
-            sx={{
-              ".MuiTablePagination-toolbar": {
-                alignItems: "baseline",
-                marginTop: "1.6rem"
-              },
-              ".MuiTablePagination-selectLabel": {
-                color: "rgba(0, 0, 0, 0.6)",
-                fontSize: "12px",
-                fontWeight: "normal"
-              },
-              ".MuiTablePagination-select": {
-                color: "rgba(0, 0, 0, 0.6)",
-                fontSize: "12px",
-                fontWeight: "normal"
-              },
-              ".MuiTablePagination-spacer": {
-                display: "none"
-              },
-              ".MuiTablePagination-displayedRows": {
-                marginLeft: "auto"
-              }
-            }}
+        {perPage && currentPage && onPageChange && (
+          <CustomTablePagination
+            totalRows={totalRows}
+            perPage={perPage}
+            currentPage={currentPage}
+            onPageChange={onPageChange}
+            onPerPageChange={onPerPageChange}
           />
         )}
       </Paper>

@@ -29,7 +29,7 @@ import Filter from "./components/Filter";
 import FilterButton from "./components/FilterButton";
 import { saveFilters } from "./actions/filter-actions";
 import useGridFilter from "./hooks/useGridFilter";
-import { JOIN_OPERATORS, OPERATORS, EMPTY_FILTER } from "./utils";
+import { JOIN_OPERATORS, OPERATORS, EMPTY_FILTER, ASYNC_VALUE_TYPES } from "./utils";
 
 const OPERATOR_VALUES = Object.values(OPERATORS).map((op) => op.value);
 
@@ -55,17 +55,29 @@ const GridFilter = ({ id, criterias, hideJoinOperators = false, onApply, saveFil
   }, [valuesString, joinOperator, openModal]);
 
   const parseFilter = (filter) => {
-    const parser = criterias.find(
-      ({ key }) => key === filter.criteria
-    )?.customParser;
+    const criteria = criterias.find(({ key }) => key === filter.criteria);
+    const parser = criteria?.customParser;
 
     if (parser) {
       return parser(filter);
     }
 
+    // Async types store option objects { value, label, raw }; extract the id
+    // so the API receives e.g. tag==42 instead of [object Object].
+    const isAsync = ASYNC_VALUE_TYPES.includes(criteria?.values?.type);
+
+    if (isAsync) {
+      console.warn(
+        `GridFilter: criteria "${filter.criteria}" uses async value type "${criteria.values.type}" but defines no customParser — falling back to option.value serialization.`
+      );
+    }
+    const extractValue = (v) =>
+      isAsync && v != null && typeof v === "object" ? v.value : v;
+
     const value = Array.isArray(filter.value)
-      ? filter.value.join("||")
-      : filter.value;
+      ? filter.value.map(extractValue).join("||")
+      : extractValue(filter.value);
+
     if (value != null && value !== "") {
       return [`${filter.criteria}${filter.operator}${value}`];
     }
