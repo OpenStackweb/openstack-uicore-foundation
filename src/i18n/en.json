@@ -194,5 +194,11 @@
       "company": "Type a company name",
       "async": "Type and select"
     }
+  },
+  "bulk_edit_table": {
+    "apply_changes": "Apply changes",
+    "edit_selected": "Edit selected",
+    "sorted_desc": "sorted descending",
+    "sorted_asc": "sorted ascending"
   }
 }

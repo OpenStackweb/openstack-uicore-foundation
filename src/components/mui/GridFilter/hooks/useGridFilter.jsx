@@ -26,8 +26,12 @@ const useGridFilter = (id) => {
   // what GridFilter persists itself: [{ criteria, operator, value, parsed }],
   // so a saved filter's `criteria` array (as returned by the API) can be
   // passed through directly.
-  const setFilters = (filters = [], joinOperator = JOIN_OPERATORS.ALL) =>
-    dispatch(saveFilters(id, filters, joinOperator));
+  const setFilters = (filters = [], joinOperator = JOIN_OPERATORS.ALL) => {
+    const validJoinOperator = Object.values(JOIN_OPERATORS).includes(joinOperator)
+      ? joinOperator
+      : JOIN_OPERATORS.ALL;
+    dispatch(saveFilters(id, filters, validJoinOperator));
+  };
 
   return {
     filterValues,
