@@ -96,7 +96,7 @@ Dropdown.defaultProps = {
   value: null,
   label: "",
   placeholder: "",
-  options: null
+  options: []
 };
 
 export default Dropdown;

@@ -1,3 +1,16 @@
+/**
+ * Copyright 2026 OpenStack Foundation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+
 import { useState } from "react";
 
 const useRowSelection = () => {
@@ -8,7 +21,7 @@ const useRowSelection = () => {
 
   const toggleRow = (row) => {
     setSelectedRows((current) =>
-      isSelected(row.id)
+      current.some((r) => r.id === row.id)
         ? current.filter((r) => r.id !== row.id)
         : [...current, row]
     );
@@ -18,7 +31,11 @@ const useRowSelection = () => {
     rows.length > 0 && rows.every((row) => isSelected(row.id));
 
   const toggleAll = (rows) => {
-    setSelectedRows(isAllSelected(rows) ? [] : rows);
+    setSelectedRows((current) =>
+      rows.length > 0 && rows.every((row) => current.some((r) => r.id === row.id))
+        ? []
+        : rows
+    );
   };
 
   const editField = (rowId, key, value) => {

@@ -47,6 +47,8 @@ const AsyncSelectInput = ({
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef(null);
+  const mountedRef = useRef(false);
+  const requestIdRef = useRef(0);
 
   // Filter.jsx passes `options` generically to every ValueInput type (meant
   // for the sync `select` type); this type fetches its own, so it's stripped
@@ -58,16 +60,22 @@ const AsyncSelectInput = ({
       setOptions([]);
       return;
     }
+    // Capture the ID for this request so the callback can discard stale ones.
+    requestIdRef.current += 1;
+    const thisRequestId = requestIdRef.current;
     setLoading(true);
     queryFunction(searchTerm, (rawResults) => {
+      if (!mountedRef.current || thisRequestId !== requestIdRef.current) return;
       setOptions((rawResults || []).map((item) => ({ ...formatOption(item), raw: item })));
       setLoading(false);
     });
   };
 
   useEffect(() => {
+    mountedRef.current = true;
     fetchOptions("");
     return () => {
+      mountedRef.current = false;
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

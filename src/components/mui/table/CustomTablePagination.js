@@ -43,22 +43,19 @@ const PAGINATION_SX = {
 const BASE_PER_PAGE_OPTIONS = [DEFAULT_PER_PAGE, TWENTY_PER_PAGE, FIFTY_PER_PAGE];
 
 const CustomTablePagination = ({ totalRows, perPage, currentPage, onPageChange, onPerPageChange }) => {
-  const initialPerPage = React.useRef(perPage);
-
-  let perPageOptions = BASE_PER_PAGE_OPTIONS.includes(initialPerPage.current)
-    ? BASE_PER_PAGE_OPTIONS
-    : [...BASE_PER_PAGE_OPTIONS, initialPerPage.current].sort((a, b) => a - b);
-
-  if (!onPerPageChange) {
-    perPageOptions = [initialPerPage.current];
-  }
+  const perPageOptions = React.useMemo(() => {
+    if (!onPerPageChange) return [perPage];
+    return BASE_PER_PAGE_OPTIONS.includes(perPage)
+      ? BASE_PER_PAGE_OPTIONS
+      : [...BASE_PER_PAGE_OPTIONS, perPage].sort((a, b) => a - b);
+  }, [perPage, onPerPageChange]);
 
   const handlePageChange = (_, newPage) => {
     onPageChange(newPage + 1);
   };
 
   const handleRowsPerPageChange = (ev) => {
-    onPerPageChange(ev.target.value);
+    onPerPageChange(parseInt(ev.target.value, 10));
   };
 
   return (
