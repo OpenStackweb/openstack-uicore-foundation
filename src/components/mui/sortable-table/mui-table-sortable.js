@@ -38,7 +38,7 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
-import TableContent from "../table/table-content";
+import TableCellContent from "../table/table-content";
 
 const MuiTableSortable = ({
   columns = [],
@@ -218,7 +218,7 @@ const MuiTableSortable = ({
                                   col.dottedBorder && styles.dottedBorderLeft
                                 } ${col.className}`}
                               >
-                                <TableContent row={row} col={col} />
+                                <TableCellContent row={row} col={col} />
                               </TableCell>
                             ))}
                             {/* Edit column */}

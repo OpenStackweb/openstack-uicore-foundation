@@ -9,7 +9,7 @@ const contentStyle = {
   wordBreak: "break-all",
 };
 
-const TableContent = ({ row, col }) => {
+const TableCellContent = ({ row, col }) => {
   return (
     <span style={contentStyle}>
       {isBoolean(row[col.columnKey]) ? (
@@ -31,4 +31,4 @@ const TableContent = ({ row, col }) => {
   );
 };
 
-export default TableContent;
+export default TableCellContent;
