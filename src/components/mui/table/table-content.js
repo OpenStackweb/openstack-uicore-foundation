@@ -4,7 +4,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import TruncateText from "../truncate-text";
 
-const CustomCell = (row, col) => {
+const TableContent = ({ row, col }) => {
   if (isBoolean(row[col.columnKey])) {
     return row[col.columnKey] ? (
       <CheckIcon fontSize="large" />
@@ -28,4 +28,4 @@ const CustomCell = (row, col) => {
   return <span style={{ fontWeight: "normal" }}>{row[col.columnKey]}</span>;
 };
 
-export default CustomCell;
+export default TableContent;

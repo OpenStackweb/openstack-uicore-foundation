@@ -35,7 +35,7 @@ import showConfirmDialog from "../showConfirmDialog";
 import styles from "./mui-table.module.less";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PropTypes from "prop-types";
-import CustomCell from "./custom-cell";
+import TableContent from "./table-content";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",
@@ -212,7 +212,7 @@ const MuiTable = ({
                       className={`${col.dottedBorder && styles.dottedBorderLeft} ${col.className}`}
                       sx={getCellSx(row, col)}
                     >
-                      {CustomCell(row, col)}
+                      <TableContent row={row} col={col} />
                     </TableCell>
                   ))}
                   {/* Edit column */}
