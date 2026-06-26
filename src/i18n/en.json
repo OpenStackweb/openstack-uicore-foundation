@@ -26,7 +26,6 @@
     "are_you_sure": "Are you sure?",
     "yes_delete": "Yes, delete.",
     "remove_warning": "Are you sure you want to delete this?",
-    "select_an_option": "Select an option...",
     "all": "All",
     "row_remove_warning": "Are you sure you want to delete row ",
     "edit": "Edit",
@@ -47,7 +46,14 @@
     "download": "Download"
   },
   "placeholders": {
-    "notes": "Enter your notes here..."
+    "notes": "Enter your notes here...",
+    "text": "Enter a value",
+    "select": "Select an option...",
+    "number": "Type a number",
+    "date": "Select a date",
+    "speaker": "Type a speaker name",
+    "company": "Type a company name",
+    "async": "Type and select"
   },
   "alerts": {
     "confirm_delete_title": "Confirm Deletion",
@@ -163,7 +169,6 @@
     "following": " one of the following: ",
     "select_criteria": "Select criteria",
     "select_operator": "Select operator",
-    "select_values": "Select values",
     "filters": "Filters",
     "clear_filters": "Clear Filters",
     "cancel": "Cancel",
@@ -186,13 +191,6 @@
       "any": "any",
       "before": "before",
       "after": "after"
-    },
-    "placeholders": {
-      "number": "Type a number",
-      "date": "Select a date",
-      "speaker": "Type a speaker name",
-      "company": "Type a company name",
-      "async": "Type and select"
     }
   },
   "bulk_edit_table": {

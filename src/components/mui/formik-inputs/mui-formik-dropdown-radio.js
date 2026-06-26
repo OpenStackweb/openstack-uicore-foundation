@@ -25,7 +25,7 @@ import T from "i18n-react/dist/i18n-react";
 
 const MuiFormikDropdownRadio = ({ name, label, options, placeholder, ...rest }) => {
   const finalPlaceholder =
-    placeholder || T.translate("general.select_an_option");
+    placeholder || T.translate("placeholders.select");
   const [field, meta, helpers] = useField(name);
 
   const handleChange = (event) => {

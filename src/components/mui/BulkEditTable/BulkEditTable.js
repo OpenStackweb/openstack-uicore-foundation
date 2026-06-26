@@ -29,7 +29,7 @@ import useRowSelection from "./hooks/useRowSelection";
 import styles from "./BulkEditTable.module.less";
 import CustomTablePagination from "../table/CustomTablePagination";
 
-const BulkEditTable = ({ options, columns, data, onSort, onUpdate, totalRows, perPage, currentPage, onPageChange, onPerPageChange }) => {
+const BulkEditTable = ({ options, columns, data, onSort, onUpdate, totalRows, perPage, currentPage, onPageChange, onPerPageChange, idKey }) => {
   const {
     selectedRows,
     isSelected,
@@ -41,9 +41,9 @@ const BulkEditTable = ({ options, columns, data, onSort, onUpdate, totalRows, pe
     enterEditMode,
     cancel,
     reset
-  } = useRowSelection();
+  } = useRowSelection(idKey);
 
-  const dataIds = data.map((row) => row.id).join(",");
+  const dataIds = data.map((row) => row[idKey]).join(",");
 
   // reset selection/edit state whenever the set of rows shown changes
   // (pagination, filtering, sorting, search, etc.)
@@ -108,11 +108,11 @@ const BulkEditTable = ({ options, columns, data, onSort, onUpdate, totalRows, pe
                       width={colWidth}
                       key={`heading_${col.columnKey}`}
                     >
-                      {col.label}
+                      {col.header ?? col.label ?? col.value}
                     </Heading>
                   );
                 })}
-                {options.actions && (
+                {(options.actions?.edit || options.actions?.delete) && (
                   <TableCell
                     align="center"
                     className={styles.actionColumn}
@@ -127,14 +127,15 @@ const BulkEditTable = ({ options, columns, data, onSort, onUpdate, totalRows, pe
               {columns.length > 0 &&
                 data.map((row) => (
                   <Row
-                    key={`row_${row.id}`}
+                    key={`row_${row[idKey]}`}
                     row={row}
+                    idKey={idKey}
                     editEnabled={editEnabled}
-                    isSelected={isSelected(row.id)}
-                    editRow={selectedRows.find((r) => r.id === row.id) || row}
+                    isSelected={isSelected(row[idKey])}
+                    editRow={selectedRows.find((r) => r[idKey] === row[idKey]) || row}
                     onToggle={() => toggleRow(row)}
                     onFieldChange={(key, value) =>
-                      editField(row.id, key, value)
+                      editField(row[idKey], key, value)
                     }
                     columns={columns}
                     actions={options.actions}
@@ -163,11 +164,16 @@ BulkEditTable.propTypes = {
   data: PropTypes.array.isRequired,
   onSort: PropTypes.func.isRequired,
   onUpdate: PropTypes.func.isRequired,
+  idKey: PropTypes.string,
   totalRows: PropTypes.number,
   perPage: PropTypes.number,
   currentPage: PropTypes.number,
   onPageChange: PropTypes.func,
   onPerPageChange: PropTypes.func
+};
+
+BulkEditTable.defaultProps = {
+  idKey: "id"
 };
 
 export default BulkEditTable;

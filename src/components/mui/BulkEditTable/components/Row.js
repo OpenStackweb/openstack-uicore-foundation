@@ -41,7 +41,8 @@ const Row = (props) => {
     editRow,
     onToggle,
     onFieldChange,
-    actions
+    actions,
+    idKey
   } = props;
 
   const isEditingRow = isSelected && editEnabled;
@@ -61,15 +62,15 @@ const Row = (props) => {
         <Checkbox
           checked={isSelected}
           onChange={onToggle}
-          slotProps={{ input: { "aria-label": `Select row ${row.id}` } }}
+          slotProps={{ input: { "aria-label": `Select row ${row[idKey]}` } }}
         />
       </TableCell>
-      <TableCell sx={{ fontWeight: "normal" }}>{row.id}</TableCell>
+      <TableCell sx={{ fontWeight: "normal" }}>{row[idKey]}</TableCell>
       {columns
-        .filter((col) => col.columnKey !== "id")
+        .filter((col) => col.columnKey !== idKey)
         .map((col) => (
           <TableCell
-            key={`${row.id}_${col.columnKey}`}
+            key={`${row[idKey]}_${col.columnKey}`}
             className={
               isEditingRow && col.editableField
                 ? styles.bulkEditCol
@@ -99,7 +100,7 @@ const Row = (props) => {
                 size="medium"
                 onClick={() => actions.edit.onClick(row)}
                 sx={{ padding: 0 }}
-                aria-label={`Edit event ${row.id}`}
+                aria-label={`Edit event ${row[idKey]}`}
               >
                 <EditIcon fontSize="large" />
               </IconButton>
@@ -109,7 +110,7 @@ const Row = (props) => {
                 size="medium"
                 onClick={() => actions.delete.onClick(row)}
                 sx={{ padding: 0 }}
-                aria-label={`Delete event ${row.id}`}
+                aria-label={`Delete event ${row[idKey]}`}
               >
                 <DeleteIcon fontSize="large" />
               </IconButton>
@@ -129,7 +130,12 @@ Row.propTypes = {
   editRow: PropTypes.object.isRequired,
   onToggle: PropTypes.func,
   onFieldChange: PropTypes.func,
-  actions: PropTypes.object
+  actions: PropTypes.object,
+  idKey: PropTypes.string
+};
+
+Row.defaultProps = {
+  idKey: "id"
 };
 
 export default Row;

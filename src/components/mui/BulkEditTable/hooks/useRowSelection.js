@@ -13,26 +13,26 @@
 
 import { useState } from "react";
 
-const useRowSelection = () => {
+const useRowSelection = (idKey = "id") => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [editEnabled, setEditEnabled] = useState(false);
 
-  const isSelected = (rowId) => selectedRows.some((row) => row.id === rowId);
+  const isSelected = (rowId) => selectedRows.some((row) => row[idKey] === rowId);
 
   const toggleRow = (row) => {
     setSelectedRows((current) =>
-      current.some((r) => r.id === row.id)
-        ? current.filter((r) => r.id !== row.id)
+      current.some((r) => r[idKey] === row[idKey])
+        ? current.filter((r) => r[idKey] !== row[idKey])
         : [...current, row]
     );
   };
 
   const isAllSelected = (rows) =>
-    rows.length > 0 && rows.every((row) => isSelected(row.id));
+    rows.length > 0 && rows.every((row) => isSelected(row[idKey]));
 
   const toggleAll = (rows) => {
     setSelectedRows((current) =>
-      rows.length > 0 && rows.every((row) => current.some((r) => r.id === row.id))
+      rows.length > 0 && rows.every((row) => current.some((r) => r[idKey] === row[idKey]))
         ? []
         : rows
     );
@@ -40,7 +40,7 @@ const useRowSelection = () => {
 
   const editField = (rowId, key, value) => {
     setSelectedRows((current) =>
-      current.map((row) => (row.id === rowId ? { ...row, [key]: value } : row))
+      current.map((row) => (row[idKey] === rowId ? { ...row, [key]: value } : row))
     );
   };
 

@@ -42,7 +42,7 @@ const Cell = ({ col, row, editRow, isEditingRow, onChange }) => {
           editRow[col.columnKey]?.id ??
           editRow[col.columnKey]?.value ??
           editRow[col.columnKey],
-        onChange,
+        onChange: (ev) => onChange({ target: { value: ev.target.value, id: col.columnKey } }),
         row: editRow,
         rowData: editRow[col.columnKey]
       }) ?? null

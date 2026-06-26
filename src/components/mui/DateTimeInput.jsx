@@ -46,7 +46,7 @@ const DateTimeInput = ({
 }) => {
   const momentValue = value ? moment.unix(value) : null;
   const finalPlaceholder =
-    placeholder || T.translate("grid_filter.placeholders.date");
+    placeholder || T.translate("placeholders.date");
 
   const handleChange = (newValue) => {
     onChange({
