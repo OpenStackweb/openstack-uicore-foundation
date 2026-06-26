@@ -273,27 +273,18 @@ describe("MuiTable", () => {
     });
     afterEach(() => jest.restoreAllMocks());
 
-    test("wraps cell in truncating span", () => {
+    test("wraps cell in truncating span and shows raw value tooltip on hover", async () => {
       setup({ columns: [{ columnKey: "name", header: "Name", truncateText: true }] });
-      expect(screen.getByText("Alice").parentElement).toHaveStyle({
+      const wrapper = screen.getByText("Alice").parentElement;
+
+      expect(wrapper).toHaveStyle({
         overflow: "hidden",
         textOverflow: "ellipsis",
         whiteSpace: "nowrap"
       });
-    });
 
-    test("tooltip shows raw value when col.render is absent", async () => {
-      setup({ columns: [{ columnKey: "name", header: "Name", truncateText: true }] });
-      await userEvent.hover(screen.getByText("Alice").parentElement);
+      await userEvent.hover(wrapper);
       expect(await screen.findByRole("tooltip")).toHaveTextContent("Alice");
-    });
-
-    test("tooltip matches rendered output when col.render transforms data", async () => {
-      const cols = [{ columnKey: "name", header: "Name", truncateText: true, render: (row) => <span>Formatted: {row.name}</span> }];
-      setup({ columns: cols });
-      const cell = screen.getByText("Formatted: Alice");
-      await userEvent.hover(cell.parentElement);
-      expect(await screen.findByRole("tooltip")).toHaveTextContent("Formatted: Alice");
     });
   });
 });

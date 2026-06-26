@@ -36,7 +36,7 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
-import TruncateText from "../truncate-text";
+import { renderCell } from "../table/utils";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",
@@ -187,6 +187,7 @@ const MuiTableEditable = ({
     options.disableProp && row[options.disableProp] ? ARCHIVED_CELL_SX : null;
 
   const getCellSx = (row, baseSx = {}) => ({
+    wordBreak: "break-all",
     ...baseSx,
     ...(getArchivedCellSx(row) || {})
   });
@@ -290,11 +291,7 @@ const MuiTableEditable = ({
             <TableBody>
               {data.map((row) => (
                 <TableRow key={row.id}>
-                  {columns.map((col) => {
-                    const cellContent = col.render
-                      ? col.render(row)
-                      : <span style={{ fontWeight: "normal" }}>{row[col.columnKey]}</span>;
-                    return (
+                  {columns.map((col) => (
                     <TableCell
                       key={`${row.id}-${col.columnKey}`}
                       onClick={() => handleCellClick(row, col.columnKey)}
@@ -322,16 +319,11 @@ const MuiTableEditable = ({
                           }
                           validation={col.validation}
                         />
-                      ) : col.truncateText ? (
-                        <TruncateText charLimit={col.truncateText}>
-                          {col.render ? col.render(row) : row[col.columnKey]}
-                        </TruncateText>
                       ) : (
-                        cellContent
+                        renderCell(row, col)
                       )}
                     </TableCell>
-                  );
-                  })}
+                  ))}
                   {onEdit && (
                     <TableCell
                       sx={getCellSx(row)}

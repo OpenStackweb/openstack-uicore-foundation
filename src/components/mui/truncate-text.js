@@ -6,7 +6,7 @@ const TruncateText = ({ children, charLimit }) => {
   const ref = React.useRef(null);
   const [isOverflowing, setIsOverflowing] = React.useState(false);
 
-  const shouldCharTruncate = typeof charLimit === "number" && typeof children === "string";
+  const shouldCharTruncate = typeof charLimit === "number";
   const isTruncated = shouldCharTruncate && children.length > charLimit;
 
   const displayContent = isTruncated ? children.slice(0, charLimit) + "..." : children;

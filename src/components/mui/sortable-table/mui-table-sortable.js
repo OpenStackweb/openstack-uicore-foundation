@@ -38,7 +38,7 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
-import TruncateText from "../truncate-text";
+import { renderCell } from "../table/utils";
 
 const MuiTableSortable = ({
   columns = [],
@@ -210,27 +210,18 @@ const MuiTableSortable = ({
                             }}
                           >
                             {/* Main content columns */}
-                            {columns.map((col) => {
-                              const cellContent = col.render?.(row) || <span>{row[col.columnKey]}</span>;
-                              return (
+                            {columns.map((col) => (
                               <TableCell
                                 key={col.columnKey}
                                 align={col.align ?? "left"}
                                 className={`${
                                   col.dottedBorder && styles.dottedBorderLeft
                                 } ${col.className}`}
-                                sx={{ fontWeight: "normal" }}
+                                sx={{ fontWeight: "normal", wordBreak: "break-all" }}
                               >
-                                {col.truncateText ? (
-                                  <TruncateText charLimit={col.truncateText}>
-                                    {col.render?.(row) ?? row[col.columnKey]}
-                                  </TruncateText>
-                                ) : (
-                                  cellContent
-                                )}
+                                {renderCell(row, col)}
                               </TableCell>
-                              );
-                            })}
+                            ))}
                             {/* Edit column */}
                             {onEdit && (
                               <TableCell

@@ -13,7 +13,6 @@
 
 import * as React from "react";
 import T from "i18n-react/dist/i18n-react";
-import isBoolean from "lodash/isBoolean";
 import {
   Box,
   Button,
@@ -30,15 +29,13 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
 import { visuallyHidden } from "@mui/utils";
 import { DEFAULT_PER_PAGE, FIFTY_PER_PAGE, TWENTY_PER_PAGE } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
 import styles from "./mui-table.module.less";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PropTypes from "prop-types";
-import TruncateText from "../truncate-text";
+import { renderCell } from "./utils";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",
@@ -120,6 +117,7 @@ const MuiTable = ({
 
   const getCellSx = (row, col) => ({
     fontWeight: "normal",
+    wordBreak: "break-all",
     ...(col.width && {
       width: col.width,
       minWidth: col.width,
@@ -152,30 +150,6 @@ const MuiTable = ({
     if (isConfirmed) {
       onDelete(item.id);
     }
-  };
-
-  const renderCell = (row, col) => {
-    if (isBoolean(row[col.columnKey])) {
-      return row[col.columnKey] ? (
-        <CheckIcon fontSize="large" />
-      ) : (
-        <CloseIcon fontSize="large" />
-      );
-    }
-
-    if (col.truncateText) {
-      return (
-        <TruncateText charLimit={col.truncateText}>
-          {col.render ? col.render(row) : row[col.columnKey]}
-        </TruncateText>
-      );
-    }
-
-    const content = col.render
-      ? col.render(row)
-      : <span style={{ fontWeight: "normal" }}>{row[col.columnKey]}</span>;
-
-    return content;
   };
 
   return (

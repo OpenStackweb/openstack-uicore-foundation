@@ -31,23 +31,20 @@ describe("TruncateText", () => {
   });
 
   describe("css mode (charLimit={true})", () => {
-    test("wrapper span has truncation styles", () => {
-      render(<TruncateText charLimit={true}>content</TruncateText>);
-      const wrapper = screen.getByText("content").parentElement;
+    test("wrapper span has truncation styles and shows tooltip on hover when content overflows", async () => {
+      scrollWidthSpy.mockReturnValue(200);
+      offsetWidthSpy.mockReturnValue(100);
+
+      render(<TruncateText charLimit={true}>really long content</TruncateText>);
+      const wrapper = screen.getByText("really long content").parentElement;
+
       expect(wrapper).toHaveStyle({
         overflow: "hidden",
         textOverflow: "ellipsis",
         whiteSpace: "nowrap"
       });
-    });
 
-    test("shows tooltip on hover when content overflows", async () => {
-      scrollWidthSpy.mockReturnValue(200);
-      offsetWidthSpy.mockReturnValue(100);
-
-      render(<TruncateText charLimit={true}>really long content</TruncateText>);
-      await userEvent.hover(screen.getByText("really long content").parentElement);
-
+      await userEvent.hover(wrapper);
       expect(await screen.findByRole("tooltip")).toHaveTextContent("really long content");
     });
 
