@@ -48,7 +48,7 @@ describe("MuiFormikDropdownRadio", () => {
 
   test("shows default i18n placeholder when no value selected", () => {
     renderWithFormik({});
-    expect(screen.getByText("general.select_an_option")).toBeInTheDocument();
+    expect(screen.getByText("placeholders.select")).toBeInTheDocument();
   });
 
   test("shows custom placeholder when provided", () => {

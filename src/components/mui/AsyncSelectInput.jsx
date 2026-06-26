@@ -17,7 +17,7 @@ import T from "i18n-react/dist/i18n-react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import CircularProgress from "@mui/material/CircularProgress";
-import { DEBOUNCE_WAIT_250 } from "../../../../../utils/constants";
+import { DEBOUNCE_WAIT_250 } from "../../utils/constants";
 
 const defaultFormatOption = (item) => ({
   value: item.id,
@@ -56,7 +56,7 @@ const AsyncSelectInput = ({
   const { options: _staleOptions, ...autocompleteProps } = rest;
 
   const fetchOptions = (searchTerm) => {
-    if (searchTerm && searchTerm.length < minSearchLength) {
+    if (minSearchLength > 0 && (!searchTerm || searchTerm.length < minSearchLength)) {
       setOptions([]);
       return;
     }
@@ -94,7 +94,7 @@ const AsyncSelectInput = ({
   // Filter.jsx's single-value default is "" (not null); treat it as empty.
   const normalizedValue = multiple ? value || [] : value || null;
   const finalPlaceholder =
-    placeholder || T.translate("grid_filter.placeholders.async");
+    placeholder || T.translate("placeholders.async");
 
   return (
     <Autocomplete

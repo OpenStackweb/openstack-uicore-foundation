@@ -53,7 +53,7 @@ const NumberInput = ({
   };
 
   const finalPlaceholder =
-    placeholder || T.translate("grid_filter.placeholders.number");
+    placeholder || T.translate("placeholders.number");
 
   return (
     <TextField

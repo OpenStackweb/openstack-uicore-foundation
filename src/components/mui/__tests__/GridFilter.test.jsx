@@ -327,7 +327,7 @@ describe("Filter - datetime value type", () => {
 
     expect(screen.getByTestId("test-value")).toHaveAttribute(
       "placeholder",
-      "grid_filter.placeholders.date"
+      "placeholders.date"
     );
   });
 });
@@ -417,7 +417,7 @@ describe("Filter - number value type", () => {
       value: null
     });
 
-    expect(input).toHaveAttribute("placeholder", "grid_filter.placeholders.number");
+    expect(input).toHaveAttribute("placeholder", "placeholders.number");
   });
 });
 
@@ -482,7 +482,7 @@ describe("Filter - asyncSelect value type", () => {
       />
     );
     expect(
-      screen.getByPlaceholderText("grid_filter.placeholders.async")
+      screen.getByPlaceholderText("placeholders.async")
     ).toBeInTheDocument();
   });
 });
@@ -526,7 +526,7 @@ describe("Filter - speaker value type", () => {
   test("uses the speaker-specific default placeholder, not the generic async one", () => {
     renderSpeakerFilter();
     expect(
-      screen.getByPlaceholderText("grid_filter.placeholders.speaker")
+      screen.getByPlaceholderText("placeholders.speaker")
     ).toBeInTheDocument();
   });
 });
@@ -570,7 +570,7 @@ describe("Filter - company value type", () => {
   test("uses the company-specific default placeholder, not the generic async one", () => {
     renderCompanyFilter();
     expect(
-      screen.getByPlaceholderText("grid_filter.placeholders.company")
+      screen.getByPlaceholderText("placeholders.company")
     ).toBeInTheDocument();
   });
 
@@ -792,8 +792,8 @@ describe("GridFilter – parseFilter / handleSubmit", () => {
 
     afterEach(() => jest.restoreAllMocks());
 
-    test("logs a console.error when no customParser is provided", () => {
-      const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    test("logs a console.warn when no customParser is provided", () => {
+      const errorSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
       renderWithFilters(
         [{ criteria: "created_by_company", operator: "==", value: companyValue }],
         { criterias: companyCriteria() }
@@ -810,7 +810,7 @@ describe("GridFilter – parseFilter / handleSubmit", () => {
     });
 
     test("does not log when a customParser is provided, and uses its return value", () => {
-      const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const errorSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
       const customParser = (f) => [
         `created_by_company==${f.value.map((c) => c.raw.name).join("||")}`
       ];

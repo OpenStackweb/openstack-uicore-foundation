@@ -58,21 +58,26 @@ const GridFilter = ({ id, criterias, hideJoinOperators = false, onApply, saveFil
     const criteria = criterias.find(({ key }) => key === filter.criteria);
     const parser = criteria?.customParser;
 
-    if (!parser && ASYNC_VALUE_TYPES.includes(criteria?.values?.type)) {
-      console.error(
-        `GridFilter: criteria "${filter.criteria}" uses async value type "${criteria.values.type}" but defines no customParser — its value will not serialize into the API filter string correctly.`
-      );
-    }
-
     if (parser) {
       return parser(filter);
     }
 
-    // TODO: use escapeFilterValue
+    // Async types store option objects { value, label, raw }; extract the id
+    // so the API receives e.g. tag==42 instead of [object Object].
+    const isAsync = ASYNC_VALUE_TYPES.includes(criteria?.values?.type);
+
+    if (isAsync) {
+      console.warn(
+        `GridFilter: criteria "${filter.criteria}" uses async value type "${criteria.values.type}" but defines no customParser — falling back to option.value serialization.`
+      );
+    }
+    const extractValue = (v) =>
+      isAsync && v != null && typeof v === "object" ? v.value : v;
 
     const value = Array.isArray(filter.value)
-      ? filter.value.join("||")
-      : filter.value;
+      ? filter.value.map(extractValue).join("||")
+      : extractValue(filter.value);
+
     if (value != null && value !== "") {
       return [`${filter.criteria}${filter.operator}${value}`];
     }

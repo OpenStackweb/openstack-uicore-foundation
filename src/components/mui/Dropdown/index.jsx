@@ -26,7 +26,8 @@ const Dropdown = ({
   ...rest
 }) => {
   const finalPlaceholder =
-    placeholder || T.translate("general.select_an_option");
+    placeholder || T.translate("placeholders.select");
+  const normalizedOptions = options ?? [];
 
   return (
     <FormControl fullWidth>
@@ -49,20 +50,20 @@ const Dropdown = ({
           }
           if (Array.isArray(selected)) {
             const lookup = Object.fromEntries(
-              options.map((o) => [o.value, o.label])
+              normalizedOptions.map((o) => [o.value, o.label])
             );
             return selected
               .map((v) => lookup[v])
               .filter(Boolean)
               .join(", ");
           }
-          const selectedOption = options.find(
+          const selectedOption = normalizedOptions.find(
             ({ value }) => value === selected
           );
           return selectedOption ? selectedOption.label : "";
         }}
       >
-        {options?.map((op) => (
+        {normalizedOptions.map((op) => (
           <MenuItem key={`selectop-${op.value}`} value={op.value} disabled={op.disabled}>
             {op.label}
           </MenuItem>

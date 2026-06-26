@@ -15,30 +15,32 @@ import React from "react";
 import PropTypes from "prop-types";
 import T from "i18n-react/dist/i18n-react";
 import AsyncSelectInput from "./AsyncSelectInput";
-import { queryCompanies } from "../../../../../utils/query-actions";
+import { querySpeakers } from "../../utils/query-actions";
 
-const defaultFormatOption = (company) => ({
-  value: company.id,
-  label: company.name
+const defaultFormatOption = (speaker) => ({
+  value: speaker.id,
+  label: `${speaker.first_name} ${speaker.last_name} (${speaker.email || speaker.id})`
 });
 
-const CompanySelectInput = ({ queryFunction, placeholder, ...rest }) => (
+const SpeakerSelectInput = ({ summitId, queryFunction, placeholder, ...rest }) => (
   <AsyncSelectInput
-    queryFunction={queryFunction || queryCompanies}
-    placeholder={placeholder || T.translate("grid_filter.placeholders.company")}
+    queryFunction={queryFunction || ((input, callback) => querySpeakers(summitId, input, callback))}
+    placeholder={placeholder || T.translate("placeholders.speaker")}
     // eslint-disable-next-line react/jsx-props-no-spreading
     {...rest}
   />
 );
 
-CompanySelectInput.propTypes = {
+SpeakerSelectInput.propTypes = {
+  summitId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   queryFunction: PropTypes.func,
   placeholder: PropTypes.string
 };
 
-CompanySelectInput.defaultProps = {
+SpeakerSelectInput.defaultProps = {
+  summitId: null,
   queryFunction: null,
   formatOption: defaultFormatOption
 };
 
-export default CompanySelectInput;
+export default SpeakerSelectInput;

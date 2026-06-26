@@ -12,17 +12,17 @@
  * */
 
 import React from "react";
-import TextField from "@mui/material/TextField";
 import PropTypes from "prop-types";
 import Dropdown from "../../../Dropdown";
-import DateTimeInput from "./DateTimeInput";
-import NumberInput from "./NumberInput";
-import AsyncSelectInput from "./AsyncSelectInput";
-import SpeakerSelectInput from "./SpeakerSelectInput";
-import CompanySelectInput from "./CompanySelectInput";
+import TextInput from "../../../TextInput";
+import DateTimeInput from "../../../DateTimeInput";
+import NumberInput from "../../../NumberInput";
+import AsyncSelectInput from "../../../AsyncSelectInput";
+import SpeakerSelectInput from "../../../SpeakerSelectInput";
+import CompanySelectInput from "../../../CompanySelectInput";
 
 const INPUT_TYPE_MAP = {
-  text: TextField,
+  text: TextInput,
   select: Dropdown,
   datetime: DateTimeInput,
   number: NumberInput,

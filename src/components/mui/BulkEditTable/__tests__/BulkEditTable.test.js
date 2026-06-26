@@ -51,9 +51,9 @@ describe("BulkEditTable", () => {
     const checkboxes = screen.getAllByRole("checkbox");
 
     await user.click(checkboxes[1]);
-    await user.click(screen.getByText("event_list.edit_selected"));
+    await user.click(screen.getByText("bulk_edit_table.edit_selected"));
     await act(async () => {
-      await user.click(screen.getByText("bulk_actions_page.btn_apply_changes"));
+      await user.click(screen.getByText("bulk_edit_table.apply_changes"));
     });
 
     await waitFor(() => {
