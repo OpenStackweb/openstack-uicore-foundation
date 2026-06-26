@@ -38,7 +38,7 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
-import { renderCell } from "../table/utils";
+import CustomCell from "../table/custom-cell";
 
 const MuiTableSortable = ({
   columns = [],
@@ -219,7 +219,7 @@ const MuiTableSortable = ({
                                 } ${col.className}`}
                                 sx={{ fontWeight: "normal", wordBreak: "break-all" }}
                               >
-                                {renderCell(row, col)}
+                                {CustomCell(row, col)}
                               </TableCell>
                             ))}
                             {/* Edit column */}

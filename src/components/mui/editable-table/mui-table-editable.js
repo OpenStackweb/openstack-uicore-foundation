@@ -36,7 +36,7 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
-import { renderCell } from "../table/utils";
+import CustomCell from "../table/custom-cell";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",
@@ -320,7 +320,7 @@ const MuiTableEditable = ({
                           validation={col.validation}
                         />
                       ) : (
-                        renderCell(row, col)
+                        CustomCell(row, col)
                       )}
                     </TableCell>
                   ))}
