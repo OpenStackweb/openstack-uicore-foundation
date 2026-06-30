@@ -21,13 +21,13 @@ import {
 } from "@mui/material";
 import { useField } from "formik";
 
-const MuiFormikCheckbox = ({ name, label, ...props }) => {
+const MuiFormikCheckbox = ({ name, label, margin = "normal", ...props }) => {
   const [field, meta] = useField({ name, type: "checkbox" });
 
   return (
     <FormControl
       fullWidth
-      margin="normal"
+      margin={margin}
       error={meta.touched && Boolean(meta.error)}
     >
       <FormControlLabel
