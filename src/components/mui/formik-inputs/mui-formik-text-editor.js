@@ -4,15 +4,17 @@ import { InputLabel } from "@mui/material";
 import TextEditorV3 from "../../inputs/editor-input-v3";
 import { normalizeHtmlString } from "../../../utils/methods";
 
-const FormikTextEditor = ({ name, options = {}, licence, ...props }) => {
+const FormikTextEditor = ({ name, label = "", options = {}, licence, ...props }) => {
   const [field, meta, helpers] = useField(name);
   const mergedOptions = { tabIndex: 0, allowTabNavigation: true, ...options };
 
   return (
     <>
-      <InputLabel htmlFor={name}>
-        {label}
-      </InputLabel>
+      {label && (
+        <InputLabel htmlFor={name}>
+          {label}
+        </InputLabel>
+      )}
       <TextEditorV3
         id={name}
         value={field.value}
