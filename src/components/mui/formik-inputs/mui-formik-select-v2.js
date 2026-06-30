@@ -10,14 +10,14 @@ import {
 } from "@mui/material";
 import { useField } from "formik";
 
-const MuiFormikSelectV2 = ({ name, label, placeholder, options, ...rest }) => {
+const MuiFormikSelectV2 = ({ name, label, placeholder, options, required, ...rest }) => {
   const [field, meta] = useField(name);
   const finalPlaceholder =
     placeholder || T.translate("placeholders.select");
 
   return (
-    <FormControl fullWidth error={meta.touched && Boolean(meta.error)}>
-      {label && <InputLabel id={`${name}-label`}>{label}</InputLabel>}
+    <FormControl fullWidth error={meta.touched && Boolean(meta.error)} required={required}>
+      {label && <InputLabel shrink id={`${name}-label`}>{label}</InputLabel>}
       <Select
         name={name}
         label={label}
