@@ -39,7 +39,7 @@ const ItemTableField = ({
         <MuiFormikDropdownCheckbox
           {...commonProps}
           size="small"
-          options={field.values.map((v) => ({ value: v.id, label: v.value }))}
+          options={field.values.map((v) => ({ value: String(v.id), label: v.value }))}
         />
       );
     case "RadioButtonList":
