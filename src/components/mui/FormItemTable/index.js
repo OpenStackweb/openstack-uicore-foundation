@@ -13,7 +13,6 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Box,
   Collapse,
   IconButton,
   MenuItem,
@@ -208,6 +207,7 @@ const FormItemTable = ({
                   <TableCell>
                     <IconButton
                       size="small"
+                      aria-label="Toggle row details"
                       onClick={() => toggleRow(row.form_item_id)}
                     >
                       {isOpen ? (
@@ -263,6 +263,7 @@ const FormItemTable = ({
                   <TableCell align="center" sx={{ verticalAlign: "middle" }}>
                     <IconButton
                       size="small"
+                      aria-label="Toggle row details"
                       onClick={() => toggleRow(row.form_item_id)}
                     >
                       <InfoOutlinedIcon color={getDetailsIconColor(row)} />
