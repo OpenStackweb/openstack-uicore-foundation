@@ -59,7 +59,9 @@ const SortableItem = ({ id, item, index, renderItem }) => {
 };
 
 const getItemId = (item, index, idKey) =>
-  item[idKey] ? String(item[idKey]) : `new-${index}`;
+  item[idKey] !== undefined && item[idKey] !== null
+    ? String(item[idKey])
+    : `new-${index}`;
 
 const DragNDropList = ({
   items,
@@ -82,6 +84,8 @@ const DragNDropList = ({
     const newIndex = items.findIndex(
       (item, i) => getItemId(item, i, idKey) === over.id
     );
+
+    if (oldIndex === -1 || newIndex === -1) return;
 
     const reordered = arrayMove(items, oldIndex, newIndex).map((item, i) => ({
       ...item,
