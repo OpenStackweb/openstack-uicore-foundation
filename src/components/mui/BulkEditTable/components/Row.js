@@ -65,29 +65,26 @@ const Row = (props) => {
           slotProps={{ input: { "aria-label": `Select row ${row[idKey]}` } }}
         />
       </TableCell>
-      <TableCell sx={{ fontWeight: "normal" }}>{row[idKey]}</TableCell>
-      {columns
-        .filter((col) => col.columnKey !== idKey)
-        .map((col) => (
-          <TableCell
-            key={`${row[idKey]}_${col.columnKey}`}
-            className={
-              isEditingRow && col.editableField
-                ? styles.bulkEditCol
-                : styles.dataColumn
-            }
-            sx={{ fontWeight: "normal" }}
-            style={getCellStyle(col)}
-          >
-            <Cell
-              col={col}
-              row={row}
-              editRow={editRow}
-              isEditingRow={isEditingRow}
-              onChange={onRowChange}
-            />
-          </TableCell>
-        ))}
+      {columns.map((col) => (
+        <TableCell
+          key={`${row[idKey]}_${col.columnKey}`}
+          className={
+            isEditingRow && col.editableField
+              ? styles.bulkEditCol
+              : styles.dataColumn
+          }
+          sx={{ fontWeight: "normal" }}
+          style={getCellStyle(col)}
+        >
+          <Cell
+            col={col}
+            row={row}
+            editRow={editRow}
+            isEditingRow={isEditingRow}
+            onChange={onRowChange}
+          />
+        </TableCell>
+      ))}
       {(actions?.edit || actions?.delete) && (
         <TableCell
           align="center"
