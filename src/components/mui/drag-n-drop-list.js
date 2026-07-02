@@ -44,11 +44,11 @@ const SortableItem = ({ id, item, index, renderItem }) => {
   return (
     <Box
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      sx={{
-        background: isDragging ? "#f0f0f0" : "inherit",
-        transition: "background 0.2s ease"
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition: [transition, "background 0.2s ease"].filter(Boolean).join(", ")
       }}
+      sx={{ background: isDragging ? "#f0f0f0" : "inherit" }}
     >
       {renderItem(item, index, {
         isDragging,
@@ -58,6 +58,14 @@ const SortableItem = ({ id, item, index, renderItem }) => {
   );
 };
 
+// Items without an idKey value fall back to a positional id (new-${index}).
+// Because that id is recomputed from the current index every render, after a
+// reorder it identifies whatever item now occupies that slot, not the item it
+// originally pointed to - React will reuse that item's fiber instead of
+// remounting it. Harmless if renderItem is stateless/positional (e.g. Formik
+// fields bound by values[index]), but consumers relying on local/uncontrolled
+// state inside renderItem should assign a stable id (e.g. crypto.randomUUID())
+// to new items instead of leaving idKey undefined.
 const getItemId = (item, index, idKey) =>
   item[idKey] !== undefined && item[idKey] !== null
     ? String(item[idKey])
