@@ -221,4 +221,20 @@ describe("useGridFilter – setFilters", () => {
       payload: { id: "f", filters: [], joinOperator: JOIN_OPERATORS.ALL }
     });
   });
+
+  test("falls back to JOIN_OPERATORS.ALL when given an invalid joinOperator", () => {
+    const store = storeWith("f", []);
+    const savedCriteria = [
+      { criteria: "track_id", operator: "==", value: [36333], parsed: ["track_id==36333"] }
+    ];
+
+    const { current } = renderHookWithStore(() => useGridFilter("f"), store);
+    current.setFilters(savedCriteria, "garbage");
+
+    const actions = store.getActions();
+    expect(actions[0]).toMatchObject({
+      type: SAVE_FILTERS,
+      payload: { id: "f", filters: savedCriteria, joinOperator: JOIN_OPERATORS.ALL }
+    });
+  });
 });

@@ -163,11 +163,12 @@ export const fetchAllSummits = async (onlyActive) => {
         .then((json) => json.data);
 };
 
-/**
- * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
- */
-export const querySpeakers = debounce(async (summitId, input, callback, per_page = DEFAULT_PER_PAGE ) => {
-
+// Undebounced: callers that already debounce per-instance (e.g.
+// AsyncSelectInput/SpeakerSelectInput) should use this directly. Wiring the
+// module-level debounced `querySpeakers` below as a per-instance default
+// coalesces calls across separate mounted instances (they share one timer)
+// and stacks a second debounce on top of the caller's own.
+export const querySpeakersRaw = async (summitId, input, callback, per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/${summitId ? `summits/${summitId}/speakers`:`speakers`}`);
 
@@ -182,8 +183,12 @@ export const querySpeakers = debounce(async (summitId, input, callback, per_page
     }
 
     _fetch(endpoint, callback);
+};
 
-}, DEBOUNCE_WAIT);
+/**
+ * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
+ */
+export const querySpeakers = debounce(querySpeakersRaw, DEBOUNCE_WAIT);
 
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}
@@ -316,10 +321,9 @@ export const queryGroups = debounce(async (input, callback, per_page = DEFAULT_P
 
 }, DEBOUNCE_WAIT);
 
-/**
- * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
- */
-export const queryCompanies = debounce(async (input, callback, per_page = DEFAULT_PER_PAGE) => {
+// Undebounced counterpart of queryCompanies below — see querySpeakersRaw for
+// why per-instance callers (e.g. CompanySelectInput) should use this instead.
+export const queryCompaniesRaw = async (input, callback, per_page = DEFAULT_PER_PAGE) => {
 
     let endpoint = URI(`/api/v1/companies`);
 
@@ -333,7 +337,12 @@ export const queryCompanies = debounce(async (input, callback, per_page = DEFAUL
     }
 
     _fetch(endpoint, callback);
-}, DEBOUNCE_WAIT);
+};
+
+/**
+ * @type {DebouncedFunc<(function(*, *, *=): Promise<void>)|*>}
+ */
+export const queryCompanies = debounce(queryCompaniesRaw, DEBOUNCE_WAIT);
 
 /**
  * @type {DebouncedFunc<(function(*, *, *, *=): Promise<void>)|*>}

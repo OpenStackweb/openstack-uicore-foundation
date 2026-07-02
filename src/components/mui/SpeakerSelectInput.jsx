@@ -15,7 +15,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import T from "i18n-react/dist/i18n-react";
 import AsyncSelectInput from "./AsyncSelectInput";
-import { querySpeakers } from "../../utils/query-actions";
+import { querySpeakersRaw } from "../../utils/query-actions";
 
 const defaultFormatOption = (speaker) => ({
   value: speaker.id,
@@ -24,7 +24,7 @@ const defaultFormatOption = (speaker) => ({
 
 const SpeakerSelectInput = ({ summitId, queryFunction, placeholder, ...rest }) => (
   <AsyncSelectInput
-    queryFunction={queryFunction || ((input, callback) => querySpeakers(summitId, input, callback))}
+    queryFunction={queryFunction || ((input, callback) => querySpeakersRaw(summitId, input, callback))}
     placeholder={placeholder || T.translate("placeholders.speaker")}
     // eslint-disable-next-line react/jsx-props-no-spreading
     {...rest}

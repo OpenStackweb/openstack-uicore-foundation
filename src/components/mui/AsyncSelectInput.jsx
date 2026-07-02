@@ -17,7 +17,7 @@ import T from "i18n-react/dist/i18n-react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import CircularProgress from "@mui/material/CircularProgress";
-import { DEBOUNCE_WAIT_250 } from "../../utils/constants";
+import { ASYNC_SELECT_SAFETY_TIMEOUT, DEBOUNCE_WAIT_250 } from "../../utils/constants";
 
 const defaultFormatOption = (item) => ({
   value: item.id,
@@ -49,6 +49,9 @@ const AsyncSelectInput = ({
   const debounceRef = useRef(null);
   const mountedRef = useRef(false);
   const requestIdRef = useRef(0);
+  // Backstops a queryFunction whose callback never fires (e.g. a non-404
+  // HTTP error swallowed upstream) so the spinner doesn't spin forever.
+  const safetyTimeoutRef = useRef(null);
 
   // Filter.jsx passes `options` generically to every ValueInput type (meant
   // for the sync `select` type); this type fetches its own, so it's stripped
@@ -64,9 +67,22 @@ const AsyncSelectInput = ({
     requestIdRef.current += 1;
     const thisRequestId = requestIdRef.current;
     setLoading(true);
+
+    if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
+    safetyTimeoutRef.current = setTimeout(() => {
+      if (mountedRef.current && thisRequestId === requestIdRef.current) {
+        setLoading(false);
+      }
+    }, ASYNC_SELECT_SAFETY_TIMEOUT);
+
     queryFunction(searchTerm, (rawResults) => {
       if (!mountedRef.current || thisRequestId !== requestIdRef.current) return;
-      setOptions((rawResults || []).map((item) => ({ ...formatOption(item), raw: item })));
+      clearTimeout(safetyTimeoutRef.current);
+      // queryFunction implementations may invoke the callback with something
+      // other than an array (e.g. an Error on auth failure), so guard here
+      // rather than assume the shape.
+      const items = Array.isArray(rawResults) ? rawResults : [];
+      setOptions(items.map((item) => ({ ...formatOption(item), raw: item })));
       setLoading(false);
     });
   };
@@ -77,6 +93,7 @@ const AsyncSelectInput = ({
     return () => {
       mountedRef.current = false;
       if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

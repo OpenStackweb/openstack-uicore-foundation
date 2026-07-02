@@ -12,6 +12,7 @@
  * */
 
 import * as React from "react";
+import PropTypes from "prop-types";
 import T from "i18n-react/dist/i18n-react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -371,6 +372,40 @@ const MuiTableEditable = ({
       </Paper>
     </Box>
   );
+};
+
+MuiTableEditable.propTypes = {
+  columns: PropTypes.arrayOf(
+    PropTypes.shape({
+      columnKey: PropTypes.string.isRequired,
+      header: PropTypes.node,
+      width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      align: PropTypes.string,
+      sortable: PropTypes.bool,
+      editable: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+      validation: PropTypes.shape({ schema: PropTypes.object }),
+      render: PropTypes.func
+    })
+  ),
+  data: PropTypes.arrayOf(PropTypes.object),
+  totalRows: PropTypes.number,
+  // Pagination only renders when all three are provided — see line 366.
+  perPage: PropTypes.number,
+  currentPage: PropTypes.number,
+  onPageChange: PropTypes.func,
+  onPerPageChange: PropTypes.func,
+  onSort: PropTypes.func,
+  options: PropTypes.shape({
+    sortCol: PropTypes.string,
+    sortDir: PropTypes.oneOf([1, -1]),
+    disableProp: PropTypes.string
+  }),
+  getName: PropTypes.func,
+  onEdit: PropTypes.func,
+  onArchive: PropTypes.func,
+  onDelete: PropTypes.func,
+  onCellChange: PropTypes.func,
+  deleteDialogBody: PropTypes.func
 };
 
 export default MuiTableEditable;

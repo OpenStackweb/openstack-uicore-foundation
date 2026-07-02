@@ -100,7 +100,7 @@ const Row = (props) => {
                 size="medium"
                 onClick={() => actions.edit.onClick(row)}
                 sx={{ padding: 0 }}
-                aria-label={`Edit event ${row[idKey]}`}
+                aria-label={`Edit row ${row[idKey]}`}
               >
                 <EditIcon fontSize="large" />
               </IconButton>
@@ -110,7 +110,7 @@ const Row = (props) => {
                 size="medium"
                 onClick={() => actions.delete.onClick(row)}
                 sx={{ padding: 0 }}
-                aria-label={`Delete event ${row[idKey]}`}
+                aria-label={`Delete row ${row[idKey]}`}
               >
                 <DeleteIcon fontSize="large" />
               </IconButton>

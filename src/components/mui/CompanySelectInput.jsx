@@ -15,7 +15,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import T from "i18n-react/dist/i18n-react";
 import AsyncSelectInput from "./AsyncSelectInput";
-import { queryCompanies } from "../../utils/query-actions";
+import { queryCompaniesRaw } from "../../utils/query-actions";
 
 const defaultFormatOption = (company) => ({
   value: company.id,
@@ -24,7 +24,7 @@ const defaultFormatOption = (company) => ({
 
 const CompanySelectInput = ({ queryFunction, placeholder, ...rest }) => (
   <AsyncSelectInput
-    queryFunction={queryFunction || queryCompanies}
+    queryFunction={queryFunction || queryCompaniesRaw}
     placeholder={placeholder || T.translate("placeholders.company")}
     // eslint-disable-next-line react/jsx-props-no-spreading
     {...rest}

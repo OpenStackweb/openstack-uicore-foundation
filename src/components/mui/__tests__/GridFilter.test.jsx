@@ -9,7 +9,7 @@ import configureStore from "redux-mock-store";
 import thunk from "redux-thunk";
 import { GridFilter, OPERATORS, JOIN_OPERATORS, SAVE_FILTERS } from "../GridFilter";
 import Filter from "../GridFilter/components/Filter";
-import { querySpeakers, queryCompanies } from "../../../utils/query-actions";
+import { querySpeakersRaw, queryCompaniesRaw } from "../../../utils/query-actions";
 
 jest.mock("i18n-react/dist/i18n-react", () => ({
   __esModule: true,
@@ -17,8 +17,8 @@ jest.mock("i18n-react/dist/i18n-react", () => ({
 }));
 
 jest.mock("../../../utils/query-actions", () => ({
-  querySpeakers: jest.fn((summitId, input, callback) => callback([])),
-  queryCompanies: jest.fn((input, callback) => callback([]))
+  querySpeakersRaw: jest.fn((summitId, input, callback) => callback([])),
+  queryCompaniesRaw: jest.fn((input, callback) => callback([]))
 }));
 
 // MUI Fade never fires its exit callback in jsdom (no CSS transition events),
@@ -488,7 +488,7 @@ describe("Filter - asyncSelect value type", () => {
 });
 
 describe("Filter - speaker value type", () => {
-  beforeEach(() => querySpeakers.mockClear());
+  beforeEach(() => querySpeakersRaw.mockClear());
 
   const speakerCriteria = (props = {}) => [
     {
@@ -511,16 +511,16 @@ describe("Filter - speaker value type", () => {
       />
     );
 
-  test("defaults queryFunction to querySpeakers scoped to summitId", () => {
+  test("defaults queryFunction to querySpeakersRaw scoped to summitId", () => {
     renderSpeakerFilter();
-    expect(querySpeakers).toHaveBeenCalledWith(42, "", expect.any(Function));
+    expect(querySpeakersRaw).toHaveBeenCalledWith(42, "", expect.any(Function));
   });
 
   test("a queryFunction override takes precedence over the summitId default", () => {
     const queryFunction = jest.fn((input, callback) => callback([]));
     renderSpeakerFilter({ queryFunction });
     expect(queryFunction).toHaveBeenCalledWith("", expect.any(Function));
-    expect(querySpeakers).not.toHaveBeenCalled();
+    expect(querySpeakersRaw).not.toHaveBeenCalled();
   });
 
   test("uses the speaker-specific default placeholder, not the generic async one", () => {
@@ -532,7 +532,7 @@ describe("Filter - speaker value type", () => {
 });
 
 describe("Filter - company value type", () => {
-  beforeEach(() => queryCompanies.mockClear());
+  beforeEach(() => queryCompaniesRaw.mockClear());
 
   const companyCriteria = (props = {}) => [
     {
@@ -555,16 +555,16 @@ describe("Filter - company value type", () => {
       />
     );
 
-  test("defaults queryFunction to queryCompanies", () => {
+  test("defaults queryFunction to queryCompaniesRaw", () => {
     renderCompanyFilter();
-    expect(queryCompanies).toHaveBeenCalledWith("", expect.any(Function));
+    expect(queryCompaniesRaw).toHaveBeenCalledWith("", expect.any(Function));
   });
 
   test("a queryFunction override takes precedence over the default", () => {
     const queryFunction = jest.fn((input, callback) => callback([]));
     renderCompanyFilter({ queryFunction });
     expect(queryFunction).toHaveBeenCalledWith("", expect.any(Function));
-    expect(queryCompanies).not.toHaveBeenCalled();
+    expect(queryCompaniesRaw).not.toHaveBeenCalled();
   });
 
   test("uses the company-specific default placeholder, not the generic async one", () => {
