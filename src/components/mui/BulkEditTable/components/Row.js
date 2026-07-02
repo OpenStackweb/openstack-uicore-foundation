@@ -42,7 +42,8 @@ const Row = (props) => {
     onToggle,
     onFieldChange,
     actions,
-    idKey
+    idKey,
+    entityName
   } = props;
 
   const isEditingRow = isSelected && editEnabled;
@@ -100,7 +101,7 @@ const Row = (props) => {
                 size="medium"
                 onClick={() => actions.edit.onClick(row)}
                 sx={{ padding: 0 }}
-                aria-label={`Edit event ${row[idKey]}`}
+                aria-label={`Edit ${entityName} ${row[idKey]}`}
               >
                 <EditIcon fontSize="large" />
               </IconButton>
@@ -110,7 +111,7 @@ const Row = (props) => {
                 size="medium"
                 onClick={() => actions.delete.onClick(row)}
                 sx={{ padding: 0 }}
-                aria-label={`Delete event ${row[idKey]}`}
+                aria-label={`Delete ${entityName} ${row[idKey]}`}
               >
                 <DeleteIcon fontSize="large" />
               </IconButton>
@@ -131,11 +132,13 @@ Row.propTypes = {
   onToggle: PropTypes.func,
   onFieldChange: PropTypes.func,
   actions: PropTypes.object,
-  idKey: PropTypes.string
+  idKey: PropTypes.string,
+  entityName: PropTypes.string
 };
 
 Row.defaultProps = {
-  idKey: "id"
+  idKey: "id",
+  entityName: "row"
 };
 
 export default Row;

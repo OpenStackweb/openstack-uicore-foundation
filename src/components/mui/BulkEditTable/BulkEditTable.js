@@ -29,7 +29,7 @@ import useRowSelection from "./hooks/useRowSelection";
 import styles from "./BulkEditTable.module.less";
 import CustomTablePagination from "../table/CustomTablePagination";
 
-const BulkEditTable = ({ options, columns, data, onSort, onUpdate, totalRows, perPage, currentPage, onPageChange, onPerPageChange, idKey }) => {
+const BulkEditTable = ({ options, columns, data, onSort, onUpdate, totalRows, perPage, currentPage, onPageChange, onPerPageChange, idKey, entityName }) => {
   const {
     selectedRows,
     isSelected,
@@ -139,6 +139,7 @@ const BulkEditTable = ({ options, columns, data, onSort, onUpdate, totalRows, pe
                     }
                     columns={columns}
                     actions={options.actions}
+                    entityName={entityName}
                   />
                 ))}
             </TableBody>
@@ -165,6 +166,7 @@ BulkEditTable.propTypes = {
   onSort: PropTypes.func.isRequired,
   onUpdate: PropTypes.func.isRequired,
   idKey: PropTypes.string,
+  entityName: PropTypes.string,
   totalRows: PropTypes.number,
   perPage: PropTypes.number,
   currentPage: PropTypes.number,
@@ -173,7 +175,8 @@ BulkEditTable.propTypes = {
 };
 
 BulkEditTable.defaultProps = {
-  idKey: "id"
+  idKey: "id",
+  entityName: "row"
 };
 
 export default BulkEditTable;
