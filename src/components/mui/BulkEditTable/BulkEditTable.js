@@ -13,6 +13,7 @@
 
 import React, { useEffect } from "react";
 import PropTypes from "prop-types";
+import T from "i18n-react/dist/i18n-react";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
@@ -28,8 +29,28 @@ import Row from "./components/Row";
 import useRowSelection from "./hooks/useRowSelection";
 import styles from "./BulkEditTable.module.less";
 import CustomTablePagination from "../table/CustomTablePagination";
+import showConfirmDialog from "../showConfirmDialog";
 
-const BulkEditTable = ({ options, columns, data, onSort, onUpdate, totalRows, perPage, currentPage, onPageChange, onPerPageChange, idKey }) => {
+const BulkEditTable = ({
+  options,
+  columns,
+  data,
+  onSort,
+  onUpdate,
+  totalRows,
+  perPage,
+  currentPage,
+  onPageChange,
+  onPerPageChange,
+  idKey,
+  onEdit,
+  onDelete,
+  getName,
+  deleteDialogTitle,
+  deleteDialogBody,
+  deleteDialogConfirmText,
+  confirmButtonColor
+}) => {
   const {
     selectedRows,
     isSelected,
@@ -62,6 +83,29 @@ const BulkEditTable = ({ options, columns, data, onSort, onUpdate, totalRows, pe
       .catch((error) => {
         console.error("Error updating events:", error);
       });
+  };
+
+  // Wraps the onDelete prop with the same confirm-before-delete UX other mui
+  // tables already have (see mui-table.js's handleDelete), so consumers don't
+  // need to wire up their own dialog. Matches mui-table.js's contract:
+  // onDelete is called with the row's id, not the full row.
+  const handleDelete = async (item) => {
+    const isConfirmed = await showConfirmDialog({
+      title: deleteDialogTitle || T.translate("general.are_you_sure"),
+      text:
+        typeof deleteDialogBody === "function"
+          ? deleteDialogBody(getName(item))
+          : deleteDialogBody ||
+            `${T.translate("general.row_remove_warning")} ${getName(item)}`,
+      iconType: "warning",
+      confirmButtonColor: confirmButtonColor || "error",
+      confirmButtonText:
+        deleteDialogConfirmText || T.translate("general.yes_delete")
+    });
+
+    if (isConfirmed) {
+      onDelete(item[idKey]);
+    }
   };
 
   return (
@@ -112,7 +156,7 @@ const BulkEditTable = ({ options, columns, data, onSort, onUpdate, totalRows, pe
                     </Heading>
                   );
                 })}
-                {(options.actions?.edit || options.actions?.delete) && (
+                {(onEdit || onDelete) && (
                   <TableCell
                     align="center"
                     className={styles.actionColumn}
@@ -138,7 +182,8 @@ const BulkEditTable = ({ options, columns, data, onSort, onUpdate, totalRows, pe
                       editField(row[idKey], key, value)
                     }
                     columns={columns}
-                    actions={options.actions}
+                    onEdit={onEdit}
+                    onDelete={onDelete ? handleDelete : null}
                   />
                 ))}
             </TableBody>
@@ -169,11 +214,25 @@ BulkEditTable.propTypes = {
   perPage: PropTypes.number,
   currentPage: PropTypes.number,
   onPageChange: PropTypes.func,
-  onPerPageChange: PropTypes.func
+  onPerPageChange: PropTypes.func,
+  onEdit: PropTypes.func,
+  onDelete: PropTypes.func,
+  getName: PropTypes.func,
+  deleteDialogTitle: PropTypes.string,
+  deleteDialogBody: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
+  deleteDialogConfirmText: PropTypes.string,
+  confirmButtonColor: PropTypes.string
 };
 
 BulkEditTable.defaultProps = {
-  idKey: "id"
+  idKey: "id",
+  onEdit: null,
+  onDelete: null,
+  getName: (item) => item.name,
+  deleteDialogTitle: null,
+  deleteDialogBody: null,
+  deleteDialogConfirmText: null,
+  confirmButtonColor: null
 };
 
 export default BulkEditTable;

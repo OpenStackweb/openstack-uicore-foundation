@@ -41,7 +41,8 @@ const Row = (props) => {
     editRow,
     onToggle,
     onFieldChange,
-    actions,
+    onEdit,
+    onDelete,
     idKey
   } = props;
 
@@ -85,27 +86,27 @@ const Row = (props) => {
           />
         </TableCell>
       ))}
-      {(actions?.edit || actions?.delete) && (
+      {(onEdit || onDelete) && (
         <TableCell
           align="center"
           className={`${styles.actionColumn} ${styles.dottedBorderLeft}`}
           sx={{ backgroundColor: "#fff" }}
         >
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
-            {actions.edit && (
+            {onEdit && (
               <IconButton
                 size="medium"
-                onClick={() => actions.edit.onClick(row)}
+                onClick={() => onEdit(row)}
                 sx={{ padding: 0 }}
                 aria-label={`Edit row ${row[idKey]}`}
               >
                 <EditIcon fontSize="large" />
               </IconButton>
             )}
-            {actions.delete && (
+            {onDelete && (
               <IconButton
                 size="medium"
-                onClick={() => actions.delete.onClick(row)}
+                onClick={() => onDelete(row)}
                 sx={{ padding: 0 }}
                 aria-label={`Delete row ${row[idKey]}`}
               >
@@ -127,12 +128,15 @@ Row.propTypes = {
   editRow: PropTypes.object.isRequired,
   onToggle: PropTypes.func,
   onFieldChange: PropTypes.func,
-  actions: PropTypes.object,
+  onEdit: PropTypes.func,
+  onDelete: PropTypes.func,
   idKey: PropTypes.string
 };
 
 Row.defaultProps = {
-  idKey: "id"
+  idKey: "id",
+  onEdit: null,
+  onDelete: null
 };
 
 export default Row;
