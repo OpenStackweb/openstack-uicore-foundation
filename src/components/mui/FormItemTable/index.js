@@ -11,7 +11,7 @@
  * limitations under the License.
  * */
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Collapse,
   IconButton,
@@ -39,7 +39,7 @@ import MuiFormikSelect from "../formik-inputs/mui-formik-select";
 import MuiFormikPriceField from "../formik-inputs/mui-formik-pricefield";
 import MuiFormikDiscountField from "../formik-inputs/mui-formik-discountfield";
 import ExpandedRowContent from "./components/ExpandedRowContent";
-import { isItemAvailable } from "./helpers";
+import { hasDrivingQuantityField, isItemAvailable } from "./helpers";
 
 const FormItemTable = ({
   data,
@@ -50,41 +50,70 @@ const FormItemTable = ({
   errors
 }) => {
   const valuesStr = JSON.stringify(values);
-  const [openRows, setOpenRows] = useState({});
 
   const extraColumns =
     data[0]?.meta_fields?.filter(
       (mf) => mf.class_field === SPONSOR_FORMS_METAFIELD_CLASS.FORM
     ) || [];
 
+  // Rows whose global qty is driven by a Form- or Item-level Quantity field
+  // only expose that field inside the expanded panel, so default them open —
+  // otherwise the field that determines pricing is hidden behind a click.
+  const [openRows, setOpenRows] = useState(() =>
+    data.reduce((acc, row) => {
+      if (hasDrivingQuantityField(row, extraColumns)) acc[row.form_item_id] = true;
+      return acc;
+    }, {})
+  );
+
   // toggle, code, name, custom_rate, early_bird, standard, onsite, qty, total, details
   const totalColumns = 10;
 
+  // Rows that had a visible error the last time this effect ran. Used to
+  // only auto-expand on a fresh error occurrence, not on every validation
+  // cycle a persisting error is still part of — otherwise a row the user
+  // just collapsed gets forced back open on the next keystroke anywhere
+  // else in the form (errors/touched get new references on most
+  // validateOnChange cycles even when this row's own error didn't change).
+  const previousErrorRowsRef = useRef(new Set());
+
   useEffect(() => {
-    if (!errors || Object.keys(errors).length === 0) return;
-    setOpenRows((prev) => {
-      const updates = {};
-      data.forEach((row) => {
-        const itemFields = (row.meta_fields ?? []).filter(
-          (f) => f.class_field === SPONSOR_FORMS_METAFIELD_CLASS.ITEM
-        );
-        const expandedKeys = new Set([
-          ...extraColumns.map(
-            (exc) =>
-              `i-${row.form_item_id}-c-${exc.class_field}-f-${exc.type_id}`
-          ),
-          ...itemFields.map(
-            (f) => `i-${row.form_item_id}-c-${f.class_field}-f-${f.type_id}`
-          ),
-          `i-${row.form_item_id}-c-global-f-notes`
-        ]);
-        const hasVisibleError = Object.keys(errors).some(
-          (key) => expandedKeys.has(key) && touched[key]
-        );
-        if (hasVisibleError) updates[row.form_item_id] = true;
-      });
-      return { ...prev, ...updates };
+    if (!errors || Object.keys(errors).length === 0) {
+      previousErrorRowsRef.current = new Set();
+      return;
+    }
+
+    const currentErrorRows = new Set();
+    const updates = {};
+    data.forEach((row) => {
+      const itemFields = (row.meta_fields ?? []).filter(
+        (f) => f.class_field === SPONSOR_FORMS_METAFIELD_CLASS.ITEM
+      );
+      const expandedKeys = new Set([
+        ...extraColumns.map(
+          (exc) =>
+            `i-${row.form_item_id}-c-${exc.class_field}-f-${exc.type_id}`
+        ),
+        ...itemFields.map(
+          (f) => `i-${row.form_item_id}-c-${f.class_field}-f-${f.type_id}`
+        ),
+        `i-${row.form_item_id}-c-global-f-notes`
+      ]);
+      const hasVisibleError = Object.keys(errors).some(
+        (key) => expandedKeys.has(key) && touched[key]
+      );
+      if (hasVisibleError) {
+        currentErrorRows.add(row.form_item_id);
+        if (!previousErrorRowsRef.current.has(row.form_item_id)) {
+          updates[row.form_item_id] = true;
+        }
+      }
     });
+    previousErrorRowsRef.current = currentErrorRows;
+
+    if (Object.keys(updates).length > 0) {
+      setOpenRows((prev) => ({ ...prev, ...updates }));
+    }
   }, [errors, touched]);
 
   const toggleRow = (rowId) => {

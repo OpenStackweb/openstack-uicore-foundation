@@ -12,7 +12,10 @@
  * */
 
 import { epochToMomentTimeZone } from "../../../utils/methods";
-import { MILLISECONDS_IN_SECOND } from "../../../utils/constants";
+import {
+  MILLISECONDS_IN_SECOND,
+  SPONSOR_FORMS_METAFIELD_CLASS
+} from "../../../utils/constants";
 
 export const getCurrentApplicableRate = (timeZone, rateDates) => {
   const now = epochToMomentTimeZone(
@@ -41,3 +44,17 @@ export const getCurrentApplicableRate = (timeZone, rateDates) => {
 
 export const isItemAvailable = (item, currentApplicableRate) =>
   item.rates?.[currentApplicableRate] != null;
+
+// The global quantity for a row is driven (and therefore read-only/computed)
+// when either a Form-class or an Item-class metafield of type Quantity
+// exists for it. Form-class fields are shared across all rows (extraColumns);
+// Item-class fields are specific to this row.
+export const hasDrivingQuantityField = (row, extraColumns) => {
+  const hasFormLevel = extraColumns.some((exc) => exc.type === "Quantity");
+  const hasItemLevel = (row.meta_fields ?? []).some(
+    (mf) =>
+      mf.class_field === SPONSOR_FORMS_METAFIELD_CLASS.ITEM &&
+      mf.type === "Quantity"
+  );
+  return hasFormLevel || hasItemLevel;
+};
