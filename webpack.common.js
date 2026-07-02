@@ -125,6 +125,7 @@ module.exports = {
         'components/mui/formik-inputs/summit-addon-select': './src/components/mui/formik-inputs/mui-formik-summit-addon-select.js',
         'components/mui/formik-inputs/switch': './src/components/mui/formik-inputs/mui-formik-switch.js',
         'components/mui/formik-inputs/textfield': './src/components/mui/formik-inputs/mui-formik-textfield.js',
+        'components/mui/formik-inputs/texteditor': './src/components/mui/formik-inputs/mui-formik-text-editor.js',        
         'components/mui/formik-inputs/timepicker': './src/components/mui/formik-inputs/mui-formik-timepicker.js',
         'components/mui/formik-inputs/upload': './src/components/mui/formik-inputs/mui-formik-upload.js',
         'components/mui/formik-inputs/company-input': './src/components/mui/formik-inputs/company-input-mui.js',
