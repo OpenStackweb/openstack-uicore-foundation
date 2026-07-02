@@ -13,7 +13,6 @@
 
 import * as React from "react";
 import T from "i18n-react/dist/i18n-react";
-import isBoolean from "lodash/isBoolean";
 import {
   Box,
   Button,
@@ -30,14 +29,13 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
-import {visuallyHidden} from "@mui/utils";
-import {DEFAULT_PER_PAGE, FIFTY_PER_PAGE, TWENTY_PER_PAGE} from "../../../utils/constants";
+import { visuallyHidden } from "@mui/utils";
+import { DEFAULT_PER_PAGE, FIFTY_PER_PAGE, TWENTY_PER_PAGE } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
 import styles from "./mui-table.module.less";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PropTypes from "prop-types";
+import TableCellContent from "./table-content";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",
@@ -54,27 +52,27 @@ const ACTION_CELL_SX = {
 };
 
 const MuiTable = ({
-                    columns = [],
-                    data = [],
-                    children,
-                    totalRows,
-                    perPage,
-                    currentPage,
-                    onPageChange,
-                    onPerPageChange,
-                    onSort,
-                    options = {sortCol: "", sortDir: 1, disableProp: null}, // disableProp is the prop that will disable the row
-                    getName = (item) => item.name,
-                    onEdit,
-                    onArchive,
-                    onDelete,
-                    onSelect,
-                    canDelete = () => true,
-                    deleteDialogTitle = null,
-                    deleteDialogBody = null,
-                    deleteDialogConfirmText = null,
-                    confirmButtonColor = null
-                  }) => {
+  columns = [],
+  data = [],
+  children,
+  totalRows,
+  perPage,
+  currentPage,
+  onPageChange,
+  onPerPageChange,
+  onSort,
+  options = { sortCol: "", sortDir: 1, disableProp: null }, // disableProp is the prop that will disable the row
+  getName = (item) => item.name,
+  onEdit,
+  onArchive,
+  onDelete,
+  onSelect,
+  canDelete = () => true,
+  deleteDialogTitle = null,
+  deleteDialogBody = null,
+  deleteDialogConfirmText = null,
+  confirmButtonColor = null
+}) => {
   const totalColumnsCount =
     columns.length + (onEdit ? 1 : 0) + (onDelete ? 1 : 0) + (onArchive ? 1 : 0) + (onSelect ? 1 : 0);
 
@@ -103,7 +101,7 @@ const MuiTable = ({
     customPerPageOptions = [initialPerPage.current];
   }
 
-  const {sortCol, sortDir} = options;
+  const { sortCol, sortDir } = options;
 
   const getDisabledSx = (row) =>
     options.disableProp && row[options.disableProp] ? ARCHIVED_CELL_SX : {};
@@ -118,7 +116,6 @@ const MuiTable = ({
   })
 
   const getCellSx = (row, col) => ({
-    fontWeight: "normal",
     ...(col.width && {
       width: col.width,
       minWidth: col.width,
@@ -153,32 +150,16 @@ const MuiTable = ({
     }
   };
 
-  const renderCell = (row, col) => {
-    if (col.render) {
-      return col.render(row);
-    }
-
-    if (isBoolean(row[col.columnKey])) {
-      return row[col.columnKey] ? (
-        <CheckIcon fontSize="large"/>
-      ) : (
-        <CloseIcon fontSize="large"/>
-      );
-    }
-
-    return <span style={{fontWeight: "normal"}}>{row[col.columnKey]}</span>;
-  };
-
   return (
-    <Box sx={{width: "100%"}}>
-      <Paper elevation={0} sx={{width: "100%", mb: 2}}>
+    <Box sx={{ width: "100%" }}>
+      <Paper elevation={0} sx={{ width: "100%", mb: 2 }}>
         <TableContainer
           component={Paper}
-          sx={{borderRadius: 0, boxShadow: "none"}}
+          sx={{ borderRadius: 0, boxShadow: "none" }}
         >
-          <Table sx={{tableLayout: "fixed"}}>
+          <Table sx={{ tableLayout: "fixed" }}>
             {/* TABLE HEADER */}
-            <TableHead sx={{backgroundColor: "#EAEDF4"}}>
+            <TableHead sx={{ backgroundColor: "#EAEDF4" }}>
               <TableRow>
                 {columns.map((col) => (
                   <TableCell
@@ -210,10 +191,10 @@ const MuiTable = ({
                     )}
                   </TableCell>
                 ))}
-                {onEdit && <TableCell sx={ACTION_CELL_SX}/>}
-                {onArchive && <TableCell sx={{...ACTION_CELL_SX, width: 80, minWidth: 80, maxWidth: 80}}/>}
-                {onDelete && <TableCell sx={ACTION_CELL_SX}/>}
-                {onSelect && <TableCell sx={ACTION_CELL_SX}/>}
+                {onEdit && <TableCell sx={ACTION_CELL_SX} />}
+                {onArchive && <TableCell sx={{ ...ACTION_CELL_SX, width: 80, minWidth: 80, maxWidth: 80 }} />}
+                {onDelete && <TableCell sx={ACTION_CELL_SX} />}
+                {onSelect && <TableCell sx={ACTION_CELL_SX} />}
               </TableRow>
             </TableHead>
 
@@ -229,7 +210,7 @@ const MuiTable = ({
                       className={`${col.dottedBorder && styles.dottedBorderLeft} ${col.className}`}
                       sx={getCellSx(row, col)}
                     >
-                      {renderCell(row, col)}
+                      <TableCellContent row={row} col={col} />
                     </TableCell>
                   ))}
                   {/* Edit column */}
@@ -242,18 +223,18 @@ const MuiTable = ({
                       <IconButton
                         size="medium"
                         onClick={() => onEdit(row)}
-                        sx={{padding: 0}}
+                        sx={{ padding: 0 }}
                         data-testid="action-edit"
                         disabled={options.disableProp && row[options.disableProp]}
                       >
-                        <EditIcon fontSize="large"/>
+                        <EditIcon fontSize="large" />
                       </IconButton>
                     </TableCell>
                   )}
                   {onArchive && (
                     <TableCell
                       align="center"
-                      sx={{...getActionCellSx(row), width: 80, minWidth: 80, maxWidth: 80}}
+                      sx={{ ...getActionCellSx(row), width: 80, minWidth: 80, maxWidth: 80 }}
                       className={styles.dottedBorderLeft}
                     >
                       <Button
@@ -291,10 +272,10 @@ const MuiTable = ({
                           size="medium"
                           onClick={() => handleDelete(row)}
                           data-testid="action-delete"
-                          sx={{padding: 0}}
+                          sx={{ padding: 0 }}
                           disabled={options.disableProp && row[options.disableProp]}
                         >
-                          <DeleteIcon fontSize="large"/>
+                          <DeleteIcon fontSize="large" />
                         </IconButton>
                       )}
                     </TableCell>
@@ -309,10 +290,10 @@ const MuiTable = ({
                         size="medium"
                         onClick={() => onSelect(row)}
                         data-testid="action-select"
-                        sx={{padding: 0}}
+                        sx={{ padding: 0 }}
                         disabled={options.disableProp && row[options.disableProp]}
                       >
-                        <ArrowForwardIcon/>
+                        <ArrowForwardIcon />
                       </IconButton>
                     </TableCell>
                   )}

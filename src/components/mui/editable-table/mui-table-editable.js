@@ -36,6 +36,7 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
+import TableCellContent from "../table/table-content";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",
@@ -295,8 +296,7 @@ const MuiTableEditable = ({
                       onClick={() => handleCellClick(row, col.columnKey)}
                       sx={getCellSx(row, {
                         cursor: isEditable(col, row) ? "pointer" : "default",
-                        padding: isEditable(col, row) ? "8px 16px" : undefined,
-                        fontWeight: "normal"
+                        padding: isEditable(col, row) ? "8px 16px" : undefined
                       })}
                     >
                       {isEditable(col, row) ? (
@@ -317,12 +317,8 @@ const MuiTableEditable = ({
                           }
                           validation={col.validation}
                         />
-                      ) : col.render ? (
-                        col.render(row)
                       ) : (
-                        <span style={{ fontWeight: "normal" }}>
-                          {row[col.columnKey]}
-                        </span>
+                        <TableCellContent row={row} col={col} />
                       )}
                     </TableCell>
                   ))}

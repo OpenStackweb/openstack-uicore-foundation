@@ -265,4 +265,26 @@ describe("MuiTable", () => {
     // MUI CheckIcon renders an SVG; just ensure no error
     expect(screen.getByRole("cell", { hidden: true })).toBeInTheDocument();
   });
+
+  describe("ellipsis column prop", () => {
+    beforeEach(() => {
+      jest.spyOn(Element.prototype, "scrollWidth", "get").mockReturnValue(200);
+      jest.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(100);
+    });
+    afterEach(() => jest.restoreAllMocks());
+
+    test("wraps cell in truncating span and shows raw value tooltip on hover", async () => {
+      setup({ columns: [{ columnKey: "name", header: "Name", truncateText: true }] });
+      const wrapper = screen.getByText("Alice").parentElement;
+
+      expect(wrapper).toHaveStyle({
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap"
+      });
+
+      await userEvent.hover(wrapper);
+      expect(await screen.findByRole("tooltip")).toHaveTextContent("Alice");
+    });
+  });
 });
