@@ -143,7 +143,7 @@ const MuiTable = ({
           `${T.translate("general.row_remove_warning")} ${getName(item)}`,
       type: "warning",
       showCancelButton: true,
-      confirmButtonColor: confirmButtonColor || "#DD6B55",
+      confirmButtonColor: confirmButtonColor || "error",
       confirmButtonText:
         deleteDialogConfirmText || T.translate("general.yes_delete")
     });
