@@ -97,6 +97,7 @@ export {default as MuiFormikSelectV2} from './mui/formik-inputs/mui-formik-selec
 export {default as MuiFormikSummitAddonSelect} from './mui/formik-inputs/mui-formik-summit-addon-select'
 export {default as MuiFormikSwitch} from './mui/formik-inputs/mui-formik-switch'
 export {default as MuiFormikTextField} from './mui/formik-inputs/mui-formik-textfield'
+export {default as MuiFormikTextEditor} from './mui/formik-inputs/mui-formik-text-editor'
 export {default as MuiFormikTimepicker} from './mui/formik-inputs/mui-formik-timepicker'
 export {default as MuiFormikUpload} from './mui/formik-inputs/mui-formik-upload'
 export {default as MuiCompanyInput} from './mui/formik-inputs/company-input-mui'

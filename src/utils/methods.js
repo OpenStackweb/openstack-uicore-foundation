@@ -311,3 +311,9 @@ export const empty = (value) => {
 };
 
 export const isSentryInitialized = () => typeof window !== "undefined" && !!window.SENTRY_DSN;
+
+export const normalizeHtmlString = (textInput) => {
+  if (!textInput) return "";
+  const doc = new DOMParser().parseFromString(textInput, "text/html");
+  return doc.body.textContent.trim().length === 0 ? "" : textInput;
+};
