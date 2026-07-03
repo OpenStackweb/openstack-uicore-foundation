@@ -31,7 +31,11 @@ const Dropdown = ({
 
   return (
     <FormControl fullWidth>
-      {label && <InputLabel id={`${id}-label`}>{label}</InputLabel>}
+      {label && (
+        <InputLabel id={`${id}-label`} shrink>
+          {label}
+        </InputLabel>
+      )}
       <Select
         value={value}
         label={label}

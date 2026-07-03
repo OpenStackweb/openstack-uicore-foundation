@@ -36,7 +36,14 @@ const OPERATOR_VALUES = Object.values(OPERATORS).map((op) => op.value);
 
 // For usage INSTRUCTIONS see readme.md in this directory.
 
-const GridFilter = ({ id, criterias, hideJoinOperators = false, onApply, saveFilters }) => {
+const GridFilter = ({
+  id,
+  criterias,
+  hideJoinOperators = false,
+  onApply,
+  saveFilters,
+  iconSx
+}) => {
   const { joinOperator, filterCount, valuesWithIds } = useGridFilter(id);
   const valuesString = useMemo(
     () => valuesWithIds.map((v) => v.id).join(","),
@@ -137,6 +144,7 @@ const GridFilter = ({ id, criterias, hideJoinOperators = false, onApply, saveFil
         filterCount={filterCount}
         onClick={() => setOpenModal(true)}
         onDelete={handleRemoveAndApply}
+        iconSx={iconSx}
       />
       <Dialog
         open={openModal}
@@ -223,12 +231,14 @@ GridFilter.propTypes = {
   ).isRequired,
   hideJoinOperators: PropTypes.bool,
   onApply: PropTypes.func,
-  saveFilters: PropTypes.func.isRequired
+  saveFilters: PropTypes.func.isRequired,
+  iconSx: PropTypes.object
 };
 
 GridFilter.defaultProps = {
   hideJoinOperators: false,
-  onApply: () => {}
+  onApply: () => {},
+  iconSx: {}
 };
 
 export default connect(null, { saveFilters })(GridFilter);
