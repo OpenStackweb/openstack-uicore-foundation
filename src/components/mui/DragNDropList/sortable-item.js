@@ -34,7 +34,9 @@ const SortableItem = ({ id, item, index, renderItem }) => {
       ref={setNodeRef}
       style={{
         transform: CSS.Transform.toString(transform),
-        transition: [transition, "background 0.2s ease"].filter(Boolean).join(", ")
+        transition: [transition, "background 0.2s ease"].filter(Boolean).join(", "),
+        zIndex: isDragging ? 1 : "auto",
+        position: "relative"
       }}
       sx={{ background: isDragging ? "#f0f0f0" : "inherit" }}
     >
