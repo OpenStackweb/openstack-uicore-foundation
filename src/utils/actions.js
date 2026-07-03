@@ -60,6 +60,12 @@ export const snackbarSuccessHandler = (message) => (dispatch, state) =>
         state
     );
 
+export const snackbarErrorMsg = (message) => (dispatch, state) =>
+    setSnackbarMessage({ ...message, type: "error", code: CODE_200 })(
+        dispatch,
+        state
+    );
+
 const xhrs = {};
 const etagCache = {};
 
