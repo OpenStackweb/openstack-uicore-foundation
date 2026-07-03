@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import DragAndDropList from "../drag-n-drop-list";
+import DragAndDropList from "../DragNDropList";
 
 // Capture the onDragEnd handler so tests can simulate drags
 let triggerDragEnd;

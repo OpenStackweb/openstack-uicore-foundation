@@ -24,39 +24,12 @@ import {
 import {
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
   arrayMove
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { Box } from "@mui/material";
 
-const SortableItem = ({ id, item, index, renderItem }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging
-  } = useSortable({ id });
-
-  return (
-    <Box
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition: [transition, "background 0.2s ease"].filter(Boolean).join(", ")
-      }}
-      sx={{ background: isDragging ? "#f0f0f0" : "inherit" }}
-    >
-      {renderItem(item, index, {
-        isDragging,
-        dragHandleProps: { ...listeners, ...attributes }
-      })}
-    </Box>
-  );
-};
+import SortableItem from "./sortable-item";
 
 // Items without an idKey value fall back to a positional id (new-${index}).
 // Because that id is recomputed from the current index every render, after a

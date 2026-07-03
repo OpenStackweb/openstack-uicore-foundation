@@ -87,7 +87,7 @@ module.exports = {
         'components/mui/confirm-dialog': './src/components/mui/confirm-dialog.js',
         'components/mui/custom-alert': './src/components/mui/CustomAlert/index.js',
         'components/mui/dnd-list': './src/components/mui/dnd-list.js',
-        'components/mui/drag-n-drop-list': './src/components/mui/drag-n-drop-list.js',
+        'components/mui/drag-n-drop-list': './src/components/mui/DragNDropList/index.js',
         'components/mui/dropdown-checkbox': './src/components/mui/dropdown-checkbox.js',
         'components/mui/dropdown': './src/components/mui/Dropdown',
         'components/mui/toggle-buttons': './src/components/mui/ToggleButtons',
