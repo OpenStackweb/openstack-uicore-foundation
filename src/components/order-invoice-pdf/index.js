@@ -13,6 +13,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
+import moment from "moment-timezone";
 import {
   Document,
   Page,
@@ -26,11 +27,23 @@ import {
 } from "@react-pdf/renderer";
 import { currencyAmountFromCents } from "../../utils/money";
 import { epochToMomentTimeZone } from "../../utils/methods";
+import { MILLISECONDS_IN_SECOND } from "../../utils/constants";
 
 const DEFAULT_FONT_FAMILY = "Helvetica";
 
-const formatDate = (epoch, timeZoneId, format) =>
-  epochToMomentTimeZone(epoch, timeZoneId).format(format);
+export const formatDate = (
+  date,
+  timeZone = "LOC",
+  format = "dddd Do h:mm a"
+) => {
+  if (timeZone === "LOC") {
+    return moment(date * MILLISECONDS_IN_SECOND).format(format);
+  }
+
+  return moment(date * MILLISECONDS_IN_SECOND)
+    .tz(timeZone)
+    .format(format);
+};
 
 const formatAddress = (address) => {
   if (!address) return "";

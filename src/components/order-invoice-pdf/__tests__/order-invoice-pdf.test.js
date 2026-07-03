@@ -13,7 +13,7 @@
 
 import React from "react";
 import { render } from "@testing-library/react";
-import { buildOrderPdfRows, OrderPdf } from "../index";
+import { buildRows, OrderPdf } from "../index";
 
 jest.mock("@react-pdf/renderer", () => {
   const React = require("react");
