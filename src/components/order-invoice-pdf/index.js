@@ -26,7 +26,6 @@ import {
   pdf
 } from "@react-pdf/renderer";
 import { currencyAmountFromCents } from "../../utils/money";
-import { epochToMomentTimeZone } from "../../utils/methods";
 import { MILLISECONDS_IN_SECOND } from "../../utils/constants";
 
 const DEFAULT_FONT_FAMILY = "Helvetica";
@@ -36,6 +35,8 @@ export const formatDate = (
   timeZone = "LOC",
   format = "dddd Do h:mm a"
 ) => {
+  if (!date) return "";
+
   if (timeZone === "LOC") {
     return moment(date * MILLISECONDS_IN_SECOND).format(format);
   }
