@@ -133,7 +133,10 @@ const BulkEditTable = ({
                 >
                   <Checkbox
                     checked={isAllSelected(data)}
-                    onChange={() => toggleAll(data)}
+                    onChange={() => {
+                      if (!editEnabled) toggleAll(data);
+                    }}
+                    disabled={editEnabled}
                     slotProps={{ input: { "aria-label": "select all" } }}
                   />
                 </TableCell>

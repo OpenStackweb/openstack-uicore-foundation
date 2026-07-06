@@ -62,7 +62,10 @@ const Row = (props) => {
       >
         <Checkbox
           checked={isSelected}
-          onChange={onToggle}
+          onChange={() => {
+            if (!editEnabled) onToggle();
+          }}
+          disabled={editEnabled}
           slotProps={{ input: { "aria-label": `Select row ${row[idKey]}` } }}
         />
       </TableCell>

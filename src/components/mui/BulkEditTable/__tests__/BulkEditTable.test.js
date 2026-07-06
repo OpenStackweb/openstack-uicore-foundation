@@ -13,7 +13,13 @@
 
 import React from "react";
 import userEvent from "@testing-library/user-event";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor
+} from "@testing-library/react";
 import BulkEditTable from "../BulkEditTable";
 
 jest.mock("i18n-react/dist/i18n-react", () => ({
@@ -60,6 +66,47 @@ describe("BulkEditTable", () => {
       expect(onUpdate).toHaveBeenCalledTimes(1);
       expect(onUpdate).toHaveBeenCalledWith(
         expect.arrayContaining([expect.objectContaining({ id: 1 })])
+      );
+    });
+  });
+
+  test("changing the selection while editing preserves in-progress edits", async () => {
+    const user = userEvent.setup();
+    const onUpdate = jest.fn(() => Promise.resolve());
+    const editableColumns = [
+      { columnKey: "id", value: "id", sortable: true },
+      { columnKey: "title", value: "title", sortable: true, editableField: true }
+    ];
+
+    render(
+      <BulkEditTable {...baseProps} columns={editableColumns} onUpdate={onUpdate} />
+    );
+
+    const checkboxes = screen.getAllByRole("checkbox");
+
+    // select row 1 and enter edit mode
+    await user.click(checkboxes[1]);
+    await user.click(screen.getByText("bulk_edit_table.edit_selected"));
+
+    // type an edit into row 1's editable title cell
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "Edited title" }
+    });
+
+    // widen the selection via "select all" while still editing
+    fireEvent.click(checkboxes[0]);
+
+    await act(async () => {
+      await user.click(screen.getByText("bulk_edit_table.apply_changes"));
+    });
+
+    await waitFor(() => {
+      // selection is frozen while editing, so "select all" is a no-op and
+      // the in-progress edit on row 1 survives to onUpdate
+      expect(onUpdate).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ id: 1, title: "Edited title" })
+        ])
       );
     });
   });

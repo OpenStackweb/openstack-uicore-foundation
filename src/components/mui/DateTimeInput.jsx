@@ -41,17 +41,36 @@ const DateTimeInput = ({
   label,
   placeholder,
   disabled,
+  timezone,
   onChange,
   ...rest
 }) => {
-  const momentValue = value ? moment.unix(value) : null;
+  // value is always a unix timestamp, which carries no timezone of its own —
+  // moment.unix() alone renders it in the browser's local zone. Re-anchor it
+  // in `timezone` (the summit's zone, typically) so the picker displays and
+  // edits the same wall-clock time the summit sees, regardless of where the
+  // admin's browser happens to be.
+  const momentValue = value
+    ? timezone
+      ? moment.unix(value).tz(timezone)
+      : moment.unix(value)
+    : null;
   const finalPlaceholder =
     placeholder || T.translate("placeholders.date");
 
   const handleChange = (newValue) => {
-    onChange({
-      target: { value: newValue?.isValid() ? newValue.unix() : null }
-    });
+    if (!newValue?.isValid()) {
+      onChange({ target: { value: null } });
+      return;
+    }
+    // The picker has no notion of `timezone` — it hands back a plain
+    // wall-clock reading. Re-interpret that same reading as belonging to
+    // `timezone` (rather than the instant it'd represent in the browser's
+    // local zone) before converting to an epoch.
+    const zonedValue = timezone
+      ? moment.tz(newValue.format("YYYY-MM-DD HH:mm:ss"), timezone)
+      : newValue;
+    onChange({ target: { value: zonedValue.unix() } });
   };
 
   return (
@@ -85,6 +104,9 @@ DateTimeInput.propTypes = {
   label: PropTypes.string,
   placeholder: PropTypes.string,
   disabled: PropTypes.bool,
+  // IANA zone name (e.g. a summit's time_zone_id) the value is displayed/
+  // edited in. Omit to keep the browser's local zone (previous behavior).
+  timezone: PropTypes.string,
   onChange: PropTypes.func.isRequired
 };
 
@@ -93,7 +115,8 @@ DateTimeInput.defaultProps = {
   mode: "datetime",
   label: "",
   placeholder: "",
-  disabled: false
+  disabled: false,
+  timezone: null
 };
 
 export default DateTimeInput;

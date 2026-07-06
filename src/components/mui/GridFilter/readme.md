@@ -224,6 +224,8 @@ For date/time criteria, use `type: "datetime"`. It renders a single MUI `DateTim
 | `time`     | time only     |
 | `datetime` | date and time (default) |
 
+A stored epoch carries no timezone of its own, so by default the picker displays and edits it in the browser's local zone. When the value actually represents a moment-specific time (e.g. a summit's schedule), pass `props.timezone` (an IANA zone name) so the admin sees and edits summit wall-clock time regardless of where their browser is:
+
 ```jsx
 {
   key: "created",
@@ -231,7 +233,7 @@ For date/time criteria, use `type: "datetime"`. It renders a single MUI `DateTim
   operators: [OPERATORS.BEFORE, OPERATORS.AFTER],
   values: {
     type: "datetime",
-    props: { mode: "date" }
+    props: { mode: "date", timezone: summit.time_zone_id }
   }
 }
 ```
