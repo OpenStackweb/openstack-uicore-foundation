@@ -26,7 +26,6 @@ export {default as Input} from './inputs/text-input'
 export {default as Panel} from './sections/panel'
 export {default as SimpleLinkList} from './simple-link-list'
 export {default as SummitDropdown} from './summit-dropdown'
-export {OrderPdf, buildRows as buildOrderPdfRows, generateInvoicePDF, previewPDF} from './order-invoice-pdf'
 export {default as Table} from './table/Table'
 export {default as SortableTable} from './table-sortable/SortableTable'
 export {default as EditableTable} from './table-editable/EditableTable'
@@ -134,6 +133,7 @@ export {MuiBaseCustomTheme} from './mui/MuiBaseCustomTheme'
 // export {default as ExtraQuestionsForm } from './extra-questions/index.js';
 // export {default as GMap} from './google-map';
 // export {default as TextEditorV2} from './inputs/editor-input-v2'
+// export {default as TextEditorV3} from './inputs/editor-input-v3'
 // export {default as CompanyInputV2} from './inputs/company-input-v2.js'
 // export {default as MuiDndList} from './mui/dnd-list'                              // react-beautiful-dnd
 // export {default as MuiSortableTable} from './mui/sortable-table/mui-table-sortable' // react-beautiful-dnd
@@ -141,3 +141,4 @@ export {MuiBaseCustomTheme} from './mui/MuiBaseCustomTheme'
 // export {default as MuiAdditionalInput} from './mui/formik-inputs/additional-input/additional-input' // react-beautiful-dnd (via dnd-list)
 // export {default as MuiAdditionalInputList} from './mui/formik-inputs/additional-input/additional-input-list' // react-beautiful-dnd (via dnd-list)
 // export {default as MuiDragNDropList} from './mui/DragNDropList'               // @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
+// export {OrderPdf, buildRows as buildOrderPdfRows, generateInvoicePDF, previewPDF} from './order-invoice-pdf' // @react-pdf/renderer
