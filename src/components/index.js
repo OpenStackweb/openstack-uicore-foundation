@@ -134,7 +134,6 @@ export {MuiBaseCustomTheme} from './mui/MuiBaseCustomTheme'
 // export {default as ExtraQuestionsForm } from './extra-questions/index.js';
 // export {default as GMap} from './google-map';
 // export {default as TextEditorV2} from './inputs/editor-input-v2'
-// export {default as TextEditorV3} from './inputs/editor-input-v3'
 // export {default as CompanyInputV2} from './inputs/company-input-v2.js'
 // export {default as MuiDndList} from './mui/dnd-list'                              // react-beautiful-dnd
 // export {default as MuiSortableTable} from './mui/sortable-table/mui-table-sortable' // react-beautiful-dnd

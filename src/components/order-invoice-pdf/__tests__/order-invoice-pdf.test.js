@@ -309,7 +309,7 @@ describe("buildRows — balance accumulation", () => {
 const makeRenderOrder = (overrides = {}) => ({
   number: "ORD-2026-001",
   total: 0,
-  purchased_date: "2026-01-15T10:00:00Z",
+  purchased_date: 1700000000,
   purchased_by_full_name: "Jane Doe",
   client: { contact_name: "Jane Doe", company_name: "Acme Corp" },
   address: null,
@@ -353,6 +353,7 @@ describe("OrderPdf — render", () => {
     expect(text).toContain("OpenStack Summit 2026");
     expect(text).toContain("Main Hall");
     expect(text).toContain("123 Expo Blvd");
+    expect(text).toContain("V6B 1A1");
   });
 });
 
