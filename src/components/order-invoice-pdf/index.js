@@ -34,6 +34,9 @@ export { buildRows, formatDate };
 // the theme's fontFamily must already be registered via Font.register in
 // the consuming app to render as a custom typeface instead of falling back.
 export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
+  if (!order) throw new Error("OrderPdf: order is required");
+  if (!summit) throw new Error("OrderPdf: summit is required");
+
   const fontFamily = getThemeFontFamily(theme);
   const styles = createStyles(fontFamily);
   const rowStyles = createRowStyles(styles);
@@ -45,7 +48,7 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
     refunds_total: refundsTotal = 0,
     retained = 0,
     credited_to_payment_method: credited = 0
-  } = order || {};
+  } = order;
 
   const clientName =
     order.client?.contact_name || order.purchased_by_full_name || "";

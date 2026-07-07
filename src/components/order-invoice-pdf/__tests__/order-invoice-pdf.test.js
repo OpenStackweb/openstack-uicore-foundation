@@ -355,6 +355,15 @@ describe("OrderPdf — render", () => {
     expect(text).toContain("123 Expo Blvd");
     expect(text).toContain("V6B 1A1");
   });
+
+  it("throws a clear error when order or summit are omitted", () => {
+    expect(() => render(<OrderPdf summit={makeRenderSummit()} />)).toThrow(
+      "OrderPdf: order is required"
+    );
+    expect(() => render(<OrderPdf order={makeRenderOrder()} />)).toThrow(
+      "OrderPdf: summit is required"
+    );
+  });
 });
 
 // ─── Reconciliation block ─────────────────────────────────────────────────────
