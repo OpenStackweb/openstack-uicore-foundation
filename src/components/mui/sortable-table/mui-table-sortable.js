@@ -38,7 +38,7 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
-import TableCellContent from "../table/table-content";
+import TableCellContent from "../table/table-cell-content";
 
 const MuiTableSortable = ({
   columns = [],

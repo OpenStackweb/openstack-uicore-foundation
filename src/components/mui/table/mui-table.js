@@ -35,7 +35,7 @@ import showConfirmDialog from "../showConfirmDialog";
 import styles from "./mui-table.module.less";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PropTypes from "prop-types";
-import TableCellContent from "./table-content";
+import TableCellContent from "./table-cell-content";
 
 const ARCHIVED_CELL_SX = {
   backgroundColor: "background.light",

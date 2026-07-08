@@ -6,7 +6,7 @@ import TruncateText from "../truncate-text";
 
 const contentStyle = {
   fontWeight: "normal",
-  wordBreak: "break-all",
+  overflowWrap: "break-word",
 };
 
 const TableCellContent = ({ row, col }) => {
