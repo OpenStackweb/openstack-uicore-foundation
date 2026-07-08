@@ -289,7 +289,9 @@ const MuiTableSortableV2 = ({
                           (onReorder ? 1 : 0)
                         }
                         align="center"
-                      ></TableCell>
+                      >
+                        {T.translate("mui_table.no_items")}
+                      </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
