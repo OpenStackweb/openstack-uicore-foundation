@@ -43,13 +43,26 @@ const NumberInput = ({
     // "1."), so just wait for more input instead of clobbering it.
     if (Number.isNaN(parsed)) return;
 
+    // min/max are enforced on blur (see handleBlur), not here, so that typing
+    // e.g. "15" against a min of 10 isn't rewritten to "10" after the first digit.
+    onChange({ target: { value: parsed } });
+  };
+
+  const handleBlur = (e) => {
+    const raw = e.target.value;
+    if (raw === "") return;
+
+    const parsed = integer ? parseInt(raw, 10) : parseFloat(raw);
+    if (Number.isNaN(parsed)) return;
+
     let clamped = parsed;
     if (min != null) clamped = Math.max(clamped, min);
     if (max != null) clamped = Math.min(clamped, max);
-    // only force-normalize the DOM when clamping changed the typed value;
-    // otherwise leave it alone so e.g. a trailing "." isn't stripped mid-typing
-    if (clamped !== parsed) e.target.value = clamped;
-    onChange({ target: { value: clamped } });
+
+    if (clamped !== parsed) {
+      e.target.value = clamped;
+      onChange({ target: { value: clamped } });
+    }
   };
 
   const finalPlaceholder =
@@ -66,6 +79,7 @@ const NumberInput = ({
       fullWidth
       size="small"
       onChange={handleChange}
+      onBlur={handleBlur}
       onKeyDown={(e) => {
         if (BLOCKED_KEYS.includes(e.key)) e.preventDefault();
         if (integer && (e.key === "." || e.key === ",")) e.preventDefault();

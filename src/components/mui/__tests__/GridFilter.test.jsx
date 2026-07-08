@@ -343,17 +343,29 @@ describe("Filter - number value type", () => {
     }
   };
 
-  const renderFilter = (value, onChange = jest.fn()) => {
-    render(
-      <Filter
-        id="test"
-        value={value}
-        criterias={[numberCriteria]}
-        onChange={onChange}
-        onAdd={jest.fn()}
-        onDelete={jest.fn()}
-      />
-    );
+  const renderFilter = (initialValue, onChange = jest.fn()) => {
+    // Wrap in local state so onChange feeds back into a re-render, matching
+    // real usage where the parent re-renders Filter with the updated value.
+    // A static value prop would let React snap the controlled input back to
+    // blank between events, hiding blur-time clamping behavior.
+    const Wrapper = () => {
+      const [value, setValue] = React.useState(initialValue);
+      const handleChange = (updated) => {
+        onChange(updated);
+        setValue(updated);
+      };
+      return (
+        <Filter
+          id="test"
+          value={value}
+          criterias={[numberCriteria]}
+          onChange={handleChange}
+          onAdd={jest.fn()}
+          onDelete={jest.fn()}
+        />
+      );
+    };
+    render(<Wrapper />);
     return { onChange, input: screen.getByRole("spinbutton") };
   };
 
@@ -383,7 +395,7 @@ describe("Filter - number value type", () => {
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ value: 42 }));
   });
 
-  test("clamps the value to max", () => {
+  test("clamps the value to max on blur", () => {
     const { input, onChange } = renderFilter({
       id: "0",
       criteria: "attendees",
@@ -392,8 +404,10 @@ describe("Filter - number value type", () => {
     });
 
     fireEvent.change(input, { target: { value: "500" } });
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ value: 500 }));
 
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ value: 100 }));
+    fireEvent.blur(input);
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ value: 100 }));
   });
 
   test("clears to null when the input is emptied", () => {
