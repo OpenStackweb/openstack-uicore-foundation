@@ -154,7 +154,8 @@ const MuiTableEditable = ({
   onArchive,
   onDelete,
   onCellChange, // New prop for handling cell value changes
-  deleteDialogBody
+  deleteDialogBody,
+  tableSx = {}
 }) => {
   // State to track which cell is currently being edited
   const [editingCell, setEditingCell] = React.useState(null);
@@ -213,7 +214,7 @@ const MuiTableEditable = ({
           component={Paper}
           sx={{ borderRadius: 0, boxShadow: "none" }}
         >
-          <Table>
+          <Table sx={tableSx}>
             {/* TABLE HEADER */}
             <TableHead sx={{ backgroundColor: "#EAEAEA" }}>
               <TableRow>

@@ -52,7 +52,8 @@ const MuiTableSortable = ({
   deleteDialogBody = null,
   onReorder,
   idKey = "id",
-  updateOrderKey = "order"
+  updateOrderKey = "order",
+  tableSx = {}
 }) => {
   const { sortCol, sortDir } = options;
 
@@ -105,7 +106,7 @@ const MuiTableSortable = ({
           component={Paper}
           sx={{ borderRadius: 0, boxShadow: "none" }}
         >
-          <Table>
+          <Table sx={tableSx}>
             {/* TABLE HEADER */}
             <TableHead sx={{ backgroundColor: "#EAEAEA" }}>
               <TableRow>

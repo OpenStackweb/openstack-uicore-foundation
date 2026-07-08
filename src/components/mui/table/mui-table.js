@@ -70,7 +70,8 @@ const MuiTable = ({
   deleteDialogTitle = null,
   deleteDialogBody = null,
   deleteDialogConfirmText = null,
-  confirmButtonColor = null
+  confirmButtonColor = null,
+  tableSx = {}
 }) => {
   const totalColumnsCount =
     columns.length + (onEdit ? 1 : 0) + (onDelete ? 1 : 0) + (onArchive ? 1 : 0) + (onSelect ? 1 : 0);
@@ -131,7 +132,7 @@ const MuiTable = ({
           component={Paper}
           sx={{ borderRadius: 0, boxShadow: "none" }}
         >
-          <Table sx={{ tableLayout: "fixed" }}>
+          <Table sx={{ tableLayout: "fixed", ...tableSx }}>
             {/* TABLE HEADER */}
             <TableHead sx={{ backgroundColor: "#EAEDF4" }}>
               <TableRow>
@@ -321,7 +322,8 @@ MuiTable.propTypes = {
   deleteDialogTitle: PropTypes.string,
   deleteDialogBody: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   deleteDialogConfirmText: PropTypes.string,
-  confirmButtonColor: PropTypes.string
+  confirmButtonColor: PropTypes.string,
+  tableSx: PropTypes.object
 };
 
 export default MuiTable;
