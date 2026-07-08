@@ -19,7 +19,6 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
-import TablePagination from "@mui/material/TablePagination";
 import TableSortLabel from "@mui/material/TableSortLabel";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
@@ -32,13 +31,9 @@ import { visuallyHidden } from "@mui/utils";
 
 import styles from "./styles.module.less";
 
-import {
-  DEFAULT_PER_PAGE,
-  FIFTY_PER_PAGE,
-  TWENTY_PER_PAGE
-} from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
 import TableCellContent from "../table/table-cell-content";
+import CustomTablePagination from "../table/CustomTablePagination";
 
 const MuiTableSortable = ({
   columns = [],
@@ -60,24 +55,6 @@ const MuiTableSortable = ({
   updateOrderKey = "order",
   tableSx = {}
 }) => {
-  const handleChangePage = (_, newPage) => {
-    onPageChange(newPage + 1);
-  };
-
-  const handleChangeRowsPerPage = (ev) => {
-    onPerPageChange(ev.target.value);
-  };
-
-  const basePerPageOptions = [
-    DEFAULT_PER_PAGE,
-    TWENTY_PER_PAGE,
-    FIFTY_PER_PAGE
-  ];
-
-  const customPerPageOptions = basePerPageOptions.includes(perPage)
-    ? basePerPageOptions
-    : [...basePerPageOptions, perPage].sort((a, b) => a - b);
-
   const { sortCol, sortDir } = options;
 
   const handleDragEnd = (result) => {
@@ -287,28 +264,13 @@ const MuiTableSortable = ({
         </TableContainer>
 
         {/* PAGINATION */}
-        {onPerPageChange && onPageChange && (
-          <TablePagination
-            component="div"
-            count={totalRows}
-            rowsPerPageOptions={customPerPageOptions}
-            rowsPerPage={perPage}
-            page={currentPage - 1}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage={T.translate("mui_table.rows_per_page")}
-            sx={{
-              ".MuiTablePagination-toolbar": {
-                alignItems: "baseline",
-                marginTop: "1.6rem"
-              },
-              ".MuiTablePagination-spacer": {
-                display: "none"
-              },
-              ".MuiTablePagination-displayedRows": {
-                marginLeft: "auto"
-              }
-            }}
+        {perPage && currentPage && onPageChange && (
+          <CustomTablePagination
+            totalRows={totalRows}
+            perPage={perPage}
+            currentPage={currentPage}
+            onPageChange={onPageChange}
+            onPerPageChange={onPerPageChange}
           />
         )}
       </Paper>

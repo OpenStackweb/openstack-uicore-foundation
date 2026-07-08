@@ -17,7 +17,7 @@ import { Chip, IconButton } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import T from "i18n-react/dist/i18n-react";
 
-const FilterButton = ({ filterCount, onClick, onDelete }) => {
+const FilterButton = ({ filterCount, onClick, onDelete, iconSx }) => {
   if (filterCount > 0) {
     return (
       <Chip
@@ -44,7 +44,7 @@ const FilterButton = ({ filterCount, onClick, onDelete }) => {
       size="large"
       aria-label={T.translate("grid_filter.open_filters")}
       onClick={onClick}
-      sx={{ mr: 1, top: "-6px", position: "relative" }}
+      sx={{ mr: 1, top: 0, position: "relative", padding: 0, ...iconSx }}
     >
       <FilterListIcon fontSize="large" />
     </IconButton>
@@ -54,7 +54,12 @@ const FilterButton = ({ filterCount, onClick, onDelete }) => {
 FilterButton.propTypes = {
   filterCount: PropTypes.number.isRequired,
   onClick: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired
+  onDelete: PropTypes.func.isRequired,
+  iconSx: PropTypes.object
+};
+
+FilterButton.defaultProps = {
+  iconSx: {}
 };
 
 export default FilterButton;

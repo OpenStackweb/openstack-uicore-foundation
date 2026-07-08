@@ -26,7 +26,7 @@ import T from "i18n-react/dist/i18n-react";
 
 const MuiFormikDropdownCheckbox = ({ name, label, placeholder, options, ...rest }) => {
   const [field, meta, helpers] = useField(name);
-  const finalPlaceholder = placeholder || T.translate("general.select_an_option");
+  const finalPlaceholder = placeholder || T.translate("placeholders.select");
   const allSelected = options.every(({ value }) =>
     field.value?.includes(value)
   );

@@ -172,3 +172,69 @@ describe("useGridFilter – resetFilters", () => {
     });
   });
 });
+
+// ─── setFilters ────────────────────────────────────────────────────────────
+
+describe("useGridFilter – setFilters", () => {
+  test("dispatches SAVE_FILTERS with the hook's id and the given filters/joinOperator", () => {
+    const store = storeWith("f", []);
+    const savedCriteria = [
+      { id: "track_id-0", criteria: "track_id", operator: "==", value: [36333], parsed: ["track_id==36333"] }
+    ];
+
+    const { current } = renderHookWithStore(() => useGridFilter("f"), store);
+    current.setFilters(savedCriteria, JOIN_OPERATORS.ANY);
+
+    const actions = store.getActions();
+    expect(actions).toHaveLength(1);
+    expect(actions[0]).toMatchObject({
+      type: SAVE_FILTERS,
+      payload: { id: "f", filters: savedCriteria, joinOperator: JOIN_OPERATORS.ANY }
+    });
+  });
+
+  test("defaults joinOperator to JOIN_OPERATORS.ALL when omitted", () => {
+    const store = storeWith("f", []);
+    const savedCriteria = [
+      { criteria: "selection_status", operator: "==", value: ["accepted"], parsed: ["selection_status==accepted"] }
+    ];
+
+    const { current } = renderHookWithStore(() => useGridFilter("f"), store);
+    current.setFilters(savedCriteria);
+
+    const actions = store.getActions();
+    expect(actions[0]).toMatchObject({
+      type: SAVE_FILTERS,
+      payload: { id: "f", filters: savedCriteria, joinOperator: JOIN_OPERATORS.ALL }
+    });
+  });
+
+  test("defaults filters to [] when called with no arguments", () => {
+    const store = storeWith("f", []);
+
+    const { current } = renderHookWithStore(() => useGridFilter("f"), store);
+    current.setFilters();
+
+    const actions = store.getActions();
+    expect(actions[0]).toMatchObject({
+      type: SAVE_FILTERS,
+      payload: { id: "f", filters: [], joinOperator: JOIN_OPERATORS.ALL }
+    });
+  });
+
+  test("falls back to JOIN_OPERATORS.ALL when given an invalid joinOperator", () => {
+    const store = storeWith("f", []);
+    const savedCriteria = [
+      { criteria: "track_id", operator: "==", value: [36333], parsed: ["track_id==36333"] }
+    ];
+
+    const { current } = renderHookWithStore(() => useGridFilter("f"), store);
+    current.setFilters(savedCriteria, "garbage");
+
+    const actions = store.getActions();
+    expect(actions[0]).toMatchObject({
+      type: SAVE_FILTERS,
+      payload: { id: "f", filters: savedCriteria, joinOperator: JOIN_OPERATORS.ALL }
+    });
+  });
+});

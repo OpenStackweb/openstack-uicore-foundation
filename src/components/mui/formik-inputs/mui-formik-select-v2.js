@@ -13,7 +13,7 @@ import { useField } from "formik";
 const MuiFormikSelectV2 = ({ name, label, placeholder, options, ...rest }) => {
   const [field, meta] = useField(name);
   const finalPlaceholder =
-    placeholder || T.translate("general.select_an_option");
+    placeholder || T.translate("placeholders.select");
 
   return (
     <FormControl fullWidth error={meta.touched && Boolean(meta.error)}>
