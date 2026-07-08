@@ -22,13 +22,15 @@ jest.mock("../../../../utils/methods", () => ({
 }));
 
 jest.mock("../../../../utils/constants", () => ({
-  MILLISECONDS_IN_SECOND: 1000
+  MILLISECONDS_IN_SECOND: 1000,
+  SPONSOR_FORMS_METAFIELD_CLASS: { FORM: "Form", ITEM: "Item" }
 }));
 
 import { epochToMomentTimeZone } from "../../../../utils/methods";
 import {
   getCurrentApplicableRate,
-  isItemAvailable
+  isItemAvailable,
+  hasDrivingQuantityField
 } from "../helpers";
 
 describe("isItemAvailable", () => {
@@ -50,6 +52,19 @@ describe("isItemAvailable", () => {
   test("returns false when rate value is null", () => {
     const item = { rates: { early_bird: null } };
     expect(isItemAvailable(item, "early_bird")).toBe(false);
+  });
+});
+
+describe("hasDrivingQuantityField", () => {
+  test("returns false when extraColumns has no Quantity field", () => {
+    expect(hasDrivingQuantityField([])).toBe(false);
+  });
+
+  test("returns true when a Form-class Quantity field exists in extraColumns", () => {
+    const extraColumns = [
+      { type_id: 1, class_field: "Form", type: "Quantity" }
+    ];
+    expect(hasDrivingQuantityField(extraColumns)).toBe(true);
   });
 });
 

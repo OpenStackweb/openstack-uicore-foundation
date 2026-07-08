@@ -59,12 +59,12 @@ const FormItemTable = ({
     [data]
   );
 
-  // Rows whose global qty is driven by a Form- or Item-level Quantity field
-  // only expose that field inside the expanded panel, so default them open —
+  // Rows whose global qty is driven by a Form-level Quantity field only
+  // expose that field inside the expanded panel, so default them open —
   // otherwise the field that determines pricing is hidden behind a click.
   const [openRows, setOpenRows] = useState(() =>
     data.reduce((acc, row) => {
-      if (hasDrivingQuantityField(row, extraColumns)) acc[row.form_item_id] = true;
+      if (hasDrivingQuantityField(extraColumns)) acc[row.form_item_id] = true;
       return acc;
     }, {})
   );

@@ -27,7 +27,7 @@ const GlobalQuantityField = ({
   const [field, meta, helpers] = useField(name);
 
   // using readOnly since formik won't validate disabled fields
-  const isReadOnly = hasDrivingQuantityField(row, extraColumns);
+  const isReadOnly = hasDrivingQuantityField(extraColumns);
 
   useEffect(() => {
     helpers.setValue(value);
