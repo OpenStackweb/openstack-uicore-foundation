@@ -39,28 +39,38 @@ const MetaFieldValuesV2 = ({
     `${baseName}[${fieldIndex}].values[${valueIndex}].${fieldName}`;
 
   const onReorder = (newValues) => {
-    const newMetaFields = [...metaFields];
-    newMetaFields[fieldIndex].values = newValues;
+    const newMetaFields = metaFields.map((f, i) =>
+      i === fieldIndex ? { ...f, values: newValues } : f
+    );
     setFieldValue(baseName, newMetaFields);
   };
 
   const handleAddValue = () => {
     const newFields = metaFields.map((f, i) =>
       i === fieldIndex
-        ? { ...f, values: [...f.values, { value: "", name: "", is_default: false }] }
+        ? {
+            ...f,
+            values: [
+              ...f.values,
+              { value: "", name: "", is_default: false, order: f.values.length + 1 }
+            ]
+          }
         : f
     );
     setFieldValue(baseName, newFields);
   };
 
   const handleDefaultChange = (valueIndex, checked) => {
-    const newFields = [...metaFields];
-    if (checked) {
-      newFields[fieldIndex].values.forEach((v) => {
-        v.is_default = false;
-      });
-    }
-    newFields[fieldIndex].values[valueIndex].is_default = checked;
+    const newFields = metaFields.map((f, i) => {
+      if (i !== fieldIndex) return f;
+      return {
+        ...f,
+        values: f.values.map((v, vi) => {
+          if (checked) return { ...v, is_default: vi === valueIndex };
+          return vi === valueIndex ? { ...v, is_default: false } : v;
+        })
+      };
+    });
     setFieldValue(baseName, newFields);
   };
 
@@ -83,9 +93,10 @@ const MetaFieldValuesV2 = ({
     if (!isConfirmed) return;
 
     const removeValueFromFields = () => {
-      const newFields = [...metaFields];
-      newFields[fieldIndex].values = newFields[fieldIndex].values.filter(
-        (_, index) => index !== valueIndex
+      const newFields = metaFields.map((f, i) =>
+        i === fieldIndex
+          ? { ...f, values: f.values.filter((_, index) => index !== valueIndex) }
+          : f
       );
       setFieldValue(baseName, newFields);
     };
