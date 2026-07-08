@@ -14,15 +14,14 @@
 import React from "react";
 import PropTypes from "prop-types";
 import TextField from "@mui/material/TextField";
-
-const DEFAULT_PLACEHOLDER = "Enter text...";
+import T from "i18n-react/dist/i18n-react";
 
 const Cell = ({ col, row, editRow, isEditingRow, onChange }) => {
   if (isEditingRow && col.editableField === true) {
     return (
       <TextField
         id={col.columnKey}
-        placeholder={col.placeholder || DEFAULT_PLACEHOLDER}
+        placeholder={col.placeholder || T.translate("placeholders.text")}
         multiline
         minRows={2}
         fullWidth
