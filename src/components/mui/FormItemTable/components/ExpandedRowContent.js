@@ -24,6 +24,7 @@ const InlineNotesField = ({ rowId, disabled }) => {
   return (
     <TextField
       {...field}
+      value={field.value ?? ""}
       label={T.translate("sponsor_edit_form.notes")}
       fullWidth
       size="small"

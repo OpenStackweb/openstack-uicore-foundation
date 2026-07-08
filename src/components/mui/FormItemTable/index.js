@@ -51,10 +51,13 @@ const FormItemTable = ({
 }) => {
   const valuesStr = JSON.stringify(values);
 
-  const extraColumns =
-    data[0]?.meta_fields?.filter(
-      (mf) => mf.class_field === SPONSOR_FORMS_METAFIELD_CLASS.FORM
-    ) || [];
+  const extraColumns = useMemo(
+    () =>
+      data[0]?.meta_fields?.filter(
+        (mf) => mf.class_field === SPONSOR_FORMS_METAFIELD_CLASS.FORM
+      ) || [],
+    [data]
+  );
 
   // Rows whose global qty is driven by a Form- or Item-level Quantity field
   // only expose that field inside the expanded panel, so default them open —
@@ -100,7 +103,7 @@ const FormItemTable = ({
         `i-${row.form_item_id}-c-global-f-notes`
       ]);
       const hasVisibleError = Object.keys(errors).some(
-        (key) => expandedKeys.has(key) && touched[key]
+        (key) => expandedKeys.has(key) && Boolean(touched?.[key])
       );
       if (hasVisibleError) {
         currentErrorRows.add(row.form_item_id);
@@ -114,7 +117,7 @@ const FormItemTable = ({
     if (Object.keys(updates).length > 0) {
       setOpenRows((prev) => ({ ...prev, ...updates }));
     }
-  }, [errors, touched]);
+  }, [data, extraColumns, errors, touched]);
 
   const toggleRow = (rowId) => {
     setOpenRows((prev) => ({ ...prev, [rowId]: !prev[rowId] }));
