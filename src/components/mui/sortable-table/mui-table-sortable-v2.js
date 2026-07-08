@@ -51,8 +51,8 @@ import {
   TWENTY_PER_PAGE
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
-import TableCellContent from "../table/table-content";
 import SortableRow from "./sortable-row";
+import TableCellContent from "../table/table-content";
 
 const getRowId = (row, index, idKey) =>
   row[idKey] !== undefined && row[idKey] !== null
