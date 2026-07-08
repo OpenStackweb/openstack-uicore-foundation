@@ -34,6 +34,7 @@ const SpeakerSelectInput = ({ summitId, queryFunction, placeholder, ...rest }) =
 SpeakerSelectInput.propTypes = {
   summitId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   queryFunction: PropTypes.func,
+  formatOption: PropTypes.func,
   placeholder: PropTypes.string
 };
 

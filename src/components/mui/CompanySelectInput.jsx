@@ -33,6 +33,7 @@ const CompanySelectInput = ({ queryFunction, placeholder, ...rest }) => (
 
 CompanySelectInput.propTypes = {
   queryFunction: PropTypes.func,
+  formatOption: PropTypes.func,
   placeholder: PropTypes.string
 };
 
