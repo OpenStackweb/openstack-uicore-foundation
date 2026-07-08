@@ -16,38 +16,48 @@ import PropTypes from "prop-types";
 import { InputAdornment } from "@mui/material";
 import { useField } from "formik";
 import MuiFormikTextField from "./mui-formik-textfield";
-import { BYTES_PER_MB } from "../../../utils/constants";
 
 const BLOCKED_KEYS = ["e", "E", "+", "-", ".", ","];
 
-const bytesToMb = (bytes) => Math.floor(bytes / BYTES_PER_MB);
+// bytes = value * 1024 ** UNIT_POWERS[unit]
+const UNIT_POWERS = { B: 0, KB: 1, MB: 2 };
 
-const MuiFormikFilesizeField = ({ name, label, ...props }) => {
+const unitToBytesFactor = (unit) => 1024 ** UNIT_POWERS[unit];
+
+const MuiFormikFilesizeField = ({
+  name,
+  label,
+  displayUnit,
+  valueUnit,
+  ...props
+}) => {
   const [field, meta, helpers] = useField(name);
   const [cleared, setCleared] = useState(false);
 
   const emptyValue = meta.initialValue === null ? null : 0;
+  // value (in valueUnit) -> displayed number (in displayUnit)
+  const conversionFactor =
+    unitToBytesFactor(valueUnit) / unitToBytesFactor(displayUnit);
 
   const getDisplayValue = () => {
     if (cleared) return "";
     if (field.value == null || field.value === 0) {
       return field.value === 0 ? 0 : "";
     }
-    return bytesToMb(field.value);
+    return Math.floor(field.value * conversionFactor);
   };
 
   const handleChange = (e) => {
-    const mbValue = e.target.value;
+    const displayValue = e.target.value;
 
-    if (mbValue === "") {
+    if (displayValue === "") {
       setCleared(true);
       helpers.setValue(emptyValue);
       return;
     }
 
     setCleared(false);
-    const bytes = Number(mbValue) * BYTES_PER_MB;
-    helpers.setValue(bytes);
+    helpers.setValue(Number(displayValue) / conversionFactor);
   };
 
   const handleKeyDown = (e) => {
@@ -73,7 +83,9 @@ const MuiFormikFilesizeField = ({ name, label, ...props }) => {
       onChange={handleChange}
       slotProps={{
         input: {
-          endAdornment: <InputAdornment position="end">MB</InputAdornment>
+          endAdornment: (
+            <InputAdornment position="end">{displayUnit}</InputAdornment>
+          )
         },
         htmlInput: {
           min: 0,
@@ -90,7 +102,14 @@ const MuiFormikFilesizeField = ({ name, label, ...props }) => {
 
 MuiFormikFilesizeField.propTypes = {
   name: PropTypes.string.isRequired,
-  label: PropTypes.string.isRequired
+  label: PropTypes.string.isRequired,
+  displayUnit: PropTypes.oneOf(Object.keys(UNIT_POWERS)),
+  valueUnit: PropTypes.oneOf(Object.keys(UNIT_POWERS))
+};
+
+MuiFormikFilesizeField.defaultProps = {
+  displayUnit: "MB",
+  valueUnit: "B"
 };
 
 export default MuiFormikFilesizeField;

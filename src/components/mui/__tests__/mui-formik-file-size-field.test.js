@@ -212,6 +212,75 @@ describe("MuiFormikFilesizeField", () => {
     });
   });
 
+  describe("custom units", () => {
+    it("displays and stores the value as-is when valueUnit and displayUnit are both KB", async () => {
+      const onSubmit = jest.fn();
+      renderWithFormik(
+        {
+          label: "Max File Size",
+          onSubmit,
+          valueUnit: "KB",
+          displayUnit: "KB"
+        },
+        { max_file_size: 1024 }
+      );
+
+      const field = screen.getByLabelText("Max File Size");
+      expect(field).toHaveValue(1024);
+
+      await act(async () => {
+        await userEvent.clear(field);
+        await userEvent.type(field, "2048");
+        await userEvent.click(screen.getByText("submit"));
+      });
+
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ max_file_size: 2048 }),
+        expect.anything()
+      );
+    });
+
+    it("converts bytes to KB for display when displayUnit is KB", () => {
+      renderWithFormik(
+        { label: "Max File Size", onSubmit: jest.fn(), displayUnit: "KB" },
+        { max_file_size: 2048 } // 2 * 1024
+      );
+
+      const field = screen.getByLabelText("Max File Size");
+      expect(field).toHaveValue(2);
+    });
+
+    it("converts KB input to bytes when displayUnit is KB", async () => {
+      const onSubmit = jest.fn();
+      renderWithFormik(
+        { label: "Max File Size", onSubmit, displayUnit: "KB" },
+        { max_file_size: 0 }
+      );
+
+      const field = screen.getByLabelText("Max File Size");
+
+      await act(async () => {
+        await userEvent.clear(field);
+        await userEvent.type(field, "5");
+        await userEvent.click(screen.getByText("submit"));
+      });
+
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ max_file_size: 5 * 1024 }),
+        expect.anything()
+      );
+    });
+
+    it("shows the displayUnit as the field's unit adornment", () => {
+      renderWithFormik(
+        { label: "Max File Size", onSubmit: jest.fn(), displayUnit: "KB" },
+        { max_file_size: 0 }
+      );
+
+      expect(screen.getByText("KB")).toBeInTheDocument();
+    });
+  });
+
   describe("blocked keys", () => {
     it.each(["e", "E", "+", "-", ".", ","])(
       "blocks '%s' key from being entered",
