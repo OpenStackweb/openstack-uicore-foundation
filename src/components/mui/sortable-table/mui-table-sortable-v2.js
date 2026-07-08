@@ -52,7 +52,7 @@ import {
 } from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
 import SortableRow from "./sortable-row";
-import TableCellContent from "../table/table-content";
+import TableCellContent from "../table/table-cell-content";
 
 const getRowId = (row, index, idKey) =>
   row[idKey] !== undefined && row[idKey] !== null
@@ -83,7 +83,7 @@ const MuiTableSortableV2 = ({
   };
 
   const handleChangeRowsPerPage = (ev) => {
-    onPerPageChange(ev.target.value);
+    onPerPageChange(parseInt(ev.target.value, 10));
   };
 
   const basePerPageOptions = [
@@ -116,19 +116,17 @@ const MuiTableSortableV2 = ({
     if (oldIndex === -1 || newIndex === -1) return;
 
     const movedItem = data[oldIndex];
-    const reordered = arrayMove(data, oldIndex, newIndex);
+    const movedItemId = movedItem?.[idKey] ?? movedItem?.id;
 
-    // change value based on updateOrderKey
-    if (updateOrderKey) {
-      reordered.forEach((item, idx) => {
-        item[updateOrderKey] = idx + 1;
-      });
-    }
+    const reordered = arrayMove(data, oldIndex, newIndex).map((item, idx) =>
+      updateOrderKey ? { ...item, [updateOrderKey]: idx + 1 } : item
+    );
 
-    const movedItemId = movedItem.id;
-    const newOrder = reordered.find(
-      (item) => item[idKey || "id"] === movedItemId
-    )?.[updateOrderKey];
+    const newOrder = updateOrderKey
+      ? reordered.find((item) => (item[idKey] ?? item.id) === movedItemId)?.[
+      updateOrderKey
+      ]
+      : undefined;
 
     onReorder?.(reordered, movedItemId, newOrder);
   };
@@ -140,7 +138,7 @@ const MuiTableSortableV2 = ({
         typeof deleteDialogBody === "function"
           ? deleteDialogBody(getName(item))
           : deleteDialogBody ||
-            `${T.translate("general.row_remove_warning")} ${getName(item)}`,
+          `${T.translate("general.row_remove_warning")} ${getName(item)}`,
       type: "warning",
       showCancelButton: true,
       confirmButtonColor: "#DD6B55",
@@ -148,7 +146,7 @@ const MuiTableSortableV2 = ({
     });
 
     if (isConfirmed) {
-      onDelete(item.id);
+      onDelete(item[idKey] ?? item.id);
     }
   };
 
@@ -226,9 +224,8 @@ const MuiTableSortableV2 = ({
                             <TableCell
                               key={col.columnKey}
                               align={col.align ?? "left"}
-                              className={`${
-                                col.dottedBorder && styles.dottedBorderLeft
-                              } ${col.className}`}
+                              className={`${col.dottedBorder && styles.dottedBorderLeft
+                                } ${col.className}`}
                             >
                               <TableCellContent row={row} col={col} />
                             </TableCell>
@@ -284,9 +281,15 @@ const MuiTableSortableV2 = ({
                   ))}
                   {data.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={columns.length} align="center">
-                        {T.translate("mui_table.no_items")}
-                      </TableCell>
+                      <TableCell
+                        colSpan={
+                          columns.length +
+                          (onEdit ? 1 : 0) +
+                          (onDelete ? 1 : 0) +
+                          (onReorder ? 1 : 0)
+                        }
+                        align="center"
+                      ></TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -299,7 +302,7 @@ const MuiTableSortableV2 = ({
         {onPerPageChange && onPageChange && (
           <TablePagination
             component="div"
-            count={totalRows}
+            count={totalRows ?? 0}
             rowsPerPageOptions={customPerPageOptions}
             rowsPerPage={perPage}
             page={currentPage - 1}

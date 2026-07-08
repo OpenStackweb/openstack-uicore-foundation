@@ -43,7 +43,7 @@ const SortableRow = ({ id, children }) => {
               width: "100%",
               tableLayout: "fixed",
               backgroundColor: "#f0f0f0",
-              transform: "scale(1.01)",
+              transform: `${CSS.Transform.toString(transform)} scale(1.01)`,
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)"
             }
           : {})
