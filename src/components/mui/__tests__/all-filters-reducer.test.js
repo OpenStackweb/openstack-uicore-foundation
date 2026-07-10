@@ -5,7 +5,7 @@ jest.mock("i18n-react/dist/i18n-react", () => ({
 
 import allFiltersReducer from "../GridFilter/reducers/all-filters-reducer";
 import { JOIN_OPERATORS } from "../GridFilter/utils";
-import { SAVE_FILTERS } from "../GridFilter/actions/filter-actions";
+import { SAVE_FILTERS, RESET_FILTERS } from "../GridFilter/actions/filter-actions";
 import { LOGOUT_USER } from "../../security/actions";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -123,6 +123,21 @@ describe("allFiltersReducer – LOGOUT_USER", () => {
     };
 
     expect(allFiltersReducer(populated, { type: LOGOUT_USER })).toEqual({ allFilters: [] });
+  });
+});
+
+// ─── RESET_FILTERS ────────────────────────────────────────────────────────────
+
+describe("allFiltersReducer – RESET_FILTERS", () => {
+  test("resets every entry to DEFAULT_STATE, not just one id", () => {
+    const populated = {
+      allFilters: [
+        { id: "grid-a", filterValues: withFilters, joinOperator: JOIN_OPERATORS.ANY, parsedFilter: [] },
+        { id: "grid-b", filterValues: withFilters, joinOperator: JOIN_OPERATORS.ANY, parsedFilter: [] }
+      ]
+    };
+
+    expect(allFiltersReducer(populated, { type: RESET_FILTERS })).toEqual({ allFilters: [] });
   });
 });
 

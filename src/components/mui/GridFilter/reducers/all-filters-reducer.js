@@ -1,6 +1,6 @@
 import { LOGOUT_USER } from "../../../security/actions";
 import filterReducer from "./filter-reducer";
-import { SAVE_FILTERS } from "../actions/filter-actions";
+import { SAVE_FILTERS, RESET_FILTERS } from "../actions/filter-actions";
 
 const DEFAULT_STATE = {
   allFilters: []
@@ -11,6 +11,7 @@ const allFiltersReducer = (state = DEFAULT_STATE, action) => {
 
   switch (type) {
     case LOGOUT_USER:
+    case RESET_FILTERS:
       return DEFAULT_STATE;
 
     case SAVE_FILTERS: {
