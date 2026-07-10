@@ -14,6 +14,7 @@
 import React, { useEffect } from "react";
 import { useField } from "formik";
 import MuiFormikTextField from "../../formik-inputs/mui-formik-textfield";
+import { hasDrivingQuantityField } from "../helpers";
 
 const GlobalQuantityField = ({
   row,
@@ -26,12 +27,10 @@ const GlobalQuantityField = ({
   const [field, meta, helpers] = useField(name);
 
   // using readOnly since formik won't validate disabled fields
-  const isReadOnly =
-    extraColumns.filter((eq) => eq.type === "Quantity").length > 0;
+  const isReadOnly = hasDrivingQuantityField(extraColumns);
 
   useEffect(() => {
     helpers.setValue(value);
-    helpers.setTouched(true);
   }, [value]);
 
   const handleChange = (e) => {

@@ -41,3 +41,11 @@ export const getCurrentApplicableRate = (timeZone, rateDates) => {
 
 export const isItemAvailable = (item, currentApplicableRate) =>
   item.rates?.[currentApplicableRate] != null;
+
+// The global quantity for a row is driven (and therefore read-only/computed)
+// when a Form-class metafield of type Quantity exists for it (extraColumns,
+// shared across all rows). Item-class metafields are per-row data entry
+// fields unrelated to the row's global quantity, even if one happens to be
+// of type Quantity, so they must not affect this.
+export const hasDrivingQuantityField = (extraColumns) =>
+  extraColumns.some((exc) => exc.type === "Quantity");

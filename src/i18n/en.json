@@ -115,6 +115,7 @@
     "qty": "Quantity",
     "total": "Total",
     "notes": "Notes",
+    "details": "Details",
     "notes_placeholder": "Enter your notes here...",
     "additional_info": "Additional Info",
     "discount": "Discount",

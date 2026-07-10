@@ -64,6 +64,20 @@ describe("GlobalQuantityField", () => {
     expect(input).not.toHaveAttribute("readonly");
   });
 
+  test("input is not readOnly when the row has an Item-class Quantity field but extraColumns has no Form-class Quantity field", () => {
+    // Item-class Quantity metafields are per-row data entry fields, unrelated
+    // to the row's global quantity — only a Form-class Quantity column
+    // (extraColumns) may drive/lock the global quantity field.
+    const rowWithItemLevelQuantity = {
+      ...row,
+      meta_fields: [{ type_id: 1, class_field: "Item", type: "Quantity" }]
+    };
+    renderField({ row: rowWithItemLevelQuantity, extraColumns: [] });
+    const input = screen.getByRole("spinbutton");
+    expect(input).not.toHaveAttribute("readonly");
+    expect(input).not.toBeDisabled();
+  });
+
   test("clamps value to quantity_limit_per_sponsor when user types above it", async () => {
     const onSubmit = jest.fn();
     renderField({}, onSubmit);

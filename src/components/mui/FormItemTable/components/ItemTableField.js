@@ -28,7 +28,8 @@ const ItemTableField = ({
   disabled = false
 }) => {
   const name = `i-${rowId}-c-${field.class_field}-f-${field.type_id}`;
-  const commonProps = { name, label, disabled };
+  const required = field.is_required ?? false;
+  const commonProps = { name, label, disabled, required, slotProps: { inputLabel: { shrink: true } }, margin: "none" };
 
   switch (field.type) {
     case "CheckBox":
@@ -38,7 +39,7 @@ const ItemTableField = ({
         <MuiFormikDropdownCheckbox
           {...commonProps}
           size="small"
-          options={field.values.map((v) => ({ value: v.id, label: v.value }))}
+          options={field.values.map((v) => ({ value: String(v.id), label: v.value }))}
         />
       );
     case "RadioButtonList":
@@ -46,13 +47,30 @@ const ItemTableField = ({
         <MuiFormikDropdownRadio
           {...commonProps}
           size="small"
-          options={field.values.map((v) => ({ value: v.id, label: v.value }))}
+          options={field.values.map((v) => ({ value: String(v.id), label: v.value }))}
         />
       );
     case "DateTime":
-      return <MuiFormikDatepicker {...commonProps} />;
+      return (
+        <MuiFormikDatepicker
+          name={name}
+          label={label}
+          required={required}
+          disabled={disabled}
+          slotProps={{ textField: { InputLabelProps: { shrink: true } } }}
+        />
+      );
     case "Time":
-      return <MuiFormikTimepicker {...commonProps} timeZone={timeZone} />;
+      return (
+        <MuiFormikTimepicker
+          name={name}
+          label={label}
+          required={required}
+          disabled={disabled}
+          timeZone={timeZone}
+          slotProps={{ textField: { InputLabelProps: { shrink: true } } }}
+        />
+      );
     case "Quantity":
       return (
         <MuiFormikTextField
@@ -61,6 +79,7 @@ const ItemTableField = ({
           size="small"
           type="number"
           slotProps={{
+            inputLabel: { shrink: true },
             htmlInput: {
               min: field.minimum_quantity,
               ...(field.maximum_quantity > 0
@@ -75,7 +94,7 @@ const ItemTableField = ({
         <MuiFormikSelectV2
           {...commonProps}
           size="small"
-          options={field.values.map((v) => ({ value: v.id, label: v.value }))}
+          options={field.values.map((v) => ({ value: String(v.id), label: v.value }))}
         />
       );
     case "Text":
