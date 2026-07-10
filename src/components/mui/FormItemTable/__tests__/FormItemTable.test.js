@@ -25,7 +25,13 @@ jest.mock("i18n-react/dist/i18n-react", () => ({
 /* eslint-disable import/first */
 import React from "react";
 import PropTypes from "prop-types";
-import { cleanup, fireEvent, screen, render } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  screen,
+  render,
+  waitFor
+} from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { FormikProvider, useFormik } from "formik";
 import FormItemTable from "../index";
@@ -162,6 +168,59 @@ const MOCK_ITEMS_WITH_MIXED_RATES = [
       onsite: null
     },
     meta_fields: []
+  }
+];
+
+// No Form- or Item-class Quantity fields, so the global qty field isn't
+// driven and rows start collapsed — used for tests that exercise manual
+// row-toggle behavior in isolation from the driven-quantity auto-expand.
+const MOCK_ITEMS_NO_QUANTITY = [
+  {
+    form_item_id: 7,
+    code: "NOQ-1",
+    name: "No Quantity Driver Item 1",
+    rates: {
+      early_bird: 15000,
+      standard: 18800,
+      onsite: 22400
+    },
+    meta_fields: []
+  },
+  {
+    form_item_id: 8,
+    code: "NOQ-2",
+    name: "No Quantity Driver Item 2",
+    rates: {
+      early_bird: 15000,
+      standard: 18800,
+      onsite: 22400
+    },
+    meta_fields: []
+  }
+];
+
+// Has a required Item-class field but no driving Quantity field, so the row
+// starts collapsed — used to test the auto-expand-on-validation-error effect
+// without the driven-quantity default-open behavior masking the transition.
+const MOCK_ITEMS_WITH_REQUIRED_FIELD = [
+  {
+    form_item_id: 9,
+    code: "REQ-1",
+    name: "Item With Required Field",
+    rates: {
+      early_bird: 15000,
+      standard: 18800,
+      onsite: 22400
+    },
+    meta_fields: [
+      {
+        type_id: 1,
+        class_field: "Item",
+        name: "Special Instructions",
+        type: "Text",
+        is_required: true
+      }
+    ]
   }
 ];
 
@@ -345,8 +404,7 @@ const FormItemTableWrapper = ({
   currentApplicableRate,
   timeZone,
   initialValues,
-  onNotesClick,
-  onSettingsClick
+  validate
 }) => {
   const defaultValues = {
     discount_type: "AMOUNT",
@@ -356,6 +414,7 @@ const FormItemTableWrapper = ({
 
   const formik = useFormik({
     initialValues: defaultValues,
+    validate,
     onSubmit: () => {}
   });
 
@@ -366,8 +425,8 @@ const FormItemTableWrapper = ({
         currentApplicableRate={currentApplicableRate}
         timeZone={timeZone}
         values={formik.values}
-        onNotesClick={onNotesClick}
-        onSettingsClick={onSettingsClick}
+        touched={formik.touched}
+        errors={formik.errors}
       />
     </FormikProvider>
   );
@@ -378,20 +437,17 @@ FormItemTableWrapper.propTypes = {
   currentApplicableRate: PropTypes.string,
   timeZone: PropTypes.string.isRequired,
   initialValues: PropTypes.shape({}),
-  onNotesClick: PropTypes.func.isRequired,
-  onSettingsClick: PropTypes.func.isRequired
+  validate: PropTypes.func
 };
 
 FormItemTableWrapper.defaultProps = {
   currentApplicableRate: "early_bird",
-  initialValues: {}
+  initialValues: {},
+  validate: undefined
 };
 
 // ---- Tests ----
 describe("FormItemTable Component", () => {
-  const mockOnNotesClick = jest.fn();
-  const mockOnSettingsClick = jest.fn();
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -407,10 +463,7 @@ describe("FormItemTable Component", () => {
         <FormItemTableWrapper
           data={MOCK_FORM_A.items}
           currentApplicableRate="early_bird"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
       expect(
@@ -435,7 +488,10 @@ describe("FormItemTable Component", () => {
         screen.getByText("sponsor_edit_form.total")
       ).toBeInTheDocument();
       expect(
-        screen.getByText("sponsor_edit_form.notes")
+        screen.getAllByText("sponsor_edit_form.notes").length
+      ).toBeGreaterThan(0);
+      expect(
+        screen.getByText("sponsor_edit_form.details")
       ).toBeInTheDocument();
     });
 
@@ -444,10 +500,7 @@ describe("FormItemTable Component", () => {
         <FormItemTableWrapper
           data={MOCK_FORM_A.items}
           currentApplicableRate="early_bird"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
       expect(screen.getByText("Installation")).toBeInTheDocument();
@@ -461,15 +514,12 @@ describe("FormItemTable Component", () => {
         <FormItemTableWrapper
           data={MOCK_FORM_A.items}
           currentApplicableRate="early_bird"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
-      expect(screen.getByText("Qty of People")).toBeInTheDocument();
-      expect(screen.getByText("Hour x Person")).toBeInTheDocument();
-      expect(screen.getByText("Arrival Time")).toBeInTheDocument();
+      expect(screen.getAllByPlaceholderText("Qty of People").length).toBeGreaterThan(0);
+      expect(screen.getAllByPlaceholderText("Hour x Person").length).toBeGreaterThan(0);
+      expect(screen.getAllByPlaceholderText("Arrival Time").length).toBeGreaterThan(0);
     });
 
     it("displays rate values in cents to dollar format", () => {
@@ -477,10 +527,7 @@ describe("FormItemTable Component", () => {
         <FormItemTableWrapper
           data={MOCK_FORM_A.items}
           currentApplicableRate="early_bird"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
       // early_bird: 15000 cents = $150.00
@@ -496,10 +543,7 @@ describe("FormItemTable Component", () => {
         <FormItemTableWrapper
           data={MOCK_FORM_A.items}
           currentApplicableRate="early_bird"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
       expect(
@@ -514,10 +558,7 @@ describe("FormItemTable Component", () => {
         <FormItemTableWrapper
           data={MOCK_ITEMS_WITH_NULL_RATES}
           currentApplicableRate="early_bird"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
       expect(screen.getAllByText("general.n_a").length).toBeGreaterThan(0);
@@ -528,10 +569,7 @@ describe("FormItemTable Component", () => {
         <FormItemTableWrapper
           data={MOCK_ITEMS_WITH_MIXED_RATES}
           currentApplicableRate="early_bird"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
       expect(screen.getByText("$100.00")).toBeInTheDocument();
@@ -544,10 +582,7 @@ describe("FormItemTable Component", () => {
           data={MOCK_ITEMS_WITH_NULL_RATES}
           currentApplicableRate="early_bird"
           initialValues={{ "i-5-c-global-f-quantity": 3 }}
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
       // Row total and grand total should both be $0.00 when rate is null
@@ -561,8 +596,6 @@ describe("FormItemTable Component", () => {
             data={MOCK_ITEMS_WITH_NULL_RATES}
             currentApplicableRate="standard"
             timeZone="America/New_York"
-            onNotesClick={mockOnNotesClick}
-            onSettingsClick={mockOnSettingsClick}
           />
         );
       }).not.toThrow();
@@ -570,57 +603,144 @@ describe("FormItemTable Component", () => {
   });
 
   describe("ITEM Class Fields", () => {
-    it("shows warning icon for items with ITEM class fields", () => {
+    it("renders an info icon in the details column for every item", () => {
+      const { container } = render(
+        <FormItemTableWrapper
+          data={MOCK_FORM_A.items}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+        />
+      );
+
+      const infoIcons = container.querySelectorAll(
+        "[data-testid=\"InfoOutlinedIcon\"]"
+      );
+      expect(infoIcons.length).toBeGreaterThan(0);
+    });
+
+    it("renders one details icon per item", () => {
+      const { container } = render(
+        <FormItemTableWrapper
+          data={MOCK_FORM_A.items}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+        />
+      );
+
+      const infoIcons = container.querySelectorAll(
+        "[data-testid=\"InfoOutlinedIcon\"]"
+      );
+      expect(infoIcons.length).toBe(MOCK_FORM_A.items.length);
+    });
+
+    it("toggles row expansion when details button is clicked", () => {
+      const { container } = render(
+        <FormItemTableWrapper
+          data={MOCK_ITEMS_NO_QUANTITY}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+        />
+      );
+
+      const infoIcon = container.querySelector(
+        "[data-testid=\"InfoOutlinedIcon\"]"
+      );
+      fireEvent.click(infoIcon.parentElement);
+
+      const arrowUpIcons = container.querySelectorAll(
+        "[data-testid=\"KeyboardArrowUpIcon\"]"
+      );
+      expect(arrowUpIcons.length).toBe(1);
+    });
+  });
+
+  describe("Details Icon Color & Auto-Expand on Validation", () => {
+    it("shows an error-colored details icon when a required field is empty", () => {
+      // Row 1 has an Item-class required field ("Special Instructions")
+      // that has no value in initialValues.
+      const { container } = render(
+        <FormItemTableWrapper
+          data={MOCK_FORM_A.items}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+        />
+      );
+
+      const infoIcons = container.querySelectorAll(
+        "[data-testid=\"InfoOutlinedIcon\"]"
+      );
+      expect(infoIcons[0]).toHaveClass("MuiSvgIcon-colorError");
+    });
+
+    it("shows a warning-colored details icon by default when there is no required field and nothing touched", () => {
+      // Row 3 (Installation Manpower) has no meta_fields at all.
+      const { container } = render(
+        <FormItemTableWrapper
+          data={MOCK_FORM_A.items}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+        />
+      );
+
+      const infoIcons = container.querySelectorAll(
+        "[data-testid=\"InfoOutlinedIcon\"]"
+      );
+      expect(infoIcons[2]).toHaveClass("MuiSvgIcon-colorWarning");
+    });
+
+    it("shows a success-colored details icon once a row's fields have been touched with no incomplete requirements", () => {
+      // Row 4 (Dismantle Manpower) has no required fields, so touching any
+      // of its inputs (without introducing an error) should flip it to success.
       render(
         <FormItemTableWrapper
           data={MOCK_FORM_A.items}
           currentApplicableRate="early_bird"
           timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
         />
       );
 
+      fireEvent.blur(screen.getByTestId("pricefield-i-4-c-global-f-custom_rate"));
+
+      const infoIcon = screen.getAllByTestId("InfoOutlinedIcon")[3];
+      expect(infoIcon).toHaveClass("MuiSvgIcon-colorSuccess");
+    });
+
+    it("auto-expands the row when a required field is touched and fails validation", async () => {
+      // Simulate a yup/formik validation error on the row's required Item
+      // field, then mark it touched via blur, mirroring real form behavior.
+      const validate = () => ({ "i-9-c-Item-f-1": "Required" });
+
+      const { container } = render(
+        <FormItemTableWrapper
+          data={MOCK_ITEMS_WITH_REQUIRED_FIELD}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+          validate={validate}
+        />
+      );
+
+      // Row starts collapsed (no driving Quantity field on this fixture).
       expect(
-        screen.getByText("sponsor_edit_form.additional_info")
-      ).toBeInTheDocument();
-    });
+        container.querySelectorAll("[data-testid=\"KeyboardArrowUpIcon\"]")
+          .length
+      ).toBe(0);
 
-    it("renders settings button only for items with ITEM class fields", () => {
-      const { container } = render(
-        <FormItemTableWrapper
-          data={MOCK_FORM_A.items}
-          currentApplicableRate="early_bird"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+      fireEvent.blur(screen.getByTestId("textfield-i-9-c-Item-f-1"));
+
+      // Formik's validate pipeline resolves asynchronously (even for a sync
+      // validate fn), so the errors/touched-driven auto-expand effect lands
+      // a tick after the blur event.
+      await waitFor(() => {
+        const arrowUpIcons = container.querySelectorAll(
+          "[data-testid=\"KeyboardArrowUpIcon\"]"
+        );
+        expect(arrowUpIcons.length).toBe(1);
+      });
+
+      const infoIcons = container.querySelectorAll(
+        "[data-testid=\"InfoOutlinedIcon\"]"
       );
-
-      const settingsButtons = container.querySelectorAll(
-        "[data-testid=\"SettingsIcon\"]"
-      );
-      expect(settingsButtons.length).toBe(1);
-    });
-
-    it("calls onSettingsClick when settings button is clicked", () => {
-      const { container } = render(
-        <FormItemTableWrapper
-          data={MOCK_FORM_A.items}
-          currentApplicableRate="early_bird"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
-      );
-
-      const settingsButton = container.querySelector(
-        "[data-testid=\"SettingsIcon\"]"
-      ).parentElement;
-      fireEvent.click(settingsButton);
-
-      expect(mockOnSettingsClick).toHaveBeenCalledWith(MOCK_FORM_A.items[0]);
-      expect(mockOnSettingsClick).toHaveBeenCalledTimes(1);
+      expect(infoIcons[0]).toHaveClass("MuiSvgIcon-colorError");
     });
   });
 
@@ -630,10 +750,7 @@ describe("FormItemTable Component", () => {
         <FormItemTableWrapper
           data={MOCK_FORM_A.items}
           currentApplicableRate="early_bird"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
       const qtyPeopleInput = screen.getByTestId("textfield-i-1-c-Form-f-1");
@@ -647,10 +764,7 @@ describe("FormItemTable Component", () => {
         <FormItemTableWrapper
           data={MOCK_FORM_A.items}
           currentApplicableRate="early_bird"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
       const timeInput = screen.getByTestId("timepicker-i-1-c-Form-f-3");
@@ -663,10 +777,7 @@ describe("FormItemTable Component", () => {
         <FormItemTableWrapper
           data={MOCK_FORM_A.items}
           currentApplicableRate="early_bird"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
       expect(
@@ -702,10 +813,7 @@ describe("FormItemTable Component", () => {
           data={MOCK_FORM_A.items}
           currentApplicableRate="early_bird"
           timeZone="America/New_York"
-          initialValues={initialValues}
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          initialValues={initialValues}        />
       );
 
       const qtyInput = screen.getByTestId("textfield-i-1-c-global-f-quantity");
@@ -741,10 +849,7 @@ describe("FormItemTable Component", () => {
           data={itemsWithoutQuantityFields}
           currentApplicableRate="early_bird"
           timeZone="America/New_York"
-          initialValues={{ "i-10-c-global-f-quantity": 0 }}
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          initialValues={{ "i-10-c-global-f-quantity": 0 }}        />
       );
 
       expect(
@@ -769,10 +874,7 @@ describe("FormItemTable Component", () => {
           data={MOCK_FORM_A.items}
           currentApplicableRate="standard"
           timeZone="America/New_York"
-          initialValues={initialValues}
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          initialValues={initialValues}        />
       );
 
       const allText = screen.getAllByText(/\$/);
@@ -796,10 +898,7 @@ describe("FormItemTable Component", () => {
           data={MOCK_FORM_A.items}
           currentApplicableRate="standard"
           timeZone="America/New_York"
-          initialValues={initialValues}
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          initialValues={initialValues}        />
       );
 
       const allText = screen.getAllByText(/\$/);
@@ -813,10 +912,7 @@ describe("FormItemTable Component", () => {
           data={MOCK_FORM_A.items}
           currentApplicableRate="early_bird"
           timeZone="America/New_York"
-          initialValues={{}}
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          initialValues={{}}        />
       );
 
       expect(
@@ -831,10 +927,7 @@ describe("FormItemTable Component", () => {
         <FormItemTableWrapper
           data={MOCK_FORM_A.items}
           currentApplicableRate="early_bird"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
       expect(screen.getAllByText("$150.00").length).toBeGreaterThan(0);
@@ -845,10 +938,7 @@ describe("FormItemTable Component", () => {
         <FormItemTableWrapper
           data={MOCK_FORM_A.items}
           currentApplicableRate="standard"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
       expect(screen.getAllByText("$188.00").length).toBeGreaterThan(0);
@@ -859,10 +949,7 @@ describe("FormItemTable Component", () => {
         <FormItemTableWrapper
           data={MOCK_FORM_A.items}
           currentApplicableRate="onsite"
-          timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
-        />
+          timeZone="America/New_York"        />
       );
 
       expect(screen.getAllByText("$224.00").length).toBeGreaterThan(0);
@@ -870,61 +957,57 @@ describe("FormItemTable Component", () => {
   });
 
   describe("Notes Functionality", () => {
-    it("renders edit/notes button for all items", () => {
-      const { container } = render(
+    it("renders inline notes field for each item", () => {
+      render(
         <FormItemTableWrapper
           data={MOCK_FORM_A.items}
           currentApplicableRate="early_bird"
           timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
         />
       );
 
-      const editButtons = container.querySelectorAll(
-        "[data-testid=\"EditIcon\"]"
-      );
-      expect(editButtons.length).toBe(TWO_ITEMS);
+      const notesLabels = screen.getAllByText("sponsor_edit_form.notes");
+      expect(notesLabels.length).toBeGreaterThan(0);
     });
 
-    it("calls onNotesClick with correct item when notes button is clicked", () => {
+    it("clicking details button expands first item row", () => {
       const { container } = render(
         <FormItemTableWrapper
-          data={MOCK_FORM_A.items}
+          data={MOCK_ITEMS_NO_QUANTITY}
           currentApplicableRate="early_bird"
           timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
         />
       );
 
-      const editButtons = container.querySelectorAll(
-        "[data-testid=\"EditIcon\"]"
+      const infoIcons = container.querySelectorAll(
+        "[data-testid=\"InfoOutlinedIcon\"]"
       );
-      fireEvent.click(editButtons[0].parentElement);
+      fireEvent.click(infoIcons[0].parentElement);
 
-      expect(mockOnNotesClick).toHaveBeenCalledWith(MOCK_FORM_A.items[0]);
-      expect(mockOnNotesClick).toHaveBeenCalledTimes(1);
+      const arrowUpIcons = container.querySelectorAll(
+        "[data-testid=\"KeyboardArrowUpIcon\"]"
+      );
+      expect(arrowUpIcons.length).toBe(1);
     });
 
-    it("calls onNotesClick for second item independently", () => {
+    it("clicking details button expands second item row independently", () => {
       const { container } = render(
         <FormItemTableWrapper
-          data={MOCK_FORM_A.items}
+          data={MOCK_ITEMS_NO_QUANTITY}
           currentApplicableRate="early_bird"
           timeZone="America/New_York"
-          onNotesClick={mockOnNotesClick}
-          onSettingsClick={mockOnSettingsClick}
         />
       );
 
-      const editButtons = container.querySelectorAll(
-        "[data-testid=\"EditIcon\"]"
+      const infoIcons = container.querySelectorAll(
+        "[data-testid=\"InfoOutlinedIcon\"]"
       );
-      fireEvent.click(editButtons[1].parentElement);
+      fireEvent.click(infoIcons[1].parentElement);
 
-      expect(mockOnNotesClick).toHaveBeenCalledWith(MOCK_FORM_A.items[1]);
-      expect(mockOnNotesClick).toHaveBeenCalledTimes(1);
+      const arrowUpIcons = container.querySelectorAll(
+        "[data-testid=\"KeyboardArrowUpIcon\"]"
+      );
+      expect(arrowUpIcons.length).toBe(1);
     });
   });
 

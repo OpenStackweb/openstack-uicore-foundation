@@ -22,12 +22,16 @@ import { useField } from "formik";
 const MuiFormikTimepicker = ({
   name,
   label,
+  required,
   minTime,
   maxTime,
   timeZone,
-  disabled = false
+  disabled = false,
+  slotProps: externalSlotProps,
+  ...props
 }) => {
   const [field, meta, helpers] = useField(name);
+  const displayLabel = required ? `${label} *` : label;
 
   return (
     <LocalizationProvider dateAdapter={AdapterMoment}>
@@ -37,12 +41,12 @@ const MuiFormikTimepicker = ({
         minTime={minTime}
         maxTime={maxTime}
         timezone={timeZone}
-        label={timeZone}
         views={["hours", "minutes"]}
         slotProps={{
+          ...externalSlotProps,
           textField: {
             name,
-            label,
+            label: displayLabel,
             error: meta.touched && Boolean(meta.error),
             helperText: meta.touched && meta.error,
             size: "small",
@@ -56,9 +60,12 @@ const MuiFormikTimepicker = ({
                 marginLeft: "4px",
                 marginRight: "4px"
               }
-            }
+            },
+            ...(externalSlotProps?.textField || {})
           }
         }}
+        // eslint-disable-next-line react/jsx-props-no-spreading
+        {...props}
       />
     </LocalizationProvider>
   );

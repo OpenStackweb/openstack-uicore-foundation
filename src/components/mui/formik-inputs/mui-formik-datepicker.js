@@ -23,10 +23,11 @@ const MuiFormikDatepicker = ({
   label,
   required,
   disabled = false,
+  slotProps: externalSlotProps,
   ...props
 }) => {
   const [field, meta, helpers] = useField(name);
-  const requiredLabel = `${label} *`;
+  const displayLabel = required ? `${label} *` : label;
 
   return (
     <LocalizationProvider dateAdapter={AdapterMoment}>
@@ -34,15 +35,6 @@ const MuiFormikDatepicker = ({
         value={field.value}
         onChange={helpers.setValue}
         slotProps={{
-          textField: {
-            name,
-            label: required ? requiredLabel : label,
-            error: meta.touched && Boolean(meta.error),
-            helperText: meta.touched && meta.error,
-            fullWidth: true,
-            disabled,
-            size: "small"
-          },
           day: {
             sx: {
               fontSize: "1.2rem",
@@ -55,6 +47,17 @@ const MuiFormikDatepicker = ({
                 fontSize: "1rem"
               }
             }
+          },
+          ...externalSlotProps,
+          textField: {
+            name,
+            label: displayLabel,
+            error: meta.touched && Boolean(meta.error),
+            helperText: meta.touched && meta.error,
+            fullWidth: true,
+            disabled,
+            size: "small",
+            ...(externalSlotProps?.textField || {})
           }
         }}
         margin="normal"

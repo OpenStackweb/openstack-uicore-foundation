@@ -11,8 +11,9 @@
  * limitations under the License.
  * */
 
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Collapse,
   IconButton,
   MenuItem,
   Paper,
@@ -23,31 +24,125 @@ import {
   TableHead,
   TableRow
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import SettingsIcon from "@mui/icons-material/Settings";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import T from "i18n-react/dist/i18n-react";
 import { currencyAmountFromCents } from "../../../utils/money";
-import { DISCOUNT_TYPES, ONE_HUNDRED } from "../../../utils/constants";
+import {
+  DISCOUNT_TYPES,
+  ONE_HUNDRED,
+  SPONSOR_FORMS_METAFIELD_CLASS
+} from "../../../utils/constants";
 import GlobalQuantityField from "./components/GlobalQuantityField";
-import ItemTableField from "./components/ItemTableField";
 import MuiFormikSelect from "../formik-inputs/mui-formik-select";
 import MuiFormikPriceField from "../formik-inputs/mui-formik-pricefield";
 import MuiFormikDiscountField from "../formik-inputs/mui-formik-discountfield";
-import UnderlyingAlertNote from "./components/UnderlyingAlertNote";
+import ExpandedRowContent from "./components/ExpandedRowContent";
+import { hasDrivingQuantityField, isItemAvailable } from "./helpers";
 
 const FormItemTable = ({
   data,
   currentApplicableRate,
   timeZone,
   values,
-  onNotesClick,
-  onSettingsClick
+  touched,
+  errors
 }) => {
   const valuesStr = JSON.stringify(values);
-  const extraColumns =
-    data[0]?.meta_fields?.filter((mf) => mf.class_field === "Form") || [];
-  const fixedColumns = 10;
-  const totalColumns = extraColumns.length + fixedColumns;
+
+  const extraColumns = useMemo(
+    () =>
+      data[0]?.meta_fields?.filter(
+        (mf) => mf.class_field === SPONSOR_FORMS_METAFIELD_CLASS.FORM
+      ) || [],
+    [data]
+  );
+
+  // Rows whose global qty is driven by a Form-level Quantity field only
+  // expose that field inside the expanded panel, so default them open —
+  // otherwise the field that determines pricing is hidden behind a click.
+  const [openRows, setOpenRows] = useState(() =>
+    data.reduce((acc, row) => {
+      if (hasDrivingQuantityField(extraColumns)) acc[row.form_item_id] = true;
+      return acc;
+    }, {})
+  );
+
+  // toggle, code, name, custom_rate, early_bird, standard, onsite, qty, total, details
+  const totalColumns = 10;
+
+  // Rows that had a visible error the last time this effect ran. Used to
+  // only auto-expand on a fresh error occurrence, not on every validation
+  // cycle a persisting error is still part of — otherwise a row the user
+  // just collapsed gets forced back open on the next keystroke anywhere
+  // else in the form (errors/touched get new references on most
+  // validateOnChange cycles even when this row's own error didn't change).
+  const previousErrorRowsRef = useRef(new Set());
+
+  useEffect(() => {
+    if (!errors || Object.keys(errors).length === 0) {
+      previousErrorRowsRef.current = new Set();
+      return;
+    }
+
+    const currentErrorRows = new Set();
+    const updates = {};
+    data.forEach((row) => {
+      const itemFields = (row.meta_fields ?? []).filter(
+        (f) => f.class_field === SPONSOR_FORMS_METAFIELD_CLASS.ITEM
+      );
+      const expandedKeys = new Set([
+        ...extraColumns.map(
+          (exc) =>
+            `i-${row.form_item_id}-c-${exc.class_field}-f-${exc.type_id}`
+        ),
+        ...itemFields.map(
+          (f) => `i-${row.form_item_id}-c-${f.class_field}-f-${f.type_id}`
+        ),
+        `i-${row.form_item_id}-c-global-f-notes`
+      ]);
+      const hasVisibleError = Object.keys(errors).some(
+        (key) => expandedKeys.has(key) && Boolean(touched?.[key])
+      );
+      if (hasVisibleError) {
+        currentErrorRows.add(row.form_item_id);
+        if (!previousErrorRowsRef.current.has(row.form_item_id)) {
+          updates[row.form_item_id] = true;
+        }
+      }
+    });
+    previousErrorRowsRef.current = currentErrorRows;
+
+    if (Object.keys(updates).length > 0) {
+      setOpenRows((prev) => ({ ...prev, ...updates }));
+    }
+  }, [data, extraColumns, errors, touched]);
+
+  const toggleRow = (rowId) => {
+    setOpenRows((prev) => ({ ...prev, [rowId]: !prev[rowId] }));
+  };
+
+  const getDetailsIconColor = (row) => {
+    const hasIncomplete = (row.meta_fields ?? [])
+      .filter((mf) => mf.is_required)
+      .some((mf) => {
+        const val =
+          values[
+            `i-${row.form_item_id}-c-${mf.class_field}-f-${mf.type_id}`
+          ];
+        if (mf.type === "CheckBoxList") return !Array.isArray(val) || val.length === 0;
+        if (mf.type === "CheckBox") return val !== true;
+        return val === undefined || val === null || val === "";
+      });
+    if (hasIncomplete) return "error";
+
+    const prefix = `i-${row.form_item_id}-`;
+    const isTouched = Object.keys(touched ?? {}).some(
+      (key) => key.startsWith(prefix) && touched[key]
+    );
+    return isTouched ? "success" : "warning";
+  };
 
   const calculateQuantity = useCallback(
     (row) => {
@@ -83,23 +178,6 @@ const FormItemTable = ({
     return qty * rate;
   };
 
-  const hasItemFields = (row) =>
-    row.meta_fields.filter((mf) => mf.class_field === "Item").length > 0;
-
-  const itemFieldsIncomplete = (row) => {
-    const requiredFields = row.meta_fields.filter(
-      (mf) => mf.class_field === "Item" && mf.is_required
-    );
-    const hasMissingFields = requiredFields.some((mf) => {
-      const value = values[`i-${row.form_item_id}-c-Item-f-${mf.type_id}`];
-      if (mf.type === "CheckBoxList") return !Array.isArray(value) || value.length === 0;
-      if (mf.type === "CheckBox") return value !== true;
-      return value === undefined || value === null || value === "";
-    });
-
-    return requiredFields.length > 0 && hasMissingFields;
-  };
-
   const formatRate = (rate) => {
     if (rate == null) return T.translate("general.n_a");
     return currencyAmountFromCents(rate);
@@ -110,24 +188,17 @@ const FormItemTable = ({
     const discount =
       values.discount_type === DISCOUNT_TYPES.AMOUNT
         ? values.discount_amount
-        : subtotal * (values.discount_amount / ONE_HUNDRED / ONE_HUNDRED); // bps to fraction
+        : subtotal * (values.discount_amount / ONE_HUNDRED / ONE_HUNDRED);
 
     return subtotal - Math.round(discount);
   }, [data, valuesStr, currentApplicableRate]);
-
-  const handleEdit = (row) => {
-    onNotesClick(row);
-  };
-
-  const handleEditItemFields = (row) => {
-    onSettingsClick(row);
-  };
 
   return (
     <TableContainer component={Paper}>
       <Table>
         <TableHead>
           <TableRow sx={{ backgroundColor: "#EAEDF4" }}>
+            <TableCell sx={{ width: 40 }} />
             <TableCell sx={{ minWidth: 40 }}>
               {T.translate("sponsor_edit_form.code")}
             </TableCell>
@@ -146,121 +217,124 @@ const FormItemTable = ({
             <TableCell sx={{ minWidth: 40 }}>
               {T.translate("sponsor_edit_form.onsite_rate")}
             </TableCell>
-            {extraColumns.map((exc) => (
-              <TableCell key={`colhead-${exc.type_id}`} sx={{ minWidth: 200 }}>{exc.name}</TableCell>
-            ))}
             <TableCell sx={{ minWidth: 120 }}>
               {T.translate("sponsor_edit_form.qty")}
             </TableCell>
-            <TableCell sx={{ minWidth: 40 }} />
-            {/* item level extra field */}
             <TableCell sx={{ minWidth: 120 }}>
               {T.translate("sponsor_edit_form.total")}
             </TableCell>
-            <TableCell sx={{ minWidth: 40 }}>
-              {T.translate("sponsor_edit_form.notes")}
+            <TableCell sx={{ minWidth: 40 }} align="center">
+              {T.translate("sponsor_edit_form.details")}
             </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {data.map((row) => (
-            <TableRow key={`datarow-${row.form_item_id}`}>
-              <TableCell>{row.code}</TableCell>
-              <TableCell sx={{ position: "relative" }}>
-                <div>{row.name}</div>
-                <UnderlyingAlertNote
-                  showAdditionalItems={
-                    hasItemFields(row) && itemFieldsIncomplete(row)
-                  }
-                />
-              </TableCell>
-              <TableCell>
-                <MuiFormikPriceField
-                  name={`i-${row.form_item_id}-c-global-f-custom_rate`}
-                  fullWidth
-                  label=""
-                  size="small"
-                  inCents
-                  inputProps={{ step: 0.01 }}
-                />
-              </TableCell>
-              <TableCell
-                sx={{
-                  opacity: currentApplicableRate === "early_bird" ? 1 : "38%"
-                }}
-              >
-                {formatRate(row.rates.early_bird)}
-              </TableCell>
-              <TableCell
-                sx={{
-                  opacity: currentApplicableRate === "standard" ? 1 : "38%"
-                }}
-              >
-                {formatRate(row.rates.standard)}
-              </TableCell>
-              <TableCell
-                sx={{
-                  opacity: currentApplicableRate === "onsite" ? 1 : "38%"
-                }}
-              >
-                {formatRate(row.rates.onsite)}
-              </TableCell>
-              {extraColumns.map((exc) => (
-                <TableCell
-                  key={`datacell-${row.form_item_id}-${exc.type_id}`}
-                >
-                  <ItemTableField
-                    field={exc}
-                    rowId={row.form_item_id}
-                    timeZone={timeZone}
-                  />
-                </TableCell>
-              ))}
-              <TableCell>
-                <GlobalQuantityField
-                  row={row}
-                  extraColumns={extraColumns}
-                  value={calculateQuantity(row)}
-                />
-              </TableCell>
-              <TableCell align="center">
-                {hasItemFields(row) && (
-                  <IconButton
-                    size="small"
-                    aria-label="settings"
-                    onClick={() => handleEditItemFields(row)}
+          {data.map((row) => {
+            const disabled = !isItemAvailable(row, currentApplicableRate);
+            const isOpen = !!openRows[row.form_item_id];
+
+            return (
+              <React.Fragment key={`fragment-${row.form_item_id}`}>
+                <TableRow>
+                  <TableCell>
+                    <IconButton
+                      size="small"
+                      aria-label="Toggle row details"
+                      onClick={() => toggleRow(row.form_item_id)}
+                    >
+                      {isOpen ? (
+                        <KeyboardArrowUpIcon />
+                      ) : (
+                        <KeyboardArrowDownIcon />
+                      )}
+                    </IconButton>
+                  </TableCell>
+                  <TableCell>{row.code}</TableCell>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>
+                    <MuiFormikPriceField
+                      name={`i-${row.form_item_id}-c-global-f-custom_rate`}
+                      fullWidth
+                      label=""
+                      size="small"
+                      inCents
+                      inputProps={{ step: 0.01 }}
+                    />
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      opacity: currentApplicableRate === "early_bird" ? 1 : "38%"
+                    }}
                   >
-                    <SettingsIcon fontSize="large" color="warning" />
-                  </IconButton>
-                )}
-              </TableCell>
-              <TableCell>
-                {currencyAmountFromCents(calculateRowTotal(row))}
-              </TableCell>
-              <TableCell align="center">
-                <IconButton
-                  size="large"
-                  aria-label="edit"
-                  onClick={() => handleEdit(row)}
-                >
-                  <EditIcon fontSize="large" />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
+                    {formatRate(row.rates.early_bird)}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      opacity: currentApplicableRate === "standard" ? 1 : "38%"
+                    }}
+                  >
+                    {formatRate(row.rates.standard)}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      opacity: currentApplicableRate === "onsite" ? 1 : "38%"
+                    }}
+                  >
+                    {formatRate(row.rates.onsite)}
+                  </TableCell>
+                  <TableCell>
+                    <GlobalQuantityField
+                      row={row}
+                      extraColumns={extraColumns}
+                      value={calculateQuantity(row)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {currencyAmountFromCents(calculateRowTotal(row))}
+                  </TableCell>
+                  <TableCell align="center" sx={{ verticalAlign: "middle" }}>
+                    <IconButton
+                      size="small"
+                      aria-label="Toggle row details"
+                      onClick={() => toggleRow(row.form_item_id)}
+                    >
+                      <InfoOutlinedIcon color={getDetailsIconColor(row)} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell colSpan={totalColumns} sx={{ padding: 0 }}>
+                    <Collapse in={isOpen} timeout="auto">
+                      <ExpandedRowContent
+                        row={row}
+                        extraColumns={extraColumns}
+                        timeZone={timeZone}
+                        disabled={disabled}
+                      />
+                    </Collapse>
+                  </TableCell>
+                </TableRow>
+              </React.Fragment>
+            );
+          })}
           <TableRow>
             <TableCell sx={{ fontWeight: 500 }}>
               {T.translate("sponsor_edit_form.discount")}
             </TableCell>
             {/* eslint-disable-next-line */}
-            {new Array(totalColumns - 5).fill(0).map((_, i) => (
+            {new Array(totalColumns - 4).fill(0).map((_, i) => (
               <TableCell
                 // eslint-disable-next-line
                 key={`${i}-discountcell`}
               />
             ))}
             <TableCell>
-              <MuiFormikSelect name="discount_type" label="" size="small">
+              <MuiFormikSelect
+                name="discount_type"
+                label=""
+                size="small"
+                sx={{ width: 110 }}
+              >
                 {Object.values(DISCOUNT_TYPES).map((p) => (
                   <MenuItem key={`ddopt-${p}`} value={p}>
                     {p}
@@ -268,16 +342,15 @@ const FormItemTable = ({
                 ))}
               </MuiFormikSelect>
             </TableCell>
-            <TableCell />
             <TableCell>
               <MuiFormikDiscountField
                 name="discount_amount"
                 discountType={values.discount_type}
-                fullWidth
                 label=""
                 size="small"
                 margin="none"
                 inCents
+                sx={{ width: 110 }}
               />
             </TableCell>
             <TableCell />
@@ -309,3 +382,4 @@ export { getCurrentApplicableRate, isItemAvailable } from "./helpers";
 export { default as GlobalQuantityField } from "./components/GlobalQuantityField";
 export { default as ItemTableField } from "./components/ItemTableField";
 export { default as UnderlyingAlertNote } from "./components/UnderlyingAlertNote";
+export { default as ExpandedRowContent } from "./components/ExpandedRowContent";
