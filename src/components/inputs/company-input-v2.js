@@ -122,13 +122,20 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       // suggestion and then tabbing away silently populated the wrong company.
       // Selection is now explicit (click / Enter) only; see onBlur for the
       // "keep what was typed" fallback.
-      onBlur={() => {
-        // On blur with no explicit selection, take the typed text as-is:
-        // resolve to an existing company only on an exact (case-insensitive)
-        // name match, otherwise commit it as a free-text { id: 0, name }. Never
-        // commit a merely-highlighted option. Skip when the text already matches
-        // the committed value (e.g. right after an explicit selection).
-        const typed = inputValue.trim();
+      onBlur={(event) => {
+        // On blur with no explicit selection, commit the field's value as-is.
+        // Read the *DOM* value (event.target.value), NOT React input state:
+        // browser autofill (notably iOS Chrome) can populate the field without
+        // firing onInputChange, so the React state would be stale. Reading the
+        // DOM value is what MUI's `autoSelect` did internally — this preserves
+        // the typed/autofilled-value-on-blur fix (#241) — but we commit the
+        // field *text*, never a highlighted option, so hovering a suggestion and
+        // tabbing away no longer selects the wrong company (why autoSelect was
+        // removed). Resolve to an existing company only on an exact
+        // (case-insensitive) name match, else free-text { id: 0, name }. Skip
+        // when the text already matches the committed value (e.g. right after an
+        // explicit selection).
+        const typed = (event?.target?.value ?? inputValue).trim();
         const currentName = isCompanyObject(normalizedValue)
           ? normalizedValue.name
           : (typeof normalizedValue === "string" ? normalizedValue : "");

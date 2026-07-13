@@ -203,6 +203,26 @@ describe("CompanyInputV2 integration", () => {
         expect(committed).toEqual({ id: 0, name: "Tip" });
     });
 
+    it("commits a browser-autofilled value on blur even when it never fired onInputChange (#241 iOS Chrome)", () => {
+        // Autofill writes straight to the DOM without React's onInputChange, so
+        // the component's input state stays empty. The blur handler must read
+        // the DOM value (event.target.value), not React state, or required-field
+        // validation regresses — the exact bug #241's autoSelect fixed.
+        queryRegistrationCompanies.mockImplementation(() => {});
+
+        const onChange = jest.fn();
+        renderControlled({ onChange });
+        const input = screen.getByRole("combobox");
+
+        // Simulate autofill: set the DOM value directly (no fireEvent.change ->
+        // no onInputChange), then blur.
+        input.value = "Autofilled Co";
+        fireEvent.blur(input);
+
+        const committed = onChange.mock.calls.map((c) => c[0].target.value).pop();
+        expect(committed).toEqual({ id: 0, name: "Autofilled Co" });
+    });
+
     it("on blur commits the canonical existing match when the typed text matches case-insensitively", () => {
         // Capture the API callback so we can resolve it manually.
         let resolveQuery;
