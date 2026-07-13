@@ -178,6 +178,31 @@ describe("CompanyInputV2 integration", () => {
         return { ...utils, getValue: () => setValue };
     };
 
+    it("on blur takes the typed text and, when it matches no option, commits it as free text (never a highlighted option)", () => {
+        // The bug this guards: with autoSelect, mousing over a suggestion and
+        // tabbing away committed that highlighted company. Now blur must commit
+        // exactly what was typed.
+        let resolveQuery;
+        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
+            resolveQuery = cb;
+        });
+
+        const onChange = jest.fn();
+        renderControlled({ onChange });
+        const input = screen.getByRole("combobox");
+
+        // Type "Tip"; two suggestions come back (either could get highlighted on hover).
+        fireEvent.change(input, { target: { value: "Tip" } });
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }, { id: 2, name: "Tipco" }]); });
+
+        // Tab away without picking anything.
+        fireEvent.blur(input);
+
+        const committed = onChange.mock.calls.map((c) => c[0].target.value).pop();
+        // Exactly what was typed, as a free-text entry — not id 1 or id 2.
+        expect(committed).toEqual({ id: 0, name: "Tip" });
+    });
+
     it("on blur commits the canonical existing match when the typed text matches case-insensitively", () => {
         // Capture the API callback so we can resolve it manually.
         let resolveQuery;
@@ -249,5 +274,59 @@ describe("CompanyInputV2 integration", () => {
         );
         // MUI's clear button uses aria-label="Clear".
         expect(screen.queryByLabelText("Clear")).not.toBeInTheDocument();
+    });
+
+    it("never renders the clear icon, even with a real selected company (disableClearable)", () => {
+        queryRegistrationCompanies.mockImplementation(() => {});
+        render(
+            <CompanyInputV2
+                summitId={1}
+                name="company"
+                value={{ id: 1, name: "Tipit" }}
+                onChange={() => {}}
+            />
+        );
+        expect(screen.queryByLabelText("Clear")).not.toBeInTheDocument();
+    });
+
+    it("offers a 'Use \"<typed>\"' option that commits the typed text as a free-text entry", () => {
+        let resolveQuery;
+        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
+            resolveQuery = cb;
+        });
+
+        const onChange = jest.fn();
+        renderControlled({ onChange });
+        const input = screen.getByRole("combobox");
+
+        // Type a name with no existing match; the listbox opens with just the
+        // synthetic "Use ..." row.
+        fireEvent.change(input, { target: { value: "Acme" } });
+        act(() => { resolveQuery([]); });
+
+        const useOption = screen.getByText('Use "Acme"');
+        fireEvent.click(useOption);
+
+        const committed = onChange.mock.calls
+            .map((c) => c[0].target.value)
+            .find((v) => v && typeof v === "object" && v.id === 0);
+        // Committed clean, without the display-only marker.
+        expect(committed).toEqual({ id: 0, name: "Acme" });
+    });
+
+    it("does not offer the 'Use' row when the typed text already matches an option", () => {
+        let resolveQuery;
+        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
+            resolveQuery = cb;
+        });
+
+        renderControlled({});
+        const input = screen.getByRole("combobox");
+
+        fireEvent.change(input, { target: { value: "Tipit" } });
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }]); });
+
+        // The real company shows; no redundant "Use "Tipit"" row.
+        expect(screen.queryByText('Use "Tipit"')).not.toBeInTheDocument();
     });
 });

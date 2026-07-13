@@ -110,25 +110,51 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       name={name}
       options={options}
       autoComplete
-      autoSelect
       freeSolo
+      // No clear (x) icon: the field commits free text, so an explicit clear
+      // affordance isn't wanted; users empty it by deleting the text.
+      disableClearable
       includeInputInList
       filterSelectedOptions
       value={normalizedValue}
-      onBlur={() => { if (onBlur) onBlur(name) }}
+      // NOTE: `autoSelect` is intentionally NOT set. With it, blurring the field
+      // committed the currently *highlighted* option — so merely mousing over a
+      // suggestion and then tabbing away silently populated the wrong company.
+      // Selection is now explicit (click / Enter) only; see onBlur for the
+      // "keep what was typed" fallback.
+      onBlur={() => {
+        // On blur with no explicit selection, take the typed text as-is:
+        // resolve to an existing company only on an exact (case-insensitive)
+        // name match, otherwise commit it as a free-text { id: 0, name }. Never
+        // commit a merely-highlighted option. Skip when the text already matches
+        // the committed value (e.g. right after an explicit selection).
+        const typed = inputValue.trim();
+        const currentName = isCompanyObject(normalizedValue)
+          ? normalizedValue.name
+          : (typeof normalizedValue === "string" ? normalizedValue : "");
+        if (typed && typed.toLowerCase() !== currentName.trim().toLowerCase()) {
+          fireChange(findExistingByName(options, typed) || { id: 0, name: typed });
+        }
+        if (onBlur) onBlur(name);
+      }}
       getOptionLabel={(option) => {
         if (typeof option === "string") return option;
         return option.name;
       }}
       onChange={(_, newValue) => {
         let tmpValue = newValue;
-        // autoSelect commits the raw typed/autofilled string on blur. If the
-        // string matches an existing company case-insensitively, pick that
-        // option (so typing "tipit" tabs out to "Tipit"). Otherwise commit
-        // the typed value as a free-text {id: 0, name} entry.
+        // freeSolo commits the raw typed string when the user presses Enter
+        // without picking an option (reason "createOption"). If the string
+        // matches an existing company case-insensitively, pick that option (so
+        // "tipit" + Enter resolves to "Tipit"); otherwise commit it as a
+        // free-text {id: 0, name} entry.
         if (typeof tmpValue === "string" && tmpValue.trim()) {
           const trimmed = tmpValue.trim();
           tmpValue = findExistingByName(options, trimmed) || { id: 0, name: trimmed };
+        } else if (tmpValue && typeof tmpValue === "object" && tmpValue.isFreeTextOption) {
+          // The synthetic "Use "…"" row: commit a clean free-text entry,
+          // dropping the display-only marker.
+          tmpValue = { id: 0, name: tmpValue.name };
         }
         // Prepend the committed value but drop any existing entry with
         // the same id; otherwise resolving to an existing company would
@@ -147,9 +173,19 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       onInputChange={(_, newInputValue) => {
         setInputValue(newInputValue);
       }}
-      // The API already filters server-side; disable MUI's client-side filtering
-      // so all returned matches stay visible regardless of substring match.
-      filterOptions={(opts) => opts}
+      // The API already filters server-side, so all returned matches stay
+      // visible (no client-side substring filtering). We only *append* a
+      // synthetic "Use "<typed>"" row so the user can explicitly commit their
+      // free text when it isn't already one of the options.
+      filterOptions={(opts, params) => {
+        const trimmed = params.inputValue.trim();
+        const alreadyListed = trimmed && opts.some(
+          (o) => (typeof o === "string" ? o : o?.name)?.trim().toLowerCase() === trimmed.toLowerCase()
+        );
+        return trimmed && !alreadyListed
+          ? [...opts, { id: 0, name: trimmed, isFreeTextOption: true }]
+          : opts;
+      }}
       renderInput={(params) => (
         <TextField
           /* eslint-disable-next-line react/jsx-props-no-spreading */
@@ -169,7 +205,10 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
         // Mirror getOptionLabel: string options come through when the
         // consumer passes value as a plain string. Without this guard
         // those rows render empty.
-        const label = typeof option === "string" ? option : option?.name;
+        const optionName = typeof option === "string" ? option : option?.name;
+        // The synthetic free-text row reads Use "<typed>" so it's clearly a
+        // commit-what-I-typed action, not a matched company.
+        const label = option?.isFreeTextOption ? `Use "${optionName}"` : optionName;
         return (
           // eslint-disable-next-line react/jsx-props-no-spreading
           <li key={key} {...optionProps}>
