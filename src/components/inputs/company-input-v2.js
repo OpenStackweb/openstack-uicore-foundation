@@ -49,6 +49,16 @@ export const normalizeCompanyValue = (v) => {
   return null;
 };
 
+// Extract the display name from an option. String options come through when
+// the consumer passes value as a plain string; object options carry `name`.
+// Returns "" for null/undefined/malformed shapes so callers can chain string
+// ops without null guards.
+export const getOptionName = (option) => {
+  if (typeof option === "string") return option;
+  if (isCompanyObject(option)) return option.name;
+  return "";
+};
+
 const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink, ...rest }) => {
   const [inputValue, setInputValue] = React.useState("");
   const [options, setOptions] = React.useState([]);
@@ -149,10 +159,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
         }
         if (onBlur) onBlur(name);
       }}
-      getOptionLabel={(option) => {
-        if (typeof option === "string") return option;
-        return option.name;
-      }}
+      getOptionLabel={getOptionName}
       onChange={(_, newValue) => {
         let tmpValue = newValue;
         // freeSolo commits the raw typed string when the user presses Enter
@@ -195,7 +202,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       filterOptions={(opts, params) => {
         const trimmed = params.inputValue.trim();
         const alreadyListed = trimmed && opts.some(
-          (o) => (typeof o === "string" ? o : o?.name)?.trim().toLowerCase() === trimmed.toLowerCase()
+          (o) => getOptionName(o).trim().toLowerCase() === trimmed.toLowerCase()
         );
         return trimmed && !alreadyListed
           ? [{ id: 0, name: trimmed, isFreeTextOption: true }, ...opts]
@@ -217,10 +224,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       )}
       renderOption={(props, option) => {
         const { key, ...optionProps } = props;
-        // Mirror getOptionLabel: string options come through when the
-        // consumer passes value as a plain string. Without this guard
-        // those rows render empty.
-        const optionName = typeof option === "string" ? option : option?.name;
+        const optionName = getOptionName(option);
         // The synthetic free-text row reads Use "<typed>" so it's clearly a
         // commit-what-I-typed action, not a matched company.
         const label = option?.isFreeTextOption ? `Use "${optionName}"` : optionName;
