@@ -13,7 +13,8 @@
 
 import React from "react";
 import { render } from "@testing-library/react";
-import { buildRows, OrderPdf } from "../index";
+import { pdf } from "@react-pdf/renderer";
+import { buildRows, OrderPdf, generateInvoicePDF, previewPDF } from "../index";
 
 jest.mock("@react-pdf/renderer", () => {
   const React = require("react");
@@ -29,7 +30,7 @@ jest.mock("@react-pdf/renderer", () => {
     Path: () => null,
     StyleSheet: { create: (s) => s },
     Font: { register: () => {} },
-    pdf: () => ({ toBlob: async () => ({}) })
+    pdf: jest.fn(() => ({ toBlob: async () => ({}) }))
   };
 });
 
@@ -407,5 +408,157 @@ describe("OrderPdf — reconciliation block", () => {
     expect(creditedContainer.textContent).toContain(
       "Credited to Payment Method"
     );
+  });
+});
+
+// ─── generateInvoicePDF ────────────────────────────────────────────────────
+
+describe("generateInvoicePDF", () => {
+  let callOrder;
+  let clickSpy;
+  let appendChildSpy;
+  let removeChildSpy;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    callOrder = [];
+    URL.createObjectURL = jest.fn(() => {
+      callOrder.push("createObjectURL");
+      return "blob:mock-url";
+    });
+    URL.revokeObjectURL = jest.fn(() => callOrder.push("revokeObjectURL"));
+    clickSpy = jest
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => callOrder.push("click"));
+    appendChildSpy = jest.spyOn(document.body, "appendChild");
+    removeChildSpy = jest.spyOn(document.body, "removeChild");
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    delete URL.createObjectURL;
+    delete URL.revokeObjectURL;
+    jest.restoreAllMocks();
+  });
+
+  it("downloads the blob through a temporary link, then revokes the URL only after a delay", async () => {
+    await generateInvoicePDF(
+      makeRenderOrder({ number: "ORD 2026 001" }),
+      makeRenderSummit()
+    );
+
+    const link = appendChildSpy.mock.calls[0][0];
+    expect(link.tagName).toBe("A");
+    expect(link.href).toContain("blob:mock-url");
+    expect(link.download).toBe("invoice-ord-2026-001.pdf");
+
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(removeChildSpy).toHaveBeenCalledWith(link);
+    // revoking right after click() has been reported to produce empty/failed
+    // downloads on Safari and some Firefox versions, so it must be deferred
+    expect(callOrder).toEqual(["createObjectURL", "click"]);
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+
+    jest.advanceTimersByTime(60_000);
+    expect(callOrder).toEqual(["createObjectURL", "click", "revokeObjectURL"]);
+  });
+
+  it("logs and rethrows when PDF generation fails, without touching the DOM", async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    pdf.mockReturnValueOnce({
+      toBlob: () => Promise.reject(new Error("boom"))
+    });
+
+    await expect(
+      generateInvoicePDF(makeRenderOrder(), makeRenderSummit())
+    ).rejects.toThrow("boom");
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error generating invoice PDF:",
+      expect.any(Error)
+    );
+    expect(appendChildSpy).not.toHaveBeenCalled();
+    consoleErrorSpy.mockRestore();
+  });
+});
+
+// ─── previewPDF ─────────────────────────────────────────────────────────────
+
+describe("previewPDF", () => {
+  let originalOpen;
+  let fakeTab;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    originalOpen = window.open;
+    fakeTab = { location: { href: "" } };
+    URL.createObjectURL = jest.fn(() => "blob:mock-preview-url");
+    URL.revokeObjectURL = jest.fn();
+    window.open = jest.fn(() => fakeTab);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    delete URL.createObjectURL;
+    delete URL.revokeObjectURL;
+    window.open = originalOpen;
+  });
+
+  it("opens a blank tab synchronously (before the blob is ready) so Safari's popup blocker doesn't kill it", async () => {
+    const promise = previewPDF(makeRenderOrder(), makeRenderSummit());
+
+    // asserted before awaiting, i.e. before the pending PDF promise resolves
+    expect(window.open).toHaveBeenCalledWith("", "_blank", "noreferrer");
+
+    await promise;
+  });
+
+  it("navigates the pre-opened tab to the blob URL once it's ready", async () => {
+    await previewPDF(makeRenderOrder(), makeRenderSummit());
+
+    expect(fakeTab.location.href).toBe("blob:mock-preview-url");
+  });
+
+  it("does not throw when the popup blocker returns null for the pre-opened tab", async () => {
+    window.open = jest.fn(() => null);
+
+    await expect(
+      previewPDF(makeRenderOrder(), makeRenderSummit())
+    ).resolves.toBeUndefined();
+  });
+
+  it("logs, closes the pre-opened tab, and rethrows when PDF generation fails", async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    fakeTab.close = jest.fn();
+    pdf.mockReturnValueOnce({
+      toBlob: () => Promise.reject(new Error("boom"))
+    });
+
+    await expect(
+      previewPDF(makeRenderOrder(), makeRenderSummit())
+    ).rejects.toThrow("boom");
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error generating invoice PDF preview:",
+      expect.any(Error)
+    );
+    expect(fakeTab.close).toHaveBeenCalledTimes(1);
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("keeps the URL alive until the new tab has had time to load it", async () => {
+    await previewPDF(makeRenderOrder(), makeRenderSummit());
+
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+
+    jest.advanceTimersByTime(59_999);
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+
+    jest.advanceTimersByTime(1);
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:mock-preview-url");
   });
 });

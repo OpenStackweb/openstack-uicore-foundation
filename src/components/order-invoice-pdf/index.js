@@ -15,7 +15,6 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Document, Page, Text, View, Image, pdf } from "@react-pdf/renderer";
 import { createStyles, createRowStyles } from "./styles";
-import { FieldRow, PdfTableRow, ReconciliationBlock } from "./components";
 import {
   buildRows,
   formatDate,
@@ -24,8 +23,11 @@ import {
   getThemeFontFamily,
   fmtBalance
 } from "./helpers";
+import { FieldRow } from "./components/field-row";
+import { PdfTableRow } from "./components/pdf-table-row";
+import { ReconciliationBlock } from "./components/reconciliation-block";
 
-export { buildRows, formatDate };
+export { buildRows };
 
 // logoSrc/theme are left to the consumer on purpose: this component is
 // shared across apps with different branding/typefaces, so no logo image or
@@ -166,6 +168,11 @@ OrderPdf.propTypes = {
   theme: PropTypes.object
 };
 
+// Revoking a blob URL immediately after use has been reported to produce
+// empty/failed downloads on Safari and some Firefox versions, so both
+// generateInvoicePDF and previewPDF defer the revoke by this long instead.
+const REVOKE_DELAY_MS = 60_000;
+
 export const generateInvoicePDF = async (
   order,
   summit,
@@ -188,8 +195,8 @@ export const generateInvoicePDF = async (
       .replace(/\s+/g, "-");
     document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
     document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), REVOKE_DELAY_MS);
   } catch (error) {
     console.error("Error generating invoice PDF:", error);
     throw error;
@@ -197,11 +204,27 @@ export const generateInvoicePDF = async (
 };
 
 export const previewPDF = async (order, summit, { logoSrc, theme } = {}) => {
-  const blob = await pdf(
-    <OrderPdf order={order} summit={summit} logoSrc={logoSrc} theme={theme} />
-  ).toBlob();
-  const url = URL.createObjectURL(blob);
-  window.open(url, "_blank", "noopener,noreferrer");
-   // Revoke after the new tab has had a chance to load the PDF.
-   setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  // Opened synchronously, before the await below, so the tab is still tied
+  // to the originating click — otherwise Safari's popup blocker kills it.
+  // Can't pass "noopener" here: that makes window.open return null, and we
+  // need the reference to set .location.href once the blob URL is ready.
+  const newTab = window.open("", "_blank", "noreferrer");
+
+  try {
+    const blob = await pdf(
+      <OrderPdf order={order} summit={summit} logoSrc={logoSrc} theme={theme} />
+    ).toBlob();
+    const url = URL.createObjectURL(blob);
+
+    if (newTab) {
+      newTab.location.href = url;
+    }
+
+    // Revoke after the new tab has had a chance to load the PDF.
+    setTimeout(() => URL.revokeObjectURL(url), REVOKE_DELAY_MS);
+  } catch (error) {
+    console.error("Error generating invoice PDF preview:", error);
+    if (newTab) newTab.close();
+    throw error;
+  }
 };
