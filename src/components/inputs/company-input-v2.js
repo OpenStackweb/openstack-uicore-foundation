@@ -49,6 +49,16 @@ export const normalizeCompanyValue = (v) => {
   return null;
 };
 
+// Extract the display name from an option. String options come through when
+// the consumer passes value as a plain string; object options carry `name`.
+// Returns "" for null/undefined/malformed shapes so callers can chain string
+// ops without null guards.
+export const getOptionName = (option) => {
+  if (typeof option === "string") return option;
+  if (isCompanyObject(option)) return option.name;
+  return "";
+};
+
 const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink, ...rest }) => {
   const [inputValue, setInputValue] = React.useState("");
   const [options, setOptions] = React.useState([]);
@@ -110,25 +120,60 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       name={name}
       options={options}
       autoComplete
-      autoSelect
       freeSolo
+      // No clear (x) icon: the field commits free text, so an explicit clear
+      // affordance isn't wanted; users empty it by deleting the text.
+      disableClearable
       includeInputInList
       filterSelectedOptions
       value={normalizedValue}
-      onBlur={() => { if (onBlur) onBlur(name) }}
-      getOptionLabel={(option) => {
-        if (typeof option === "string") return option;
-        return option.name;
+      // NOTE: `autoSelect` is intentionally NOT set. With it, blurring the field
+      // committed the currently *highlighted* option — so merely mousing over a
+      // suggestion and then tabbing away silently populated the wrong company.
+      // Selection is now explicit (click / Enter) only; see onBlur for the
+      // "keep what was typed" fallback.
+      onBlur={(event) => {
+        // On blur with no explicit selection, commit the field's value as-is.
+        // Read the *DOM* value (event.target.value), NOT React input state:
+        // browser autofill (notably iOS Chrome) can populate the field without
+        // firing onInputChange, so the React state would be stale. Reading the
+        // DOM value is what MUI's `autoSelect` did internally — this preserves
+        // the typed/autofilled-value-on-blur fix (#241) — but we commit the
+        // field *text*, never a highlighted option, so hovering a suggestion and
+        // tabbing away no longer selects the wrong company (why autoSelect was
+        // removed). Resolve to an existing company only on an exact
+        // (case-insensitive) name match, else free-text { id: 0, name }. Skip
+        // when the text already matches the committed value (e.g. right after an
+        // explicit selection).
+        const typed = (event?.target?.value ?? inputValue).trim();
+        const currentName = isCompanyObject(normalizedValue)
+          ? normalizedValue.name
+          : (typeof normalizedValue === "string" ? normalizedValue : "");
+        if (!typed) {
+          // Field emptied (delete-all-text). With disableClearable there's no
+          // (x), so this is the only way to clear — propagate null. Skip if
+          // already cleared to avoid a redundant change.
+          if (normalizedValue) fireChange(null);
+        } else if (typed.toLowerCase() !== currentName.trim().toLowerCase()) {
+          fireChange(findExistingByName(options, typed) || { id: 0, name: typed });
+        }
+        if (onBlur) onBlur(name);
       }}
+      getOptionLabel={getOptionName}
       onChange={(_, newValue) => {
         let tmpValue = newValue;
-        // autoSelect commits the raw typed/autofilled string on blur. If the
-        // string matches an existing company case-insensitively, pick that
-        // option (so typing "tipit" tabs out to "Tipit"). Otherwise commit
-        // the typed value as a free-text {id: 0, name} entry.
+        // freeSolo commits the raw typed string when the user presses Enter
+        // without picking an option (reason "createOption"). If the string
+        // matches an existing company case-insensitively, pick that option (so
+        // "tipit" + Enter resolves to "Tipit"); otherwise commit it as a
+        // free-text {id: 0, name} entry.
         if (typeof tmpValue === "string" && tmpValue.trim()) {
           const trimmed = tmpValue.trim();
           tmpValue = findExistingByName(options, trimmed) || { id: 0, name: trimmed };
+        } else if (tmpValue && typeof tmpValue === "object" && tmpValue.isFreeTextOption) {
+          // The synthetic "Use "…"" row: commit a clean free-text entry,
+          // dropping the display-only marker.
+          tmpValue = { id: 0, name: tmpValue.name };
         }
         // Prepend the committed value but drop any existing entry with
         // the same id; otherwise resolving to an existing company would
@@ -147,9 +192,22 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       onInputChange={(_, newInputValue) => {
         setInputValue(newInputValue);
       }}
-      // The API already filters server-side; disable MUI's client-side filtering
-      // so all returned matches stay visible regardless of substring match.
-      filterOptions={(opts) => opts}
+      // The API already filters server-side, so all returned matches stay
+      // visible (no client-side substring filtering). We *prepend* a synthetic
+      // "Use "<typed>"" row so the user can explicitly commit their free text
+      // when it isn't already listed. First position makes the typed text the
+      // primary action (arrow-down + Enter commits without scrolling past
+      // suggestions) and matches the user's intent that they took the trouble
+      // to type.
+      filterOptions={(opts, params) => {
+        const trimmed = params.inputValue.trim();
+        const alreadyListed = trimmed && opts.some(
+          (o) => getOptionName(o).trim().toLowerCase() === trimmed.toLowerCase()
+        );
+        return trimmed && !alreadyListed
+          ? [{ id: 0, name: trimmed, isFreeTextOption: true }, ...opts]
+          : opts;
+      }}
       renderInput={(params) => (
         <TextField
           /* eslint-disable-next-line react/jsx-props-no-spreading */
@@ -166,10 +224,10 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       )}
       renderOption={(props, option) => {
         const { key, ...optionProps } = props;
-        // Mirror getOptionLabel: string options come through when the
-        // consumer passes value as a plain string. Without this guard
-        // those rows render empty.
-        const label = typeof option === "string" ? option : option?.name;
+        const optionName = getOptionName(option);
+        // The synthetic free-text row reads Use "<typed>" so it's clearly a
+        // commit-what-I-typed action, not a matched company.
+        const displayLabel = option?.isFreeTextOption ? `Use "${optionName}"` : optionName;
         return (
           // eslint-disable-next-line react/jsx-props-no-spreading
           <li key={key} {...optionProps}>
@@ -177,7 +235,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
               variant="body2"
               sx={{ fontSize: "1em", color: "text.secondary", padding: "5px 0" }}
             >
-              {label}
+              {displayLabel}
             </Typography>
           </li>
         );
