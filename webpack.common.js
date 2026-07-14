@@ -106,7 +106,7 @@ module.exports = {
         'components/mui/editable-table': './src/components/mui/editable-table/mui-table-editable.js',
         'components/mui/sortable-table': './src/components/mui/sortable-table/mui-table-sortable.js',
         'components/mui/bulk-edit-table': './src/components/mui/BulkEditTable/index.js',
-        'components/mui/sortable-table-v2': './src/components/mui/sortable-table/mui-table-sortable-v2.js',
+        'components/mui/sortable-table-v2': './src/components/mui/sortable-table-v2/mui-table-sortable-v2.js',
         'components/mui/table': './src/components/mui/table/mui-table.js',
         'components/mui/table/custom-table-pagination': './src/components/mui/table/CustomTablePagination.js',
         'components/mui/table/extra-rows': './src/components/mui/table/extra-rows/index.js',

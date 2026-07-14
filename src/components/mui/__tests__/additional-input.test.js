@@ -27,6 +27,14 @@ jest.mock(
     }
 );
 
+jest.mock(
+  "../formik-inputs/additional-input/meta-field-values-v2",
+  () =>
+    function MockMetaFieldValuesV2() {
+      return <div data-testid="meta-field-values-v2">MetaFieldValuesV2</div>;
+    }
+);
+
 // Helper function to render the component with Formik
 const renderWithFormik = (props, initialValues = { meta_fields: [] }) =>
   render(
@@ -127,6 +135,32 @@ describe("AdditionalInput", () => {
     test("does not show MetaFieldValues when type is Text", () => {
       renderWithFormik(defaultProps, defaultInitialMetaFields);
 
+      expect(screen.queryByTestId("meta-field-values")).not.toBeInTheDocument();
+    });
+
+    test("shows MetaFieldValues (v1) instead of MetaFieldValuesV2 by default", () => {
+      const itemWithOptions = { ...defaultItem, type: "CheckBoxList" };
+
+      renderWithFormik(
+        { ...defaultProps, item: itemWithOptions },
+        { meta_fields: [itemWithOptions] }
+      );
+
+      expect(screen.getByTestId("meta-field-values")).toBeInTheDocument();
+      expect(
+        screen.queryByTestId("meta-field-values-v2")
+      ).not.toBeInTheDocument();
+    });
+
+    test("shows MetaFieldValuesV2 instead of MetaFieldValues when useV2 is true", () => {
+      const itemWithOptions = { ...defaultItem, type: "CheckBoxList" };
+
+      renderWithFormik(
+        { ...defaultProps, item: itemWithOptions, useV2: true },
+        { meta_fields: [itemWithOptions] }
+      );
+
+      expect(screen.getByTestId("meta-field-values-v2")).toBeInTheDocument();
       expect(screen.queryByTestId("meta-field-values")).not.toBeInTheDocument();
     });
 
