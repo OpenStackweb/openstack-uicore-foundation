@@ -186,16 +186,19 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
         setInputValue(newInputValue);
       }}
       // The API already filters server-side, so all returned matches stay
-      // visible (no client-side substring filtering). We only *append* a
-      // synthetic "Use "<typed>"" row so the user can explicitly commit their
-      // free text when it isn't already one of the options.
+      // visible (no client-side substring filtering). We *prepend* a synthetic
+      // "Use "<typed>"" row so the user can explicitly commit their free text
+      // when it isn't already listed. First position makes the typed text the
+      // primary action (arrow-down + Enter commits without scrolling past
+      // suggestions) and matches the user's intent that they took the trouble
+      // to type.
       filterOptions={(opts, params) => {
         const trimmed = params.inputValue.trim();
         const alreadyListed = trimmed && opts.some(
           (o) => (typeof o === "string" ? o : o?.name)?.trim().toLowerCase() === trimmed.toLowerCase()
         );
         return trimmed && !alreadyListed
-          ? [...opts, { id: 0, name: trimmed, isFreeTextOption: true }]
+          ? [{ id: 0, name: trimmed, isFreeTextOption: true }, ...opts]
           : opts;
       }}
       renderInput={(params) => (
