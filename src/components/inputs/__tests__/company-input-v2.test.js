@@ -178,6 +178,79 @@ describe("CompanyInputV2 integration", () => {
         return { ...utils, getValue: () => setValue };
     };
 
+    it("on blur takes the typed text and, when it matches no option, commits it as free text (never a highlighted option)", () => {
+        // The bug this guards: with autoSelect, mousing over a suggestion and
+        // tabbing away committed that highlighted company. Now blur must commit
+        // exactly what was typed.
+        let resolveQuery;
+        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
+            resolveQuery = cb;
+        });
+
+        const onChange = jest.fn();
+        renderControlled({ onChange });
+        const input = screen.getByRole("combobox");
+
+        // Type "Tip"; two suggestions come back (either could get highlighted on hover).
+        fireEvent.change(input, { target: { value: "Tip" } });
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }, { id: 2, name: "Tipco" }]); });
+
+        // Tab away without picking anything.
+        fireEvent.blur(input);
+
+        const committed = onChange.mock.calls.map((c) => c[0].target.value).pop();
+        // Exactly what was typed, as a free-text entry — not id 1 or id 2.
+        expect(committed).toEqual({ id: 0, name: "Tip" });
+    });
+
+    it("commits a browser-autofilled value on blur even when it never fired onInputChange (#241 iOS Chrome)", () => {
+        // Autofill writes straight to the DOM without React's onInputChange, so
+        // the component's input state stays empty. The blur handler must read
+        // the DOM value (event.target.value), not React state, or required-field
+        // validation regresses — the exact bug #241's autoSelect fixed.
+        queryRegistrationCompanies.mockImplementation(() => {});
+
+        const onChange = jest.fn();
+        renderControlled({ onChange });
+        const input = screen.getByRole("combobox");
+
+        // Simulate autofill: set the DOM value directly (no fireEvent.change ->
+        // no onInputChange), then blur.
+        input.value = "Autofilled Co";
+        fireEvent.blur(input);
+
+        const committed = onChange.mock.calls.map((c) => c[0].target.value).pop();
+        expect(committed).toEqual({ id: 0, name: "Autofilled Co" });
+    });
+
+    it("clears the committed company when the field is emptied (delete-all-text) and blurred", () => {
+        // With disableClearable there's no (x), so deleting the text and blurring
+        // is the only way to clear — the value must propagate as null.
+        queryRegistrationCompanies.mockImplementation(() => {});
+
+        const onChange = jest.fn();
+        renderControlled({ initialValue: { id: 1, name: "Tipit" }, onChange });
+        const input = screen.getByRole("combobox");
+
+        fireEvent.change(input, { target: { value: "" } });
+        fireEvent.blur(input);
+
+        const committed = onChange.mock.calls.map((c) => c[0].target.value).pop();
+        expect(committed).toBeNull();
+    });
+
+    it("does not fire a redundant change when an already-empty field is blurred", () => {
+        queryRegistrationCompanies.mockImplementation(() => {});
+
+        const onChange = jest.fn();
+        renderControlled({ initialValue: null, onChange });
+        const input = screen.getByRole("combobox");
+
+        fireEvent.blur(input);
+
+        expect(onChange).not.toHaveBeenCalled();
+    });
+
     it("on blur commits the canonical existing match when the typed text matches case-insensitively", () => {
         // Capture the API callback so we can resolve it manually.
         let resolveQuery;
@@ -206,25 +279,31 @@ describe("CompanyInputV2 integration", () => {
     });
 
     it("auto-replaces a free-text commit with the canonical match when the API response arrives after blur", () => {
-        // Withhold the API callback to simulate the network being slower than blur.
-        let resolveQuery;
-        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
-            resolveQuery = cb;
-        });
+        // Withhold the API callback so we control when the response "arrives".
+        queryRegistrationCompanies.mockImplementation(() => {});
 
         const onChange = jest.fn();
-        // Start with the free-text commit already in place (what happens when
-        // blur fires before the response).
-        renderControlled({ initialValue: { id: 0, name: "tipit" }, onChange });
+        renderControlled({ onChange });
         const input = screen.getByRole("combobox");
 
-        // Type to populate inputValue so the effect kicks in.
+        // Type "tipit": fires onInputChange, populates inputValue, triggers the effect.
         fireEvent.change(input, { target: { value: "tipit" } });
 
-        // Now the response arrives with the canonical option.
-        act(() => { resolveQuery([{ id: 1, name: "Tipit" }]); });
+        // Blur: autoSelect commits the typed string as free-text { id: 0, name: "tipit" }
+        // via the wrapper's onChange handler, which writes it back to value. The
+        // value change re-runs the effect with the new normalizedValue closure.
+        fireEvent.blur(input);
+        onChange.mockClear();
 
-        // The component should have called onChange with the canonical option.
+        // Pull the API callback from the most recent effect run (the one with
+        // the post-blur normalizedValue captured in its closure).
+        expect(queryRegistrationCompanies).toHaveBeenCalled();
+        const [, , cb] = queryRegistrationCompanies.mock.calls[queryRegistrationCompanies.mock.calls.length - 1];
+
+        // Now the API response arrives with the canonical option. The effect
+        // sees the active value is a free-text match and auto-replaces it.
+        act(() => { cb([{ id: 1, name: "Tipit" }]); });
+
         const promoted = onChange.mock.calls
             .map((c) => c[0].target.value)
             .find((v) => v && typeof v === "object" && v.id === 1);
@@ -243,5 +322,59 @@ describe("CompanyInputV2 integration", () => {
         );
         // MUI's clear button uses aria-label="Clear".
         expect(screen.queryByLabelText("Clear")).not.toBeInTheDocument();
+    });
+
+    it("never renders the clear icon, even with a real selected company (disableClearable)", () => {
+        queryRegistrationCompanies.mockImplementation(() => {});
+        render(
+            <CompanyInputV2
+                summitId={1}
+                name="company"
+                value={{ id: 1, name: "Tipit" }}
+                onChange={() => {}}
+            />
+        );
+        expect(screen.queryByLabelText("Clear")).not.toBeInTheDocument();
+    });
+
+    it("offers a 'Use \"<typed>\"' option that commits the typed text as a free-text entry", () => {
+        let resolveQuery;
+        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
+            resolveQuery = cb;
+        });
+
+        const onChange = jest.fn();
+        renderControlled({ onChange });
+        const input = screen.getByRole("combobox");
+
+        // Type a name with no existing match; the listbox opens with just the
+        // synthetic "Use ..." row.
+        fireEvent.change(input, { target: { value: "Acme" } });
+        act(() => { resolveQuery([]); });
+
+        const useOption = screen.getByText('Use "Acme"');
+        fireEvent.click(useOption);
+
+        const committed = onChange.mock.calls
+            .map((c) => c[0].target.value)
+            .find((v) => v && typeof v === "object" && v.id === 0);
+        // Committed clean, without the display-only marker.
+        expect(committed).toEqual({ id: 0, name: "Acme" });
+    });
+
+    it("does not offer the 'Use' row when the typed text already matches an option", () => {
+        let resolveQuery;
+        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
+            resolveQuery = cb;
+        });
+
+        renderControlled({});
+        const input = screen.getByRole("combobox");
+
+        fireEvent.change(input, { target: { value: "Tipit" } });
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }]); });
+
+        // The real company shows; no redundant "Use "Tipit"" row.
+        expect(screen.queryByText('Use "Tipit"')).not.toBeInTheDocument();
     });
 });
