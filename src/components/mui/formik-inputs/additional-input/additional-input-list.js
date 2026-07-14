@@ -27,7 +27,13 @@ const DEFAULT_META_FIELD = {
   values: []
 };
 
-const AdditionalInputList = ({ name, onDelete, onDeleteValue, entityId }) => {
+const AdditionalInputList = ({
+  name,
+  onDelete,
+  onDeleteValue,
+  entityId,
+  useV2 = false
+}) => {
   const { values, setFieldValue, errors, setFieldTouched } = useFormikContext();
 
   const metaFields = values[name] || [];
@@ -114,6 +120,7 @@ const AdditionalInputList = ({ name, onDelete, onDeleteValue, entityId }) => {
           onDeleteValue={onDeleteValue}
           entityId={entityId}
           isAddDisabled={areMetafieldsIncomplete()}
+          useV2={useV2}
         />
       ))}
     </>

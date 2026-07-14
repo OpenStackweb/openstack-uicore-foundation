@@ -86,7 +86,7 @@ import React from "react";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import MuiTableSortableV2 from "../sortable-table/mui-table-sortable-v2";
+import MuiTableSortableV2 from "../sortable-table-v2/mui-table-sortable-v2";
 import showConfirmDialog from "../showConfirmDialog";
 
 const columns = [

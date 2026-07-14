@@ -26,6 +26,7 @@ import T from "i18n-react/dist/i18n-react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import MetaFieldValues from "./meta-field-values";
+import MetaFieldValuesV2 from "./meta-field-values-v2";
 import MuiFormikTextField from "../mui-formik-textfield";
 import MuiFormikSelect from "../mui-formik-select";
 import MuiFormikCheckbox from "../mui-formik-checkbox";
@@ -42,8 +43,10 @@ const AdditionalInput = ({
   onDelete,
   onDeleteValue,
   entityId,
-  isAddDisabled
+  isAddDisabled,
+  useV2 = false
 }) => {
+  const MetaFieldValuesComponent = useV2 ? MetaFieldValuesV2 : MetaFieldValues;
   const { errors, touched, values, setFieldValue } = useFormikContext();
 
   const buildFieldName = (fieldName) => `${baseName}[${itemIdx}].${fieldName}`;
@@ -118,7 +121,7 @@ const AdditionalInput = ({
           {METAFIELD_TYPES_WITH_OPTIONS.includes(currentType) && (
             <>
               <Divider sx={{ mt: 2 }} />
-              <MetaFieldValues
+              <MetaFieldValuesComponent
                 field={item}
                 fieldIndex={itemIdx}
                 baseName={baseName}
