@@ -112,8 +112,6 @@ module.exports = {
         'components/mui/table/extra-rows': './src/components/mui/table/extra-rows/index.js',
         'components/mui/formik-inputs/additional-input': './src/components/mui/formik-inputs/additional-input/additional-input.js',
         'components/mui/formik-inputs/additional-input-list': './src/components/mui/formik-inputs/additional-input/additional-input-list.js',
-        'components/mui/formik-inputs/additional-input-v2': './src/components/mui/formik-inputs/additional-input/additional-input-v2.js',
-        'components/mui/formik-inputs/additional-input-list-v2': './src/components/mui/formik-inputs/additional-input/additional-input-list-v2.js',
         'components/mui/formik-inputs/async-select': './src/components/mui/formik-inputs/mui-formik-async-select.js',
         'components/mui/formik-inputs/checkbox-group': './src/components/mui/formik-inputs/mui-formik-checkbox-group.js',
         'components/mui/formik-inputs/checkbox': './src/components/mui/formik-inputs/mui-formik-checkbox.js',
