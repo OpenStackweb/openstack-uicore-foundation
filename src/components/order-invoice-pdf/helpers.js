@@ -75,7 +75,7 @@ export const buildRows = (order, summit) => {
 
   (order.forms || []).forEach((form) => {
     (form.items || [])
-      .filter((item) => item.quantity)
+      .filter((item) => (item.quantity ?? 1) > 0)
       .forEach((item) => {
         // Cancelled is per-item
         const cancelled = !!item.canceled_by_id;
