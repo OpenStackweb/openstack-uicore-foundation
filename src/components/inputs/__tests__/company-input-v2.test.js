@@ -223,6 +223,34 @@ describe("CompanyInputV2 integration", () => {
         expect(committed).toEqual({ id: 0, name: "Autofilled Co" });
     });
 
+    it("clears the committed company when the field is emptied (delete-all-text) and blurred", () => {
+        // With disableClearable there's no (x), so deleting the text and blurring
+        // is the only way to clear — the value must propagate as null.
+        queryRegistrationCompanies.mockImplementation(() => {});
+
+        const onChange = jest.fn();
+        renderControlled({ initialValue: { id: 1, name: "Tipit" }, onChange });
+        const input = screen.getByRole("combobox");
+
+        fireEvent.change(input, { target: { value: "" } });
+        fireEvent.blur(input);
+
+        const committed = onChange.mock.calls.map((c) => c[0].target.value).pop();
+        expect(committed).toBeNull();
+    });
+
+    it("does not fire a redundant change when an already-empty field is blurred", () => {
+        queryRegistrationCompanies.mockImplementation(() => {});
+
+        const onChange = jest.fn();
+        renderControlled({ initialValue: null, onChange });
+        const input = screen.getByRole("combobox");
+
+        fireEvent.blur(input);
+
+        expect(onChange).not.toHaveBeenCalled();
+    });
+
     it("on blur commits the canonical existing match when the typed text matches case-insensitively", () => {
         // Capture the API callback so we can resolve it manually.
         let resolveQuery;

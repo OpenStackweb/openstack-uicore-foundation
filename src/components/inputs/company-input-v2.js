@@ -139,7 +139,12 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
         const currentName = isCompanyObject(normalizedValue)
           ? normalizedValue.name
           : (typeof normalizedValue === "string" ? normalizedValue : "");
-        if (typed && typed.toLowerCase() !== currentName.trim().toLowerCase()) {
+        if (!typed) {
+          // Field emptied (delete-all-text). With disableClearable there's no
+          // (x), so this is the only way to clear — propagate null. Skip if
+          // already cleared to avoid a redundant change.
+          if (normalizedValue) fireChange(null);
+        } else if (typed.toLowerCase() !== currentName.trim().toLowerCase()) {
           fireChange(findExistingByName(options, typed) || { id: 0, name: typed });
         }
         if (onBlur) onBlur(name);
