@@ -227,7 +227,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
         const optionName = getOptionName(option);
         // The synthetic free-text row reads Use "<typed>" so it's clearly a
         // commit-what-I-typed action, not a matched company.
-        const label = option?.isFreeTextOption ? `Use "${optionName}"` : optionName;
+        const displayLabel = option?.isFreeTextOption ? `Use "${optionName}"` : optionName;
         return (
           // eslint-disable-next-line react/jsx-props-no-spreading
           <li key={key} {...optionProps}>
@@ -235,7 +235,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
               variant="body2"
               sx={{ fontSize: "1em", color: "text.secondary", padding: "5px 0" }}
             >
-              {label}
+              {displayLabel}
             </Typography>
           </li>
         );
