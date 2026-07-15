@@ -378,6 +378,43 @@ describe("CompanyInputV2 integration", () => {
         expect(screen.queryByText('Use "Tipit"')).not.toBeInTheDocument();
     });
 
+    it("purges a stale free-text option when a new value is committed via blur (no flash before API responds)", () => {
+        // Repro: type "ti", blur → commits {id:0,name:"ti"}. Type "tip", blur
+        // → commits {id:0,name:"tip"}. On refocus, the stale "ti" briefly
+        // flashed in the dropdown until the new API response arrived. The
+        // effect must purge any leftover free-text (id: 0) synchronously the
+        // moment normalizedValue changes — before the API can respond again.
+        let resolveQuery;
+        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
+            resolveQuery = cb;
+        });
+
+        renderControlled({});
+        const input = screen.getByRole("combobox");
+
+        // Round 1: type "ti", get results, blur → free-text commit.
+        fireEvent.change(input, { target: { value: "ti" } });
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }, { id: 2, name: "Tipco" }]); });
+        fireEvent.blur(input);
+
+        // Round 2: type "tip", get results, blur → new free-text commit.
+        fireEvent.change(input, { target: { value: "tip" } });
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }, { id: 2, name: "Tipco" }]); });
+        fireEvent.blur(input);
+
+        // The 2nd blur triggered a fresh effect run whose API request is
+        // still pending. Reopen the listbox WITHOUT resolving the new API —
+        // the purge in the effect must have already removed the stale entry
+        // synchronously.
+        fireEvent.mouseDown(input);
+
+        const optionTexts = screen
+            .queryAllByRole("option")
+            .map((o) => o.textContent.trim());
+        expect(optionTexts).not.toContain("ti");
+        expect(optionTexts).not.toContain('Use "ti"');
+    });
+
     it("still offers 'Use \"<typed>\"' when the same text is already committed as a free-text value", () => {
         // Repro: type "ti", blur (commits {id:0,name:"ti"}), refocus, retype
         // "ti". Previously the Use row was suppressed because the committed
