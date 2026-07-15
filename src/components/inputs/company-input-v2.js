@@ -80,6 +80,16 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       return undefined;
     }
 
+    // Purge stale free-text (id: 0) options from a prior blur/commit before
+    // the API responds. Prevents a just-committed free-text ("ti") from
+    // flashing in the dropdown once the user starts a new query ("tip"),
+    // and stops the "already listed" check in filterOptions from being
+    // fooled by its own previous entry.
+    setOptions((prev) => {
+      const real = prev.filter(isExistingCompany);
+      return normalizedValue ? [normalizedValue, ...real] : real;
+    });
+
     // Guard against the in-flight callback firing after the user clears the
     // field (or types something else): without this, a late response would
     // call onChange with the previous typed value and clobber the clear.
