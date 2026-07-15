@@ -377,4 +377,30 @@ describe("CompanyInputV2 integration", () => {
         // The real company shows; no redundant "Use "Tipit"" row.
         expect(screen.queryByText('Use "Tipit"')).not.toBeInTheDocument();
     });
+
+    it("still offers 'Use \"<typed>\"' when the same text is already committed as a free-text value", () => {
+        // Repro: type "ti", blur (commits {id:0,name:"ti"}), refocus, retype
+        // "ti". Previously the Use row was suppressed because the committed
+        // free-text option was treated as "already listed" — only *real* (id>0)
+        // companies should suppress the Use row.
+        let resolveQuery;
+        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
+            resolveQuery = cb;
+        });
+
+        renderControlled({});
+        const input = screen.getByRole("combobox");
+
+        // Round 1: type, get results, blur — commits free-text.
+        fireEvent.change(input, { target: { value: "ti" } });
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }, { id: 2, name: "Tipco" }]); });
+        fireEvent.blur(input);
+
+        // Round 2: clear + retype so MUI treats the input as a real onInputChange.
+        fireEvent.change(input, { target: { value: "" } });
+        fireEvent.change(input, { target: { value: "ti" } });
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }, { id: 2, name: "Tipco" }]); });
+
+        expect(screen.getByText('Use "ti"')).toBeInTheDocument();
+    });
 });
