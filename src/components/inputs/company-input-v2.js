@@ -200,9 +200,20 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       // suggestions) and matches the user's intent that they took the trouble
       // to type.
       filterOptions={(opts, params) => {
-        const trimmed = params.inputValue.trim();
+        // Prefer MUI's active-typing inputValue; fall back to the
+        // committed free-text value's name so the Use row keeps
+        // appearing after the user tabs away and re-focuses without
+        // typing. Without the fallback, `params.inputValue` is empty
+        // on passive refocus and the Use row would disappear.
+        let trimmed = params.inputValue.trim();
+        if (!trimmed && isNewCompany(normalizedValue)) {
+          trimmed = normalizedValue.name.trim();
+        }
+        // Only real (id > 0) companies count as "already listed" — a
+        // previously-committed free-text option ({id: 0}) shouldn't
+        // suppress a fresh Use row for the same typed text.
         const alreadyListed = trimmed && opts.some(
-          (o) => getOptionName(o).trim().toLowerCase() === trimmed.toLowerCase()
+          (o) => isExistingCompany(o) && o.name.trim().toLowerCase() === trimmed.toLowerCase()
         );
         return trimmed && !alreadyListed
           ? [{ id: 0, name: trimmed, isFreeTextOption: true }, ...opts]
