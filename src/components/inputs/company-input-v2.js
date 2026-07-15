@@ -17,6 +17,11 @@ import { TextField, Autocomplete, Typography } from "@mui/material";
 import { queryRegistrationCompanies } from "../../utils/query-actions";
 import useEventCallback from "../../utils/use-event-callback";
 
+// Case-insensitive, whitespace-tolerant name comparison. Used everywhere
+// we treat two names as referring to the same company.
+export const namesMatch = (a, b) =>
+  (a || "").trim().toLowerCase() === (b || "").trim().toLowerCase();
+
 // Any well-formed company object (has a name string).
 export const isCompanyObject = (o) =>
   !!o && typeof o === "object" && typeof o.name === "string";
@@ -31,10 +36,9 @@ export const isNewCompany = (o) => isCompanyObject(o) && o.id === 0 && !!o.name.
 // Find an existing company in `candidates` whose name matches `name`
 // case-insensitively. Returns null if `name` is empty or no match found.
 export const findExistingCompany = (candidates, name) => {
-  const trimmed = name?.trim().toLowerCase();
-  if (!trimmed) return null;
+  if (!name?.trim()) return null;
   return (candidates || []).find(
-    (c) => isExistingCompany(c) && c.name.toLowerCase() === trimmed
+    (c) => isExistingCompany(c) && namesMatch(c.name, name)
   ) || null;
 };
 
@@ -164,7 +168,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
           // (x), so this is the only way to clear — propagate null. Skip if
           // already cleared to avoid a redundant change.
           if (normalizedValue) fireChange(null);
-        } else if (typed.toLowerCase() !== currentName.trim().toLowerCase()) {
+        } else if (!namesMatch(typed, currentName)) {
           fireChange(findExistingCompany(options, typed) || { id: 0, name: typed });
         }
         if (onBlur) onBlur(name);
@@ -223,7 +227,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
         // previously-committed free-text option ({id: 0}) shouldn't
         // suppress a fresh Use row for the same typed text.
         const alreadyListed = trimmed && opts.some(
-          (o) => isExistingCompany(o) && o.name.trim().toLowerCase() === trimmed.toLowerCase()
+          (o) => isExistingCompany(o) && namesMatch(o.name, trimmed)
         );
         return trimmed && !alreadyListed
           ? [{ id: 0, name: trimmed, isFreeTextOption: true }, ...opts]
