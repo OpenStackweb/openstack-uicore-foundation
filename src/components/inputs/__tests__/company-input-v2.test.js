@@ -16,8 +16,9 @@ import CompanyInputV2, {
     isCompanyObject,
     isExistingCompany,
     isNewCompany,
-    findExistingByName,
-    normalizeCompanyValue
+    findExistingCompany,
+    normalizeCompanyValue,
+    shouldOfferUseRow
 } from "../company-input-v2";
 
 // Mock the API helper so tests can drive the callback synchronously.
@@ -85,7 +86,7 @@ describe("isNewCompany", () => {
     });
 });
 
-describe("findExistingByName", () => {
+describe("findExistingCompany", () => {
     const existing = [
         { id: 1, name: "Tipit" },
         { id: 2, name: "Tipco" },
@@ -93,20 +94,20 @@ describe("findExistingByName", () => {
     ];
 
     it("returns the matching existing company when name matches case-insensitively", () => {
-        expect(findExistingByName(existing, "tipit")).toEqual({ id: 1, name: "Tipit" });
-        expect(findExistingByName(existing, "TIPCO")).toEqual({ id: 2, name: "Tipco" });
-        expect(findExistingByName(existing, "  acme corp  ")).toEqual({ id: 3, name: "ACME Corp" });
+        expect(findExistingCompany(existing, "tipit")).toEqual({ id: 1, name: "Tipit" });
+        expect(findExistingCompany(existing, "TIPCO")).toEqual({ id: 2, name: "Tipco" });
+        expect(findExistingCompany(existing, "  acme corp  ")).toEqual({ id: 3, name: "ACME Corp" });
     });
 
     it("returns null when no existing company matches", () => {
-        expect(findExistingByName(existing, "Nonexistent")).toBeNull();
+        expect(findExistingCompany(existing, "Nonexistent")).toBeNull();
     });
 
     it("returns null for empty/missing inputs", () => {
-        expect(findExistingByName(existing, "")).toBeNull();
-        expect(findExistingByName(existing, "   ")).toBeNull();
-        expect(findExistingByName(existing, undefined)).toBeNull();
-        expect(findExistingByName(null, "Tipit")).toBeNull();
+        expect(findExistingCompany(existing, "")).toBeNull();
+        expect(findExistingCompany(existing, "   ")).toBeNull();
+        expect(findExistingCompany(existing, undefined)).toBeNull();
+        expect(findExistingCompany(null, "Tipit")).toBeNull();
     });
 
     it("ignores free-text entries (id === 0) when searching", () => {
@@ -115,12 +116,32 @@ describe("findExistingByName", () => {
             { id: 1, name: "Tipit" }            // real company
         ];
         // Should pick the real one even though the free-text comes first
-        expect(findExistingByName(mixed, "tipit")).toEqual({ id: 1, name: "Tipit" });
+        expect(findExistingCompany(mixed, "tipit")).toEqual({ id: 1, name: "Tipit" });
     });
 
     it("returns null when only free-text entries are present", () => {
         const freeTextOnly = [{ id: 0, name: "Acme" }];
-        expect(findExistingByName(freeTextOnly, "Acme")).toBeNull();
+        expect(findExistingCompany(freeTextOnly, "Acme")).toBeNull();
+    });
+});
+
+describe("shouldOfferUseRow", () => {
+    it("returns false when the typed text is empty", () => {
+        expect(shouldOfferUseRow("", [{ id: 1, name: "Tipit" }])).toBe(false);
+    });
+    it("returns true when no real company matches the typed text", () => {
+        expect(shouldOfferUseRow("Acme", [])).toBe(true);
+        expect(shouldOfferUseRow("Acme", [{ id: 1, name: "Tipit" }])).toBe(true);
+    });
+    it("returns false when a real company matches the typed text case-insensitively", () => {
+        expect(shouldOfferUseRow("tipit", [{ id: 1, name: "Tipit" }])).toBe(false);
+        expect(shouldOfferUseRow("TIPIT", [{ id: 1, name: "Tipit" }])).toBe(false);
+    });
+    it("still returns true even if a previously-committed free-text option matches the typed text (id: 0 doesn't suppress the Use row)", () => {
+        // Pins the bug where the Use row disappeared after the user committed
+        // free-text via blur and then refocused with the same text.
+        expect(shouldOfferUseRow("ti", [{ id: 0, name: "ti" }])).toBe(true);
+        expect(shouldOfferUseRow("ti", [{ id: 0, name: "ti" }, { id: 1, name: "Tipit" }])).toBe(true);
     });
 });
 
@@ -268,7 +289,7 @@ describe("CompanyInputV2 integration", () => {
         act(() => { resolveQuery([{ id: 1, name: "Tipit" }]); });
 
         // Blur: autoSelect commits the typed string; our onChange handler maps
-        // it to the canonical option via findExistingByName.
+        // it to the canonical option via findExistingCompany.
         fireEvent.blur(input);
 
         // Find the call where the canonical value landed.
@@ -376,5 +397,74 @@ describe("CompanyInputV2 integration", () => {
 
         // The real company shows; no redundant "Use "Tipit"" row.
         expect(screen.queryByText('Use "Tipit"')).not.toBeInTheDocument();
+    });
+
+    it("purges a stale free-text option when a new value is committed via blur (no flash before API responds)", () => {
+        // Repro: type "ti", blur → commits {id:0,name:"ti"}. Type "tip", blur
+        // → commits {id:0,name:"tip"}. On refocus, the stale "ti" briefly
+        // flashed in the dropdown until the new API response arrived. The
+        // effect must purge any leftover free-text (id: 0) synchronously the
+        // moment normalizedValue changes — before the API can respond again.
+        let resolveQuery;
+        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
+            resolveQuery = cb;
+        });
+
+        renderControlled({});
+        const input = screen.getByRole("combobox");
+
+        // Round 1: type "ti", get results, blur → free-text commit.
+        fireEvent.change(input, { target: { value: "ti" } });
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }, { id: 2, name: "Tipco" }]); });
+        fireEvent.blur(input);
+
+        // Round 2: type "tip", get results, blur → new free-text commit.
+        fireEvent.change(input, { target: { value: "tip" } });
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }, { id: 2, name: "Tipco" }]); });
+        fireEvent.blur(input);
+
+        // The 2nd blur triggered a fresh effect run whose API request is
+        // still pending. Reopen the listbox WITHOUT resolving the new API —
+        // the purge in the effect must have already removed the stale entry
+        // synchronously.
+        fireEvent.mouseDown(input);
+
+        // Guard against the whole test passing vacuously if the popup never
+        // reopens — queryAllByRole("option") would return [] and both
+        // absence assertions below would trivially pass.
+        expect(screen.getByRole("listbox")).toBeInTheDocument();
+        expect(screen.getByText('Use "tip"')).toBeInTheDocument();
+
+        const optionTexts = screen
+            .queryAllByRole("option")
+            .map((o) => o.textContent.trim());
+        expect(optionTexts).not.toContain("ti");
+        expect(optionTexts).not.toContain('Use "ti"');
+    });
+
+    it("still offers 'Use \"<typed>\"' when the same text is already committed as a free-text value", () => {
+        // Repro: type "ti", blur (commits {id:0,name:"ti"}), refocus, retype
+        // "ti". Previously the Use row was suppressed because the committed
+        // free-text option was treated as "already listed" — only *real* (id>0)
+        // companies should suppress the Use row.
+        let resolveQuery;
+        queryRegistrationCompanies.mockImplementation((_summitId, _input, cb) => {
+            resolveQuery = cb;
+        });
+
+        renderControlled({});
+        const input = screen.getByRole("combobox");
+
+        // Round 1: type, get results, blur — commits free-text.
+        fireEvent.change(input, { target: { value: "ti" } });
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }, { id: 2, name: "Tipco" }]); });
+        fireEvent.blur(input);
+
+        // Round 2: clear + retype so MUI treats the input as a real onInputChange.
+        fireEvent.change(input, { target: { value: "" } });
+        fireEvent.change(input, { target: { value: "ti" } });
+        act(() => { resolveQuery([{ id: 1, name: "Tipit" }, { id: 2, name: "Tipco" }]); });
+
+        expect(screen.getByText('Use "ti"')).toBeInTheDocument();
     });
 });

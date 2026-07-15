@@ -17,6 +17,11 @@ import { TextField, Autocomplete, Typography } from "@mui/material";
 import { queryRegistrationCompanies } from "../../utils/query-actions";
 import useEventCallback from "../../utils/use-event-callback";
 
+// Case-insensitive, whitespace-tolerant name comparison. Used everywhere
+// we treat two names as referring to the same company.
+export const namesMatch = (a, b) =>
+  (a || "").trim().toLowerCase() === (b || "").trim().toLowerCase();
+
 // Any well-formed company object (has a name string).
 export const isCompanyObject = (o) =>
   !!o && typeof o === "object" && typeof o.name === "string";
@@ -30,11 +35,10 @@ export const isNewCompany = (o) => isCompanyObject(o) && o.id === 0 && !!o.name.
 
 // Find an existing company in `candidates` whose name matches `name`
 // case-insensitively. Returns null if `name` is empty or no match found.
-export const findExistingByName = (candidates, name) => {
-  const trimmed = name?.trim().toLowerCase();
-  if (!trimmed) return null;
+export const findExistingCompany = (candidates, name) => {
+  if (!name?.trim()) return null;
   return (candidates || []).find(
-    (c) => isExistingCompany(c) && c.name.toLowerCase() === trimmed
+    (c) => isExistingCompany(c) && namesMatch(c.name, name)
   ) || null;
 };
 
@@ -59,6 +63,59 @@ export const getOptionName = (option) => {
   return "";
 };
 
+// Should the synthetic Use "<typed>" row be prepended to the dropdown?
+// Only *real* (id > 0) companies count as "already listed" — a previously-
+// committed free-text option ({id: 0}) shouldn't suppress a fresh Use row
+// for the same typed text.
+export const shouldOfferUseRow = (trimmed, opts) => {
+  if (!trimmed) return false;
+  return !opts.some(
+    (o) => isExistingCompany(o) && namesMatch(o.name, trimmed)
+  );
+};
+
+// Resolve the user's typed string to either the canonical existing company
+// (case-insensitive match against `opts`) or a fresh free-text entry
+// ({id: 0, name}). Used by onBlur and onChange when the user commits raw
+// text — same intent, both sites should agree on what the value becomes.
+export const resolveTypedCompany = (opts, typed) =>
+  findExistingCompany(opts, typed) || { id: 0, name: typed.trim() };
+
+// Text the synthetic Use row should reflect. Prefers what the user is
+// actively typing (MUI's params.inputValue), falling back to the committed
+// free-text value's name so the Use row survives a passive refocus (tab
+// away, click back in without typing) — in that state params.inputValue
+// is empty even though the field still displays the committed text.
+export const getUseRowText = (params, normalizedValue) => {
+  const typed = params.inputValue.trim();
+  if (typed) return typed;
+  return isNewCompany(normalizedValue) ? normalizedValue.name.trim() : "";
+};
+
+// Resolve whatever MUI hands us in onChange into a canonical Company entry.
+// - String (freeSolo Enter with raw text)  → existing match, else free-text
+// - Synthetic Use row (isFreeTextOption)    → clean free-text (marker stripped)
+// - Anything else (picked option, null)     → passed through unchanged
+export const resolveCommittedCompany = (input, opts) => {
+  if (typeof input === "string") {
+    // Blank / whitespace-only strings normalise to null so consumers never
+    // receive a raw string in place of a Company | null value.
+    return input.trim() ? resolveTypedCompany(opts, input) : null;
+  }
+  if (input?.isFreeTextOption) {
+    return { id: 0, name: input.name };
+  }
+  return input;
+};
+
+// After the API responds, if the user's already-committed free-text has a
+// canonical match in the results, return that so the value can be upgraded
+// to the existing company. Returns null when there's nothing to upgrade.
+export const findCanonicalUpgrade = (value, results) => {
+  if (!isNewCompany(value)) return null;
+  return findExistingCompany(results, value.name);
+};
+
 const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink, ...rest }) => {
   const [inputValue, setInputValue] = React.useState("");
   const [options, setOptions] = React.useState([]);
@@ -80,35 +137,32 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       return undefined;
     }
 
+    // Purge stale free-text (id: 0) options from a prior blur/commit before
+    // the API responds. Prevents a just-committed free-text ("ti") from
+    // flashing in the dropdown once the user starts a new query ("tip"),
+    // and stops the "already listed" check in filterOptions from being
+    // fooled by its own previous entry.
+    setOptions((prev) => {
+      const real = prev.filter(isExistingCompany);
+      return normalizedValue ? [normalizedValue, ...real] : real;
+    });
+
     // Guard against the in-flight callback firing after the user clears the
     // field (or types something else): without this, a late response would
     // call onChange with the previous typed value and clobber the clear.
     let cancelled = false;
     queryRegistrationCompanies(summitId, inputValue, (results) => {
       if (cancelled) return;
-
-      let newOptions = [];
-
-      if (normalizedValue) {
-        newOptions = [normalizedValue];
-      }
-
-      if (results) {
-        newOptions = [...newOptions, ...results];
-      }
-
-      setOptions(newOptions);
-
+      setOptions([
+        ...(normalizedValue ? [normalizedValue] : []),
+        ...(results || [])
+      ]);
       // If the user typed and blurred faster than the API responded, the
       // free-text commit already happened. Once the response arrives, if
-      // there is a case-insensitive existing match, replace the free-text
-      // value with the canonical option.
-      if (isNewCompany(normalizedValue)) {
-        const match = findExistingByName(results, normalizedValue.name);
-        if (match) {
-          fireChange(match);
-        }
-      }
+      // there is a case-insensitive existing match, upgrade the value to
+      // the canonical option.
+      const upgrade = findCanonicalUpgrade(normalizedValue, results);
+      if (upgrade) fireChange(upgrade);
     }, options2Show);
     return () => { cancelled = true; };
   }, [normalizedValue, inputValue, summitId, options2Show, fireChange]);
@@ -146,48 +200,27 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
         // when the text already matches the committed value (e.g. right after an
         // explicit selection).
         const typed = (event?.target?.value ?? inputValue).trim();
-        const currentName = isCompanyObject(normalizedValue)
-          ? normalizedValue.name
-          : (typeof normalizedValue === "string" ? normalizedValue : "");
+        const currentName = getOptionName(normalizedValue);
         if (!typed) {
           // Field emptied (delete-all-text). With disableClearable there's no
           // (x), so this is the only way to clear — propagate null. Skip if
           // already cleared to avoid a redundant change.
           if (normalizedValue) fireChange(null);
-        } else if (typed.toLowerCase() !== currentName.trim().toLowerCase()) {
-          fireChange(findExistingByName(options, typed) || { id: 0, name: typed });
+        } else if (!namesMatch(typed, currentName)) {
+          fireChange(resolveTypedCompany(options, typed));
         }
         if (onBlur) onBlur(name);
       }}
       getOptionLabel={getOptionName}
       onChange={(_, newValue) => {
-        let tmpValue = newValue;
-        // freeSolo commits the raw typed string when the user presses Enter
-        // without picking an option (reason "createOption"). If the string
-        // matches an existing company case-insensitively, pick that option (so
-        // "tipit" + Enter resolves to "Tipit"); otherwise commit it as a
-        // free-text {id: 0, name} entry.
-        if (typeof tmpValue === "string" && tmpValue.trim()) {
-          const trimmed = tmpValue.trim();
-          tmpValue = findExistingByName(options, trimmed) || { id: 0, name: trimmed };
-        } else if (tmpValue && typeof tmpValue === "object" && tmpValue.isFreeTextOption) {
-          // The synthetic "Use "…"" row: commit a clean free-text entry,
-          // dropping the display-only marker.
-          tmpValue = { id: 0, name: tmpValue.name };
-        }
+        const nextValue = resolveCommittedCompany(newValue, options);
         // Prepend the committed value but drop any existing entry with
         // the same id; otherwise resolving to an existing company would
         // produce a duplicate row when the dropdown next opens.
-        setOptions(tmpValue
-          ? [tmpValue, ...options.filter((o) => o?.id !== tmpValue?.id)]
+        setOptions(nextValue
+          ? [nextValue, ...options.filter((o) => o?.id !== nextValue?.id)]
           : options);
-        onChange({
-          target: {
-            id: name,
-            value: tmpValue,
-            type: "companyinput"
-          }
-        });
+        fireChange(nextValue);
       }}
       onInputChange={(_, newInputValue) => {
         setInputValue(newInputValue);
@@ -200,12 +233,9 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       // suggestions) and matches the user's intent that they took the trouble
       // to type.
       filterOptions={(opts, params) => {
-        const trimmed = params.inputValue.trim();
-        const alreadyListed = trimmed && opts.some(
-          (o) => getOptionName(o).trim().toLowerCase() === trimmed.toLowerCase()
-        );
-        return trimmed && !alreadyListed
-          ? [{ id: 0, name: trimmed, isFreeTextOption: true }, ...opts]
+        const text = getUseRowText(params, normalizedValue);
+        return shouldOfferUseRow(text, opts)
+          ? [{ id: 0, name: text, isFreeTextOption: true }, ...opts]
           : opts;
       }}
       renderInput={(params) => (
