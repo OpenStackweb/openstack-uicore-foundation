@@ -178,9 +178,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
         // when the text already matches the committed value (e.g. right after an
         // explicit selection).
         const typed = (event?.target?.value ?? inputValue).trim();
-        const currentName = isCompanyObject(normalizedValue)
-          ? normalizedValue.name
-          : (typeof normalizedValue === "string" ? normalizedValue : "");
+        const currentName = getOptionName(normalizedValue);
         if (!typed) {
           // Field emptied (delete-all-text). With disableClearable there's no
           // (x), so this is the only way to clear — propagate null. Skip if
