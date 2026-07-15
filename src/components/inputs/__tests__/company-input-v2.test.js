@@ -16,7 +16,7 @@ import CompanyInputV2, {
     isCompanyObject,
     isExistingCompany,
     isNewCompany,
-    findExistingByName,
+    findExistingCompany,
     normalizeCompanyValue
 } from "../company-input-v2";
 
@@ -85,7 +85,7 @@ describe("isNewCompany", () => {
     });
 });
 
-describe("findExistingByName", () => {
+describe("findExistingCompany", () => {
     const existing = [
         { id: 1, name: "Tipit" },
         { id: 2, name: "Tipco" },
@@ -93,20 +93,20 @@ describe("findExistingByName", () => {
     ];
 
     it("returns the matching existing company when name matches case-insensitively", () => {
-        expect(findExistingByName(existing, "tipit")).toEqual({ id: 1, name: "Tipit" });
-        expect(findExistingByName(existing, "TIPCO")).toEqual({ id: 2, name: "Tipco" });
-        expect(findExistingByName(existing, "  acme corp  ")).toEqual({ id: 3, name: "ACME Corp" });
+        expect(findExistingCompany(existing, "tipit")).toEqual({ id: 1, name: "Tipit" });
+        expect(findExistingCompany(existing, "TIPCO")).toEqual({ id: 2, name: "Tipco" });
+        expect(findExistingCompany(existing, "  acme corp  ")).toEqual({ id: 3, name: "ACME Corp" });
     });
 
     it("returns null when no existing company matches", () => {
-        expect(findExistingByName(existing, "Nonexistent")).toBeNull();
+        expect(findExistingCompany(existing, "Nonexistent")).toBeNull();
     });
 
     it("returns null for empty/missing inputs", () => {
-        expect(findExistingByName(existing, "")).toBeNull();
-        expect(findExistingByName(existing, "   ")).toBeNull();
-        expect(findExistingByName(existing, undefined)).toBeNull();
-        expect(findExistingByName(null, "Tipit")).toBeNull();
+        expect(findExistingCompany(existing, "")).toBeNull();
+        expect(findExistingCompany(existing, "   ")).toBeNull();
+        expect(findExistingCompany(existing, undefined)).toBeNull();
+        expect(findExistingCompany(null, "Tipit")).toBeNull();
     });
 
     it("ignores free-text entries (id === 0) when searching", () => {
@@ -115,12 +115,12 @@ describe("findExistingByName", () => {
             { id: 1, name: "Tipit" }            // real company
         ];
         // Should pick the real one even though the free-text comes first
-        expect(findExistingByName(mixed, "tipit")).toEqual({ id: 1, name: "Tipit" });
+        expect(findExistingCompany(mixed, "tipit")).toEqual({ id: 1, name: "Tipit" });
     });
 
     it("returns null when only free-text entries are present", () => {
         const freeTextOnly = [{ id: 0, name: "Acme" }];
-        expect(findExistingByName(freeTextOnly, "Acme")).toBeNull();
+        expect(findExistingCompany(freeTextOnly, "Acme")).toBeNull();
     });
 });
 
@@ -268,7 +268,7 @@ describe("CompanyInputV2 integration", () => {
         act(() => { resolveQuery([{ id: 1, name: "Tipit" }]); });
 
         // Blur: autoSelect commits the typed string; our onChange handler maps
-        // it to the canonical option via findExistingByName.
+        // it to the canonical option via findExistingCompany.
         fireEvent.blur(input);
 
         // Find the call where the canonical value landed.

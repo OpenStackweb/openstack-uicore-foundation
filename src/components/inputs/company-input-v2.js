@@ -30,7 +30,7 @@ export const isNewCompany = (o) => isCompanyObject(o) && o.id === 0 && !!o.name.
 
 // Find an existing company in `candidates` whose name matches `name`
 // case-insensitively. Returns null if `name` is empty or no match found.
-export const findExistingByName = (candidates, name) => {
+export const findExistingCompany = (candidates, name) => {
     const trimmed = name?.trim().toLowerCase();
     if (!trimmed) return null;
     return (candidates || []).find(
@@ -114,7 +114,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
             // there is a case-insensitive existing match, replace the free-text
             // value with the canonical option.
             if (isNewCompany(normalizedValue)) {
-                const match = findExistingByName(results, normalizedValue.name);
+                const match = findExistingCompany(results, normalizedValue.name);
                 if (match) {
                     fireChange(match);
                 }
@@ -165,7 +165,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
                     // already cleared to avoid a redundant change.
                     if (normalizedValue) fireChange(null);
                 } else if (typed.toLowerCase() !== currentName.trim().toLowerCase()) {
-                    fireChange(findExistingByName(options, typed) || { id: 0, name: typed });
+                    fireChange(findExistingCompany(options, typed) || { id: 0, name: typed });
                 }
                 if (onBlur) onBlur(name);
             }}
@@ -179,7 +179,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
                 // free-text {id: 0, name} entry.
                 if (typeof tmpValue === "string" && tmpValue.trim()) {
                     const trimmed = tmpValue.trim();
-                    tmpValue = findExistingByName(options, trimmed) || { id: 0, name: trimmed };
+                    tmpValue = findExistingCompany(options, trimmed) || { id: 0, name: trimmed };
                 } else if (tmpValue && typeof tmpValue === "object" && tmpValue.isFreeTextOption) {
                     // The synthetic "Use "…"" row: commit a clean free-text entry,
                     // dropping the display-only marker.
