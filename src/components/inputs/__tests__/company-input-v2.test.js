@@ -429,6 +429,12 @@ describe("CompanyInputV2 integration", () => {
         // synchronously.
         fireEvent.mouseDown(input);
 
+        // Guard against the whole test passing vacuously if the popup never
+        // reopens — queryAllByRole("option") would return [] and both
+        // absence assertions below would trivially pass.
+        expect(screen.getByRole("listbox")).toBeInTheDocument();
+        expect(screen.getByText('Use "tip"')).toBeInTheDocument();
+
         const optionTexts = screen
             .queryAllByRole("option")
             .map((o) => o.textContent.trim());
