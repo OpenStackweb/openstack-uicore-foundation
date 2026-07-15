@@ -81,6 +81,17 @@ export const shouldOfferUseRow = (trimmed, opts) => {
 export const resolveTypedCompany = (opts, typed) =>
   findExistingCompany(opts, typed) || { id: 0, name: typed.trim() };
 
+// Text the synthetic Use row should reflect. Prefers what the user is
+// actively typing (MUI's params.inputValue), falling back to the committed
+// free-text value's name so the Use row survives a passive refocus (tab
+// away, click back in without typing) — in that state params.inputValue
+// is empty even though the field still displays the committed text.
+export const getUseRowText = (params, normalizedValue) => {
+  const typed = params.inputValue.trim();
+  if (typed) return typed;
+  return isNewCompany(normalizedValue) ? normalizedValue.name.trim() : "";
+};
+
 const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink, ...rest }) => {
   const [inputValue, setInputValue] = React.useState("");
   const [options, setOptions] = React.useState([]);
@@ -229,17 +240,9 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
       // suggestions) and matches the user's intent that they took the trouble
       // to type.
       filterOptions={(opts, params) => {
-        // Prefer MUI's active-typing inputValue; fall back to the
-        // committed free-text value's name so the Use row keeps
-        // appearing after the user tabs away and re-focuses without
-        // typing. Without the fallback, `params.inputValue` is empty
-        // on passive refocus and the Use row would disappear.
-        let trimmed = params.inputValue.trim();
-        if (!trimmed && isNewCompany(normalizedValue)) {
-          trimmed = normalizedValue.name.trim();
-        }
-        return shouldOfferUseRow(trimmed, opts)
-          ? [{ id: 0, name: trimmed, isFreeTextOption: true }, ...opts]
+        const text = getUseRowText(params, normalizedValue);
+        return shouldOfferUseRow(text, opts)
+          ? [{ id: 0, name: text, isFreeTextOption: true }, ...opts]
           : opts;
       }}
       renderInput={(params) => (
