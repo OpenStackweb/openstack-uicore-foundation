@@ -106,6 +106,14 @@ export const resolveCommittedCompany = (input, opts) => {
   return input;
 };
 
+// After the API responds, if the user's already-committed free-text has a
+// canonical match in the results, return that so the value can be upgraded
+// to the existing company. Returns null when there's nothing to upgrade.
+export const findCanonicalUpgrade = (value, results) => {
+  if (!isNewCompany(value)) return null;
+  return findExistingCompany(results, value.name);
+};
+
 const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink, ...rest }) => {
   const [inputValue, setInputValue] = React.useState("");
   const [options, setOptions] = React.useState([]);
@@ -143,29 +151,16 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
     let cancelled = false;
     queryRegistrationCompanies(summitId, inputValue, (results) => {
       if (cancelled) return;
-
-      let newOptions = [];
-
-      if (normalizedValue) {
-        newOptions = [normalizedValue];
-      }
-
-      if (results) {
-        newOptions = [...newOptions, ...results];
-      }
-
-      setOptions(newOptions);
-
+      setOptions([
+        ...(normalizedValue ? [normalizedValue] : []),
+        ...(results || [])
+      ]);
       // If the user typed and blurred faster than the API responded, the
       // free-text commit already happened. Once the response arrives, if
-      // there is a case-insensitive existing match, replace the free-text
-      // value with the canonical option.
-      if (isNewCompany(normalizedValue)) {
-        const match = findExistingCompany(results, normalizedValue.name);
-        if (match) {
-          fireChange(match);
-        }
-      }
+      // there is a case-insensitive existing match, upgrade the value to
+      // the canonical option.
+      const upgrade = findCanonicalUpgrade(normalizedValue, results);
+      if (upgrade) fireChange(upgrade);
     }, options2Show);
     return () => { cancelled = true; };
   }, [normalizedValue, inputValue, summitId, options2Show, fireChange]);
