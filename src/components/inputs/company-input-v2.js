@@ -63,6 +63,17 @@ export const getOptionName = (option) => {
   return "";
 };
 
+// Should the synthetic Use "<typed>" row be prepended to the dropdown?
+// Only *real* (id > 0) companies count as "already listed" — a previously-
+// committed free-text option ({id: 0}) shouldn't suppress a fresh Use row
+// for the same typed text.
+export const shouldOfferUseRow = (trimmed, opts) => {
+  if (!trimmed) return false;
+  return !opts.some(
+    (o) => isExistingCompany(o) && namesMatch(o.name, trimmed)
+  );
+};
+
 const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink, ...rest }) => {
   const [inputValue, setInputValue] = React.useState("");
   const [options, setOptions] = React.useState([]);
@@ -223,13 +234,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
         if (!trimmed && isNewCompany(normalizedValue)) {
           trimmed = normalizedValue.name.trim();
         }
-        // Only real (id > 0) companies count as "already listed" — a
-        // previously-committed free-text option ({id: 0}) shouldn't
-        // suppress a fresh Use row for the same typed text.
-        const alreadyListed = trimmed && opts.some(
-          (o) => isExistingCompany(o) && namesMatch(o.name, trimmed)
-        );
-        return trimmed && !alreadyListed
+        return shouldOfferUseRow(trimmed, opts)
           ? [{ id: 0, name: trimmed, isFreeTextOption: true }, ...opts]
           : opts;
       }}
