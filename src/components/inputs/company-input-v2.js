@@ -74,6 +74,13 @@ export const shouldOfferUseRow = (trimmed, opts) => {
   );
 };
 
+// Resolve the user's typed string to either the canonical existing company
+// (case-insensitive match against `opts`) or a fresh free-text entry
+// ({id: 0, name}). Used by onBlur and onChange when the user commits raw
+// text — same intent, both sites should agree on what the value becomes.
+export const resolveTypedCompany = (opts, typed) =>
+  findExistingCompany(opts, typed) || { id: 0, name: typed.trim() };
+
 const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink, ...rest }) => {
   const [inputValue, setInputValue] = React.useState("");
   const [options, setOptions] = React.useState([]);
@@ -180,7 +187,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
           // already cleared to avoid a redundant change.
           if (normalizedValue) fireChange(null);
         } else if (!namesMatch(typed, currentName)) {
-          fireChange(findExistingCompany(options, typed) || { id: 0, name: typed });
+          fireChange(resolveTypedCompany(options, typed));
         }
         if (onBlur) onBlur(name);
       }}
@@ -193,8 +200,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
         // "tipit" + Enter resolves to "Tipit"); otherwise commit it as a
         // free-text {id: 0, name} entry.
         if (typeof tmpValue === "string" && tmpValue.trim()) {
-          const trimmed = tmpValue.trim();
-          tmpValue = findExistingCompany(options, trimmed) || { id: 0, name: trimmed };
+          tmpValue = resolveTypedCompany(options, tmpValue);
         } else if (tmpValue && typeof tmpValue === "object" && tmpValue.isFreeTextOption) {
           // The synthetic "Use "…"" row: commit a clean free-text entry,
           // dropping the display-only marker.
