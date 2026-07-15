@@ -510,7 +510,7 @@ describe("previewPDF", () => {
     const promise = previewPDF(makeRenderOrder(), makeRenderSummit());
 
     // asserted before awaiting, i.e. before the pending PDF promise resolves
-    expect(window.open).toHaveBeenCalledWith("", "_blank", "noreferrer");
+    expect(window.open).toHaveBeenCalledWith("", "_blank");
 
     await promise;
   });

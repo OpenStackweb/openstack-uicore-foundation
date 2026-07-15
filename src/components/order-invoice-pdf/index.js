@@ -206,9 +206,10 @@ export const generateInvoicePDF = async (
 export const previewPDF = async (order, summit, { logoSrc, theme } = {}) => {
   // Opened synchronously, before the await below, so the tab is still tied
   // to the originating click — otherwise Safari's popup blocker kills it.
-  // Can't pass "noopener" here: that makes window.open return null, and we
-  // need the reference to set .location.href once the blob URL is ready.
-  const newTab = window.open("", "_blank", "noreferrer");
+  // Can't pass "noopener" (or "noreferrer", which implies it) here: that
+  // makes window.open return null, and we need the reference to set
+  // .location.href once the blob URL is ready.
+  const newTab = window.open("", "_blank");
 
   try {
     const blob = await pdf(
