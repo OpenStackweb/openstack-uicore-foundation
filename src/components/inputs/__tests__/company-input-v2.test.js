@@ -17,7 +17,8 @@ import CompanyInputV2, {
     isExistingCompany,
     isNewCompany,
     findExistingCompany,
-    normalizeCompanyValue
+    normalizeCompanyValue,
+    shouldOfferUseRow
 } from "../company-input-v2";
 
 // Mock the API helper so tests can drive the callback synchronously.
@@ -121,6 +122,26 @@ describe("findExistingCompany", () => {
     it("returns null when only free-text entries are present", () => {
         const freeTextOnly = [{ id: 0, name: "Acme" }];
         expect(findExistingCompany(freeTextOnly, "Acme")).toBeNull();
+    });
+});
+
+describe("shouldOfferUseRow", () => {
+    it("returns false when the typed text is empty", () => {
+        expect(shouldOfferUseRow("", [{ id: 1, name: "Tipit" }])).toBe(false);
+    });
+    it("returns true when no real company matches the typed text", () => {
+        expect(shouldOfferUseRow("Acme", [])).toBe(true);
+        expect(shouldOfferUseRow("Acme", [{ id: 1, name: "Tipit" }])).toBe(true);
+    });
+    it("returns false when a real company matches the typed text case-insensitively", () => {
+        expect(shouldOfferUseRow("tipit", [{ id: 1, name: "Tipit" }])).toBe(false);
+        expect(shouldOfferUseRow("TIPIT", [{ id: 1, name: "Tipit" }])).toBe(false);
+    });
+    it("still returns true even if a previously-committed free-text option matches the typed text (id: 0 doesn't suppress the Use row)", () => {
+        // Pins the bug where the Use row disappeared after the user committed
+        // free-text via blur and then refocused with the same text.
+        expect(shouldOfferUseRow("ti", [{ id: 0, name: "ti" }])).toBe(true);
+        expect(shouldOfferUseRow("ti", [{ id: 0, name: "ti" }, { id: 1, name: "Tipit" }])).toBe(true);
     });
 });
 
