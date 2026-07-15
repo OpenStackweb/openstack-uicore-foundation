@@ -97,8 +97,10 @@ export const getUseRowText = (params, normalizedValue) => {
 // - Synthetic Use row (isFreeTextOption)    → clean free-text (marker stripped)
 // - Anything else (picked option, null)     → passed through unchanged
 export const resolveCommittedCompany = (input, opts) => {
-    if (typeof input === "string" && input.trim()) {
-        return resolveTypedCompany(opts, input);
+    if (typeof input === "string") {
+        // Blank / whitespace-only strings normalise to null so consumers never
+        // receive a raw string in place of a Company | null value.
+        return input.trim() ? resolveTypedCompany(opts, input) : null;
     }
     if (input?.isFreeTextOption) {
         return { id: 0, name: input.name };
