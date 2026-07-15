@@ -92,6 +92,20 @@ export const getUseRowText = (params, normalizedValue) => {
     return isNewCompany(normalizedValue) ? normalizedValue.name.trim() : "";
 };
 
+// Resolve whatever MUI hands us in onChange into a canonical Company entry.
+// - String (freeSolo Enter with raw text)  → existing match, else free-text
+// - Synthetic Use row (isFreeTextOption)    → clean free-text (marker stripped)
+// - Anything else (picked option, null)     → passed through unchanged
+export const resolveCommittedCompany = (input, opts) => {
+    if (typeof input === "string" && input.trim()) {
+        return resolveTypedCompany(opts, input);
+    }
+    if (input?.isFreeTextOption) {
+        return { id: 0, name: input.name };
+    }
+    return input;
+};
+
 const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink, ...rest }) => {
     const [inputValue, setInputValue] = React.useState("");
     const [options, setOptions] = React.useState([]);
@@ -202,32 +216,14 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
             }}
             getOptionLabel={getOptionName}
             onChange={(_, newValue) => {
-                let tmpValue = newValue;
-                // freeSolo commits the raw typed string when the user presses Enter
-                // without picking an option (reason "createOption"). If the string
-                // matches an existing company case-insensitively, pick that option (so
-                // "tipit" + Enter resolves to "Tipit"); otherwise commit it as a
-                // free-text {id: 0, name} entry.
-                if (typeof tmpValue === "string" && tmpValue.trim()) {
-                    tmpValue = resolveTypedCompany(options, tmpValue);
-                } else if (tmpValue && typeof tmpValue === "object" && tmpValue.isFreeTextOption) {
-                    // The synthetic "Use "…"" row: commit a clean free-text entry,
-                    // dropping the display-only marker.
-                    tmpValue = { id: 0, name: tmpValue.name };
-                }
+                const nextValue = resolveCommittedCompany(newValue, options);
                 // Prepend the committed value but drop any existing entry with
                 // the same id; otherwise resolving to an existing company would
                 // produce a duplicate row when the dropdown next opens.
-                setOptions(tmpValue
-                    ? [tmpValue, ...options.filter((o) => o?.id !== tmpValue?.id)]
+                setOptions(nextValue
+                    ? [nextValue, ...options.filter((o) => o?.id !== nextValue?.id)]
                     : options);
-                onChange({
-                    target: {
-                        id: name,
-                        value: tmpValue,
-                        type: "companyinput"
-                    }
-                });
+                fireChange(nextValue);
             }}
             onInputChange={(_, newInputValue) => {
                 setInputValue(newInputValue);
