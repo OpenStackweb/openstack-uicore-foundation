@@ -71,11 +71,11 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
             <FieldRow
               styles={styles}
               label="Date"
-              value={formatDate(
+              value={order.purchased_date ? formatDate(
                 order.purchased_date,
                 summit.time_zone_id,
                 "YYYY/MM/DD hh:mm a"
-              )}
+              ) : "Pending"}
               noBorder
             />
           </View>

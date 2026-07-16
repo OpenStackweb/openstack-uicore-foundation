@@ -15,6 +15,7 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { pdf } from "@react-pdf/renderer";
 import { buildRows, OrderPdf, generateInvoicePDF, previewPDF } from "../index";
+import { formatDate } from "../helpers";
 
 jest.mock("@react-pdf/renderer", () => {
   const React = require("react");
@@ -363,6 +364,30 @@ describe("OrderPdf — render", () => {
     );
     expect(() => render(<OrderPdf order={makeRenderOrder()} />)).toThrow(
       "OrderPdf: summit is required"
+    );
+  });
+
+  it("renders 'Pending' for the Date field when purchased_date is null", () => {
+    const { container } = render(
+      <OrderPdf
+        order={makeRenderOrder({ purchased_date: null })}
+        summit={makeRenderSummit()}
+      />
+    );
+    expect(container.textContent).toContain("Pending");
+  });
+
+  it("renders the formatted date when purchased_date is present", () => {
+    const { container } = render(
+      <OrderPdf order={makeRenderOrder()} summit={makeRenderSummit()} />
+    );
+    expect(container.textContent).not.toContain("Pending");
+    expect(container.textContent).toContain(
+      formatDate(
+        makeRenderOrder().purchased_date,
+        makeRenderSummit().time_zone_id,
+        "YYYY/MM/DD hh:mm a"
+      )
     );
   });
 });
