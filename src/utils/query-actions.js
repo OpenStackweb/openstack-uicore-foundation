@@ -145,7 +145,7 @@ export const querySummits = debounce(async (input, callback, per_page= DEFAULT_P
 
 export const fetchAllSummits = async (onlyActive) => {
 
-    let endpoint = URI(`/api/v2/summits/all`);
+    let endpoint = URI(`/api/v1/summits/all`);
 
     endpoint.addQuery('fields', 'id,name,start_date,end_date');
     endpoint.addQuery('expand', 'none');
