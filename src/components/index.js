@@ -5,7 +5,6 @@ export {default as DateTimePicker} from './inputs/datetimepicker'
 export {default as GroupedDropdown} from './inputs/grouped-dropdown'
 export {default as UploadInput} from './inputs/upload-input'
 export {default as UploadInputV2} from './inputs/upload-input-v2'
-export {default as UploadInputV3} from './inputs/upload-input-v3'
 export {default as CompanyInput} from './inputs/company-input'
 export {default as PromocodeInput} from './inputs/promocode-input'
 export {default as SponsorInput} from './inputs/sponsor-input'
@@ -135,6 +134,7 @@ export {MuiBaseCustomTheme} from './mui/MuiBaseCustomTheme'
 // export {default as TextEditorV2} from './inputs/editor-input-v2'
 // export {default as TextEditorV3} from './inputs/editor-input-v3'
 // export {default as CompanyInputV2} from './inputs/company-input-v2.js'
+// export {default as UploadInputV3} from './inputs/upload-input-v3'                 // @mui/material, @mui/icons-material, @mui/x-date-pickers, spark-md5, dropzone, react-dropzone
 // export {default as MuiDndList} from './mui/dnd-list'                              // react-beautiful-dnd
 // export {default as MuiSortableTable} from './mui/sortable-table/mui-table-sortable' // react-beautiful-dnd
 // export {default as MuiStripePayment} from './mui/StripePayment'                   // @stripe/react-stripe-js, @stripe/stripe-js
