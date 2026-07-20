@@ -141,4 +141,4 @@ export {MuiBaseCustomTheme} from './mui/MuiBaseCustomTheme'
 // export {default as MuiAdditionalInput} from './mui/formik-inputs/additional-input/additional-input' // react-beautiful-dnd (via dnd-list) or @dnd-kit (via DragNDropList) depending on the `useV2` prop
 // export {default as MuiAdditionalInputList} from './mui/formik-inputs/additional-input/additional-input-list' // react-beautiful-dnd (via dnd-list) or @dnd-kit (via DragNDropList) depending on the `useV2` prop
 // export {default as MuiDragNDropList} from './mui/DragNDropList'               // @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
-// export {default as MuiTableSortableV2} from './mui/sortable-table/mui-table-sortable-v2' // @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
+// export {default as MuiTableSortableV2} from './mui/sortable-table-v2/mui-table-sortable-v2' // @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities

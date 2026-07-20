@@ -22,7 +22,10 @@ jest.mock("../showConfirmDialog", () => ({
 }));
 
 jest.mock("@dnd-kit/core", () => ({
-  DndContext: ({ children }) => children,
+  DndContext: ({ children, onDragEnd }) => {
+    global.__triggerDragEnd = onDragEnd;
+    return children;
+  },
   closestCenter: jest.fn(),
   KeyboardSensor: function KeyboardSensor() {},
   PointerSensor: function PointerSensor() {},
@@ -178,5 +181,34 @@ describe("MuiTableSortableV2", () => {
       })
     );
     expect(onPageChange).toHaveBeenCalledWith(2);
+  });
+
+  describe("handleDragEnd", () => {
+    test("assigns order relative to the current page when reordering on page 2", () => {
+      const onReorder = jest.fn();
+      const page2Data = [
+        { id: 11, name: "K", role: "Dev", order: 11 },
+        { id: 12, name: "L", role: "PM", order: 12 }
+      ];
+
+      setup({
+        data: page2Data,
+        currentPage: 2,
+        perPage: 10,
+        totalRows: 20,
+        onReorder
+      });
+
+      global.__triggerDragEnd({ active: { id: "11" }, over: { id: "12" } });
+
+      expect(onReorder).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ id: 12, order: 11 }),
+          expect.objectContaining({ id: 11, order: 12 })
+        ]),
+        11,
+        12
+      );
+    });
   });
 });

@@ -46,16 +46,18 @@ const MetaFieldValuesV2 = ({
   };
 
   const handleAddValue = () => {
-    const newFields = metaFields.map((f, i) =>
-      i === fieldIndex
+    const newFields = metaFields.map((f, i) => {
+      const nextOrder = Math.max(0, ...f.values.map((v) => v.order ?? 0)) + 1;
+      return i === fieldIndex
         ? {
-            ...f,
-            values: [
-              ...f.values,
-              { value: "", name: "", is_default: false, order: f.values.length + 1 }
-            ]
-          }
+          ...f,
+          values: [
+            ...f.values,
+            { value: "", name: "", is_default: false, order: nextOrder }
+          ]
+        }
         : f
+    }
     );
     setFieldValue(baseName, newFields);
   };
@@ -102,9 +104,9 @@ const MetaFieldValuesV2 = ({
     };
 
     if (field.id && metaFieldValue.id && onMetaFieldTypeValueDeleted) {
-      onMetaFieldTypeValueDeleted(entityId, field.id, metaFieldValue.id).then(
-        () => removeValueFromFields()
-      );
+      onMetaFieldTypeValueDeleted(entityId, field.id, metaFieldValue.id)
+      .then(() => removeValueFromFields())
+      .catch(() => {});
     } else {
       removeValueFromFields();
     }
