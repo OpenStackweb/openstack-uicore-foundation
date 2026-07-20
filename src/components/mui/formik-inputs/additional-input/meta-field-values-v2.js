@@ -87,7 +87,7 @@ const MetaFieldValuesV2 = ({
     const isConfirmed = await showConfirmDialog({
       title: T.translate("general.are_you_sure"),
       text: T.translate("meta_fields.delete_value_warning"),
-      type: "warning",
+      iconType: "warning",
       confirmButtonColor: "#DD6B55",
       confirmButtonText: T.translate("general.yes_delete")
     });
