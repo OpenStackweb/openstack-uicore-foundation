@@ -147,6 +147,46 @@ describe("MetaFieldValuesV2", () => {
         expect(updatedInputs).toHaveLength(3);
       });
     });
+
+    test("assigns a non-colliding order when adding after removing a middle value", async () => {
+      const fieldWithGap = {
+        id: 1,
+        name: "Test Field",
+        type: "CheckBoxList",
+        values: [
+          { id: 101, name: "Option 1", value: "opt1", is_default: false, order: 1 },
+          { id: 103, name: "Option 3", value: "opt3", is_default: false, order: 3 }
+        ]
+      };
+
+      let latestValues;
+      const TestWrapper = () => {
+        const { values } = useFormikContext();
+        latestValues = values;
+        return (
+          <MetaFieldValuesV2
+            field={values.meta_fields[0]}
+            fieldIndex={0}
+            baseName="meta_fields"
+            onMetaFieldTypeValueDeleted={jest.fn()}
+            entityId={1}
+          />
+        );
+      };
+
+      render(
+        <Formik initialValues={{ meta_fields: [fieldWithGap] }} onSubmit={jest.fn()}>
+          <Form><TestWrapper /></Form>
+        </Formik>
+      );
+
+      await userEvent.click(screen.getByRole("button", { name: /add/i }));
+
+      await waitFor(() => {
+        const orders = latestValues.meta_fields[0].values.map((v) => v.order);
+        expect(new Set(orders).size).toBe(orders.length); // fails today: [1, 3, 3]
+      });
+    });
   });
 
   describe("isMetafieldValueIncomplete", () => {
@@ -328,5 +368,38 @@ describe("MetaFieldValuesV2", () => {
         expect(screen.getAllByTestId("CloseIcon")).toHaveLength(1);
       });
     });
+  });
+
+  test("keeps the value in the list when the delete API call rejects", async () => {
+    const mockOnDelete = jest.fn().mockRejectedValue(new Error("network error"));
+    showConfirmDialog.mockResolvedValue(true);
+
+    const TestWrapper = ({ onDelete }) => {
+      const { values } = useFormikContext();
+      const field = values.meta_fields[0];
+      return (
+        <MetaFieldValuesV2
+          field={field}
+          fieldIndex={0}
+          baseName="meta_fields"
+          onMetaFieldTypeValueDeleted={onDelete}
+          entityId={1}
+        />
+      );
+    };
+
+    render(
+      <Formik initialValues={defaultInitialValues} onSubmit={jest.fn()}>
+        <Form><TestWrapper onDelete={mockOnDelete} /></Form>
+      </Formik>
+    );
+
+    const closeButton = screen.getAllByTestId("CloseIcon")[0].closest("button");
+    await userEvent.click(closeButton);
+
+    await waitFor(() => expect(mockOnDelete).toHaveBeenCalled());
+
+    // today: silently stays at 2 items, no error surfaced
+    expect(screen.getAllByTestId("CloseIcon")).toHaveLength(2);
   });
 });

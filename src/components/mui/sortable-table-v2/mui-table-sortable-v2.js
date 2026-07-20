@@ -119,7 +119,9 @@ const MuiTableSortableV2 = ({
     const movedItemId = movedItem?.[idKey] ?? movedItem?.id;
 
     const reordered = arrayMove(data, oldIndex, newIndex).map((item, idx) =>
-      updateOrderKey ? { ...item, [updateOrderKey]: idx + 1 } : item
+      updateOrderKey
+        ? { ...item, [updateOrderKey]: (currentPage - 1) * perPage + idx + 1 }
+        : item
     );
 
     const newOrder = updateOrderKey
