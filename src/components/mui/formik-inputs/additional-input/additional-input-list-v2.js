@@ -13,10 +13,10 @@
 
 import React from "react";
 import AdditionalInputListCore from "./additional-input-list-core";
-import AdditionalInput from "./additional-input";
+import AdditionalInputV2 from "./additional-input-v2";
 
-const AdditionalInputList = (props) => (
-  <AdditionalInputListCore {...props} AdditionalInputComponent={AdditionalInput} />
+const AdditionalInputListV2 = (props) => (
+  <AdditionalInputListCore {...props} AdditionalInputComponent={AdditionalInputV2} />
 );
 
-export default AdditionalInputList;
+export default AdditionalInputListV2;

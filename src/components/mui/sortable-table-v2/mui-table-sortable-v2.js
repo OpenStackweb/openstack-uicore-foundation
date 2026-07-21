@@ -141,7 +141,7 @@ const MuiTableSortableV2 = ({
           ? deleteDialogBody(getName(item))
           : deleteDialogBody ||
           `${T.translate("general.row_remove_warning")} ${getName(item)}`,
-      type: "warning",
+      iconType: "warning",
       showCancelButton: true,
       confirmButtonColor: "#DD6B55",
       confirmButtonText: T.translate("general.yes_delete")
