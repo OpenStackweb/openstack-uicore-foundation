@@ -235,7 +235,7 @@ describe("MetaFieldValues", () => {
       expect(showConfirmDialog).toHaveBeenCalledWith(
         expect.objectContaining({
           title: expect.any(String),
-          type: "warning"
+          typeIcon: "warning"
         })
       );
     });
