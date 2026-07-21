@@ -201,7 +201,7 @@ describe("AdditionalInputListCore", () => {
       expect(showConfirmDialog).toHaveBeenCalledWith(
         expect.objectContaining({
           title: expect.any(String),
-          type: "warning"
+          iconType: "warning"
         })
       );
     });

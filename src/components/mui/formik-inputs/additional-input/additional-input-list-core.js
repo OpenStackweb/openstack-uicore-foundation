@@ -58,7 +58,7 @@ const AdditionalInputListCore = ({
       text: `${T.translate("additional_inputs.delete_warning")} ${
         item.name
       }`,
-      type: "warning",
+      iconType: "warning",
       confirmButtonColor: "#DD6B55",
       confirmButtonText: T.translate("general.yes_delete")
     });
