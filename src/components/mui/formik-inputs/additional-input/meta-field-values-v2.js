@@ -17,12 +17,13 @@ import { useFormikContext } from "formik";
 import { Box, Button, Grid2, Divider, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
-import DragAndDropList from "../../dnd-list";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import DragAndDropList from "../../DragNDropList";
 import showConfirmDialog from "../../showConfirmDialog";
 import MuiFormikTextField from "../mui-formik-textfield";
 import MuiFormikCheckbox from "../mui-formik-checkbox";
 
-const MetaFieldValues = ({
+const MetaFieldValuesV2 = ({
   field,
   fieldIndex,
   baseName = "meta_fields",
@@ -38,28 +39,40 @@ const MetaFieldValues = ({
     `${baseName}[${fieldIndex}].values[${valueIndex}].${fieldName}`;
 
   const onReorder = (newValues) => {
-    const newMetaFields = [...metaFields];
-    newMetaFields[fieldIndex].values = newValues;
+    const newMetaFields = metaFields.map((f, i) =>
+      i === fieldIndex ? { ...f, values: newValues } : f
+    );
     setFieldValue(baseName, newMetaFields);
   };
 
   const handleAddValue = () => {
-    const newFields = metaFields.map((f, i) =>
-      i === fieldIndex
-        ? { ...f, values: [...f.values, { value: "", name: "", is_default: false }] }
+    const newFields = metaFields.map((f, i) => {
+      const nextOrder = Math.max(0, ...f.values.map((v) => v.order ?? 0)) + 1;
+      return i === fieldIndex
+        ? {
+          ...f,
+          values: [
+            ...f.values,
+            { value: "", name: "", is_default: false, order: nextOrder }
+          ]
+        }
         : f
+    }
     );
     setFieldValue(baseName, newFields);
   };
 
   const handleDefaultChange = (valueIndex, checked) => {
-    const newFields = [...metaFields];
-    if (checked) {
-      newFields[fieldIndex].values.forEach((v) => {
-        v.is_default = false;
-      });
-    }
-    newFields[fieldIndex].values[valueIndex].is_default = checked;
+    const newFields = metaFields.map((f, i) => {
+      if (i !== fieldIndex) return f;
+      return {
+        ...f,
+        values: f.values.map((v, vi) => {
+          if (checked) return { ...v, is_default: vi === valueIndex };
+          return vi === valueIndex ? { ...v, is_default: false } : v;
+        })
+      };
+    });
     setFieldValue(baseName, newFields);
   };
 
@@ -82,23 +95,24 @@ const MetaFieldValues = ({
     if (!isConfirmed) return;
 
     const removeValueFromFields = () => {
-      const newFields = [...metaFields];
-      newFields[fieldIndex].values = newFields[fieldIndex].values.filter(
-        (_, index) => index !== valueIndex
+      const newFields = metaFields.map((f, i) =>
+        i === fieldIndex
+          ? { ...f, values: f.values.filter((_, index) => index !== valueIndex) }
+          : f
       );
       setFieldValue(baseName, newFields);
     };
 
     if (field.id && metaFieldValue.id && onMetaFieldTypeValueDeleted) {
-      onMetaFieldTypeValueDeleted(entityId, field.id, metaFieldValue.id).then(
-        () => removeValueFromFields()
-      );
+      onMetaFieldTypeValueDeleted(entityId, field.id, metaFieldValue.id)
+      .then(() => removeValueFromFields())
+      .catch(() => {});
     } else {
       removeValueFromFields();
     }
   };
 
-  const renderMetaFieldValue = (val, sortedIndex, provided, snapshot) => {
+  const renderMetaFieldValue = (val, sortedIndex, { isDragging, dragHandleProps } = {}) => {
     const originalIndex = field.values.findIndex(
       (v) => (v.id && v.id === val.id) || v === val
     );
@@ -111,15 +125,24 @@ const MetaFieldValues = ({
           spacing={2}
           sx={{
             alignItems: "start",
-            background: snapshot?.isDragging ? "#ebebeb" : "inherit",
-            boxShadow: snapshot?.isDragging
+            background: isDragging ? "#ebebeb" : "inherit",
+            boxShadow: isDragging
               ? "0px 5px 15px rgba(0,0,0,0.3)"
               : "none",
             transition: "transform 0.2s ease, box-shadow 0.2s ease",
-            transform: snapshot?.isDragging ? "scale(1.02)" : "none",
+            transform: isDragging ? "scale(1.02)" : "none",
             py: 2
           }}
         >
+          <Grid2 size={1} sx={{ display: "flex", alignItems: "center" }}>
+            <IconButton
+              {...dragHandleProps}
+              aria-label="drag to reorder"
+              sx={{ cursor: "grab" }}
+            >
+              <DragIndicatorIcon />
+            </IconButton>
+          </Grid2>
           <Grid2 size={4}>
             <MuiFormikTextField
               name={buildValueFieldName(valueIndex, "name")}
@@ -150,7 +173,7 @@ const MetaFieldValues = ({
               }}
             />
           </Grid2>
-          <Grid2 size={4}>
+          <Grid2 size={3}>
             <MuiFormikCheckbox
               name={buildValueFieldName(valueIndex, "is_default")}
               label={T.translate("meta_fields.is_default")}
@@ -173,7 +196,6 @@ const MetaFieldValues = ({
         renderItem={renderMetaFieldValue}
         idKey="id"
         updateOrderKey="order"
-        droppableId={`droppable-values-${fieldIndex}`}
       />
       <Grid2 container spacing={2} sx={{ mt: 2 }} offset={4}>
         <Button
@@ -189,4 +211,4 @@ const MetaFieldValues = ({
   );
 };
 
-export default MetaFieldValues;
+export default MetaFieldValuesV2;
