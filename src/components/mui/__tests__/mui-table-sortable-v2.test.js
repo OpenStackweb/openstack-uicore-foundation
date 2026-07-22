@@ -210,5 +210,35 @@ describe("MuiTableSortableV2", () => {
         12
       );
     });
+
+    test("falls back to a page-agnostic order when pagination props are not wired up", () => {
+      const onReorder = jest.fn();
+
+      render(
+        <MuiTableSortableV2
+          columns={columns}
+          data={data}
+          onSort={jest.fn()}
+          options={{ sortCol: "name", sortDir: 1 }}
+          onReorder={onReorder}
+        />
+      );
+
+      global.__triggerDragEnd({ active: { id: "1" }, over: { id: "2" } });
+
+      expect(onReorder).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ id: 2, order: 1 }),
+          expect.objectContaining({ id: 1, order: 2 })
+        ]),
+        1,
+        2
+      );
+      expect(onReorder).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        NaN
+      );
+    });
   });
 });
