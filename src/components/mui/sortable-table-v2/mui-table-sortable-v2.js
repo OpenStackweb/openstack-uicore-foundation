@@ -27,20 +27,8 @@ import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import { IconButton } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  arrayMove
-} from "@dnd-kit/sortable";
+import { DndContext } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { visuallyHidden } from "@mui/utils";
 
 import styles from "./styles.module.less";
@@ -53,6 +41,7 @@ import {
 import showConfirmDialog from "../showConfirmDialog";
 import SortableRow from "./sortable-row";
 import TableCellContent from "../table/table-cell-content";
+import useDndKitReorder from "../DragNDropList/hooks/useDndKitReorder";
 
 const getRowId = (row, index, idKey) =>
   row[idKey] !== undefined && row[idKey] !== null
@@ -98,40 +87,29 @@ const MuiTableSortableV2 = ({
 
   const { sortCol, sortDir } = options;
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
+  // Falls back to a page-agnostic order (idx + 1) when pagination isn't
+  // wired up, instead of writing NaN into every row's order on drag-end.
+  const pageOffset =
+    currentPage != null && perPage != null ? (currentPage - 1) * perPage : 0;
 
-  const handleDragEnd = ({ active, over }) => {
-    if (!over || active.id === over.id) return;
+  const { sensors, collisionDetection, handleDragEnd } = useDndKitReorder({
+    items: data,
+    getItemId: (row, i) => getRowId(row, i, idKey),
+    updateOrderKey,
+    orderOffset: pageOffset,
+    onReorder: (reordered, { oldIndex }) => {
+      const movedItem = data[oldIndex];
+      const movedItemId = movedItem?.[idKey] ?? movedItem?.id;
 
-    const oldIndex = data.findIndex(
-      (row, i) => getRowId(row, i, idKey) === active.id
-    );
-    const newIndex = data.findIndex(
-      (row, i) => getRowId(row, i, idKey) === over.id
-    );
+      const newOrder = updateOrderKey
+        ? reordered.find((item) => (item[idKey] ?? item.id) === movedItemId)?.[
+        updateOrderKey
+        ]
+        : undefined;
 
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const movedItem = data[oldIndex];
-    const movedItemId = movedItem?.[idKey] ?? movedItem?.id;
-
-    const reordered = arrayMove(data, oldIndex, newIndex).map((item, idx) =>
-      updateOrderKey
-        ? { ...item, [updateOrderKey]: (currentPage - 1) * perPage + idx + 1 }
-        : item
-    );
-
-    const newOrder = updateOrderKey
-      ? reordered.find((item) => (item[idKey] ?? item.id) === movedItemId)?.[
-      updateOrderKey
-      ]
-      : undefined;
-
-    onReorder?.(reordered, movedItemId, newOrder);
-  };
+      onReorder?.(reordered, movedItemId, newOrder);
+    }
+  });
 
   const handleDelete = async (item) => {
     const isConfirmed = await showConfirmDialog({
@@ -206,7 +184,7 @@ const MuiTableSortableV2 = ({
             {/* TABLE BODY */}
             <DndContext
               sensors={sensors}
-              collisionDetection={closestCenter}
+              collisionDetection={collisionDetection}
               onDragEnd={handleDragEnd}
             >
               <SortableContext
