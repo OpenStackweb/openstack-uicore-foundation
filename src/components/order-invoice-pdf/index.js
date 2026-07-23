@@ -45,12 +45,15 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
   const rows = buildRows(order, summit);
 
   const {
-    amount_due: total = 0,
+    net_amount,
+    amount_due,
     cancelled_total: cancelledTotal = 0,
     refunds_total: refundsTotal = 0,
     retained = 0,
     credited_to_payment_method: credited = 0
   } = order;
+
+  const total = net_amount || amount_due || 0;
 
   const clientName =
     order.client?.contact_name || order.purchased_by_full_name || "";
