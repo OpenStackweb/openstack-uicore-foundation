@@ -173,6 +173,7 @@ module.exports = {
         'utils/use-event-callback': './src/utils/use-event-callback.js',
         'utils/external-store': './src/utils/external-store.js',
         'utils/theme': './src/components/mui/MuiBaseCustomTheme.js',
+        'utils/lazy-with-reload': './src/utils/lazy-with-reload.js',
     },
     output: {
         path: path.resolve(__dirname, 'lib'),
