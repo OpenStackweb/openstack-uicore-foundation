@@ -25,6 +25,7 @@ module.exports = {
         'components/sections/panel': './src/components/sections/panel.js',
         'components/simple-link-list': './src/components/simple-link-list/index.js',
         'components/summit-dropdown': './src/components/summit-dropdown/index.js',
+        'components/order-invoice-pdf': './src/components/order-invoice-pdf/index.js',
         'components/table': './src/components/table/Table.js',
         'components/table-editable': './src/components/table-editable/EditableTable.js',
         'components/table-selectable': './src/components/table-selectable/SelectableTable.js',
