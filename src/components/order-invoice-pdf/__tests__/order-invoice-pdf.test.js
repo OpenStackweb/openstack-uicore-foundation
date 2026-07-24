@@ -329,8 +329,9 @@ const makeRenderOrder = (overrides = {}) => ({
 const makeRenderSummit = (overrides = {}) => ({
   name: "OpenStack Summit 2026",
   time_zone_id: "America/Los_Angeles",
-  main_locations: [
+  locations: [
     {
+      is_main: true,
       short_name: "Main Hall",
       name: "Convention Center",
       address_1: "123 Expo Blvd",
@@ -344,7 +345,7 @@ const makeRenderSummit = (overrides = {}) => ({
 });
 
 describe("OrderPdf — render", () => {
-  it("renders header fields from order and summit, venue from main_locations", () => {
+  it("renders header fields from order and summit, venue from locations marked is_main", () => {
     const { container } = render(
       <OrderPdf order={makeRenderOrder()} summit={makeRenderSummit()} />
     );
@@ -356,6 +357,31 @@ describe("OrderPdf — render", () => {
     expect(text).toContain("Main Hall");
     expect(text).toContain("123 Expo Blvd");
     expect(text).toContain("V6B 1A1");
+  });
+
+  it("prefers main_locations over locations.is_main when both are present", () => {
+    const { container } = render(
+      <OrderPdf
+        order={makeRenderOrder()}
+        summit={makeRenderSummit({
+          main_locations: [
+            {
+              short_name: "Legacy Hall",
+              name: "Legacy Center",
+              address_1: "1 Legacy Way",
+              city: "Legacy City",
+              state: "LC",
+              postal_code: "00000",
+              country: "Legacyland"
+            }
+          ]
+        })}
+      />
+    );
+    const text = container.textContent;
+    expect(text).toContain("Legacy Hall");
+    expect(text).toContain("1 Legacy Way");
+    expect(text).not.toContain("Main Hall");
   });
 
   it("throws a clear error when order or summit are omitted", () => {

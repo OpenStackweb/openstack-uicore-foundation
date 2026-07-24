@@ -43,6 +43,9 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
   const styles = createStyles(fontFamily);
   const rowStyles = createRowStyles(styles);
   const rows = buildRows(order, summit);
+  const mainLocation =
+    summit.main_locations?.[0] ??
+    summit.locations?.find((location) => location.is_main);
 
   const {
     net_amount,
@@ -104,12 +107,12 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
             <FieldRow
               styles={styles}
               label="Venue"
-              value={formatVenueName(summit?.main_locations?.[0]) ?? ""}
+              value={formatVenueName(mainLocation) ?? ""}
             />
             <FieldRow
               styles={styles}
               label="Address"
-              value={formatAddress(summit?.main_locations?.[0]) ?? ""}
+              value={formatAddress(mainLocation) ?? ""}
               noBorder
             />
           </View>
