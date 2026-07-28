@@ -12,7 +12,7 @@
  * */
 
 import moment from "moment-timezone";
-import { currencyAmountFromCents } from "../../utils/money";
+import { currencyAmountFromCents, formatDiscount } from "../../utils/money";
 import { MILLISECONDS_IN_SECOND } from "../../utils/constants";
 
 export const DEFAULT_FONT_FAMILY = "Helvetica";
@@ -31,6 +31,19 @@ export const formatDate = (
   return moment(date * MILLISECONDS_IN_SECOND)
     .tz(timeZone)
     .format(format);
+};
+
+/**
+  * Derives an order's amount due directly from its raw net_amount/amount_due
+  * fields (both in cents). This is the single source for that fallback rule,
+  * shared by consumers that normalize a raw order (e.g. into order.total) and
+  * by consumers that render straight from the raw order (e.g. the invoice PDF).
+  * @param {object} order - Raw order object with net_amount/amount_due in cents.
+  * @returns {number} - The amount due, in cents.
+  */
+export const getOrderTotal = (order) => {
+  if (!order) return 0;
+  return order.net_amount || order.amount_due || 0;
 };
 
 export const formatAddress = (address) => {
@@ -108,7 +121,7 @@ export const buildRows = (order, summit) => {
         rowKey: `discount-${form.id}`,
         type: "discount",
         code: "DIS",
-        description: String(form.discount || ""),
+        description: formatDiscount(form.discount_amount, form.discount_type),
         addon: "",
         qty: "",
         price: currencyAmountFromCents(discountCents),

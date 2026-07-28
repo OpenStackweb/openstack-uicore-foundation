@@ -44,7 +44,8 @@ const makeForm = (overrides = {}) => ({
   code: "FORM-1",
   name: "Gold Package",
   discount_in_cents: 0,
-  discount: null,
+  discount_amount: null,
+  discount_type: null,
   add_on: null,
   items: [],
   ...overrides
@@ -206,11 +207,11 @@ describe("buildRows — discount rows", () => {
     expect(rows.filter((r) => r.type === "discount")).toHaveLength(0);
   });
 
-  it("emits one discount row with code DIS and formatted amount", () => {
+  it("emits one discount row with code DIS and formatted amount, describing a Rate discount from raw discount_amount/discount_type", () => {
     const form = makeForm({
       discount_in_cents: 1500,
-      discount: "15%",
-      code: "DISC-1"
+      discount_amount: 1500,
+      discount_type: "Rate"
     });
     const discountRows = buildRows({ forms: [form] }, MOCK_SUMMIT).filter(
       (r) => r.type === "discount"
@@ -219,6 +220,19 @@ describe("buildRows — discount rows", () => {
     expect(discountRows[0].rowKey).toBe(`discount-${form.id}`);
     expect(discountRows[0].code).toBe("DIS");
     expect(discountRows[0].price).toBe("$15.00");
+    expect(discountRows[0].description).toBe("15%");
+  });
+
+  it("describes an Amount discount from raw discount_amount/discount_type", () => {
+    const form = makeForm({
+      discount_in_cents: 500,
+      discount_amount: 500,
+      discount_type: "Amount"
+    });
+    const discountRows = buildRows({ forms: [form] }, MOCK_SUMMIT).filter(
+      (r) => r.type === "discount"
+    );
+    expect(discountRows[0].description).toBe("$5.00");
   });
 });
 
