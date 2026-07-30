@@ -89,6 +89,25 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
                 summit.time_zone_id,
                 "YYYY/MM/DD hh:mm a"
               ) : T.translate("order_invoice_pdf.pending")}
+            />
+            <FieldRow
+              styles={styles}
+              label={T.translate("order_invoice_pdf.payment_method")}
+              value={order.payment_method ?? ""}
+            />
+            <FieldRow
+              styles={styles}
+              label={T.translate("order_invoice_pdf.status")}
+              value={order.status ?? ""}
+            />
+            <FieldRow
+              styles={styles}
+              label={T.translate("order_invoice_pdf.payment_date")}
+              value={order.created ? formatDate(
+                order.created,
+                "LOC",
+                "YYYY/MM/DD hh:mm a"
+              ) : ""}
               noBorder
             />
           </View>

@@ -1,0 +1,107 @@
+{
+  "id": 4821,
+  "number": "000042",
+  "summit_id": 73,
+  "sponsor_id": 806,
+  "created": 1700000000,
+  "purchased_date": 1700000000,
+  "purchased_by_id": 93379,
+  "purchased_by_email": "jane.doe@example.com",
+  "purchased_by_full_name": "Jane Doe",
+  "type": "Offline",
+  "payment_method": "Invoice",
+  "currency": "USD",
+  "status": "Pending",
+  "raw_amount": 65000,
+  "discount_amount": 5000,
+  "charges_amount": 750,
+  "payments_total": 60000,
+  "refunds_total": 3000,
+  "cancelled_total": 15000,
+  "retained": 15000,
+  "credited_to_payment_method": 0,
+  "amount_due": 750,
+  "client": {
+    "company_id": 4369,
+    "company_name": "Acme Corp",
+    "contact_name": "Jane Doe",
+    "contact_email": "jane.doe@example.com",
+    "contact_phone": "555-0100"
+  },
+  "address": {
+    "line1": "789 Client Ave",
+    "line2": "Suite 400",
+    "city": "Portland",
+    "state": "OR",
+    "postal_code": "97201",
+    "country": "USA"
+  },
+  "forms": [
+    {
+      "id": 156,
+      "form_id": 28,
+      "code": "GOLD-1",
+      "name": "Gold Package",
+      "raw_amount": 65000,
+      "net_amount": 60000,
+      "is_locked": false,
+      "discount_amount": 1000,
+      "discount_type": "Rate",
+      "discount_in_cents": 5000,
+      "add_on": null,
+      "items": [
+        {
+          "line_id": 9001,
+          "position": 1,
+          "code": "ITEM-A",
+          "title": "Logo Placement",
+          "type": { "id": 212, "code": "ITEM-A", "name": "Platinum Sponsor" },
+          "notes": null,
+          "quantity": 2,
+          "current_rate_type": "Early",
+          "current_rate": 25000,
+          "custom_rate": null,
+          "amount": 50000,
+          "canceled_at": null,
+          "canceled_by_id": null,
+          "canceled_by_email": null,
+          "canceled_by_full_name": null,
+          "cancel_reason": null,
+          "meta_fields": []
+        },
+        {
+          "line_id": 9002,
+          "position": 2,
+          "code": "ITEM-B",
+          "title": "Booth Space",
+          "type": null,
+          "notes": null,
+          "quantity": 1,
+          "current_rate_type": "Early",
+          "current_rate": 15000,
+          "custom_rate": null,
+          "amount": 15000,
+          "canceled_at": 1699900000,
+          "canceled_by_id": 7,
+          "canceled_by_email": "admin@example.com",
+          "canceled_by_full_name": "Admin User",
+          "cancel_reason": "Sponsor downgraded package",
+          "meta_fields": []
+        }
+      ]
+    }
+  ],
+  "fees": [
+    { "line_id": 7001, "position": 1, "title": "Processing Fee", "amount": 500 },
+    { "line_id": 7002, "position": 2, "title": "Late Fee", "amount": 250 }
+  ],
+  "payments": [
+    { "id": 3001, "method": "wire", "amount": 60000, "created": 1700000500 }
+  ],
+  "refunds": [
+    { "id": 4001, "reason": "duplicate charge", "status": "approved", "amount": 3000, "created": 1700000600 }
+  ],
+  "notes": [
+    { "id": 5001, "content": "Call client to confirm shipping address" }
+  ]
+}

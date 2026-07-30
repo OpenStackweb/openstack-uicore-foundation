@@ -16,6 +16,7 @@ import { render } from "@testing-library/react";
 import { pdf } from "@react-pdf/renderer";
 import { buildRows, OrderPdf, generateInvoicePDF, previewPDF } from "../index";
 import { formatDate } from "../helpers";
+import purchaseV2Fixture from "./fixtures/purchase-v2.json";
 
 const TRANSLATIONS = {
   "order_invoice_pdf.invoice_title": "Invoice",
@@ -27,6 +28,9 @@ const TRANSLATIONS = {
   "order_invoice_pdf.event": "Event",
   "order_invoice_pdf.venue": "Venue",
   "order_invoice_pdf.charge": "Charge",
+  "order_invoice_pdf.payment_method": "Payment Method",
+  "order_invoice_pdf.status": "Status",
+  "order_invoice_pdf.payment_date": "Payment Date",
   "sponsor_order_grid.code": "Code",
   "sponsor_order_grid.type": "Type",
   "sponsor_order_grid.details": "Details",
@@ -80,29 +84,61 @@ jest.mock("@react-pdf/renderer", () => {
   };
 });
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Fixture-derived builders ──────────────────────────────────────────────
+//
+// `purchase-v2.json` pins the shape of GET .../api/v2/summits/{id}/sponsors/{id}/purchases/{id}
+// ?expand=forms,forms.items,forms.items.meta_fields,forms.items.type,refunds,payments,notes,fees
+// (PurchaseV2Serializer) — the exact call sponsor-services makes before handing the raw order to
+// generateInvoicePDF/previewPDF. Every builder below starts from a real slice of that fixture and
+// overrides only the field(s) a given test cares about, instead of hand-authoring object literals.
+// A field this component reads that the fixture doesn't carry (or carries under a different key)
+// now surfaces as a failing assertion instead of a silently blank cell in the PDF.
 
 const MOCK_SUMMIT = { time_zone_id: "UTC" };
 
-const makeForm = (overrides = {}) => ({
-  id: 1,
-  code: "FORM-1",
-  name: "Gold Package",
-  discount_in_cents: 0,
-  discount_amount: null,
-  discount_type: null,
-  add_on: null,
-  items: [],
+const baseForm = purchaseV2Fixture.forms[0];
+const baseItem = baseForm.items[0]; // not cancelled
+const baseCancelledItem = baseForm.items[1]; // cancelled
+const baseFee = purchaseV2Fixture.fees[0];
+const basePayment = purchaseV2Fixture.payments[0];
+const baseRefund = purchaseV2Fixture.refunds[0];
+const baseNote = purchaseV2Fixture.notes[0];
+
+const makeForm = (overrides = {}) => ({ ...baseForm, ...overrides });
+const makeItem = (overrides = {}) => ({ ...baseItem, ...overrides });
+const makeCancelledItem = (overrides = {}) => ({
+  ...baseCancelledItem,
+  ...overrides
+});
+const makeFee = (overrides = {}) => ({ ...baseFee, ...overrides });
+const makePayment = (overrides = {}) => ({ ...basePayment, ...overrides });
+const makeRefund = (overrides = {}) => ({ ...baseRefund, ...overrides });
+const makeNote = (overrides = {}) => ({ ...baseNote, ...overrides });
+
+// The full raw order as sponsor-services receives it — used as-is or overridden
+// per test, never hand-rolled.
+const makeRenderOrder = (overrides = {}) => ({
+  ...purchaseV2Fixture,
   ...overrides
 });
 
-const makeItem = (overrides = {}) => ({
-  line_id: 10,
-  code: "ITEM-A",
-  title: "Logo Placement",
-  type: null,
-  quantity: 2,
-  amount: 5000,
+// Venue/location data comes from a different API (summit-api), which already uses
+// address_1/zip_code — not part of the purchases-api v2 contract this fixture pins.
+const makeRenderSummit = (overrides = {}) => ({
+  name: "OpenStack Summit 2026",
+  time_zone_id: "America/Los_Angeles",
+  locations: [
+    {
+      is_main: true,
+      short_name: "Main Hall",
+      name: "Convention Center",
+      address_1: "123 Expo Blvd",
+      city: "Vancouver",
+      state: "BC",
+      postal_code: "V6B 1A1",
+      country: "Canada"
+    }
+  ],
   ...overrides
 });
 
@@ -143,11 +179,8 @@ describe("buildRows — item rows", () => {
   });
 
   it("prefers item.type.name over item.title for description", () => {
-    const withType = makeItem({
-      type: { name: "Platinum Sponsor" },
-      title: "fallback"
-    });
-    const withoutType = makeItem({ type: null, title: "Logo Placement" });
+    const withType = makeItem(); // base item already carries type.name = "Platinum Sponsor"
+    const withoutType = makeItem({ type: null }); // falls back to title = "Logo Placement"
     const rows = buildRows(
       {
         forms: [
@@ -164,7 +197,11 @@ describe("buildRows — item rows", () => {
 
   it("excludes items with quantity 0", () => {
     const rows = buildRows(
-      { forms: [makeForm({ items: [makeItem({ quantity: 0 })] })] },
+      {
+        forms: [
+          makeForm({ discount_in_cents: 0, items: [makeItem({ quantity: 0 })] })
+        ]
+      },
       MOCK_SUMMIT
     );
     expect(rows).toHaveLength(0);
@@ -174,17 +211,9 @@ describe("buildRows — item rows", () => {
 // ─── Cancelled items (per-item, not per-form) ─────────────────────────────────
 
 describe("buildRows — cancelled items", () => {
-  const cancelledItem = makeItem({
-    line_id: 20,
-    amount: 10000,
-    canceled_by_id: 99,
-    canceled_by_full_name: "Admin User",
-    canceled_at: 1700000000
-  });
-
   it("sets cancelled: true and populates cancelledBy when item.canceled_by_id is set", () => {
     const rows = buildRows(
-      { forms: [makeForm({ items: [cancelledItem] })] },
+      { forms: [makeForm({ items: [makeCancelledItem()] })] },
       MOCK_SUMMIT
     );
     expect(rows[0].cancelled).toBe(true);
@@ -194,9 +223,14 @@ describe("buildRows — cancelled items", () => {
   it("sets cancelled: false and empty cancelledBy when canceled_by_id is absent or null", () => {
     const withNull = makeForm({
       id: 1,
+      discount_in_cents: 0,
       items: [makeItem({ canceled_by_id: null })]
     });
-    const withAbsent = makeForm({ id: 2, items: [makeItem()] });
+    const withAbsent = makeForm({
+      id: 2,
+      discount_in_cents: 0,
+      items: [makeItem()]
+    });
     const rows = buildRows({ forms: [withNull, withAbsent] }, MOCK_SUMMIT);
     rows.forEach((r) => {
       expect(r.cancelled).toBe(false);
@@ -205,12 +239,13 @@ describe("buildRows — cancelled items", () => {
   });
 
   it("cancelled items still accumulate into the running balance", () => {
-    const normalItem = makeItem({ line_id: 10, amount: 8000 });
+    const normalItem = makeItem({ amount: 8000 });
+    const cancelledItem = makeCancelledItem({ amount: 10000 });
     const rows = buildRows(
       {
         forms: [
-          makeForm({ id: 1, items: [normalItem] }),
-          makeForm({ id: 2, items: [cancelledItem] })
+          makeForm({ id: 1, discount_in_cents: 0, items: [normalItem] }),
+          makeForm({ id: 2, discount_in_cents: 0, items: [cancelledItem] })
         ]
       },
       MOCK_SUMMIT
@@ -233,11 +268,23 @@ describe("buildRows — cancelled items", () => {
 describe("buildRows — fee rows", () => {
   it("emits code PAYFEE with formatted amount", () => {
     const feeRow = buildRows(
-      { fees: [{ id: 1, title: "Processing Fee", amount: 200 }] },
+      { fees: [makeFee({ title: "Processing Fee", amount: 200 })] },
       MOCK_SUMMIT
     ).find((r) => r.type === "fee");
     expect(feeRow.code).toBe("PAYFEE");
     expect(feeRow.price).toBe("$2.00");
+  });
+
+  it("gives distinct row keys to multiple fees, none of which carry an `id` field", () => {
+    // Real purchases-api v2 fees only ever carry line_id/position/title/amount (see fixture) —
+    // no `id`. Two fees on the same order must not collide on rowKey.
+    expect(baseFee.id).toBeUndefined();
+    const rows = buildRows(
+      { fees: [purchaseV2Fixture.fees[0], purchaseV2Fixture.fees[1]] },
+      MOCK_SUMMIT
+    ).filter((r) => r.type === "fee");
+    expect(rows).toHaveLength(2);
+    expect(new Set(rows.map((r) => r.rowKey)).size).toBe(2);
   });
 });
 
@@ -253,19 +300,17 @@ describe("buildRows — discount rows", () => {
   });
 
   it("emits one discount row with code DIS and formatted amount, describing a Rate discount from raw discount_amount/discount_type", () => {
-    const form = makeForm({
-      discount_in_cents: 1500,
-      discount_amount: 1500,
-      discount_type: "Rate"
-    });
+    // Base form already carries discount_in_cents/discount_amount/discount_type
+    // as raw fields — never a pre-formatted `discount` string (the API doesn't send one).
+    const form = makeForm();
     const discountRows = buildRows({ forms: [form] }, MOCK_SUMMIT).filter(
       (r) => r.type === "discount"
     );
     expect(discountRows).toHaveLength(1);
     expect(discountRows[0].rowKey).toBe(`discount-${form.id}`);
     expect(discountRows[0].code).toBe("DIS");
-    expect(discountRows[0].price).toBe("$15.00");
-    expect(discountRows[0].description).toBe("15%");
+    expect(discountRows[0].price).toBe("$50.00");
+    expect(discountRows[0].description).toBe("10%");
   });
 
   it("describes an Amount discount from raw discount_amount/discount_type", () => {
@@ -286,14 +331,14 @@ describe("buildRows — discount rows", () => {
 describe("buildRows — payment rows", () => {
   it("sets description to 'Paid via <method>' and defaults method to card", () => {
     const withMethod = buildRows(
-      { payments: [{ id: 1, amount: 2500, method: "wire" }] },
+      { payments: [makePayment({ method: "wire" })] },
       MOCK_SUMMIT
     ).find((r) => r.type === "payment");
-    expect(withMethod.price).toBe("$25.00");
+    expect(withMethod.price).toBe("$600.00");
     expect(withMethod.description).toBe("Paid via wire");
 
     const withoutMethod = buildRows(
-      { payments: [{ id: 2, amount: 10000 }] },
+      { payments: [makePayment({ id: 2, method: undefined })] },
       MOCK_SUMMIT
     ).find((r) => r.type === "payment");
     expect(withoutMethod.description).toBe("Paid via card");
@@ -305,16 +350,7 @@ describe("buildRows — payment rows", () => {
 describe("buildRows — refund rows", () => {
   it("maps reason to description and status to subDescription, with defaults when absent", () => {
     const withFields = buildRows(
-      {
-        refunds: [
-          {
-            id: 1,
-            reason: "duplicate charge",
-            status: "approved",
-            amount: 3000
-          }
-        ]
-      },
+      { refunds: [makeRefund()] },
       MOCK_SUMMIT
     ).find((r) => r.type === "refund");
     expect(withFields.price).toBe("$30.00");
@@ -322,7 +358,11 @@ describe("buildRows — refund rows", () => {
     expect(withFields.subDescription).toBe("approved");
 
     const withDefaults = buildRows(
-      { refunds: [{ id: 2, amount: 1000 }] },
+      {
+        refunds: [
+          makeRefund({ id: 2, reason: undefined, status: undefined, amount: 1000 })
+        ]
+      },
       MOCK_SUMMIT
     ).find((r) => r.type === "refund");
     expect(withDefaults.description).toBe("Refund");
@@ -334,14 +374,14 @@ describe("buildRows — refund rows", () => {
 
 describe("buildRows — note rows", () => {
   it("emits type 'note' with content, defaulting to empty string when absent", () => {
-    const withContent = buildRows(
-      { notes: [{ id: 1, content: "Call client to confirm" }] },
+    const withContent = buildRows({ notes: [makeNote()] }, MOCK_SUMMIT);
+    expect(withContent[0].type).toBe("note");
+    expect(withContent[0].content).toBe("Call client to confirm shipping address");
+
+    const withoutContent = buildRows(
+      { notes: [makeNote({ id: 2, content: undefined })] },
       MOCK_SUMMIT
     );
-    expect(withContent[0].type).toBe("note");
-    expect(withContent[0].content).toBe("Call client to confirm");
-
-    const withoutContent = buildRows({ notes: [{ id: 2 }] }, MOCK_SUMMIT);
     expect(withoutContent[0].content).toBe("");
   });
 });
@@ -352,8 +392,8 @@ describe("buildRows — balance accumulation", () => {
   it("interleaves payments and refunds by created date and updates balance correctly", () => {
     const rows = buildRows(
       {
-        payments: [{ id: 1, amount: 10000, created: 2 }],
-        refunds: [{ id: 2, amount: 3000, created: 1 }]
+        payments: [makePayment({ amount: 10000, created: 2 })],
+        refunds: [makeRefund({ amount: 3000, created: 1 })]
       },
       MOCK_SUMMIT
     );
@@ -367,51 +407,26 @@ describe("buildRows — balance accumulation", () => {
 
 // ─── OrderPdf render-level ────────────────────────────────────────────────────
 
-const makeRenderOrder = (overrides = {}) => ({
-  number: "ORD-2026-001",
-  total: 0,
-  purchased_date: 1700000000,
-  purchased_by_full_name: "Jane Doe",
-  client: { contact_name: "Jane Doe", company_name: "Acme Corp" },
-  address: null,
-  forms: [],
-  fees: [],
-  payments: [],
-  refunds: [],
-  cancelled_total: 0,
-  refunds_total: 0,
-  retained: 0,
-  credited_to_payment_method: 0,
-  ...overrides
-});
-
-const makeRenderSummit = (overrides = {}) => ({
-  name: "OpenStack Summit 2026",
-  time_zone_id: "America/Los_Angeles",
-  locations: [
-    {
-      is_main: true,
-      short_name: "Main Hall",
-      name: "Convention Center",
-      address_1: "123 Expo Blvd",
-      city: "Vancouver",
-      state: "BC",
-      postal_code: "V6B 1A1",
-      country: "Canada"
-    }
-  ],
-  ...overrides
-});
-
 describe("OrderPdf — render", () => {
   it("renders header fields from order and summit, venue from locations marked is_main", () => {
     const { container } = render(
       <OrderPdf order={makeRenderOrder()} summit={makeRenderSummit()} />
     );
     const text = container.textContent;
-    expect(text).toContain("ORD-2026-001");
+    expect(text).toContain("000042");
     expect(text).toContain("Acme Corp");
     expect(text).toContain("Jane Doe");
+    // Client address — purchases-api v2 shape (line1/line2), not summit-api's address_1.
+    expect(text).toContain("789 Client Ave");
+    expect(text).toContain("97201");
+    // Payment method/status/date — plain reads off PurchaseV2Serializer.allowed_fields,
+    // present on the raw order this component receives. Checking the labels (not just
+    // the values) avoids false positives from "Invoice"/"Pending" already appearing
+    // elsewhere in the header for unrelated reasons.
+    expect(text).toContain("Payment Method");
+    expect(text).toContain("Status");
+    expect(text).toContain("Payment Date");
+    expect(text).toContain(formatDate(purchaseV2Fixture.created, "LOC", "YYYY/MM/DD hh:mm a"));
     expect(text).toContain("OpenStack Summit 2026");
     expect(text).toContain("Main Hall");
     expect(text).toContain("123 Expo Blvd");
@@ -463,8 +478,13 @@ describe("OrderPdf — render", () => {
   });
 
   it("renders the formatted date when purchased_date is present", () => {
+    // status: overridden away from the fixture's default "Pending" so this
+    // assertion isn't confounded by the unrelated Status field sharing that text.
     const { container } = render(
-      <OrderPdf order={makeRenderOrder()} summit={makeRenderSummit()} />
+      <OrderPdf
+        order={makeRenderOrder({ status: "Paid" })}
+        summit={makeRenderSummit()}
+      />
     );
     expect(container.textContent).not.toContain("Pending");
     expect(container.textContent).toContain(
@@ -511,7 +531,7 @@ describe("OrderPdf — reconciliation block", () => {
 
     const { container: creditedContainer } = render(
       <OrderPdf
-        order={makeRenderOrder({ credited_to_payment_method: 5000 })}
+        order={makeRenderOrder({ retained: 0, credited_to_payment_method: 5000 })}
         summit={makeRenderSummit()}
       />
     );

@@ -165,7 +165,10 @@
     "address": "Address",
     "event": "Event",
     "venue": "Venue",
-    "charge": "Charge"
+    "charge": "Charge",
+    "payment_method": "Payment Method",
+    "status": "Status",
+    "payment_date": "Payment Date"
   },
   "upload_input_v3": {
       "no_post_url": "No Post URL",
