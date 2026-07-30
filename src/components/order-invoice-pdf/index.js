@@ -62,7 +62,7 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
   const clientName =
     order.client?.contact_name || order.purchased_by_full_name || "";
   const clientCompany = order.client?.company_name || "";
-  const clientAddress = formatAddress(order.address) || "N/A";
+  const clientAddress = formatAddress(order.address) || T.translate("general.not_available");
 
   return (
     <Document>

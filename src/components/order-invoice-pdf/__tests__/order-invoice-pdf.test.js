@@ -48,7 +48,8 @@ const TRANSLATIONS = {
   "mui_table.refund": "Refund",
   "mui_table.paid_via": "Paid via",
   "mui_table.note": "NOTE",
-  "mui_table.total": "Total"
+  "mui_table.total": "Total",
+  "general.not_available": "N/A"
 };
 
 jest.mock("i18n-react/dist/i18n-react", () => ({
@@ -468,6 +469,16 @@ describe("OrderPdf — render", () => {
     expect(text).toContain("Main Hall");
     expect(text).toContain("123 Expo Blvd");
     expect(text).toContain("V6B 1A1");
+  });
+
+  it("renders 'N/A' for the client Address field when order.address is missing", () => {
+    const { container } = render(
+      <OrderPdf
+        order={makeRenderOrder({ address: null })}
+        summit={makeRenderSummit()}
+      />
+    );
+    expect(container.textContent).toContain("N/A");
   });
 
   it("prefers main_locations over locations.is_main when both are present", () => {
