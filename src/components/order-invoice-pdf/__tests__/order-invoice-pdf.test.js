@@ -49,6 +49,10 @@ const TRANSLATIONS = {
   "mui_table.paid_via": "Paid via",
   "mui_table.note": "NOTE",
   "mui_table.total": "Total",
+  "mui_table.pay": "PAY",
+  "mui_table.ref": "REF",
+  "mui_table.dis": "DIS",
+  "mui_table.payfee": "PAYFEE",
   "general.not_available": "N/A"
 };
 

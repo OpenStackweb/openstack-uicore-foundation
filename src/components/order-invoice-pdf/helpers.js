@@ -129,7 +129,7 @@ export const buildRows = (order, summit) => {
       rows.push({
         rowKey: `discount-${form.id}`,
         type: "discount",
-        code: "DIS",
+        code: T.translate("mui_table.dis"),
         description: formatDiscount(form.discount_amount, form.discount_type),
         addon: "",
         qty: "",
@@ -144,7 +144,7 @@ export const buildRows = (order, summit) => {
     rows.push({
       rowKey: `fee-${fee.line_id ?? fee.id}`,
       type: "fee",
-      code: "PAYFEE",
+      code: T.translate("mui_table.payfee"),
       description: String(fee.title || ""),
       addon: "",
       qty: "1",
@@ -165,7 +165,7 @@ export const buildRows = (order, summit) => {
       rows.push({
         rowKey: `payment-${item.id}`,
         type: "payment",
-        code: "PAY",
+        code: T.translate("mui_table.pay"),
         description: `${T.translate("mui_table.paid_via")} ${item.method || "card"}`,
         subDescription: formatDate(
           item.created,
@@ -182,7 +182,7 @@ export const buildRows = (order, summit) => {
       rows.push({
         rowKey: `refund-${item.id}`,
         type: "refund",
-        code: "REF",
+        code: T.translate("mui_table.ref"),
         description: String(item.reason || T.translate("mui_table.refund")),
         subDescription: String(item.status || ""),
         addon: "",
