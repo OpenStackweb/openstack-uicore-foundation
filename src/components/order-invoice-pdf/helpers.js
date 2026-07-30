@@ -56,6 +56,7 @@ export const formatAddress = (address) => {
     address.zip_code ?? address.postal_code,
     address.country
   ]
+    .map(val => (val ?? "").toString().trim())
     .filter(Boolean)
     .join(", ");
 };
