@@ -21,13 +21,12 @@ import {
   formatDate,
   formatAddress,
   formatVenueName,
-  getThemeFontFamily,
-  fmtBalance,
-  getOrderTotal
+  getThemeFontFamily
 } from "./helpers";
 import { FieldRow } from "./components/field-row";
 import { PdfTableRow } from "./components/pdf-table-row";
 import { ReconciliationBlock } from "./components/reconciliation-block";
+import { formatBalance, getOrderTotal } from "../../utils/money";
 
 export { buildRows };
 
@@ -86,7 +85,7 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
               label={T.translate("order_invoice_pdf.date")}
               value={order.purchased_date ? formatDate(
                 order.purchased_date,
-                summit.time_zone_id,
+                "LOC",
                 "YYYY/MM/DD hh:mm a"
               ) : T.translate("order_invoice_pdf.pending")}
             />
@@ -178,13 +177,15 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
               />
             ))}
 
-            <ReconciliationBlock
-              styles={styles}
-              cancelledTotal={cancelledTotal}
-              refundsTotal={refundsTotal}
-              retained={retained}
-              credited={credited}
-            />
+            {(cancelledTotal || refundsTotal || retained || credited) ? (
+              <ReconciliationBlock
+                styles={styles}
+                cancelledTotal={cancelledTotal}
+                refundsTotal={refundsTotal}
+                retained={retained}
+                credited={credited}
+              />
+            ) : null}
 
             <View style={styles.tdAmountDue}>
               <Text style={styles.tdAmountDueLabel}>
@@ -199,7 +200,7 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
                   }
                 ]}
               >
-                {fmtBalance(total ?? 0)}
+                {formatBalance(total ?? 0)}
               </Text>
             </View>
           </View>

@@ -75,7 +75,8 @@
     "dis": "DIS",
     "discount": "Discount",
     "amount_due": "AMOUNT DUE",
-    "note": "NOTE"
+    "note": "NOTE",
+    "card": "card"
   },
   "meta_fields": {
     "delete_value_warning": "Please verify you want to delete the added value",

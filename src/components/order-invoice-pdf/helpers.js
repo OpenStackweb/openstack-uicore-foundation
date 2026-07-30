@@ -35,19 +35,6 @@ export const formatDate = (
     .format(format);
 };
 
-/**
-  * Derives an order's amount due directly from its raw net_amount/amount_due
-  * fields (both in cents). This is the single source for that fallback rule,
-  * shared by consumers that normalize a raw order (e.g. into order.total) and
-  * by consumers that render straight from the raw order (e.g. the invoice PDF).
-  * @param {object} order - Raw order object with net_amount/amount_due in cents.
-  * @returns {number} - The amount due, in cents.
-  */
-export const getOrderTotal = (order) => {
-  if (!order) return 0;
-  return order.net_amount || order.amount_due || 0;
-};
-
 export const formatAddress = (address) => {
   if (!address) return "";
   return [
@@ -82,12 +69,6 @@ export const getThemeFontFamily = (theme) => {
     : DEFAULT_FONT_FAMILY;
 };
 
-export const fmtBalance = (cents) => {
-  if (cents == null) return "";
-  const abs = currencyAmountFromCents(Math.abs(cents));
-  return cents < 0 ? `-${abs}` : abs;
-};
-
 export const buildRows = (order, summit) => {
   const rows = [];
   let balanceCents = 0;
@@ -101,7 +82,7 @@ export const buildRows = (order, summit) => {
         const cancelledBy = cancelled
           ? T.translate("sponsor_order_grid.cancelled_by", {
               user: item.canceled_by_full_name,
-              date: formatDate(item.canceled_at, summit.time_zone_id, "YYYY/MM/DD HH:mm")
+              date: formatDate(item.canceled_at, "LOC", "YYYY/MM/DD HH:mm")
             })
           : "";
 
@@ -166,12 +147,8 @@ export const buildRows = (order, summit) => {
         rowKey: `payment-${item.id}`,
         type: "payment",
         code: T.translate("mui_table.pay"),
-        description: `${T.translate("mui_table.paid_via")} ${item.method || "card"}`,
-        subDescription: formatDate(
-          item.created,
-          summit.time_zone_id,
-          "YYYY/MM/DD HH:mm"
-        ),
+        description: `${T.translate("mui_table.paid_via")} ${item.method || T.translate("mui_table.card")}`,
+        subDescription: formatDate(item.created, "LOC", "YYYY/MM/DD HH:mm"),
         addon: "",
         qty: "1",
         price: currencyAmountFromCents(item.amount),

@@ -14,7 +14,7 @@
 import React from "react";
 import T from "i18n-react/dist/i18n-react";
 import { View, Text } from "@react-pdf/renderer";
-import { fmtBalance } from "../helpers";
+import { formatBalance } from "../../../utils/money";
 import { PdfIcon } from "./pdf-icon";
 
 export const PdfTableRow = ({ row, styles, rowStyles }) => {
@@ -67,7 +67,7 @@ export const PdfTableRow = ({ row, styles, rowStyles }) => {
             row.balanceCents < 0 && styles.colBalanceNegative
           ]}
         >
-          {fmtBalance(row.balanceCents)}
+          {formatBalance(row.balanceCents)}
         </Text>
       ) : (
         <View style={styles.colBalance} />

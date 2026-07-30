@@ -209,3 +209,28 @@ export const formatDiscount = (amount, type) => {
   if (type === DISCOUNT_TYPES.RATE) return `${amount / BPS}%`; // transform from bps to percentage
   return "";
 };
+
+/**
+ * Derives an order's amount due directly from its raw net_amount/amount_due
+ * fields (both in cents). This is the single source for that fallback rule,
+ * shared by consumers that normalize a raw order (e.g. into order.total) and
+ * by consumers that render straight from the raw order (e.g. the invoice PDF).
+ * @param {object} order - Raw order object with net_amount/amount_due in cents.
+ * @returns {number} - The amount due, in cents.
+ */
+export const getOrderTotal = (order) => {
+  if (!order) return 0;
+  return order.net_amount || order.amount_due || 0;
+};
+
+/**
+ * Formats a signed amount in cents as currency, preserving the sign
+ * (e.g. -500 -> "-$5.00").
+ * @param {number} cents
+ * @returns {string}
+ */
+export const formatBalance = (cents) => {
+  if (cents == null) return "";
+  const abs = currencyAmountFromCents(Math.abs(cents));
+  return cents < 0 ? `-${abs}` : abs;
+};

@@ -53,6 +53,7 @@ const TRANSLATIONS = {
   "mui_table.ref": "REF",
   "mui_table.dis": "DIS",
   "mui_table.payfee": "PAYFEE",
+  "mui_table.card": "card",
   "general.not_available": "N/A"
 };
 
@@ -542,7 +543,7 @@ describe("OrderPdf — render", () => {
     expect(container.textContent).toContain(
       formatDate(
         makeRenderOrder().purchased_date,
-        makeRenderSummit().time_zone_id,
+        "LOC",
         "YYYY/MM/DD hh:mm a"
       )
     );
@@ -590,6 +591,19 @@ describe("OrderPdf — reconciliation block", () => {
     expect(creditedContainer.textContent).toContain(
       "Credited to Payment Method"
     );
+  });
+
+  it("omits the block entirely when cancelled/refunded/retained/credited are all zero", () => {
+    const order = makeRenderOrder({
+      cancelled_total: 0,
+      refunds_total: 0,
+      retained: 0,
+      credited_to_payment_method: 0
+    });
+    const { container } = render(
+      <OrderPdf order={order} summit={makeRenderSummit()} />
+    );
+    expect(container.textContent).not.toContain("Reconciliation");
   });
 });
 
