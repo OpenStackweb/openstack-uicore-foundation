@@ -69,7 +69,7 @@ export const getThemeFontFamily = (theme) => {
     : DEFAULT_FONT_FAMILY;
 };
 
-export const buildRows = (order, summit) => {
+export const buildRows = (order) => {
   const rows = [];
   let balanceCents = 0;
 
