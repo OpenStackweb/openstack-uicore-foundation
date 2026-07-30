@@ -75,7 +75,8 @@
     "dis": "DIS",
     "discount": "Discount",
     "amount_due": "AMOUNT DUE",
-    "note": "NOTE"
+    "note": "NOTE",
+    "card": "card"
   },
   "meta_fields": {
     "delete_value_warning": "Please verify you want to delete the added value",
@@ -155,6 +156,20 @@
     "refunded": "Refunded",
     "retained": "Retained as cancellation fee",
     "credited": "Credited to Payment Method"
+  },
+  "order_invoice_pdf": {
+    "invoice_title": "Invoice",
+    "order": "Order",
+    "date": "Date",
+    "pending": "Pending",
+    "client": "Client",
+    "address": "Address",
+    "event": "Event",
+    "venue": "Venue",
+    "charge": "Charge",
+    "payment_method": "Payment Method",
+    "status": "Status",
+    "payment_date": "Payment Date"
   },
   "upload_input_v3": {
       "no_post_url": "No Post URL",

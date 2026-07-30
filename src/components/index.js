@@ -141,3 +141,4 @@ export {MuiBaseCustomTheme} from './mui/MuiBaseCustomTheme'
 // export {default as MuiAdditionalInput} from './mui/formik-inputs/additional-input/additional-input' // react-beautiful-dnd (via dnd-list)
 // export {default as MuiAdditionalInputList} from './mui/formik-inputs/additional-input/additional-input-list' // react-beautiful-dnd (via dnd-list)
 // export {default as MuiDragNDropList} from './mui/DragNDropList'               // @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
+// export {OrderPdf, buildRows as buildOrderPdfRows, generateInvoicePDF, previewPDF} from './order-invoice-pdf' // @react-pdf/renderer
