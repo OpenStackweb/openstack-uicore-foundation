@@ -15,7 +15,7 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { pdf } from "@react-pdf/renderer";
 import { buildRows, OrderPdf, generateInvoicePDF, previewPDF } from "../index";
-import { formatDate } from "../helpers";
+import { formatDate, getThemeFontFamily } from "../helpers";
 import purchaseV2Fixture from "./fixtures/purchase-v2.json";
 
 const TRANSLATIONS = {
@@ -79,7 +79,14 @@ jest.mock("@react-pdf/renderer", () => {
     Svg: () => null,
     Path: () => null,
     StyleSheet: { create: (s) => s },
-    Font: { register: () => {} },
+    // Mirrors a consuming app that has registered "Inter" via Font.register
+    // and nothing else — matches the real @react-pdf/font contract, which
+    // only ever knows about Helvetica/Courier/Times-Roman plus whatever the
+    // consumer explicitly registered.
+    Font: {
+      register: () => {},
+      getRegisteredFontFamilies: () => ["Inter"]
+    },
     pdf: jest.fn(() => ({ toBlob: async () => ({}) }))
   };
 });
@@ -402,6 +409,36 @@ describe("buildRows — balance accumulation", () => {
     expect(rows[0].balanceCents).toBe(3000);
     expect(rows[1].type).toBe("payment");
     expect(rows[1].balanceCents).toBe(-7000); // 3000 - 10000
+  });
+});
+
+// ─── getThemeFontFamily ─────────────────────────────────────────────────────
+//
+// Exercised directly (not just via a full OrderPdf render) because the real
+// failure this guards against — react-pdf's FontStore throwing "Font family
+// not registered" — lives inside @react-pdf/font/@react-pdf/layout, which the
+// mock above replaces entirely. A render-level "does not throw" assertion
+// would pass whether or not getThemeFontFamily's registration check exists,
+// since the mocked Font never throws either way.
+
+describe("getThemeFontFamily", () => {
+  it("returns DEFAULT_FONT_FAMILY when the theme has no fontFamily", () => {
+    expect(getThemeFontFamily(undefined)).toBe("Helvetica");
+    expect(getThemeFontFamily({})).toBe("Helvetica");
+  });
+
+  it("falls back to DEFAULT_FONT_FAMILY when the theme's fontFamily is not registered via Font.register", () => {
+    // Mocked Font.getRegisteredFontFamilies() above only returns ["Inter"] —
+    // this is the exact shape of sponsor-services' MUI theme (Roboto stack).
+    expect(
+      getThemeFontFamily({ typography: { fontFamily: "Roboto, sans-serif" } })
+    ).toBe("Helvetica");
+  });
+
+  it("returns the theme's fontFamily when it is registered via Font.register", () => {
+    expect(
+      getThemeFontFamily({ typography: { fontFamily: "Inter, sans-serif" } })
+    ).toBe("Inter");
   });
 });
 
