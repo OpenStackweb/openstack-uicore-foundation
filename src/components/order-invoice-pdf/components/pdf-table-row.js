@@ -12,6 +12,7 @@
  * */
 
 import React from "react";
+import T from "i18n-react/dist/i18n-react";
 import { View, Text } from "@react-pdf/renderer";
 import { fmtBalance } from "../helpers";
 import { PdfIcon } from "./pdf-icon";
@@ -21,7 +22,9 @@ export const PdfTableRow = ({ row, styles, rowStyles }) => {
   if (row.type === "note") {
     return (
       <View style={styles.tdNote}>
-        <Text style={[styles.colCode, styles.muted]}>NOTE</Text>
+        <Text style={[styles.colCode, styles.muted]}>
+          {T.translate("mui_table.note")}
+        </Text>
         <Text style={[{ flex: 1 }, styles.muted]}>{row.content}</Text>
       </View>
     );
@@ -46,7 +49,7 @@ export const PdfTableRow = ({ row, styles, rowStyles }) => {
       <View style={styles.colDescMultiLine}>
         <Text style={s.descText}>
           {row.type === "item"
-            ? `${row.description} - Total: ${row.qty}`
+            ? `${row.description} - ${T.translate("mui_table.total")}: ${row.qty}`
             : row.description}
         </Text>
         {row.cancelledBy && (

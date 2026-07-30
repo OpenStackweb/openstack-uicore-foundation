@@ -156,6 +156,17 @@
     "retained": "Retained as cancellation fee",
     "credited": "Credited to Payment Method"
   },
+  "order_invoice_pdf": {
+    "invoice_title": "Invoice",
+    "order": "Order",
+    "date": "Date",
+    "pending": "Pending",
+    "client": "Client",
+    "address": "Address",
+    "event": "Event",
+    "venue": "Venue",
+    "charge": "Charge"
+  },
   "upload_input_v3": {
       "no_post_url": "No Post URL",
       "upload_disabled": "Upload has been disabled by administrators.",

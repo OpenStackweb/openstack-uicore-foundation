@@ -11,6 +11,7 @@
  * limitations under the License.
  * */
 
+import T from "i18n-react/dist/i18n-react";
 import { StyleSheet } from "@react-pdf/renderer";
 
 // Parameterized by fontFamily so a consumer's custom typeface (registered via
@@ -262,7 +263,7 @@ export const createRowStyles = (styles) => ({
     typeBadge: {
       icon: "ArrowUpward",
       iconColor: "#ff9800",
-      label: "Charge",
+      label: T.translate("order_invoice_pdf.charge"),
       labelColor: "#333333"
     }
   },
@@ -274,7 +275,7 @@ export const createRowStyles = (styles) => ({
     typeBadge: {
       icon: "ArrowUpward",
       iconColor: "#ff9800",
-      label: "Charge",
+      label: T.translate("order_invoice_pdf.charge"),
       labelColor: "#333333"
     }
   },
@@ -286,7 +287,7 @@ export const createRowStyles = (styles) => ({
     typeBadge: {
       icon: "ArrowDownward",
       iconColor: "#4caf50",
-      label: "Discount",
+      label: T.translate("mui_table.discount"),
       labelColor: "#1b5e20"
     }
   },
@@ -298,7 +299,7 @@ export const createRowStyles = (styles) => ({
     typeBadge: {
       icon: "ArrowDownward",
       iconColor: "#4caf50",
-      label: "Payment",
+      label: T.translate("mui_table.payment"),
       labelColor: "#1b5e20"
     }
   },
@@ -310,7 +311,7 @@ export const createRowStyles = (styles) => ({
     typeBadge: {
       icon: "Refresh",
       iconColor: "#ea580c",
-      label: "Refund",
+      label: T.translate("mui_table.refund"),
       labelColor: "#e65100"
     }
   },
@@ -323,7 +324,7 @@ export const createRowStyles = (styles) => ({
     typeBadge: {
       icon: "DoNotDisturb",
       iconColor: "#9ca3af",
-      label: "Cancelled",
+      label: T.translate("sponsor_order_grid.cancelled"),
       labelColor: "#9ca3af"
     }
   }

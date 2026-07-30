@@ -13,6 +13,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
+import T from "i18n-react/dist/i18n-react";
 import { Document, Page, Text, View, Image, pdf } from "@react-pdf/renderer";
 import { createStyles, createRowStyles } from "./styles";
 import {
@@ -33,9 +34,10 @@ export { buildRows };
 // logoSrc/theme are left to the consumer on purpose: this component is
 // shared across apps with different branding/typefaces, so no logo image or
 // font file ships with uicore. fontFamily is read off theme.typography and
-// falls back to a react-pdf built-in (no Font.register needed) when absent;
-// the theme's fontFamily must already be registered via Font.register in
-// the consuming app to render as a custom typeface instead of falling back.
+// falls back to a react-pdf built-in (no Font.register needed) when absent
+// OR when not registered via Font.register in the consuming app — react-pdf
+// throws on an unregistered family rather than falling back itself, so
+// getThemeFontFamily checks Font.getRegisteredFontFamilies() before using it.
 export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
   if (!order) throw new Error("OrderPdf: order is required");
   if (!summit) throw new Error("OrderPdf: summit is required");
@@ -71,16 +73,22 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
             {logoSrc ? <Image src={logoSrc} style={styles.logo} /> : null}
           </View>
           <View style={styles.cellRight}>
-            <Text style={styles.invoiceTitle}>Invoice</Text>
-            <FieldRow styles={styles} label="Order" value={order.number} />
+            <Text style={styles.invoiceTitle}>
+              {T.translate("order_invoice_pdf.invoice_title")}
+            </Text>
             <FieldRow
               styles={styles}
-              label="Date"
+              label={T.translate("order_invoice_pdf.order")}
+              value={order.number}
+            />
+            <FieldRow
+              styles={styles}
+              label={T.translate("order_invoice_pdf.date")}
               value={order.purchased_date ? formatDate(
                 order.purchased_date,
                 summit.time_zone_id,
                 "YYYY/MM/DD hh:mm a"
-              ) : "Pending"}
+              ) : T.translate("order_invoice_pdf.pending")}
               noBorder
             />
           </View>
@@ -91,26 +99,30 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
           <View style={styles.cellLeft}>
             <FieldRow
               styles={styles}
-              label="Client"
+              label={T.translate("order_invoice_pdf.client")}
               value={`${clientCompany}\n${clientName}`}
             />
             <FieldRow
               styles={styles}
-              label="Address"
+              label={T.translate("order_invoice_pdf.address")}
               value={clientAddress}
               noBorder
             />
           </View>
           <View style={styles.cellRight}>
-            <FieldRow styles={styles} label="Event" value={summit.name ?? ""} />
             <FieldRow
               styles={styles}
-              label="Venue"
+              label={T.translate("order_invoice_pdf.event")}
+              value={summit.name ?? ""}
+            />
+            <FieldRow
+              styles={styles}
+              label={T.translate("order_invoice_pdf.venue")}
               value={formatVenueName(mainLocation) ?? ""}
             />
             <FieldRow
               styles={styles}
-              label="Address"
+              label={T.translate("order_invoice_pdf.address")}
               value={formatAddress(mainLocation) ?? ""}
               noBorder
             />
@@ -121,11 +133,21 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
         <View style={styles.tableWrapper}>
           <View style={styles.table}>
             <View style={styles.thRow} fixed>
-              <Text style={[styles.thText, styles.colCode]}>Code</Text>
-              <Text style={[styles.thText, styles.colType]}>Type</Text>
-              <Text style={[styles.thText, styles.colDesc]}>Details</Text>
-              <Text style={[styles.thText, styles.colPrice]}>Amount</Text>
-              <Text style={[styles.thText, styles.colBalance]}>Balance</Text>
+              <Text style={[styles.thText, styles.colCode]}>
+                {T.translate("sponsor_order_grid.code")}
+              </Text>
+              <Text style={[styles.thText, styles.colType]}>
+                {T.translate("sponsor_order_grid.type")}
+              </Text>
+              <Text style={[styles.thText, styles.colDesc]}>
+                {T.translate("sponsor_order_grid.details")}
+              </Text>
+              <Text style={[styles.thText, styles.colPrice]}>
+                {T.translate("sponsor_order_grid.amount")}
+              </Text>
+              <Text style={[styles.thText, styles.colBalance]}>
+                {T.translate("sponsor_order_grid.balance")}
+              </Text>
             </View>
 
             {rows.map((row) => (
@@ -146,7 +168,9 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
             />
 
             <View style={styles.tdAmountDue}>
-              <Text style={styles.tdAmountDueLabel}>AMOUNT DUE</Text>
+              <Text style={styles.tdAmountDueLabel}>
+                {T.translate("sponsor_order_grid.amount_due")}
+              </Text>
               <View style={{ width: "18%" }} />
               <Text
                 style={[
@@ -224,10 +248,15 @@ export const previewPDF = async (order, summit, { logoSrc, theme } = {}) => {
 
     if (newTab) {
       newTab.location.href = url;
+      // Revoke after the new tab has had a chance to load the PDF.
+      setTimeout(() => URL.revokeObjectURL(url), REVOKE_DELAY_MS);
+      return;
     }
 
-    // Revoke after the new tab has had a chance to load the PDF.
-    setTimeout(() => URL.revokeObjectURL(url), REVOKE_DELAY_MS);
+    // Popup blocked: fall back to a download so the click isn't silently
+    // swallowed.
+    URL.revokeObjectURL(url);
+    return generateInvoicePDF(order, summit, { logoSrc, theme });
   } catch (error) {
     console.error("Error generating invoice PDF preview:", error);
     if (newTab) newTab.close();

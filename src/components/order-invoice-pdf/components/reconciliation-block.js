@@ -12,6 +12,7 @@
  * */
 
 import React from "react";
+import T from "i18n-react/dist/i18n-react";
 import { View, Text } from "@react-pdf/renderer";
 import { currencyAmountFromCents } from "../../../utils/money";
 
@@ -30,25 +31,31 @@ export const ReconciliationBlock = ({
   const totalColor = retained > 0 ? "#c62828" : "#1b5e20";
   const totalLabel =
     retained > 0
-      ? "Retained as cancellation fee"
+      ? T.translate("sponsor_order_grid.retained")
       : credited > 0
-        ? "Credited to Payment Method"
-        : "Balance";
+        ? T.translate("sponsor_order_grid.credited")
+        : T.translate("sponsor_order_grid.balance");
   const totalValue =
     retained > 0 ? retained : credited > 0 ? credited : retained;
 
   return (
     <View style={styles.reconciliationWrapper} wrap={false}>
       <View style={styles.reconciliationBox}>
-        <Text style={styles.reconciliationTitle}>Reconciliation</Text>
+        <Text style={styles.reconciliationTitle}>
+          {T.translate("sponsor_order_grid.reconciliation")}
+        </Text>
         <View style={styles.reconciliationRow}>
-          <Text style={styles.reconciliationLabel}>Cancelled</Text>
+          <Text style={styles.reconciliationLabel}>
+            {T.translate("sponsor_order_grid.cancelled")}
+          </Text>
           <Text style={styles.reconciliationValue}>
             {currencyAmountFromCents(cancelledTotal ?? 0)}
           </Text>
         </View>
         <View style={styles.reconciliationRow}>
-          <Text style={styles.reconciliationLabel}>Refunded</Text>
+          <Text style={styles.reconciliationLabel}>
+            {T.translate("sponsor_order_grid.refunded")}
+          </Text>
           <Text style={styles.reconciliationValue}>
             {currencyAmountFromCents(refundsTotal ?? 0)}
           </Text>

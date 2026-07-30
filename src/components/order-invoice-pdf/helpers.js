@@ -12,6 +12,8 @@
  * */
 
 import moment from "moment-timezone";
+import T from "i18n-react/dist/i18n-react";
+import { Font } from "@react-pdf/renderer";
 import { currencyAmountFromCents, formatDiscount } from "../../utils/money";
 import { MILLISECONDS_IN_SECOND } from "../../utils/constants";
 
@@ -49,8 +51,8 @@ export const getOrderTotal = (order) => {
 export const formatAddress = (address) => {
   if (!address) return "";
   return [
-    address.address_1,
-    address.address_2,
+    address.address_1 ?? address.line1,
+    address.address_2 ?? address.line2,
     address.city,
     address.state,
     address.zip_code ?? address.postal_code,
@@ -74,7 +76,10 @@ export const formatVenueName = (location) => {
 export const getThemeFontFamily = (theme) => {
   const fontFamily = theme?.typography?.fontFamily;
   if (!fontFamily) return DEFAULT_FONT_FAMILY;
-  return fontFamily.split(",")[0].trim().replace(/^['"]|['"]$/g, "");
+  const resolved = fontFamily.split(",")[0].trim().replace(/^['"]|['"]$/g, "");
+  return Font.getRegisteredFontFamilies().includes(resolved)
+    ? resolved
+    : DEFAULT_FONT_FAMILY;
 };
 
 export const fmtBalance = (cents) => {
@@ -94,7 +99,10 @@ export const buildRows = (order, summit) => {
         // Cancelled is per-item
         const cancelled = !!item.canceled_by_id;
         const cancelledBy = cancelled
-          ? `Cancelled by ${item.canceled_by_full_name} on ${formatDate(item.canceled_at, summit.time_zone_id, "YYYY/MM/DD HH:mm")}`
+          ? T.translate("sponsor_order_grid.cancelled_by", {
+              user: item.canceled_by_full_name,
+              date: formatDate(item.canceled_at, summit.time_zone_id, "YYYY/MM/DD HH:mm")
+            })
           : "";
 
         // Cancelled items still accumulate
@@ -134,7 +142,7 @@ export const buildRows = (order, summit) => {
   (order.fees || []).forEach((fee) => {
     balanceCents += fee.amount;
     rows.push({
-      rowKey: `fee-${fee.id}`,
+      rowKey: `fee-${fee.line_id ?? fee.id}`,
       type: "fee",
       code: "PAYFEE",
       description: String(fee.title || ""),
@@ -158,7 +166,7 @@ export const buildRows = (order, summit) => {
         rowKey: `payment-${item.id}`,
         type: "payment",
         code: "PAY",
-        description: `Paid via ${item.method || "card"}`,
+        description: `${T.translate("mui_table.paid_via")} ${item.method || "card"}`,
         subDescription: formatDate(
           item.created,
           summit.time_zone_id,
@@ -175,7 +183,7 @@ export const buildRows = (order, summit) => {
         rowKey: `refund-${item.id}`,
         type: "refund",
         code: "REF",
-        description: String(item.reason || "Refund"),
+        description: String(item.reason || T.translate("mui_table.refund")),
         subDescription: String(item.status || ""),
         addon: "",
         qty: "1",

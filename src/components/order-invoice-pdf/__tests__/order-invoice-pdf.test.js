@@ -17,6 +17,51 @@ import { pdf } from "@react-pdf/renderer";
 import { buildRows, OrderPdf, generateInvoicePDF, previewPDF } from "../index";
 import { formatDate } from "../helpers";
 
+const TRANSLATIONS = {
+  "order_invoice_pdf.invoice_title": "Invoice",
+  "order_invoice_pdf.order": "Order",
+  "order_invoice_pdf.date": "Date",
+  "order_invoice_pdf.pending": "Pending",
+  "order_invoice_pdf.client": "Client",
+  "order_invoice_pdf.address": "Address",
+  "order_invoice_pdf.event": "Event",
+  "order_invoice_pdf.venue": "Venue",
+  "order_invoice_pdf.charge": "Charge",
+  "sponsor_order_grid.code": "Code",
+  "sponsor_order_grid.type": "Type",
+  "sponsor_order_grid.details": "Details",
+  "sponsor_order_grid.amount": "Amount",
+  "sponsor_order_grid.balance": "Balance",
+  "sponsor_order_grid.amount_due": "AMOUNT DUE",
+  "sponsor_order_grid.reconciliation": "Reconciliation",
+  "sponsor_order_grid.cancelled": "Cancelled",
+  "sponsor_order_grid.refunded": "Refunded",
+  "sponsor_order_grid.retained": "Retained as cancellation fee",
+  "sponsor_order_grid.credited": "Credited to Payment Method",
+  "sponsor_order_grid.cancelled_by": "Cancelled {date} by {user}",
+  "mui_table.payment": "Payment",
+  "mui_table.discount": "Discount",
+  "mui_table.refund": "Refund",
+  "mui_table.paid_via": "Paid via",
+  "mui_table.note": "NOTE",
+  "mui_table.total": "Total"
+};
+
+jest.mock("i18n-react/dist/i18n-react", () => ({
+  __esModule: true,
+  default: {
+    translate: (key, tokens) => {
+      let text = TRANSLATIONS[key] ?? key;
+      if (tokens) {
+        Object.entries(tokens).forEach(([token, value]) => {
+          text = text.replace(new RegExp(`{${token}}`, "g"), value);
+        });
+      }
+      return text;
+    }
+  }
+}));
+
 jest.mock("@react-pdf/renderer", () => {
   const React = require("react");
   const Span = ({ children }) =>
@@ -586,12 +631,20 @@ describe("previewPDF", () => {
     expect(fakeTab.location.href).toBe("blob:mock-preview-url");
   });
 
-  it("does not throw when the popup blocker returns null for the pre-opened tab", async () => {
+  it("falls back to downloading the PDF when the popup blocker returns null for the pre-opened tab", async () => {
     window.open = jest.fn(() => null);
+    const appendChildSpy = jest.spyOn(document.body, "appendChild");
+    const clickSpy = jest
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {});
 
-    await expect(
-      previewPDF(makeRenderOrder(), makeRenderSummit())
-    ).resolves.toBeUndefined();
+    await previewPDF(makeRenderOrder(), makeRenderSummit());
+
+    expect(appendChildSpy).toHaveBeenCalled();
+    expect(clickSpy).toHaveBeenCalled();
+
+    appendChildSpy.mockRestore();
+    clickSpy.mockRestore();
   });
 
   it("logs, closes the pre-opened tab, and rethrows when PDF generation fails", async () => {
