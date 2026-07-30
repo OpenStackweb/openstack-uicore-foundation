@@ -7,7 +7,6 @@ import thunk from 'redux-thunk'
 const middlewares = [thunk]
 const mockStore = configureMockStore(middlewares);
 const store = mockStore();
-jest.mock('request');
 jest.mock("sweetalert2", () => ({
     fire: jest.fn().mockResolvedValue({ value: true }),
 }));

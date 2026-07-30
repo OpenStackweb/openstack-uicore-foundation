@@ -215,9 +215,9 @@ module.exports = {
                             '@babel/preset-flow'
                         ],
                         plugins: [
-                            '@babel/plugin-proposal-object-rest-spread',
-                            '@babel/plugin-proposal-class-properties',
-                            '@babel/plugin-proposal-optional-chaining',
+                            '@babel/plugin-transform-object-rest-spread',
+                            '@babel/plugin-transform-class-properties',
+                            '@babel/plugin-transform-optional-chaining',
                         ]
                     }
                 }
@@ -244,6 +244,7 @@ module.exports = {
                     {
                         loader: 'sass-loader',
                         options: {
+                            api: 'modern',
                             sourceMap: false
                         }
                     }
@@ -252,7 +253,16 @@ module.exports = {
             {
                 test: /\.scss/,
                 exclude: /\.module\.scss/,
-                use: [MiniCssExtractPlugin.loader, "css-loader", 'sass-loader']
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    "css-loader",
+                    {
+                        loader: 'sass-loader',
+                        options: {
+                            api: 'modern'
+                        }
+                    }
+                ]
             },
             {
                 test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
