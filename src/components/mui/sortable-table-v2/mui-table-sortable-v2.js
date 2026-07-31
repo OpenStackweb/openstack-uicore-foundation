@@ -19,7 +19,6 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
-import TablePagination from "@mui/material/TablePagination";
 import TableSortLabel from "@mui/material/TableSortLabel";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
@@ -33,14 +32,10 @@ import { visuallyHidden } from "@mui/utils";
 
 import styles from "./styles.module.less";
 
-import {
-  DEFAULT_PER_PAGE,
-  FIFTY_PER_PAGE,
-  TWENTY_PER_PAGE
-} from "../../../utils/constants";
 import showConfirmDialog from "../showConfirmDialog";
 import SortableRow from "./sortable-row";
 import TableCellContent from "../table/table-cell-content";
+import CustomTablePagination from "../table/CustomTablePagination";
 import useDndKitReorder from "../DragNDropList/hooks/useDndKitReorder";
 
 const getRowId = (row, index, idKey) =>
@@ -67,24 +62,6 @@ const MuiTableSortableV2 = ({
   idKey = "id",
   updateOrderKey = "order"
 }) => {
-  const handleChangePage = (_, newPage) => {
-    onPageChange(newPage + 1);
-  };
-
-  const handleChangeRowsPerPage = (ev) => {
-    onPerPageChange(parseInt(ev.target.value, 10));
-  };
-
-  const basePerPageOptions = [
-    DEFAULT_PER_PAGE,
-    TWENTY_PER_PAGE,
-    FIFTY_PER_PAGE
-  ];
-
-  const customPerPageOptions = basePerPageOptions.includes(perPage)
-    ? basePerPageOptions
-    : [...basePerPageOptions, perPage].sort((a, b) => a - b);
-
   const { sortCol, sortDir } = options;
 
   // Falls back to a page-agnostic order (idx + 1) when pagination isn't
@@ -133,60 +110,60 @@ const MuiTableSortableV2 = ({
   return (
     <Box sx={{ width: "100%" }}>
       <Paper elevation={0} sx={{ width: "100%", mb: 2 }}>
-        <TableContainer
-          component={Paper}
-          sx={{ borderRadius: 0, boxShadow: "none" }}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={collisionDetection}
+          onDragEnd={handleDragEnd}
         >
-          <Table>
-            {/* TABLE HEADER */}
-            <TableHead sx={{ backgroundColor: "#EAEAEA" }}>
-              <TableRow>
-                {columns.map((col) => (
-                  <TableCell
-                    key={col.columnKey}
-                    sx={{
-                      width: col.width,
-                      minWidth: col.width,
-                      maxWidth: col.width
-                    }}
-                    align={col.align ?? "left"}
-                  >
-                    {col.sortable ? (
-                      <TableSortLabel
-                        active={sortCol === col.columnKey}
-                        direction={
-                          sortCol === col.columnKey && sortDir === -1
-                            ? "desc"
-                            : "asc"
-                        }
-                        onClick={() => onSort(col.columnKey, sortDir * -1)}
-                      >
-                        {col.header}
-                        {sortCol === col.columnKey ? (
-                          <Box component="span" sx={visuallyHidden}>
-                            {sortDir === -1
-                              ? T.translate("mui_table.sorted_desc")
-                              : T.translate("mui_table.sorted_asc")}
-                          </Box>
-                        ) : null}
-                      </TableSortLabel>
-                    ) : (
-                      col.header
-                    )}
-                  </TableCell>
-                ))}
-                {onEdit && <TableCell sx={{ width: 40 }} />}
-                {onDelete && <TableCell sx={{ width: 40 }} />}
-                {onReorder && <TableCell sx={{ width: 40 }} />}
-              </TableRow>
-            </TableHead>
+          <TableContainer
+            component={Paper}
+            sx={{ borderRadius: 0, boxShadow: "none" }}
+          >
+            <Table>
+              {/* TABLE HEADER */}
+              <TableHead sx={{ backgroundColor: "#EAEAEA" }}>
+                <TableRow>
+                  {columns.map((col) => (
+                    <TableCell
+                      key={col.columnKey}
+                      sx={{
+                        width: col.width,
+                        minWidth: col.width,
+                        maxWidth: col.width
+                      }}
+                      align={col.align ?? "left"}
+                    >
+                      {col.sortable ? (
+                        <TableSortLabel
+                          active={sortCol === col.columnKey}
+                          direction={
+                            sortCol === col.columnKey && sortDir === -1
+                              ? "desc"
+                              : "asc"
+                          }
+                          onClick={() => onSort(col.columnKey, sortDir * -1)}
+                        >
+                          {col.header}
+                          {sortCol === col.columnKey ? (
+                            <Box component="span" sx={visuallyHidden}>
+                              {sortDir === -1
+                                ? T.translate("mui_table.sorted_desc")
+                                : T.translate("mui_table.sorted_asc")}
+                            </Box>
+                          ) : null}
+                        </TableSortLabel>
+                      ) : (
+                        col.header
+                      )}
+                    </TableCell>
+                  ))}
+                  {onEdit && <TableCell sx={{ width: 40 }} />}
+                  {onDelete && <TableCell sx={{ width: 40 }} />}
+                  {onReorder && <TableCell sx={{ width: 40 }} />}
+                </TableRow>
+              </TableHead>
 
-            {/* TABLE BODY */}
-            <DndContext
-              sensors={sensors}
-              collisionDetection={collisionDetection}
-              onDragEnd={handleDragEnd}
-            >
+              {/* TABLE BODY */}
               <SortableContext
                 items={data.map((row, i) => getRowId(row, i, idKey))}
                 strategy={verticalListSortingStrategy}
@@ -248,9 +225,8 @@ const MuiTableSortableV2 = ({
                               align="center"
                               sx={{ width: 40 }}
                               className={styles.dottedBorderLeft}
-                              {...dragHandleProps}
                             >
-                              <IconButton size="large">
+                              <IconButton size="large" {...dragHandleProps}>
                                 <UnfoldMoreIcon fontSize="large" />
                               </IconButton>
                             </TableCell>
@@ -276,33 +252,18 @@ const MuiTableSortableV2 = ({
                   )}
                 </TableBody>
               </SortableContext>
-            </DndContext>
-          </Table>
-        </TableContainer>
+            </Table>
+          </TableContainer>
+        </DndContext>
 
         {/* PAGINATION */}
         {onPerPageChange && onPageChange && (
-          <TablePagination
-            component="div"
-            count={totalRows ?? 0}
-            rowsPerPageOptions={customPerPageOptions}
-            rowsPerPage={perPage}
-            page={currentPage - 1}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage={T.translate("mui_table.rows_per_page")}
-            sx={{
-              ".MuiTablePagination-toolbar": {
-                alignItems: "baseline",
-                marginTop: "1.6rem"
-              },
-              ".MuiTablePagination-spacer": {
-                display: "none"
-              },
-              ".MuiTablePagination-displayedRows": {
-                marginLeft: "auto"
-              }
-            }}
+          <CustomTablePagination
+            totalRows={totalRows}
+            perPage={perPage}
+            currentPage={currentPage}
+            onPageChange={onPageChange}
+            onPerPageChange={onPerPageChange}
           />
         )}
       </Paper>

@@ -47,18 +47,18 @@ const MetaFieldValuesV2 = ({
 
   const handleAddValue = () => {
     const newFields = metaFields.map((f, i) => {
-      const nextOrder = Math.max(0, ...f.values.map((v) => v.order ?? 0)) + 1;
-      return i === fieldIndex
-        ? {
-          ...f,
-          values: [
-            ...f.values,
-            { value: "", name: "", is_default: false, order: nextOrder }
-          ]
-        }
-        : f
-    }
-    );
+      if (i !== fieldIndex) return f;
+      const currentValues = f.values ?? [];
+      const nextOrder =
+        Math.max(0, ...currentValues.map((v) => v.order ?? 0)) + 1;
+      return {
+        ...f,
+        values: [
+          ...currentValues,
+          { value: "", name: "", is_default: false, order: nextOrder }
+        ]
+      };
+    });
     setFieldValue(baseName, newFields);
   };
 

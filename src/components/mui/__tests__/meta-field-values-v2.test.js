@@ -187,6 +187,46 @@ describe("MetaFieldValuesV2", () => {
         expect(new Set(orders).size).toBe(orders.length); // fails today: [1, 3, 3]
       });
     });
+
+    test("adds a value when a sibling meta field has no values array", async () => {
+      // Serializers omit `values` entirely for question types that don't allow
+      // options, so a sibling meta field can arrive without the key at all.
+      const siblingWithoutValues = { id: 2, name: "Notes", type: "Text" };
+
+      let latestValues;
+      const TestWrapper = () => {
+        const { values } = useFormikContext();
+        latestValues = values;
+        return (
+          <MetaFieldValuesV2
+            field={values.meta_fields[1]}
+            fieldIndex={1}
+            baseName="meta_fields"
+            onMetaFieldTypeValueDeleted={jest.fn()}
+            entityId={1}
+          />
+        );
+      };
+
+      render(
+        <Formik
+          initialValues={{ meta_fields: [siblingWithoutValues, defaultField] }}
+          onSubmit={jest.fn()}
+        >
+          <Form>
+            <TestWrapper />
+          </Form>
+        </Formik>
+      );
+
+      await userEvent.click(screen.getByRole("button", { name: /add/i }));
+
+      await waitFor(() => {
+        expect(latestValues.meta_fields[1].values).toHaveLength(3);
+      });
+      expect(latestValues.meta_fields[1].values[2].order).toBe(3);
+      expect(latestValues.meta_fields[0]).toEqual(siblingWithoutValues);
+    });
   });
 
   describe("isMetafieldValueIncomplete", () => {

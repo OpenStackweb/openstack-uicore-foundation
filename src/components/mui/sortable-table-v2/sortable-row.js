@@ -27,11 +27,13 @@ const SortableRow = ({ id, children }) => {
     isDragging
   } = useSortable({ id });
 
+  const transformString = CSS.Transform.toString(transform);
+
   return (
     <TableRow
       ref={setNodeRef}
       sx={{
-        transform: CSS.Transform.toString(transform),
+        transform: transformString,
         transition: [transition, "background-color 0.2s ease"]
           .filter(Boolean)
           .join(", "),
@@ -43,7 +45,9 @@ const SortableRow = ({ id, children }) => {
               width: "100%",
               tableLayout: "fixed",
               backgroundColor: "#f0f0f0",
-              transform: `${CSS.Transform.toString(transform)} scale(1.01)`,
+              transform: transformString
+                ? `${transformString} scale(1.01)`
+                : "scale(1.01)",
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)"
             }
           : {})
