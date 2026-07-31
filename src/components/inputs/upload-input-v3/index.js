@@ -475,7 +475,7 @@ const UploadInputV3 = ({
                     {filename}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {fileSize} · {T.translate("upload_input_v3.complete")}
+                    {file?.size ? `${fileSize} ·` : ''} {T.translate("upload_input_v3.complete")}
                   </Typography>
                 </Box>
 
