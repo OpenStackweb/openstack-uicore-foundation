@@ -11,13 +11,13 @@
  * limitations under the License.
  * */
 
-jest.mock("../summit-addon-select", () => {
+jest.mock("../addon-type-select", () => {
   const React = require("react");
   return {
     __esModule: true,
     default: ({ value, placeholder, inputProps }) => (
       <div
-        data-testid="summit-addon-select"
+        data-testid="addon-type-select"
         data-value={value}
         data-placeholder={placeholder}
         data-error={inputProps?.error ? "true" : "false"}
@@ -32,24 +32,24 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { Formik, Form } from "formik";
 import "@testing-library/jest-dom";
-import MuiFormikSummitAddonSelect from "../formik-inputs/mui-formik-summit-addon-select";
+import MuiFormikAddonTypeSelect from "../formik-inputs/mui-formik-addon-type-select";
 
 const renderWithFormik = (props, initialValues = { addon: "" }) =>
   render(
     <Formik initialValues={initialValues} onSubmit={jest.fn()}>
       <Form>
-        <MuiFormikSummitAddonSelect name="addon" summitId={1} {...props} />
+        <MuiFormikAddonTypeSelect name="addon" summitId={1} {...props} />
       </Form>
     </Formik>
   );
 
-describe("MuiFormikSummitAddonSelect", () => {
-  test("renders the SummitAddonSelect", () => {
+describe("MuiFormikAddonTypeSelect", () => {
+  test("renders the AddonTypeSelect", () => {
     renderWithFormik({});
-    expect(screen.getByTestId("summit-addon-select")).toBeInTheDocument();
+    expect(screen.getByTestId("addon-type-select")).toBeInTheDocument();
   });
 
-  test("passes placeholder to SummitAddonSelect", () => {
+  test("passes placeholder to AddonTypeSelect", () => {
     renderWithFormik({ placeholder: "Choose addon" });
     expect(screen.getByText("Choose addon")).toBeInTheDocument();
   });
@@ -63,11 +63,11 @@ describe("MuiFormikSummitAddonSelect", () => {
         onSubmit={jest.fn()}
       >
         <Form>
-          <MuiFormikSummitAddonSelect name="addon" summitId={1} />
+          <MuiFormikAddonTypeSelect name="addon" summitId={1} />
         </Form>
       </Formik>
     );
-    expect(screen.getByTestId("summit-addon-select")).toHaveAttribute(
+    expect(screen.getByTestId("addon-type-select")).toHaveAttribute(
       "data-error",
       "true"
     );
@@ -75,7 +75,7 @@ describe("MuiFormikSummitAddonSelect", () => {
 
   test("passes false error when not touched", () => {
     renderWithFormik({});
-    expect(screen.getByTestId("summit-addon-select")).toHaveAttribute(
+    expect(screen.getByTestId("addon-type-select")).toHaveAttribute(
       "data-error",
       "false"
     );

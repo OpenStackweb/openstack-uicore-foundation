@@ -635,7 +635,7 @@ export const querySummitAddons = async (
     callback
 ) => {
     const endpoint = URI(
-        `/api/v1/summits/${summitId}/add-ons/metadata`
+        `/api/v1/summits/all/add-on-types`
     );
     endpoint.addQuery("page", 1);
     endpoint.addQuery("per_page", MAX_PER_PAGE);

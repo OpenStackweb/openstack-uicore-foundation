@@ -13,16 +13,19 @@
 
 jest.mock("../../../utils/query-actions", () => ({
   querySummitAddons: jest.fn((summitId, callback) => {
-    callback(["Addon Alpha", "Addon Beta"]);
+    callback([
+      { id: 1, name: "Addon Alpha" },
+      { id: 2, name: "Addon Beta" }
+    ]);
   })
 }));
 
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import SummitAddonSelect from "../summit-addon-select";
+import AddonTypeSelect from "../addon-type-select";
 
-describe("SummitAddonSelect", () => {
+describe("AddonTypeSelect", () => {
   const defaultProps = {
     value: "",
     summitId: 5,
@@ -33,12 +36,12 @@ describe("SummitAddonSelect", () => {
   beforeEach(() => jest.clearAllMocks());
 
   test("renders a select combobox", () => {
-    const { container } = render(<SummitAddonSelect {...defaultProps} />);
+    const { container } = render(<AddonTypeSelect {...defaultProps} />);
     expect(container.querySelector("[role='combobox']")).toBeInTheDocument();
   });
 
   test("calls querySummitAddons on mount with summitId", async () => {
-    render(<SummitAddonSelect {...defaultProps} />);
+    render(<AddonTypeSelect {...defaultProps} />);
     await waitFor(() => {
       expect(
         require("../../../utils/query-actions").querySummitAddons
@@ -47,7 +50,7 @@ describe("SummitAddonSelect", () => {
   });
 
   test("renders options returned by querySummitAddons", async () => {
-    render(<SummitAddonSelect {...defaultProps} />);
+    render(<AddonTypeSelect {...defaultProps} />);
     // Options are rendered inside the Select's listbox - click to open
     // Just verify the component renders without errors after options load
     await waitFor(() => {
