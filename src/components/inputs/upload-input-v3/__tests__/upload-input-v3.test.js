@@ -123,10 +123,11 @@ describe('UploadInputV3', () => {
       expect(screen.getByText(/Complete/)).toBeInTheDocument();
     });
 
-    test('shows default size when size is not provided', () => {
+    test('does not show file size when size is not provided', () => {
       const files = [{ filename: 'no-size.pdf' }];
       render(<UploadInputV3 {...defaultProps} value={files} />);
-      expect(screen.getByText(/0 KB/)).toBeInTheDocument();
+      expect(screen.queryByText(/KB|MB/)).not.toBeInTheDocument();
+      expect(screen.getByText(/Complete/)).toBeInTheDocument();
     });
 
     test('formats file size correctly', () => {
