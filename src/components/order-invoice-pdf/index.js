@@ -45,7 +45,7 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
   const fontFamily = getThemeFontFamily(theme);
   const styles = createStyles(fontFamily);
   const rowStyles = createRowStyles(styles);
-  const rows = buildRows(order, summit);
+  const rows = buildRows(order);
   const cancelledItems = rows.filter(
     (row) => row.type === "item" && row.cancellations?.length > 0
   );

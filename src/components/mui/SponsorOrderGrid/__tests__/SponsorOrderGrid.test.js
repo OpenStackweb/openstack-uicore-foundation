@@ -458,3 +458,52 @@ describe("SponsorOrderGrid", () => {
     expect(screen.queryByText("sponsor_order_grid.reconciliation")).not.toBeInTheDocument();
   });
 });
+
+// ─── Ledger-driven fixes ────────────────────────────────────────────────────
+// Regression coverage for the three ways this grid used to diverge from the
+// invoice PDF before both started consuming utils/order-ledger.
+
+describe("SponsorOrderGrid — ledger-driven fixes", () => {
+  test("renders an item whose quantity is missing (undefined), defaulting to 1", () => {
+    const order = {
+      forms: [makeForm({ items: [makeItem({ quantity: undefined })] })],
+      total: 0
+    };
+    render(<SponsorOrderGrid order={order} />);
+    expect(screen.getAllByText("$100.00").length).toBeGreaterThan(0);
+  });
+
+  test("gives distinct row keys to multiple fees carrying line_id but no id (purchases-api v2 shape)", () => {
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    const order = {
+      forms: [makeForm({ items: [] })],
+      fees: [
+        { line_id: 7001, title: "Processing Fee", amount: 500 },
+        { line_id: 7002, title: "Late Fee", amount: 250 }
+      ],
+      total: 0
+    };
+    render(<SponsorOrderGrid order={order} />);
+
+    expect(screen.getByText("Processing Fee")).toBeInTheDocument();
+    expect(screen.getByText("Late Fee")).toBeInTheDocument();
+    expect(consoleErrorSpy.mock.calls.join(" ")).not.toMatch(/same key/);
+    consoleErrorSpy.mockRestore();
+  });
+
+  test("renders no discount row when discount_in_cents is 0", () => {
+    const order = {
+      forms: [
+        makeForm({
+          discount_in_cents: 0,
+          discount_amount: 1000,
+          discount_type: "Rate",
+          items: [makeItem()]
+        })
+      ],
+      total: 0
+    };
+    render(<SponsorOrderGrid order={order} />);
+    expect(screen.queryByText("mui_table.dis")).not.toBeInTheDocument();
+  });
+});
