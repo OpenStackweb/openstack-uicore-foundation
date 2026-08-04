@@ -17,7 +17,9 @@ jest.mock("i18n-react/dist/i18n-react", () => ({
 }));
 
 jest.mock("../../../../utils/money", () => ({
-  currencyAmountFromCents: (amount) => `$${(amount / 100).toFixed(2)}`
+  currencyAmountFromCents: (amount) => `$${(amount / 100).toFixed(2)}`,
+  formatDiscount: (amount, type) =>
+    type === "Rate" ? `${amount / 100}%` : `$${(amount / 100).toFixed(2)}`
 }));
 
 jest.mock("../../../../utils/constants", () => ({
@@ -464,6 +466,15 @@ describe("SponsorOrderGrid", () => {
 // invoice PDF before both started consuming utils/order-ledger.
 
 describe("SponsorOrderGrid — ledger-driven fixes", () => {
+  test("falls back to item.title for the details column when item.type is null (matches the invoice PDF)", () => {
+    const order = {
+      forms: [makeForm({ items: [makeItem({ type: null, title: "Booth Space" })] })],
+      total: 0
+    };
+    render(<SponsorOrderGrid order={order} />);
+    expect(screen.getByText(/Booth Space/)).toBeInTheDocument();
+  });
+
   test("renders an item whose quantity is missing (undefined), defaulting to 1", () => {
     const order = {
       forms: [makeForm({ items: [makeItem({ quantity: undefined })] })],
@@ -505,5 +516,39 @@ describe("SponsorOrderGrid — ledger-driven fixes", () => {
     };
     render(<SponsorOrderGrid order={order} />);
     expect(screen.queryByText("mui_table.dis")).not.toBeInTheDocument();
+  });
+
+  test("formats the discount description from discount_amount/discount_type when the form carries no pre-formatted discount string (raw API shape)", () => {
+    const order = {
+      forms: [
+        makeForm({
+          discount: null,
+          discount_in_cents: 5000,
+          discount_amount: 1000,
+          discount_type: "Rate",
+          items: [makeItem()]
+        })
+      ],
+      total: 0
+    };
+    render(<SponsorOrderGrid order={order} />);
+    expect(screen.getByText("10%")).toBeInTheDocument();
+  });
+
+  test("uses the pre-formatted discount string when the form is already normalized", () => {
+    const order = {
+      forms: [
+        makeForm({
+          discount: "10% off",
+          discount_in_cents: 5000,
+          discount_amount: 1000,
+          discount_type: "Rate",
+          items: [makeItem()]
+        })
+      ],
+      total: 0
+    };
+    render(<SponsorOrderGrid order={order} />);
+    expect(screen.getByText("10% off")).toBeInTheDocument();
   });
 });
