@@ -28,7 +28,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import {DiscountRow, FeeRow, NotesRow, PaymentRow, RefundRow, TotalRow} from "../table/extra-rows";
 import {SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../utils/constants";
 import InfoNote from "../InfoNote";
-import {currencyAmountFromCents} from "../../../utils/money";
+import {currencyAmountFromCents, formatDiscount} from "../../../utils/money";
 import {buildOrderLedger} from "../../../utils/order-ledger";
 import TransactionType from "./components/TransactionType";
 import {formatEpoch} from "../../../utils/methods";
@@ -49,7 +49,7 @@ const toItemRow = (entry, itemIndexByForm) => {
   return {
     id: item.type?.id || `${form.id}-${idx}`,
     formCode: form.code,
-    itemName: item.type?.name,
+    itemName: item.type?.name || item.title,
     itemCode: item.type?.code,
     quantity,
     type: cancelled ? SPONSOR_ORDER_GRID_ITEM_TYPES.CANCELLED : SPONSOR_ORDER_GRID_ITEM_TYPES.CHARGE,
@@ -80,8 +80,8 @@ const SponsorOrderGrid = ({
     cancelled_total: cancelledTotal = 0,
     refunds_total: refundsTotal = 0
   } = order || {};
-  const hasNoForms = forms.length === 0;
   const ledger = buildOrderLedger(order);
+  const hasNoRows = ledger.length === 0;
   const itemIndexByForm = new Map();
   const itemRowsByKey = new Map();
   ledger
@@ -250,7 +250,7 @@ const SponsorOrderGrid = ({
                   return (
                     <DiscountRow
                       key={entry.rowKey}
-                      discount={entry.form.discount}
+                      discount={entry.form.discount ?? formatDiscount(entry.form.discount_amount, entry.form.discount_type)}
                       discountCents={entry.amountCents}
                       trailing={trailingCols}
                       balance={entry.balanceCents}
@@ -311,7 +311,7 @@ const SponsorOrderGrid = ({
                 rowSx={{bgcolor: "#F1F3F5", "& td": {borderBottom: "none"}}}
               />
             }
-            {hasNoForms && (
+            {hasNoRows && (
               <TableRow>
                 <TableCell colSpan={colCount} align="center">
                   {T.translate("mui_table.no_items")}
