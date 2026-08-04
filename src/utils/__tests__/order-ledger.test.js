@@ -65,7 +65,7 @@ describe("buildOrderLedger — item entries", () => {
 
     expect(entries).toHaveLength(1);
     expect(entries[0].type).toBe("item");
-    expect(entries[0].rowKey).toBe("item-9001");
+    expect(entries[0].rowKey).toBe("item-156-9001");
     expect(entries[0].form).toBe(form);
     expect(entries[0].item).toBe(item);
     expect(entries[0].amountCents).toBe(5000);
@@ -84,8 +84,23 @@ describe("buildOrderLedger — item entries", () => {
     const entries = buildOrderLedger({ forms: [form] });
 
     expect(entries).toHaveLength(2);
-    expect(entries.map((e) => e.rowKey)).toEqual(["item-1", "item-2"]);
+    expect(entries.map((e) => e.rowKey)).toEqual(["item-156-1", "item-156-2"]);
     entries.forEach((e) => expect(e.quantity).toBe(1));
+  });
+
+  it("gives distinct, form-scoped row keys to items in different forms that carry no line_id/id (fix: previously collided order-wide, corrupting SponsorOrderGrid's row lookup)", () => {
+    const itemA = makeItem({ line_id: undefined, id: undefined });
+    const itemB = makeItem({ line_id: undefined, id: undefined });
+    const entries = buildOrderLedger({
+      forms: [
+        makeForm({ id: 1, discount_in_cents: 0, items: [itemA] }),
+        makeForm({ id: 2, discount_in_cents: 0, items: [itemB] })
+      ]
+    });
+    expect(entries).toHaveLength(2);
+    expect(new Set(entries.map((e) => e.rowKey)).size).toBe(2);
+    expect(entries[0].rowKey).toBe("item-1-0");
+    expect(entries[1].rowKey).toBe("item-2-0");
   });
 
   it("sets cancelled: true when canceled_quantity equals quantity, false otherwise", () => {

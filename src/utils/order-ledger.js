@@ -35,7 +35,7 @@ export const buildOrderLedger = (order) => {
   (order?.forms || []).forEach((form) => {
     (form.items || [])
       .filter((item) => (item.quantity ?? 1) > 0)
-      .forEach((item) => {
+      .forEach((item, idx) => {
         // Cancellation is per-item and quantity-scoped: canceled_quantity may
         // be anywhere from 0 (not cancelled) up to quantity (fully cancelled),
         // with the individual cancellation events (and their frozen per-event
@@ -50,7 +50,12 @@ export const buildOrderLedger = (order) => {
         balanceCents += item.amount;
         entries.push({
           type: "item",
-          rowKey: `item-${item.line_id ?? item.id}`,
+          // Scoped by form.id: line_id/id are expected to be unique per the
+          // real purchases-api v2 shape, but a payload missing both (or a
+          // stray collision) must not collide across DIFFERENT forms — that
+          // silently corrupted rendering in SponsorOrderGrid, which looks
+          // up row data by rowKey in a Map keyed across the whole order.
+          rowKey: `item-${form.id}-${item.line_id ?? item.id ?? idx}`,
           form,
           item,
           quantity,
