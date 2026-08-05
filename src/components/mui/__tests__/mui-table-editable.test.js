@@ -139,7 +139,7 @@ import "@testing-library/jest-dom";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import MuiTableEditable from "../editable-table/mui-table-editable";
+import MuiTableEditable from "../tables/editable-table";
 import showConfirmDialog from "../showConfirmDialog";
 /* eslint-enable import/first */
 
