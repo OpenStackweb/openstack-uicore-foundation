@@ -31,7 +31,7 @@ jest.mock("@dnd-kit/sortable", () => ({
 import React from "react";
 import { render } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import SortableRow from "../sortable-table-v2/sortable-row";
+import SortableRow from "../tables/sortable-table-v2/sortable-row";
 
 test("emits no literal 'undefined' transform when dragging starts before a transform is measured", () => {
   render(

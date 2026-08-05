@@ -2,7 +2,7 @@ import * as React from "react";
 import isBoolean from "lodash/isBoolean";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import TruncateText from "../truncate-text";
+import TruncateText from "../../truncate-text";
 
 const contentStyle = {
   fontWeight: "normal",
@@ -12,14 +12,14 @@ const contentStyle = {
 const TableCellContent = ({ row, col }) => {
   return (
     <span style={contentStyle}>
-      {isBoolean(row[col.columnKey]) ? (
+      {col.render ? (
+        col.render(row)
+      ) : isBoolean(row[col.columnKey]) ? (
         row[col.columnKey] ? (
           <CheckIcon fontSize="large" />
         ) : (
           <CloseIcon fontSize="large" />
         )
-      ) : col.render ? (
-        col.render(row)
       ) : col.truncateText ? (
         <TruncateText charLimit={col.truncateText}>
           {row[col.columnKey]}

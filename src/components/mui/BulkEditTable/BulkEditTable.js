@@ -28,7 +28,7 @@ import Heading from "./components/Heading";
 import Row from "./components/Row";
 import useRowSelection from "./hooks/useRowSelection";
 import styles from "./BulkEditTable.module.less";
-import CustomTablePagination from "../table/CustomTablePagination";
+import CustomTablePagination from "../tables/components/CustomTablePagination";
 import showConfirmDialog from "../showConfirmDialog";
 
 const BulkEditTable = ({
