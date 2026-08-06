@@ -22,3 +22,24 @@ export const getResponsiveTableSx = (dataColumnCount) => ({
   minWidth:
     dataColumnCount <= SMALL_TABLE_MAX_COLUMNS ? MIN_WIDTH_SMALL : MIN_WIDTH_WIDE
 });
+
+export const getColumnWidthSx = (col) => ({
+  minWidth: col.width ?? DEFAULT_COLUMN_MIN_WIDTH,
+  ...(col.width && {
+    width: col.width,
+    maxWidth: col.width
+  })
+});
+
+export const getArchivedRowSx = (row, disableProp) =>
+  disableProp && row[disableProp] ? ARCHIVED_CELL_SX : {};
+
+export const getActionCellSx = (row, disableProp, widthOverride) => ({
+  ...ACTION_CELL_SX,
+  ...(widthOverride && {
+    width: widthOverride,
+    minWidth: widthOverride,
+    maxWidth: widthOverride
+  }),
+  ...getArchivedRowSx(row, disableProp)
+});

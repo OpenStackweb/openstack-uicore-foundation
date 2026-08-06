@@ -32,7 +32,9 @@ import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
 import {
   getResponsiveTableSx,
-  DEFAULT_COLUMN_MIN_WIDTH
+  getColumnWidthSx,
+  getActionCellSx,
+  ACTION_CELL_SX
 } from "../components/table-styles";
 
 const MuiTableSortable = ({
@@ -103,11 +105,7 @@ const MuiTableSortable = ({
             {columns.map((col) => (
               <TableCell
                 key={col.columnKey}
-                sx={{
-                  width: col.width,
-                  minWidth: col.width ?? DEFAULT_COLUMN_MIN_WIDTH,
-                  maxWidth: col.width
-                }}
+                sx={{ ...getColumnWidthSx(col), ...(col.headSx || {}) }}
                 align={col.align ?? "left"}
               >
                 <SortableHeaderContent
@@ -118,9 +116,9 @@ const MuiTableSortable = ({
                 />
               </TableCell>
             ))}
-            {onEdit && <TableCell sx={{ width: 40 }} />}
-            {onDelete && <TableCell sx={{ width: 40 }} />}
-            {onReorder && <TableCell sx={{ width: 40 }} />}
+            {onEdit && <TableCell sx={ACTION_CELL_SX} />}
+            {onDelete && <TableCell sx={ACTION_CELL_SX} />}
+            {onReorder && <TableCell sx={ACTION_CELL_SX} />}
           </TableRow>
         </TableHead>
 
@@ -169,6 +167,7 @@ const MuiTableSortable = ({
                             className={`${
                               col.dottedBorder && styles.dottedBorderLeft
                             } ${col.className}`}
+                            sx={{ ...getColumnWidthSx(col), ...(col.cellSx || {}) }}
                           >
                             <TableCellContent row={row} col={col} />
                           </TableCell>
@@ -177,7 +176,7 @@ const MuiTableSortable = ({
                         {onEdit && (
                           <TableCell
                             align="center"
-                            sx={{ width: 40 }}
+                            sx={getActionCellSx(row)}
                             className={styles.dottedBorderLeft}
                           >
                             <IconButton
@@ -193,7 +192,7 @@ const MuiTableSortable = ({
                         {onDelete && (
                           <TableCell
                             align="center"
-                            sx={{ width: 40 }}
+                            sx={getActionCellSx(row)}
                             className={styles.dottedBorderLeft}
                           >
                             <IconButton
@@ -209,7 +208,7 @@ const MuiTableSortable = ({
                         {onReorder && (
                           <TableCell
                             align="center"
-                            sx={{ width: 40 }}
+                            sx={getActionCellSx(row)}
                             className={styles.dottedBorderLeft}
                             {...provided.dragHandleProps}
                           >
