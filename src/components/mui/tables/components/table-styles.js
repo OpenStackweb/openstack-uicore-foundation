@@ -23,6 +23,10 @@ export const getResponsiveTableSx = (dataColumnCount) => ({
     dataColumnCount <= SMALL_TABLE_MAX_COLUMNS ? MIN_WIDTH_SMALL : MIN_WIDTH_WIDE
 });
 
+// same bucket used for minWidth: fewer columns can stay uncollapsed longer
+export const getActionsMenuBreakpoint = (dataColumnCount) =>
+  dataColumnCount <= SMALL_TABLE_MAX_COLUMNS ? "md" : "lg";
+
 export const getColumnWidthSx = (col) => ({
   minWidth: col.width ?? DEFAULT_COLUMN_MIN_WIDTH,
   ...(col.width && {
