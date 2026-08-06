@@ -34,9 +34,10 @@ import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
 import {
   getResponsiveTableSx,
-  DEFAULT_COLUMN_MIN_WIDTH,
-  ACTION_CELL_SX,
-  ARCHIVED_CELL_SX
+  getColumnWidthSx,
+  getArchivedRowSx,
+  getActionCellSx,
+  ACTION_CELL_SX
 } from "../components/table-styles";
 
 const MuiTable = ({
@@ -67,31 +68,15 @@ const MuiTable = ({
 
   const {sortCol, sortDir} = options;
 
-  const getDisabledSx = (row) =>
-    options.disableProp && row[options.disableProp] ? ARCHIVED_CELL_SX : {};
-
   const getHeaderSx = (col) => ({
-    minWidth: col.width ?? DEFAULT_COLUMN_MIN_WIDTH,
-    ...(col.width && {
-      width: col.width,
-      maxWidth: col.width
-    }),
-    ...(col.headSx || {}),
-  })
-
-  const getCellSx = (row, col) => ({
-    minWidth: col.width ?? DEFAULT_COLUMN_MIN_WIDTH,
-    ...(col.width && {
-      width: col.width,
-      maxWidth: col.width
-    }),
-    ...(col.cellSx || {}),
-    ...getDisabledSx(row)
+    ...getColumnWidthSx(col),
+    ...(col.headSx || {})
   });
 
-  const getActionCellSx = (row) => ({
-    ...ACTION_CELL_SX,
-    ...getDisabledSx(row)
+  const getCellSx = (row, col) => ({
+    ...getColumnWidthSx(col),
+    ...(col.cellSx || {}),
+    ...getArchivedRowSx(row, options.disableProp)
   });
 
   const handleDelete = createDeleteHandler({
@@ -156,7 +141,7 @@ const MuiTable = ({
                 <TableCell
                   align="center"
                   className={styles.dottedBorderLeft}
-                  sx={getActionCellSx(row)}
+                  sx={getActionCellSx(row, options.disableProp)}
                 >
                   <IconButton
                     size="medium"
@@ -172,7 +157,7 @@ const MuiTable = ({
               {onArchive && (
                 <TableCell
                   align="center"
-                  sx={{ ...getActionCellSx(row), width: 80, minWidth: 80, maxWidth: 80 }}
+                  sx={getActionCellSx(row, options.disableProp, 80)}
                   className={styles.dottedBorderLeft}
                 >
                   <Button
@@ -203,7 +188,7 @@ const MuiTable = ({
                 <TableCell
                   align="center"
                   className={styles.dottedBorderLeft}
-                  sx={getActionCellSx(row)}
+                  sx={getActionCellSx(row, options.disableProp)}
                 >
                   {canDelete(row) && (
                     <IconButton
@@ -221,7 +206,7 @@ const MuiTable = ({
               {onSelect && (
                 <TableCell
                   align="center"
-                  sx={getActionCellSx(row)}
+                  sx={getActionCellSx(row, options.disableProp)}
                   className={styles.dottedBorderLeft}
                 >
                   <IconButton

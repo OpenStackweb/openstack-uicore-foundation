@@ -32,8 +32,10 @@ import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
 import {
   getResponsiveTableSx,
-  DEFAULT_COLUMN_MIN_WIDTH,
-  ARCHIVED_CELL_SX
+  getColumnWidthSx,
+  getArchivedRowSx,
+  getActionCellSx,
+  ACTION_CELL_SX
 } from "../components/table-styles";
 
 const validateValue = (value, validation) => {
@@ -159,12 +161,9 @@ const MuiTableEditable = ({
 
   const { sortCol, sortDir } = options;
 
-  const getArchivedCellSx = (row) =>
-    options.disableProp && row[options.disableProp] ? ARCHIVED_CELL_SX : null;
-
   const getCellSx = (row, baseSx = {}) => ({
     ...baseSx,
-    ...(getArchivedCellSx(row) || {})
+    ...getArchivedRowSx(row, options.disableProp)
   });
 
   const handleDelete = createDeleteHandler({
@@ -210,10 +209,9 @@ const MuiTableEditable = ({
               <TableCell
                 key={col.columnKey}
                 sx={{
-                  width: col.width,
-                  minWidth: col.width ?? DEFAULT_COLUMN_MIN_WIDTH,
-                  maxWidth: col.width,
-                  fontWeight: "normal"
+                  ...getColumnWidthSx(col),
+                  fontWeight: "normal",
+                  ...(col.headSx || {})
                 }}
                 align={col.align ?? "left"}
               >
@@ -227,13 +225,21 @@ const MuiTableEditable = ({
               </TableCell>
             ))}
             {onEdit && (
-              <TableCell sx={{ width: 40, fontWeight: "normal" }} />
+              <TableCell sx={{ ...ACTION_CELL_SX, fontWeight: "normal" }} />
             )}
             {onArchive && (
-              <TableCell sx={{ width: 80, fontWeight: "normal" }} />
+              <TableCell
+                sx={{
+                  ...ACTION_CELL_SX,
+                  width: 80,
+                  minWidth: 80,
+                  maxWidth: 80,
+                  fontWeight: "normal"
+                }}
+              />
             )}
             {onDelete && (
-              <TableCell sx={{ width: 40, fontWeight: "normal" }} />
+              <TableCell sx={{ ...ACTION_CELL_SX, fontWeight: "normal" }} />
             )}
           </TableRow>
         </TableHead>
@@ -245,10 +251,14 @@ const MuiTableEditable = ({
                 <TableCell
                   key={`${row.id}-${col.columnKey}`}
                   onClick={() => handleCellClick(row, col.columnKey)}
-                  sx={getCellSx(row, {
-                    cursor: isEditable(col, row) ? "pointer" : "default",
-                    padding: isEditable(col, row) ? "8px 16px" : undefined
-                  })}
+                  sx={{
+                    ...getColumnWidthSx(col),
+                    ...getCellSx(row, {
+                      cursor: isEditable(col, row) ? "pointer" : "default",
+                      padding: isEditable(col, row) ? "8px 16px" : undefined,
+                      ...(col.cellSx || {})
+                    })
+                  }}
                 >
                   {isEditable(col, row) ? (
                     <EditableCell
@@ -275,7 +285,10 @@ const MuiTableEditable = ({
               ))}
               {onEdit && (
                 <TableCell
-                  sx={getCellSx(row)}
+                  sx={{
+                    ...getActionCellSx(row, options.disableProp),
+                    fontWeight: "normal"
+                  }}
                   className={styles.dottedBorderLeft}
                 >
                   <IconButton
@@ -291,7 +304,8 @@ const MuiTableEditable = ({
                 <TableCell
                   align="center"
                   sx={{
-                    ...getCellSx(row, { width: 80, fontWeight: "normal" })
+                    ...getActionCellSx(row, options.disableProp, 80),
+                    fontWeight: "normal"
                   }}
                   className={styles.dottedBorderLeft}
                 >
@@ -316,7 +330,10 @@ const MuiTableEditable = ({
               )}
               {onDelete && (
                 <TableCell
-                  sx={getCellSx(row)}
+                  sx={{
+                    ...getActionCellSx(row, options.disableProp),
+                    fontWeight: "normal"
+                  }}
                   className={styles.dottedBorderLeft}
                 >
                   <IconButton
