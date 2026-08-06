@@ -18,7 +18,6 @@ import AddonTypeSelect from "../addon-type-select";
 
 const MuiFormikAddonTypeSelect = ({
   name,
-  summitId,
   placeholder = "Select...",
   inputProps = {}
 }) => {
@@ -27,7 +26,6 @@ const MuiFormikAddonTypeSelect = ({
   return (
     <AddonTypeSelect
       value={field.value || ""}
-      summitId={summitId}
       onChange={helpers.setValue}
       placeholder={placeholder}
       inputProps={{
@@ -41,7 +39,6 @@ const MuiFormikAddonTypeSelect = ({
 
 MuiFormikAddonTypeSelect.propTypes = {
   name: PropTypes.string.isRequired,
-  summitId: PropTypes.number.isRequired,
   placeholder: PropTypes.string,
   inputProps: PropTypes.object
 };

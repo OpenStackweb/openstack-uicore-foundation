@@ -12,7 +12,7 @@
  * */
 
 jest.mock("../../../utils/query-actions", () => ({
-  querySummitAddons: jest.fn((summitId, callback) => {
+  querySummitAddons: jest.fn((callback) => {
     callback([
       { id: 1, name: "Addon Alpha" },
       { id: 2, name: "Addon Beta" }
@@ -28,7 +28,6 @@ import AddonTypeSelect from "../addon-type-select";
 describe("AddonTypeSelect", () => {
   const defaultProps = {
     value: "",
-    summitId: 5,
     onChange: jest.fn(),
     placeholder: "Select addon..."
   };
@@ -40,12 +39,12 @@ describe("AddonTypeSelect", () => {
     expect(container.querySelector("[role='combobox']")).toBeInTheDocument();
   });
 
-  test("calls querySummitAddons on mount with summitId", async () => {
+  test("calls querySummitAddons on mount", async () => {
     render(<AddonTypeSelect {...defaultProps} />);
     await waitFor(() => {
       expect(
         require("../../../utils/query-actions").querySummitAddons
-      ).toHaveBeenCalledWith(5, expect.any(Function));
+      ).toHaveBeenCalledWith(expect.any(Function));
     });
   });
 

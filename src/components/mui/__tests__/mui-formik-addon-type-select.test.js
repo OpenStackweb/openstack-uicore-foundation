@@ -38,7 +38,7 @@ const renderWithFormik = (props, initialValues = { addon: "" }) =>
   render(
     <Formik initialValues={initialValues} onSubmit={jest.fn()}>
       <Form>
-        <MuiFormikAddonTypeSelect name="addon" summitId={1} {...props} />
+        <MuiFormikAddonTypeSelect name="addon" {...props} />
       </Form>
     </Formik>
   );
@@ -63,7 +63,7 @@ describe("MuiFormikAddonTypeSelect", () => {
         onSubmit={jest.fn()}
       >
         <Form>
-          <MuiFormikAddonTypeSelect name="addon" summitId={1} />
+          <MuiFormikAddonTypeSelect name="addon" />
         </Form>
       </Formik>
     );

@@ -18,7 +18,6 @@ import { querySummitAddons } from "../../utils/query-actions";
 
 const AddonTypeSelect = ({
   value,
-  summitId,
   placeholder = "Select...",
   onChange,
   inputProps = {}
@@ -26,7 +25,7 @@ const AddonTypeSelect = ({
   const [options, setOptions] = useState([]);
 
   useEffect(() => {
-    querySummitAddons(summitId, (results) => {
+    querySummitAddons((results) => {
       const normalized = results.map((r) => ({
         value: r.name,
         label: r.name
@@ -66,7 +65,6 @@ const AddonTypeSelect = ({
 
 AddonTypeSelect.propTypes = {
   value: PropTypes.string,
-  summitId: PropTypes.number.isRequired,
   placeholder: PropTypes.string,
   onChange: PropTypes.func.isRequired
 };
