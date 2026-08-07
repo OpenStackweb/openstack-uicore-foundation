@@ -631,14 +631,14 @@ export const querySponsorAddons = async (
 
 
 export const querySummitAddons = async (
-    summitId,
     callback
 ) => {
     const endpoint = URI(
-        `/api/v1/summits/${summitId}/add-ons/metadata`
+        `/api/v1/summits/all/add-on-types`
     );
     endpoint.addQuery("page", 1);
     endpoint.addQuery("per_page", MAX_PER_PAGE);
+    endpoint.addQuery("order", "+name");
 
     _fetch(endpoint, callback);
 };

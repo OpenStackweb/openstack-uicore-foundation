@@ -16,9 +16,8 @@ import { MenuItem, Select } from "@mui/material";
 import PropTypes from "prop-types";
 import { querySummitAddons } from "../../utils/query-actions";
 
-const SummitAddonSelect = ({
+const AddonTypeSelect = ({
   value,
-  summitId,
   placeholder = "Select...",
   onChange,
   inputProps = {}
@@ -26,10 +25,10 @@ const SummitAddonSelect = ({
   const [options, setOptions] = useState([]);
 
   useEffect(() => {
-    querySummitAddons(summitId, (results) => {
+    querySummitAddons((results) => {
       const normalized = results.map((r) => ({
-        value: r,
-        label: r
+        value: r.name,
+        label: r.name
       }));
       setOptions(normalized);
     });
@@ -64,11 +63,10 @@ const SummitAddonSelect = ({
   );
 };
 
-SummitAddonSelect.propTypes = {
+AddonTypeSelect.propTypes = {
   value: PropTypes.string,
-  summitId: PropTypes.number.isRequired,
   placeholder: PropTypes.string,
   onChange: PropTypes.func.isRequired
 };
 
-export default SummitAddonSelect;
+export default AddonTypeSelect;
