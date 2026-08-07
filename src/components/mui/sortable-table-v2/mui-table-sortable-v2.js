@@ -41,7 +41,7 @@ import useDndKitReorder from "../DragNDropList/hooks/useDndKitReorder";
 const getRowId = (row, index, idKey) =>
   row[idKey] !== undefined && row[idKey] !== null
     ? String(row[idKey])
-    : String(index);
+    : `new-${index}`;
 
 const MuiTableSortableV2 = ({
   columns = [],

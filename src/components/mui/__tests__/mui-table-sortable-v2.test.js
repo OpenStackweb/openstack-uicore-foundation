@@ -27,8 +27,8 @@ jest.mock("@dnd-kit/core", () => ({
     return children;
   },
   closestCenter: jest.fn(),
-  KeyboardSensor: function KeyboardSensor() {},
-  PointerSensor: function PointerSensor() {},
+  KeyboardSensor: function KeyboardSensor() { },
+  PointerSensor: function PointerSensor() { },
   useSensor: jest.fn(() => ({})),
   useSensors: jest.fn(() => [])
 }));
@@ -239,6 +239,40 @@ describe("MuiTableSortableV2", () => {
         expect.anything(),
         NaN
       );
+    });
+
+    test("uses idKey instead of item.id when reordering and deleting", async () => {
+      const onReorder = jest.fn();
+      const onDelete = jest.fn();
+      showConfirmDialog.mockResolvedValueOnce(true);
+      const uuidData = [
+        { uuid: "a-1", name: "K", role: "Dev", order: 1 },
+        { uuid: "a-2", name: "L", role: "PM", order: 2 }
+      ];
+
+      setup({
+        data: uuidData,
+        idKey: "uuid",
+        onReorder,
+        onDelete
+      });
+
+      global.__triggerDragEnd({ active: { id: "a-1" }, over: { id: "a-2" } });
+
+      expect(onReorder).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ uuid: "a-2", order: 1 }),
+          expect.objectContaining({ uuid: "a-1", order: 2 })
+        ]),
+        "a-1",
+        2
+      );
+
+      const buttons = screen.getAllByRole("button");
+      // buttons[0] is the sort label button; buttons[1] is the first delete button (row 1)
+      await userEvent.click(buttons[1]);
+      await new Promise((r) => setTimeout(r, 0));
+      expect(onDelete).toHaveBeenCalledWith("a-1");
     });
   });
 });
