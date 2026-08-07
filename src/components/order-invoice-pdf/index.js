@@ -44,7 +44,7 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
   const fontFamily = getThemeFontFamily(theme);
   const styles = createStyles(fontFamily);
   const rowStyles = createRowStyles(styles);
-  const rows = buildRows(order, summit);
+  const rows = buildRows(order);
   const mainLocation =
     summit.main_locations?.[0] ??
     summit.locations?.find((location) => location.is_main);
