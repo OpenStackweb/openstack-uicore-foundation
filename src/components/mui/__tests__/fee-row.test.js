@@ -23,7 +23,7 @@ jest.mock("../../../utils/money", () => ({
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import FeeRow from "../table/extra-rows/FeeRow";
+import FeeRow from "../tables/extra-rows/FeeRow";
 
 const renderInTable = (props) =>
   render(

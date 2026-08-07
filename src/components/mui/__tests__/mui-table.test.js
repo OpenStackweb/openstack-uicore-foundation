@@ -52,7 +52,7 @@ import React from "react";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import MuiTable from "../table/mui-table";
+import MuiTable from "../tables/mui-table";
 import showConfirmDialog from "../showConfirmDialog";
 
 const columns = [

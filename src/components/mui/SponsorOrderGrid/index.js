@@ -25,7 +25,7 @@ import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import UndoIcon from "@mui/icons-material/Undo";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {DiscountRow, FeeRow, NotesRow, PaymentRow, RefundRow, TotalRow} from "../table/extra-rows";
+import {DiscountRow, FeeRow, NotesRow, PaymentRow, RefundRow, TotalRow} from "../tables/extra-rows";
 import {SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../utils/constants";
 import InfoNote from "../InfoNote";
 import {currencyAmountFromCents} from "../../../utils/money";
