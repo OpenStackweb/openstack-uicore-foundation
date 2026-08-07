@@ -14,8 +14,8 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import AdditionalInputList from "../formik-inputs/additional-input/additional-input-list";
-import AdditionalInput from "../formik-inputs/additional-input/additional-input";
+import AdditionalInputListV2 from "../formik-inputs/additional-input/additional-input-list-v2";
+import AdditionalInputV2 from "../formik-inputs/additional-input/additional-input-v2";
 
 jest.mock("../formik-inputs/additional-input/additional-input-list-core", () =>
   function MockAdditionalInputListCore({ AdditionalInputComponent }) {
@@ -27,12 +27,12 @@ jest.mock("../formik-inputs/additional-input/additional-input-list-core", () =>
   }
 );
 
-describe("AdditionalInputList (v1 entry point)", () => {
-  test("wires the react-beautiful-dnd based AdditionalInput into the core list", () => {
-    render(<AdditionalInputList />);
+describe("AdditionalInputListV2 (@dnd-kit entry point)", () => {
+  test("wires the @dnd-kit based AdditionalInputV2 into the core list", () => {
+    render(<AdditionalInputListV2 />);
 
     expect(screen.getByTestId("input-component-name")).toHaveTextContent(
-      AdditionalInput.name
+      AdditionalInputV2.name
     );
   });
 });
