@@ -45,7 +45,7 @@ const mapOrderData = (forms) => {
       .filter((it) => it.quantity)
       .map((it, i) => {
         const amount = currencyAmountFromCents(it.amount || 0);
-        const itemId = it.type?.id || `${form.id}-${i}`;
+        const itemId = it.line_id ?? `${form.id}-${i}`;
         const cancelled = !!it.canceled_by_id;
         const type = cancelled ? SPONSOR_ORDER_GRID_ITEM_TYPES.CANCELLED : SPONSOR_ORDER_GRID_ITEM_TYPES.CHARGE;
 
