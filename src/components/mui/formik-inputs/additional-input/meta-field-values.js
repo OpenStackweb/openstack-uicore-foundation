@@ -90,9 +90,9 @@ const MetaFieldValues = ({
     };
 
     if (field.id && metaFieldValue.id && onMetaFieldTypeValueDeleted) {
-      onMetaFieldTypeValueDeleted(entityId, field.id, metaFieldValue.id).then(
-        () => removeValueFromFields()
-      );
+      onMetaFieldTypeValueDeleted(entityId, field.id, metaFieldValue.id)
+      .then(() => removeValueFromFields())
+      .catch(() => {});
     } else {
       removeValueFromFields();
     }
