@@ -70,7 +70,7 @@ import React from "react";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import MuiTableSortable from "../sortable-table/mui-table-sortable";
+import MuiTableSortable from "../tables/sortable-table";
 import showConfirmDialog from "../showConfirmDialog";
 
 const columns = [
