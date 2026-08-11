@@ -13,23 +13,12 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  arrayMove
-} from "@dnd-kit/sortable";
+import { DndContext } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Box } from "@mui/material";
 
 import SortableItem from "./sortable-item";
+import useDndKitReorder from "./hooks/useDndKitReorder";
 
 // Items without an idKey value fall back to a positional id (new-${index}).
 // Because that id is recomputed from the current index every render, after a
@@ -51,35 +40,17 @@ const DragNDropList = ({
   idKey = "id",
   updateOrderKey = "order"
 }) => {
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
-
-  const handleDragEnd = ({ active, over }) => {
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = items.findIndex(
-      (item, i) => getItemId(item, i, idKey) === active.id
-    );
-    const newIndex = items.findIndex(
-      (item, i) => getItemId(item, i, idKey) === over.id
-    );
-
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const reordered = arrayMove(items, oldIndex, newIndex).map((item, i) => ({
-      ...item,
-      [updateOrderKey]: i + 1
-    }));
-
-    onReorder(reordered, { active, over });
-  };
+  const { sensors, collisionDetection, handleDragEnd } = useDndKitReorder({
+    items,
+    getItemId: (item, i) => getItemId(item, i, idKey),
+    updateOrderKey,
+    onReorder: (reordered, { active, over }) => onReorder(reordered, { active, over })
+  });
 
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={collisionDetection}
       onDragEnd={handleDragEnd}
     >
       <SortableContext
