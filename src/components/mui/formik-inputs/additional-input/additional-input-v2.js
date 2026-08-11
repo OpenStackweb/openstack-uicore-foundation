@@ -12,11 +12,11 @@
  * */
 
 import React from "react";
-import AdditionalInputListCore from "./additional-input-list-core";
-import AdditionalInput from "./additional-input";
+import AdditionalInputCore from "./additional-input-core";
+import MetaFieldValuesV2 from "./meta-field-values-v2";
 
-const AdditionalInputList = (props) => (
-  <AdditionalInputListCore {...props} AdditionalInputComponent={AdditionalInput} />
+const AdditionalInputV2 = (props) => (
+  <AdditionalInputCore {...props} MetaFieldValuesComponent={MetaFieldValuesV2} />
 );
 
-export default AdditionalInputList;
+export default AdditionalInputV2;

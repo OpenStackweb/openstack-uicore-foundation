@@ -14,20 +14,18 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useField } from "formik";
-import SummitAddonSelect from "../summit-addon-select";
+import AddonTypeSelect from "../addon-type-select";
 
-const MuiFormikSummitAddonSelect = ({
+const MuiFormikAddonTypeSelect = ({
   name,
-  summitId,
   placeholder = "Select...",
   inputProps = {}
 }) => {
   const [field, meta, helpers] = useField(name);
 
   return (
-    <SummitAddonSelect
+    <AddonTypeSelect
       value={field.value || ""}
-      summitId={summitId}
       onChange={helpers.setValue}
       placeholder={placeholder}
       inputProps={{
@@ -39,11 +37,10 @@ const MuiFormikSummitAddonSelect = ({
   );
 };
 
-MuiFormikSummitAddonSelect.propTypes = {
+MuiFormikAddonTypeSelect.propTypes = {
   name: PropTypes.string.isRequired,
-  summitId: PropTypes.number.isRequired,
   placeholder: PropTypes.string,
   inputProps: PropTypes.object
 };
 
-export default MuiFormikSummitAddonSelect;
+export default MuiFormikAddonTypeSelect;

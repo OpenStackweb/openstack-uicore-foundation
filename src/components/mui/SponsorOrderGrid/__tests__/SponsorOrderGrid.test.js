@@ -35,11 +35,11 @@ import "@testing-library/jest-dom";
 import SponsorOrderGrid from "../index";
 
 const makeItem = (overrides = {}) => ({
-  line_id: 1,
+  line_id: 841,
   quantity: 1,
   amount: 10000,
   canceled_by_id: null,
-  type: { name: "Booth", code: "BOOTH" },
+  type: { id: 146, name: "Booth", code: "BOOTH" },
   meta_fields: [],
   ...overrides
 });
@@ -145,6 +145,51 @@ describe("SponsorOrderGrid", () => {
     const button = document.querySelector("tbody button");
     fireEvent.click(button);
     expect(onUndoCancelForm).toHaveBeenCalledTimes(1);
+  });
+
+  test("passes the order line id to onCancelForm", () => {
+    const onCancelForm = jest.fn();
+    render(
+      <SponsorOrderGrid
+        {...defaultProps}
+        onCancelForm={onCancelForm}
+        onUndoCancelForm={jest.fn()}
+      />
+    );
+    const button = document.querySelector("tbody button");
+    fireEvent.click(button);
+    expect(onCancelForm).toHaveBeenCalledWith(expect.objectContaining({ id: 841 }));
+  });
+
+  test("passes the order line id to onUndoCancelForm", () => {
+    const onUndoCancelForm = jest.fn();
+    const order = {
+      forms: [makeForm({ items: [makeItem({ line_id: 841, canceled_by_id: 99 })] })],
+      total: 0
+    };
+    render(
+      <SponsorOrderGrid
+        order={order}
+        onCancelForm={jest.fn()}
+        onUndoCancelForm={onUndoCancelForm}
+      />
+    );
+    const button = document.querySelector("tbody button");
+    fireEvent.click(button);
+    expect(onUndoCancelForm).toHaveBeenCalledWith(expect.objectContaining({ id: 841 }));
+  });
+
+  test("gives rows from different forms with the same item type distinct ids", () => {
+    const order = {
+      forms: [
+        makeForm({ id: 10, items: [makeItem({ line_id: 841, type: { id: 146, name: "Booth", code: "BOOTH" } })] }),
+        makeForm({ id: 11, items: [makeItem({ line_id: 900, type: { id: 146, name: "Booth", code: "BOOTH" } })] })
+      ],
+      total: 0
+    };
+    render(<SponsorOrderGrid order={order} />);
+    expect(document.getElementById("item-841")).toBeInTheDocument();
+    expect(document.getElementById("item-900")).toBeInTheDocument();
   });
 
   test("renders amount_due label in total row", () => {

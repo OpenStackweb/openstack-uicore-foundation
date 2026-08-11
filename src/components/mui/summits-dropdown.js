@@ -20,7 +20,7 @@ const SummitsDropdown = ({
                              onlyActive = false,
                              label = "Search by show",
                              onChange,
-                             summits,
+                             summits = [],
                              excludeSummitIds = []
                          }) => {
     const [summitOptions, setSummitOptions] = useState(summits);

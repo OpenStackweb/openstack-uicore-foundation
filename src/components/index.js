@@ -68,7 +68,7 @@ export {default as MuiMenuButton} from './mui/menu-button'
 export {default as MuiSearchInput} from './mui/search-input'
 export {default as MuiShowConfirmDialog} from './mui/showConfirmDialog'
 export {default as MuiSponsorAddonSelect} from './mui/sponsor-addon-select'
-export {default as MuiSummitAddonSelect} from './mui/summit-addon-select'
+export {default as MuiAddonTypeSelect} from './mui/addon-type-select'
 export {default as MuiSummitsDropdown} from './mui/summits-dropdown'
 export {default as MuiFormItemTable, getCurrentApplicableRate, isItemAvailable, GlobalQuantityField, ItemTableField, UnderlyingAlertNote, ExpandedRowContent} from './mui/FormItemTable'
 export {default as MuiItemSettingsModal} from './mui/ItemSettingsModal'
@@ -96,7 +96,7 @@ export {default as MuiFormikRadioGroup} from './mui/formik-inputs/mui-formik-rad
 export {default as MuiFormikSelectGroup} from './mui/formik-inputs/mui-formik-select-group'
 export {default as MuiFormikSelect} from './mui/formik-inputs/mui-formik-select'
 export {default as MuiFormikSelectV2} from './mui/formik-inputs/mui-formik-select-v2'
-export {default as MuiFormikSummitAddonSelect} from './mui/formik-inputs/mui-formik-summit-addon-select'
+export {default as MuiFormikAddonTypeSelect} from './mui/formik-inputs/mui-formik-addon-type-select'
 export {default as MuiFormikSwitch} from './mui/formik-inputs/mui-formik-switch'
 export {default as MuiFormikTextField} from './mui/formik-inputs/mui-formik-textfield'
 export {default as MuiFormikTextEditor} from './mui/formik-inputs/mui-formik-text-editor'
@@ -139,6 +139,9 @@ export {MuiBaseCustomTheme} from './mui/MuiBaseCustomTheme'
 // export {default as MuiSortableTable} from './mui/sortable-table/mui-table-sortable' // react-beautiful-dnd
 // export {default as MuiStripePayment} from './mui/StripePayment'                   // @stripe/react-stripe-js, @stripe/stripe-js
 // export {default as MuiAdditionalInput} from './mui/formik-inputs/additional-input/additional-input' // react-beautiful-dnd (via dnd-list)
+// export {default as MuiAdditionalInputV2} from './mui/formik-inputs/additional-input/additional-input-v2' // @dnd-kit (via DragNDropList)
 // export {default as MuiAdditionalInputList} from './mui/formik-inputs/additional-input/additional-input-list' // react-beautiful-dnd (via dnd-list)
+// export {default as MuiAdditionalInputListV2} from './mui/formik-inputs/additional-input/additional-input-list-v2' // @dnd-kit (via DragNDropList)
 // export {default as MuiDragNDropList} from './mui/DragNDropList'               // @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 // export {OrderPdf, buildRows as buildOrderPdfRows, generateInvoicePDF, previewPDF} from './order-invoice-pdf' // @react-pdf/renderer
+// export {default as MuiTableSortableV2} from './mui/sortable-table-v2/mui-table-sortable-v2' // @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities

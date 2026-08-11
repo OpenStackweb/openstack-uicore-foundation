@@ -1,0 +1,358 @@
+/**
+ * Copyright 2026 OpenStack Foundation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+
+import React from "react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { Formik, Form, useFormikContext } from "formik";
+import "@testing-library/jest-dom";
+import AdditionalInputCore from "../formik-inputs/additional-input/additional-input-core";
+
+const MockMetaFieldValuesComponent = () => (
+  <div data-testid="meta-field-values-component">MetaFieldValues</div>
+);
+
+// Helper function to render the component with Formik
+const renderWithFormik = (props, initialValues = { meta_fields: [] }) =>
+  render(
+    <Formik initialValues={initialValues} onSubmit={jest.fn()}>
+      <Form>
+        <AdditionalInputCore {...props} />
+      </Form>
+    </Formik>
+  );
+
+describe("AdditionalInputCore", () => {
+  const defaultItem = {
+    id: 1,
+    name: "Test Field",
+    type: "",
+    is_required: false,
+    minimum_quantity: 0,
+    maximum_quantity: 0,
+    values: []
+  };
+
+  const defaultProps = {
+    item: defaultItem,
+    itemIdx: 0,
+    baseName: "meta_fields",
+    onAdd: jest.fn(),
+    onDelete: jest.fn(),
+    onDeleteValue: jest.fn(),
+    entityId: 1,
+    isAddDisabled: false,
+    MetaFieldValuesComponent: MockMetaFieldValuesComponent
+  };
+
+  const defaultInitialMetaFields = {
+    meta_fields: [defaultItem]
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("Rendering", () => {
+    test("renders name, type and is_required fields", () => {
+      renderWithFormik(defaultProps, defaultInitialMetaFields);
+
+      expect(
+        screen.getByPlaceholderText(
+          "additional_inputs.placeholders.title"
+        )
+      ).toBeInTheDocument();
+      expect(screen.getByRole("combobox")).toBeInTheDocument();
+      expect(screen.getByRole("checkbox")).toBeInTheDocument();
+    });
+
+    test("renders add and delete buttons", () => {
+      renderWithFormik(defaultProps, defaultInitialMetaFields);
+
+      expect(
+        screen.getByRole("button", { name: /delete/i })
+      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /add/i })).toBeInTheDocument();
+    });
+  });
+
+  describe("Conditional rendering based on type", () => {
+    test("shows the values component when type is CheckBoxList", () => {
+      const itemWithOptions = { ...defaultItem, type: "CheckBoxList" };
+
+      renderWithFormik(
+        { ...defaultProps, item: itemWithOptions },
+        { meta_fields: [itemWithOptions] }
+      );
+
+      expect(
+        screen.getByTestId("meta-field-values-component")
+      ).toBeInTheDocument();
+    });
+
+    test("shows the values component when type is ComboBox", () => {
+      const itemWithOptions = { ...defaultItem, type: "ComboBox" };
+
+      renderWithFormik(
+        { ...defaultProps, item: itemWithOptions },
+        { meta_fields: [itemWithOptions] }
+      );
+
+      expect(
+        screen.getByTestId("meta-field-values-component")
+      ).toBeInTheDocument();
+    });
+
+    test("shows the values component when type is RadioButtonList", () => {
+      const itemWithOptions = { ...defaultItem, type: "RadioButtonList" };
+
+      renderWithFormik(
+        { ...defaultProps, item: itemWithOptions },
+        { meta_fields: [itemWithOptions] }
+      );
+
+      expect(
+        screen.getByTestId("meta-field-values-component")
+      ).toBeInTheDocument();
+    });
+
+    test("does not show the values component when type is Text", () => {
+      renderWithFormik(defaultProps, defaultInitialMetaFields);
+
+      expect(
+        screen.queryByTestId("meta-field-values-component")
+      ).not.toBeInTheDocument();
+    });
+
+    test("shows quantity fields when type is Quantity", () => {
+      const itemQuantity = { ...defaultItem, type: "Quantity" };
+
+      renderWithFormik(
+        { ...defaultProps, item: itemQuantity },
+        { meta_fields: [itemQuantity] }
+      );
+
+      expect(
+        screen.getByPlaceholderText(
+          "additional_inputs.placeholders.minimum_quantity"
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText(
+          "additional_inputs.placeholders.maximum_quantity"
+        )
+      ).toBeInTheDocument();
+    });
+
+    test("does not show quantity fields when type is not Quantity", () => {
+      renderWithFormik(defaultProps, defaultInitialMetaFields);
+
+      expect(
+        screen.queryByPlaceholderText(
+          "additional_inputs.placeholders.minimum_quantity"
+        )
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByPlaceholderText(
+          "additional_inputs.placeholders.maximum_quantity"
+        )
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Button interactions", () => {
+    test("calls onDelete with item and index when delete button is clicked", async () => {
+      const mockOnDelete = jest.fn();
+
+      renderWithFormik(
+        { ...defaultProps, onDelete: mockOnDelete },
+        defaultInitialMetaFields
+      );
+
+      const deleteButton = screen.getByRole("button", { name: /delete/i });
+      await userEvent.click(deleteButton);
+
+      expect(mockOnDelete).toHaveBeenCalledWith(defaultItem, 0);
+    });
+
+    test("calls onAdd when add button is clicked", async () => {
+      const mockOnAdd = jest.fn();
+
+      renderWithFormik(
+        { ...defaultProps, onAdd: mockOnAdd },
+        defaultInitialMetaFields
+      );
+
+      const addButton = screen.getByRole("button", { name: /add/i });
+      await userEvent.click(addButton);
+
+      expect(mockOnAdd).toHaveBeenCalled();
+    });
+
+    test("disables add button when isAddDisabled is true", () => {
+      renderWithFormik(
+        { ...defaultProps, isAddDisabled: true },
+        defaultInitialMetaFields
+      );
+
+      const addButton = screen.getByRole("button", { name: /add/i });
+      expect(addButton).toBeDisabled();
+    });
+
+    test("enables add button when isAddDisabled is false", () => {
+      renderWithFormik(
+        { ...defaultProps, isAddDisabled: false },
+        defaultInitialMetaFields
+      );
+
+      const addButton = screen.getByRole("button", { name: /add/i });
+      expect(addButton).not.toBeDisabled();
+    });
+  });
+
+  describe("handleTypeChange", () => {
+    test("clears values when switching from an options-based type to a non-options type", async () => {
+      const itemWithValues = {
+        ...defaultItem,
+        type: "CheckBoxList",
+        values: [{ value: "opt1", name: "Option 1", is_default: false }]
+      };
+
+      const TestWrapper = () => {
+        const { values } = useFormikContext();
+        return (
+          <>
+            <AdditionalInputCore
+              {...defaultProps}
+              item={itemWithValues}
+            />
+            <div data-testid="values-count">
+              {values.meta_fields[0].values.length}
+            </div>
+          </>
+        );
+      };
+
+      render(
+        <Formik
+          initialValues={{ meta_fields: [itemWithValues] }}
+          onSubmit={jest.fn()}
+        >
+          <Form>
+            <TestWrapper />
+          </Form>
+        </Formik>
+      );
+
+      expect(screen.getByTestId("values-count")).toHaveTextContent("1");
+
+      await userEvent.click(screen.getByRole("combobox"));
+      await userEvent.click(await screen.findByRole("option", { name: "CheckBox" }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("values-count")).toHaveTextContent("0");
+      });
+    });
+
+    test("preserves values when switching between options-based types", async () => {
+      const itemWithValues = {
+        ...defaultItem,
+        type: "CheckBoxList",
+        values: [{ value: "opt1", name: "Option 1", is_default: false }]
+      };
+
+      const TestWrapper = () => {
+        const { values } = useFormikContext();
+        return (
+          <>
+            <AdditionalInputCore
+              {...defaultProps}
+              item={itemWithValues}
+            />
+            <div data-testid="values-count">
+              {values.meta_fields[0].values.length}
+            </div>
+          </>
+        );
+      };
+
+      render(
+        <Formik
+          initialValues={{ meta_fields: [itemWithValues] }}
+          onSubmit={jest.fn()}
+        >
+          <Form>
+            <TestWrapper />
+          </Form>
+        </Formik>
+      );
+
+      expect(screen.getByTestId("values-count")).toHaveTextContent("1");
+
+      await userEvent.click(screen.getByRole("combobox"));
+      await userEvent.click(await screen.findByRole("option", { name: "ComboBox" }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("values-count")).toHaveTextContent("1");
+      });
+    });
+  });
+
+  describe("Error display", () => {
+    test("shows values error when touched and has error", () => {
+      const itemWithOptions = { ...defaultItem, type: "CheckBoxList" };
+
+      render(
+        <Formik
+          initialValues={{ meta_fields: [itemWithOptions] }}
+          initialErrors={{
+            meta_fields: [{ values: "At least one option required" }]
+          }}
+          initialTouched={{ meta_fields: [{ values: true }] }}
+          onSubmit={jest.fn()}
+        >
+          <Form>
+            <AdditionalInputCore {...defaultProps} item={itemWithOptions} />
+          </Form>
+        </Formik>
+      );
+
+      expect(
+        screen.getByText("At least one option required")
+      ).toBeInTheDocument();
+    });
+
+    test("does not show values error when not touched", () => {
+      const itemWithOptions = { ...defaultItem, type: "CheckBoxList" };
+
+      render(
+        <Formik
+          initialValues={{ meta_fields: [itemWithOptions] }}
+          initialErrors={{
+            meta_fields: [{ values: "At least one option required" }]
+          }}
+          initialTouched={{ meta_fields: [{ values: false }] }}
+          onSubmit={jest.fn()}
+        >
+          <Form>
+            <AdditionalInputCore {...defaultProps} item={itemWithOptions} />
+          </Form>
+        </Formik>
+      );
+
+      expect(
+        screen.queryByText("At least one option required")
+      ).not.toBeInTheDocument();
+    });
+  });
+});

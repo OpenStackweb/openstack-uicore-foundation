@@ -14,25 +14,25 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import AdditionalInputList from "../formik-inputs/additional-input/additional-input-list";
-import AdditionalInput from "../formik-inputs/additional-input/additional-input";
+import AdditionalInputV2 from "../formik-inputs/additional-input/additional-input-v2";
+import MetaFieldValuesV2 from "../formik-inputs/additional-input/meta-field-values-v2";
 
-jest.mock("../formik-inputs/additional-input/additional-input-list-core", () =>
-  function MockAdditionalInputListCore({ AdditionalInputComponent }) {
+jest.mock("../formik-inputs/additional-input/additional-input-core", () =>
+  function MockAdditionalInputCore({ MetaFieldValuesComponent }) {
     return (
-      <div data-testid="input-component-name">
-        {AdditionalInputComponent.name}
+      <div data-testid="values-component-name">
+        {MetaFieldValuesComponent.name}
       </div>
     );
   }
 );
 
-describe("AdditionalInputList (v1 entry point)", () => {
-  test("wires the react-beautiful-dnd based AdditionalInput into the core list", () => {
-    render(<AdditionalInputList />);
+describe("AdditionalInputV2 (@dnd-kit entry point)", () => {
+  test("wires the @dnd-kit based MetaFieldValuesV2 into the core component", () => {
+    render(<AdditionalInputV2 />);
 
-    expect(screen.getByTestId("input-component-name")).toHaveTextContent(
-      AdditionalInput.name
+    expect(screen.getByTestId("values-component-name")).toHaveTextContent(
+      MetaFieldValuesV2.name
     );
   });
 });
