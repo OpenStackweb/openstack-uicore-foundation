@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import CreatableSelect from 'react-select/lib/Creatable';
 import T from 'i18n-react/dist/i18n-react';
 
@@ -76,3 +77,13 @@ export default class FreeMultiTextInput extends React.Component {
         );
     }
 }
+
+FreeMultiTextInput.propTypes = {
+    id: PropTypes.string.isRequired,
+    /** Current tags as react-select options. */
+    value: PropTypes.array,
+    /** Receives a synthetic { target: { id, value, type } }. */
+    onChange: PropTypes.func.isRequired,
+    /** Maximum number of entries; further input is rejected once reached. */
+    limit: PropTypes.number
+};

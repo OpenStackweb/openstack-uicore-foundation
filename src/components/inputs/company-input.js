@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import AsyncSelect from 'react-select/lib/Async';
 import {queryCompanies} from '../../utils/query-actions';
 import AsyncCreatableSelect from "react-select/lib/AsyncCreatable";
@@ -115,3 +116,26 @@ export default class CompanyInput extends React.Component {
 
     }
 }
+
+CompanyInput.propTypes = {
+    /** Selected company or companies, as { id, name }. */
+    value: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.string, PropTypes.number]),
+    /** Echoed back as ev.target.id on the synthetic change event. */
+    id: PropTypes.string.isRequired,
+    /** Receives a synthetic { target: { id, value, type } }. */
+    onChange: PropTypes.func.isRequired,
+    /** Gated on the prop being present, so multi={false} still enables multi-select. */
+    multi: PropTypes.bool,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string,
+    /** Alias for multi; either being present enables multi-select. */
+    isMulti: PropTypes.bool,
+    /** Presence turns this into a creatable select. */
+    allowCreate: PropTypes.bool,
+    /** Called with the typed text when a new company is created. */
+    onCreate: PropTypes.func,
+    /** Overrides the default queryCompanies lookup. */
+    queryFunction: PropTypes.func,
+    /** Appended to the fetched option list. */
+    extraOptions: PropTypes.array
+};
