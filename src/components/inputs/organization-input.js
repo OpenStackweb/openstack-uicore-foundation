@@ -114,6 +114,6 @@ OrganizationInput.propTypes = {
     error: PropTypes.string,
     /** Presence-gated: switches to AsyncCreatableSelect regardless of value. */
     allowCreate: PropTypes.bool,
-    /** Called with the typed text when a new organization is created. */
+    /** Called with the typed text when a new organization is created. Required whenever allowCreate is present: AsyncCreatableSelect's create action calls it unconditionally. */
     onCreate: PropTypes.func
 };

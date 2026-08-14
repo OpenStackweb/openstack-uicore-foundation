@@ -76,10 +76,10 @@ CountryDropdown.propTypes = {
     id: PropTypes.string.isRequired,
     /** Receives a synthetic { target: { id, value, type } }. */
     onChange: PropTypes.func.isRequired,
-    /** Gated on the prop being present, so multi={false} still enables multi-select. */
+    /** No effect: forwarded via {...this.props} to Dropdown, which reads isMulti, not multi. */
     multi: PropTypes.bool,
     /** Non-empty renders an .error-label. */
     error: PropTypes.string,
-    /** Fetches the country list on mount; renders empty without a reachable API. */
+    /** Forwarded via {...this.props} to Dropdown, then to react-select's Select as its placeholder text. */
     placeholder: PropTypes.string
 };

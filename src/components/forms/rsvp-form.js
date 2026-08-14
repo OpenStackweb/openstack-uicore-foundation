@@ -168,7 +168,8 @@ class RsvpForm extends React.Component {
 RsvpForm.propTypes = {
     /** Rendered by class_name, e.g. RSVPTextBoxQuestionTemplate or RSVPCheckBoxListQuestionTemplate. */
     questions: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        /** Must be a number: handleChange compares answer.question_id to parseInt(id) with strict equality, which never matches a string id. */
+        id: PropTypes.number.isRequired,
         /** Selects the widget; unknown values render nothing. */
         class_name: PropTypes.string.isRequired,
         name: PropTypes.string,

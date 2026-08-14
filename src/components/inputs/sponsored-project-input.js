@@ -82,4 +82,6 @@ SponsoredProjectInput.propTypes = {
     multi: PropTypes.bool,
     /** Non-empty renders an .error-label. */
     error: PropTypes.string,
+    /** Presence-gated: sets isClearable regardless of value. */
+    clearable: PropTypes.bool,
 };

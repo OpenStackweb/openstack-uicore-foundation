@@ -533,7 +533,7 @@ UploadInputV3.propTypes = {
     onUploadStart: PropTypes.func,
     label: PropTypes.node,
     helpText: PropTypes.node,
-    /** Non-empty renders an .error-label. */
+    /** Non-empty renders an MUI Alert (severity="error"), not an .error-label. */
     error: PropTypes.string
 };
 export default UploadInputV3;
