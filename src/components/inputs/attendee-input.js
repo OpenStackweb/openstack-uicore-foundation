@@ -79,7 +79,7 @@ AttendeeInput.propTypes = {
     id: PropTypes.string.isRequired,
     /** Receives a synthetic { target: { id, value, type } }. */
     onChange: PropTypes.func.isRequired,
-    /** Enables multi-select. */
+    /** No effect on this component: it is destructured out of props so it never reaches ...rest, and isMulti is never computed or passed to AsyncSelect. Consumers still pass it; it does nothing here. */
     multi: PropTypes.bool,
     /** Non-empty renders an .error-label. */
     error: PropTypes.string,

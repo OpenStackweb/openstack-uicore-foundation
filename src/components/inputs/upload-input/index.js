@@ -124,8 +124,8 @@ const UploadInput = ({value, error, handleRemove, handleUpload, handleError, ...
 UploadInput.propTypes = {
     /** Existing file URL. An image renders as a preview, anything else as a file icon. */
     value: PropTypes.string,
-    /** Called with the accepted file(s). */
-    handleUpload: PropTypes.func,
+    /** Called with the accepted file(s). Called unconditionally on drop, unlike handleError below; required. */
+    handleUpload: PropTypes.func.isRequired,
     /** Called when the existing file is cleared. */
     handleRemove: PropTypes.func,
     /** Called with rejected files, e.g. wrong type or too large. */
