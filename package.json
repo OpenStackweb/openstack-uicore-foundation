@@ -9,7 +9,7 @@
         "build": "./node_modules/.bin/webpack --config webpack.prod.js",
         "test": "jest",
         "storybook": "storybook dev -p 6006",
-        "build-storybook": "storybook build"
+        "build-storybook": "storybook build -o dist/core-ui"
     },
     "license": "APACHE 2.0",
     "dependencies": {
