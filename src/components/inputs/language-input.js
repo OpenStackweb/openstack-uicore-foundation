@@ -103,7 +103,7 @@ LanguageInput.propTypes = {
     onChange: PropTypes.func.isRequired,
     /** Gated on the prop being present, so multi={false} still enables multi-select. */
     multi: PropTypes.bool,
-    /** Non-empty renders an .error-label. */
+    /** Not read by this component; not destructured, so it flows through ...rest into Select, which does not render it. */
     error: PropTypes.string,
     /** Presence switches option values from ISO code to numeric id. */
     shouldUseId: PropTypes.bool

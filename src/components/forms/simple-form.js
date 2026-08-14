@@ -153,8 +153,8 @@ SimpleForm.propTypes = {
     fields: PropTypes.arrayOf(PropTypes.shape({
         /** Matches a key on entity. */
         name: PropTypes.string.isRequired,
-        /** One of 'text', 'textarea', 'checkbox'. */
-        type: PropTypes.string.isRequired,
+        /** Anything else renders nothing. */
+        type: PropTypes.oneOf(['text', 'textarea', 'checkbox']).isRequired,
         label: PropTypes.node
     })).isRequired,
     /** Seeds the form. Copied into local state and re-synced when it changes. */

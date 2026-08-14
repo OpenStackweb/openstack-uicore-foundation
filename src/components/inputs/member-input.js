@@ -103,6 +103,6 @@ MemberInput.propTypes = {
     error: PropTypes.string,
     /** (member) => value. Defaults to member.id. */
     getOptionValue: PropTypes.func,
-    /** (member) => label. Defaults to the member's name and email. */
+    /** (member) => label. Defaults to the member's name and id: `${first_name} ${last_name} (${id})`. */
     getOptionLabel: PropTypes.func
 };

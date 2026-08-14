@@ -204,7 +204,8 @@ ScheduleBuilderView.propTypes = {
     allowDrag: PropTypes.bool,
     /** Renders the print button when provided. */
     showPrint: PropTypes.bool,
-    onDayChanged: PropTypes.func,
+    /** Called unconditionally (no guard) when the venue change invalidates currentDay; required. */
+    onDayChanged: PropTypes.func.isRequired,
     onVenueChanged: PropTypes.func,
     onSlotSizeChange: PropTypes.func,
     onScheduleEvent: PropTypes.func,
