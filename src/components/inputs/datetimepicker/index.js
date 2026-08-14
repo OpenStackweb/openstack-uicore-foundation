@@ -123,8 +123,11 @@ DateTimePicker.propTypes = {
     onChange: PropTypes.func.isRequired,
     /** IANA zone; the displayed value is converted into it. */
     timezone: PropTypes.string,
-    /** { date, time } moment format strings. Pass time: false for a date-only picker. */
-    format: PropTypes.object,
+    /** { date, time } moment format strings. Pass time: false for a date-only picker. Dereferenced with no default; required. */
+    format: PropTypes.shape({
+        date: PropTypes.string.isRequired,
+        time: PropTypes.oneOfType([PropTypes.string, PropTypes.bool])
+    }).isRequired,
     /** Constrains selectable dates, e.g. { after, before }. */
     validation: PropTypes.object,
     /** Forwarded to the underlying input. */

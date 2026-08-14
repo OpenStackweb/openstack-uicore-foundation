@@ -185,7 +185,7 @@ ScheduleBuilderView.propTypes = {
         end_date: PropTypes.number.isRequired,
         time_zone_id: PropTypes.string,
         /** Required: schedule-event-list reads time_zone.name. */
-        time_zone: PropTypes.shape({ name: PropTypes.string }),
+        time_zone: PropTypes.shape({ name: PropTypes.string.isRequired }).isRequired,
         locations: PropTypes.array.isRequired
     }).isRequired,
     /** Restricts selectable days and venues per track. Null allows everything. */
@@ -213,6 +213,10 @@ ScheduleBuilderView.propTypes = {
     onClickSelected: PropTypes.func,
     onMoveSingleEvent: PropTypes.func,
     onSelectAll: PropTypes.func,
-    onSelectedBulkAction: PropTypes.func
+    onSelectedBulkAction: PropTypes.func,
+    /** Overrides the default bulkOptions passed to BulkActionsSelector. */
+    customBulkOptions: PropTypes.array,
+    /** Passed through to ScheduleEventList to gate drop targets. */
+    canDropEvent: PropTypes.func
 };
 export default ScheduleBuilderView;

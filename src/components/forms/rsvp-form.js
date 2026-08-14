@@ -175,11 +175,19 @@ RsvpForm.propTypes = {
         /** Injected as raw HTML. */
         label: PropTypes.string,
         is_mandatory: PropTypes.bool,
-        values: PropTypes.array
+        values: PropTypes.array,
+        /** RSVPLiteralContentQuestionTemplate: raw HTML content rendered via RawHTML. */
+        value: PropTypes.string,
+        /** RSVPDropDownQuestionTemplate: when true, values are remapped to {value: id, label: value}. */
+        is_country_selector: PropTypes.bool,
+        /** RSVPDropDownQuestionTemplate: passed through to the Dropdown as isMulti. */
+        is_multiselect: PropTypes.bool,
+        /** RSVPDropDownQuestionTemplate: used as the Dropdown's placeholder. */
+        empty_string: PropTypes.string
     })).isRequired,
-    /** Receives the collected answers array on submit. */
-    onSubmit: PropTypes.func.isRequired,
-    /** Keyed by question id. Read once into state at mount. */
-    errors: PropTypes.object
+    /** Receives the collected answers array on submit. Omit to render a display-only form with no submit button. */
+    onSubmit: PropTypes.func,
+    /** Keyed by question id. Read into state at mount with no fallback; hasErrors() throws if omitted. */
+    errors: PropTypes.object.isRequired
 };
 export default RsvpForm;

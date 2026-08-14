@@ -152,11 +152,11 @@ OperatorInput.propTypes = {
     multi: PropTypes.bool,
     /** Non-empty renders an .error-label. */
     error: PropTypes.string,
-    /** Operator choices; 'between' switches the control to two inputs. */
+    /** Operator choices; 'between' switches the control to two inputs. Has a defaultProps fallback above. */
     options: PropTypes.arrayOf(PropTypes.shape({
         value: PropTypes.string,
         label: PropTypes.string
-    })).isRequired,
+    })),
     label: PropTypes.node,
     className: PropTypes.string,
     isMulti: PropTypes.bool,
