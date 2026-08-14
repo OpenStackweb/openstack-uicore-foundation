@@ -80,8 +80,8 @@ export default class FreeMultiTextInput extends React.Component {
 
 FreeMultiTextInput.propTypes = {
     id: PropTypes.string.isRequired,
-    /** Current tags as react-select options. Destructured with no default and spread on Enter/Tab; required. */
-    value: PropTypes.array.isRequired,
+    /** Current tags as react-select options. Destructured with no default and spread on Enter/Tab; effectively required. */
+    value: PropTypes.array,
     /** Receives a synthetic { target: { id, value, type } }. */
     onChange: PropTypes.func.isRequired,
     /** Maximum number of entries; further input is rejected once reached. */

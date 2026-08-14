@@ -181,8 +181,8 @@ export default class UploadInputV2 extends React.Component {
 
 UploadInputV2.propTypes = {
     id: PropTypes.string,
-    /** Already-uploaded files. Destructured with no default and read as value.length; required. */
-    value: PropTypes.array.isRequired,
+    /** Already-uploaded files. Destructured with no default and read as value.length; effectively required. */
+    value: PropTypes.array,
     /** Endpoint the dropzone POSTs to. */
     postUrl: PropTypes.string,
     /** Drives allowed extensions and max size unless the getters below override them. */

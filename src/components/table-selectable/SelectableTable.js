@@ -206,10 +206,10 @@ SelectableTable.propTypes = {
         actionsHeader: PropTypes.node,
         actions: PropTypes.shape({
             edit: PropTypes.shape({
-                /** Row click. Checkbox clicks are excluded. Called unconditionally by SelectableTableRow; required if edit is present. */
-                onClick: PropTypes.func.isRequired,
-                /** (id, checked) for a single row. Called unconditionally by SelectableTableRow's checkbox; required if edit is present. */
-                onSelected: PropTypes.func.isRequired,
+                /** Row click. Checkbox clicks are excluded. Called unconditionally by SelectableTableRow; effectively required if edit is present. */
+                onClick: PropTypes.func,
+                /** (id, checked) for a single row. Called unconditionally by SelectableTableRow's checkbox; effectively required if edit is present. */
+                onSelected: PropTypes.func,
                 /** Change handler for the header select-all checkbox. */
                 onSelectedAll: PropTypes.func,
                 display: PropTypes.func

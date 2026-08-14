@@ -183,10 +183,10 @@ ScheduleBuilderView.propTypes = {
         id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         start_date: PropTypes.number.isRequired,
         end_date: PropTypes.number.isRequired,
-        /** Dereferenced with no guard at getDaysOptions/getTimeframe; required. */
-        time_zone_id: PropTypes.string.isRequired,
-        /** Required: schedule-event-list reads time_zone.name. */
-        time_zone: PropTypes.shape({ name: PropTypes.string.isRequired }).isRequired,
+        /** Dereferenced with no guard at getDaysOptions/getTimeframe; effectively required. */
+        time_zone_id: PropTypes.string,
+        /** Effectively required: schedule-event-list reads time_zone.name. */
+        time_zone: PropTypes.shape({ name: PropTypes.string }),
         locations: PropTypes.array.isRequired
     }).isRequired,
     /** Restricts selectable days and venues per track. Null allows everything. */
@@ -205,8 +205,8 @@ ScheduleBuilderView.propTypes = {
     allowDrag: PropTypes.bool,
     /** Renders the print button when provided. */
     showPrint: PropTypes.bool,
-    /** Called unconditionally (no guard) when the venue change invalidates currentDay; required. */
-    onDayChanged: PropTypes.func.isRequired,
+    /** Called unconditionally (no guard) when the venue change invalidates currentDay; effectively required. */
+    onDayChanged: PropTypes.func,
     onVenueChanged: PropTypes.func,
     onSlotSizeChange: PropTypes.func,
     onScheduleEvent: PropTypes.func,

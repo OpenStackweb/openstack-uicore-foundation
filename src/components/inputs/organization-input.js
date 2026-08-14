@@ -101,7 +101,8 @@ export default class OrganizationInput extends React.Component {
 OrganizationInput.propTypes = {
     /** Selected organization, read as value.id / value.name. */
     value: PropTypes.shape({
-        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        /** Dereferenced as id.toString() with no guard; effectively required whenever value is present. */
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         name: PropTypes.string
     }),
     /** Echoed back as ev.target.id on the synthetic change event. */

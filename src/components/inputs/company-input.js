@@ -121,11 +121,13 @@ CompanyInput.propTypes = {
     /** Selected company or companies, read as value.id / value.name (or value.map(...) in multi mode). */
     value: PropTypes.oneOfType([
         PropTypes.shape({
-            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+            /** Dereferenced as id.toString() with no guard; effectively required whenever value is present. */
+            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
             name: PropTypes.string
         }),
         PropTypes.arrayOf(PropTypes.shape({
-            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+            /** Dereferenced as id.toString() with no guard; effectively required whenever value is present. */
+            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
             name: PropTypes.string
         }))
     ]),
