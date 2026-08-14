@@ -48,7 +48,7 @@ export default class Panel extends React.Component {
 }
 
 Panel.propTypes = {
-    /** Heading text. Also seeds the fallback DOM id when `id` is omitted. */
+    /** Heading text. Also seeds the fallback DOM id (`id_${title}`) when `id` is omitted — that fallback only produces a usable id when title is a string or number; callers passing an element should supply `id` explicitly. */
     title: PropTypes.node,
     /** Body is only mounted while true; the heading stays visible either way. */
     show: PropTypes.bool,
