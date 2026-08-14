@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import AsyncSelect from 'react-select/lib/Async';
 import {queryGroups} from '../../utils/query-actions';
 
@@ -62,3 +63,15 @@ export default class GroupInput extends React.Component {
     }
 }
 
+GroupInput.propTypes = {
+    /** Selected group(s). */
+    value: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.string, PropTypes.number]),
+    /** Echoed back as ev.target.id on the synthetic change event. */
+    id: PropTypes.string.isRequired,
+    /** Receives a synthetic { target: { id, value, type } }. */
+    onChange: PropTypes.func.isRequired,
+    /** Gated on the prop being present, so multi={false} still enables multi-select. */
+    multi: PropTypes.bool,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string,
+};

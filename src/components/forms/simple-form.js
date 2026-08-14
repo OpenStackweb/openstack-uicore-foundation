@@ -12,6 +12,7 @@
  **/
 
 import React from 'react'
+import PropTypes from 'prop-types';
 import T from 'i18n-react/dist/i18n-react'
 import 'awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css'
 import Input from '../inputs/text-input'
@@ -147,4 +148,20 @@ class SimpleForm extends React.Component {
     }
 }
 
+SimpleForm.propTypes = {
+    /** Field descriptors rendered in order. */
+    fields: PropTypes.arrayOf(PropTypes.shape({
+        /** Matches a key on entity. */
+        name: PropTypes.string.isRequired,
+        /** One of 'text', 'textarea', 'checkbox'. */
+        type: PropTypes.string.isRequired,
+        label: PropTypes.node
+    })).isRequired,
+    /** Seeds the form. Copied into local state and re-synced when it changes. */
+    entity: PropTypes.object.isRequired,
+    /** Keyed by field name. */
+    errors: PropTypes.object,
+    /** Receives the edited entity. */
+    onSubmit: PropTypes.func.isRequired
+};
 export default SimpleForm;

@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import AsyncSelect from 'react-select/lib/Async';
 import { querySponsors } from '../../utils/query-actions';
 
@@ -58,4 +59,20 @@ const SponsorInput = ({ id, summitId, value, error, multi, onChange, queryFuncti
     );
 }
 
+SponsorInput.propTypes = {
+    /** Selected sponsor(s). */
+    value: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.string, PropTypes.number]),
+    /** Echoed back as ev.target.id on the synthetic change event. */
+    id: PropTypes.string.isRequired,
+    /** Receives a synthetic { target: { id, value, type } }. */
+    onChange: PropTypes.func.isRequired,
+    /** Enables multi-select. */
+    multi: PropTypes.bool,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string,
+    /** Scopes the lookup. Required for results to return. */
+    summitId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    /** Overrides the default querySponsors lookup. */
+    queryFunction: PropTypes.func
+};
 export default SponsorInput;

@@ -12,6 +12,7 @@
  **/
 
 import React from 'react'
+import PropTypes from 'prop-types'
 
 
 export default class Exclusive extends React.Component {
@@ -40,3 +41,9 @@ export default class Exclusive extends React.Component {
 
     }
 }
+
+Exclusive.propTypes = {
+    /** Children render only if window.EXCLUSIVE_SECTIONS includes this name. */
+    name: PropTypes.string.isRequired,
+    children: PropTypes.node
+};

@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import './action-dropdown.less';
 import Select from 'react-select';
 
@@ -66,3 +67,19 @@ export default class ActionDropdown extends React.Component {
 
     }
 }
+
+ActionDropdown.propTypes = {
+    options: PropTypes.arrayOf(PropTypes.shape({
+        value: PropTypes.any.isRequired,
+        label: PropTypes.string.isRequired
+    })).isRequired,
+    /** Label on the trigger button next to the select. */
+    actionLabel: PropTypes.node,
+    placeholder: PropTypes.string,
+    /** Fires only on button click, with the selected option's value. Throws if nothing is selected. */
+    onClick: PropTypes.func.isRequired,
+    /** Seeds the initial selection only; later changes are held in local state. */
+    value: PropTypes.any,
+    /** Gated on the prop being present, so small={false} still applies the small styling. */
+    small: PropTypes.bool
+};

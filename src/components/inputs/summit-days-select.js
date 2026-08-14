@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import Select from 'react-select';
 
 const SummitDaysSelect = ({ days, currentValue, placeholder, onDayChanged }) => {
@@ -32,5 +33,18 @@ const SummitDaysSelect = ({ days, currentValue, placeholder, onDayChanged }) => 
         />
     );
 }
+
+SummitDaysSelect.propTypes = {
+    /** Doubles as the option list, so each entry needs both value and label. */
+    days: PropTypes.arrayOf(PropTypes.shape({
+        value: PropTypes.string.isRequired,
+        label: PropTypes.string.isRequired
+    })).isRequired,
+    /** Matched against day.value. Anything unmatched shows the placeholder. */
+    currentValue: PropTypes.string,
+    placeholder: PropTypes.string,
+    /** Receives the selected day value, or null when cleared. */
+    onDayChanged: PropTypes.func.isRequired
+};
 
 export default SummitDaysSelect;

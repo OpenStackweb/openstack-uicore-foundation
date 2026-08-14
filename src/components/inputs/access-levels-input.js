@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import AsyncSelect from 'react-select/lib/Async';
 import {queryAccessLevels} from '../../utils/query-actions';
 
@@ -92,3 +93,23 @@ export default class AccessLevelsInput extends React.Component {
     }
 }
 
+AccessLevelsInput.propTypes = {
+    /** Selected access level(s). */
+    value: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.string, PropTypes.number]),
+    /** Echoed back as ev.target.id on the synthetic change event. */
+    id: PropTypes.string.isRequired,
+    /** Receives a synthetic { target: { id, value, type } }. */
+    onChange: PropTypes.func.isRequired,
+    /** Gated on the prop being present, so multi={false} still enables multi-select. */
+    multi: PropTypes.bool,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string,
+    /** Scopes the lookup. Required for results to return. */
+    summitId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    /** Shown before the user types. */
+    defaultOptions: PropTypes.oneOfType([PropTypes.bool, PropTypes.array]),
+    /** (item) => value. Defaults to item.id. */
+    getOptionValue: PropTypes.func,
+    /** (item) => label. */
+    getOptionLabel: PropTypes.func
+};

@@ -12,6 +12,7 @@
  **/
 
 import React from 'react'
+import PropTypes from 'prop-types';
 import 'awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css'
 import Input from '../inputs/text-input'
 import Dropdown from '../inputs/dropdown'
@@ -164,4 +165,21 @@ class RsvpForm extends React.Component {
     }
 }
 
+RsvpForm.propTypes = {
+    /** Rendered by class_name, e.g. RSVPTextBoxQuestionTemplate or RSVPCheckBoxListQuestionTemplate. */
+    questions: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        /** Selects the widget; unknown values render nothing. */
+        class_name: PropTypes.string.isRequired,
+        name: PropTypes.string,
+        /** Injected as raw HTML. */
+        label: PropTypes.string,
+        is_mandatory: PropTypes.bool,
+        values: PropTypes.array
+    })).isRequired,
+    /** Receives the collected answers array on submit. */
+    onSubmit: PropTypes.func.isRequired,
+    /** Keyed by question id. Read once into state at mount. */
+    errors: PropTypes.object
+};
 export default RsvpForm;
