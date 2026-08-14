@@ -121,11 +121,11 @@ CompanyInput.propTypes = {
     /** Selected company or companies, read as value.id / value.name (or value.map(...) in multi mode). */
     value: PropTypes.oneOfType([
         PropTypes.shape({
-            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
             name: PropTypes.string
         }),
         PropTypes.arrayOf(PropTypes.shape({
-            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
             name: PropTypes.string
         }))
     ]),

@@ -183,7 +183,8 @@ ScheduleBuilderView.propTypes = {
         id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         start_date: PropTypes.number.isRequired,
         end_date: PropTypes.number.isRequired,
-        time_zone_id: PropTypes.string,
+        /** Dereferenced with no guard at getDaysOptions/getTimeframe; required. */
+        time_zone_id: PropTypes.string.isRequired,
         /** Required: schedule-event-list reads time_zone.name. */
         time_zone: PropTypes.shape({ name: PropTypes.string.isRequired }).isRequired,
         locations: PropTypes.array.isRequired

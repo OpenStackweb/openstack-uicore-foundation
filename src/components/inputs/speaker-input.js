@@ -118,8 +118,8 @@ SpeakerInput.propTypes = {
     error: PropTypes.string,
     /** Scopes the lookup to a summit; omit to search all speakers. */
     summitId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    /** Router history, used to link out to a speaker. Required whenever multi is present: the multi-value label's click handler calls history.push with no guard. */
-    history: PropTypes.object,
+    /** Router history. Required whenever multi is present: the click handler calls history.push with no guard. */
+    history: PropTypes.shape({ push: PropTypes.func.isRequired }),
     /** (speaker) => value. Defaults to speaker.id. */
     getOptionValue: PropTypes.func,
     /** (speaker) => label. */
