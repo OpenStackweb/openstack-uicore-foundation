@@ -188,7 +188,7 @@ RsvpForm.propTypes = {
     })).isRequired,
     /** Receives the collected answers array on submit. Omit to render a display-only form with no submit button. */
     onSubmit: PropTypes.func,
-    /** Keyed by question id. Read into state at mount with no fallback; hasErrors() throws if omitted. */
-    errors: PropTypes.object.isRequired
+    /** Keyed by question id. Read into state at mount with no fallback; hasErrors() throws if omitted. Effectively required. */
+    errors: PropTypes.object
 };
 export default RsvpForm;

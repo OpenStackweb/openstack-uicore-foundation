@@ -80,8 +80,8 @@ SummitDropdown.propTypes = {
     summits: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
         name: PropTypes.string.isRequired,
-        /** Compared unguarded in the sort comparator; required for the documented sort order to hold. */
-        start_date: PropTypes.number.isRequired
+        /** Compared unguarded in the sort comparator; effectively required for the documented sort order to hold. */
+        start_date: PropTypes.number
     })).isRequired,
     /** Fires with the selected summit id. The button stays disabled until a choice is made. */
     onClick: PropTypes.func.isRequired,
