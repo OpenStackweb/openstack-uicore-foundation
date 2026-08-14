@@ -240,8 +240,8 @@ export default class EditableTable extends React.Component {
 };
 
 EditableTable.propTypes = {
-    /** Rows are copied into local state; each needs an `id`. Re-synced when this prop changes. */
-    data: PropTypes.arrayOf(PropTypes.object).isRequired,
+    /** Rows are copied into local state; each needs an `id`. Re-synced when this prop changes. `:220` explicitly handles array rows too. */
+    data: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.object, PropTypes.array])).isRequired,
     columns: PropTypes.arrayOf(PropTypes.shape({
         /** Key used to read and write the cell on each row. */
         columnKey: PropTypes.string.isRequired,

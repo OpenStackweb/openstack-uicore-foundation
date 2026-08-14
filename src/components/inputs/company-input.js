@@ -118,8 +118,17 @@ export default class CompanyInput extends React.Component {
 }
 
 CompanyInput.propTypes = {
-    /** Selected company or companies, as { id, name }. */
-    value: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.string, PropTypes.number]),
+    /** Selected company or companies, read as value.id / value.name (or value.map(...) in multi mode). */
+    value: PropTypes.oneOfType([
+        PropTypes.shape({
+            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+            name: PropTypes.string
+        }),
+        PropTypes.arrayOf(PropTypes.shape({
+            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+            name: PropTypes.string
+        }))
+    ]),
     /** Echoed back as ev.target.id on the synthetic change event. */
     id: PropTypes.string.isRequired,
     /** Receives a synthetic { target: { id, value, type } }. */
@@ -132,7 +141,7 @@ CompanyInput.propTypes = {
     isMulti: PropTypes.bool,
     /** Presence turns this into a creatable select. */
     allowCreate: PropTypes.bool,
-    /** Called with the typed text when a new company is created. */
+    /** Called with the typed text when a new company is created. Required whenever allowCreate is present: AsyncCreatableSelect's create action calls it unconditionally. */
     onCreate: PropTypes.func,
     /** Overrides the default queryCompanies lookup. */
     queryFunction: PropTypes.func,

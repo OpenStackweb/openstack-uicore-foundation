@@ -192,8 +192,8 @@ SelectableTable.propTypes = {
         /** (row, cellValue) => node. Overrides default cell rendering. */
         render: PropTypes.func
     })).isRequired,
-    /** Each row's own `checked` flag drives its checkbox; selection state lives with the caller. */
-    data: PropTypes.arrayOf(PropTypes.object).isRequired,
+    /** Each row's own `checked` flag drives its checkbox; selection state lives with the caller. `:152` explicitly handles array rows too. */
+    data: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.object, PropTypes.array])).isRequired,
     options: PropTypes.shape({
         className: PropTypes.string,
         /** Hides the header select-all checkbox. */

@@ -126,8 +126,8 @@ UploadInput.propTypes = {
     value: PropTypes.string,
     /** Called with the accepted file(s). Called unconditionally on drop, unlike handleError below; required. */
     handleUpload: PropTypes.func.isRequired,
-    /** Called when the existing file is cleared. */
-    handleRemove: PropTypes.func,
+    /** Called when the existing file is cleared. Called unconditionally on remove-icon click, with no guard; required. */
+    handleRemove: PropTypes.func.isRequired,
     /** Called with rejected files, e.g. wrong type or too large. */
     handleError: PropTypes.func,
     /** Non-empty renders an .error-label. */
