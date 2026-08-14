@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const TextArea = ({ onChange, value, className, error, maxLength, ...rest }) => {
     const has_error = error && error !== '';
@@ -46,6 +47,19 @@ const TextArea = ({ onChange, value, className, error, maxLength, ...rest }) => 
         </div>
     );
 }
+
+TextArea.propTypes = {
+    /** Textarea contents. Its length drives the character counter. */
+    value: PropTypes.string,
+    /** Receives the raw change event. Suppressed once maxLength is reached, except on delete. */
+    onChange: PropTypes.func.isRequired,
+    /** Replaces the default 'form-control' class. */
+    className: PropTypes.string,
+    /** Non-empty renders an .error-label and marks the field. */
+    error: PropTypes.string,
+    /** Omit to hide the "characters left" counter. */
+    maxLength: PropTypes.number
+};
 
 TextArea.defaultProps = {
     value: ""

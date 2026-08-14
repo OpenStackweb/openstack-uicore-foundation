@@ -12,6 +12,7 @@
  **/
 
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import Select from 'react-select';
 
 const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, className, isDisabled, isClearable, options, selectStyles, customStyle, ...rest }) => {
@@ -138,4 +139,30 @@ OperatorInput.defaultProps = {
         { value: '==', label: 'Equal' },
         { value: 'between', label: 'Between' },
     ],
+};
+
+OperatorInput.propTypes = {
+    /** Either a scalar like '>10', or a two-element array for the 'between' operator. */
+    value: PropTypes.oneOfType([PropTypes.string, PropTypes.array]),
+    /** Echoed back as ev.target.id on the synthetic change event. */
+    id: PropTypes.string.isRequired,
+    /** Receives a synthetic { target: { id, value, type } }. */
+    onChange: PropTypes.func.isRequired,
+    /** Enables multi-select. */
+    multi: PropTypes.bool,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string,
+    /** Operator choices; 'between' switches the control to two inputs. */
+    options: PropTypes.arrayOf(PropTypes.shape({
+        value: PropTypes.string,
+        label: PropTypes.string
+    })).isRequired,
+    label: PropTypes.node,
+    className: PropTypes.string,
+    isMulti: PropTypes.bool,
+    isDisabled: PropTypes.bool,
+    isClearable: PropTypes.bool,
+    /** Merged into the operator select's react-select styles. */
+    selectStyles: PropTypes.object,
+    customStyle: PropTypes.object
 };

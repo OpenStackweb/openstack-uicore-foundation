@@ -12,6 +12,7 @@
  **/
 
 import React, { useState, useRef, useMemo, useCallback, useLayoutEffect, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import T from "i18n-react/dist/i18n-react";
 import {
   Box,
@@ -512,4 +513,38 @@ const UploadInputV3 = ({
   );
 };
 
+UploadInputV3.propTypes = {
+    id: PropTypes.string,
+    /** Already-uploaded files. */
+    value: PropTypes.array,
+    /** Endpoint the dropzone POSTs to. */
+    postUrl: PropTypes.string,
+    /** Drives allowed extensions and max size unless the getters below override them. */
+    mediaType: PropTypes.shape({
+        max_size: PropTypes.number,
+        type: PropTypes.shape({ allowed_extensions: PropTypes.array })
+    }),
+    /** Upload is blocked once value reaches this count. */
+    maxFiles: PropTypes.number,
+    canAdd: PropTypes.bool,
+    onRemove: PropTypes.func,
+    onUploadComplete: PropTypes.func,
+    onError: PropTypes.func,
+    /** Extra Dropzone config, merged last. */
+    djsConfig: PropTypes.object,
+    timeOut: PropTypes.number,
+    parallelChunkUploads: PropTypes.bool,
+    maxConcurrentChunks: PropTypes.number,
+    /** Returns a comma-separated extension list, overriding mediaType. */
+    getAllowedExtensions: PropTypes.func,
+    /** Returns max size in MB, overriding mediaType. */
+    getMaxSize: PropTypes.func,
+    canDelete: PropTypes.bool,
+    /** Fired when an upload begins. */
+    onUploadStart: PropTypes.func,
+    label: PropTypes.node,
+    helpText: PropTypes.node,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string
+};
 export default UploadInputV3;

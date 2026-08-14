@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import EditableTableHeading from './EditableTableHeading';
 import EditableTableCell from './EditableTableCell';
 import EditableActionsTableCell from './EditableActionsTableCell';
@@ -236,4 +237,28 @@ export default class EditableTable extends React.Component {
             </div>
         );
     }
+};
+
+EditableTable.propTypes = {
+    /** Rows are copied into local state; each needs an `id`. Re-synced when this prop changes. */
+    data: PropTypes.arrayOf(PropTypes.object).isRequired,
+    columns: PropTypes.arrayOf(PropTypes.shape({
+        /** Key used to read and write the cell on each row. */
+        columnKey: PropTypes.string.isRequired,
+        value: PropTypes.node,
+        width: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    })).isRequired,
+    /** Renders textareas instead of inputs. Gated on presence, so textArea={false} still enables it. */
+    textArea: PropTypes.bool,
+    options: PropTypes.shape({
+        className: PropTypes.string,
+        /** Skips the sweetalert confirmation on delete. Gated on presence. */
+        noAlert: PropTypes.bool,
+        actions: PropTypes.shape({
+            /** Called with the whole edited row once the user commits it. */
+            save: PropTypes.shape({ onClick: PropTypes.func.isRequired }),
+            /** Called with the row id, after confirmation unless noAlert is set. */
+            delete: PropTypes.shape({ onClick: PropTypes.func.isRequired })
+        })
+    }).isRequired
 };

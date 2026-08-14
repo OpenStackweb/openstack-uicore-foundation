@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import './summit-dropdown.less';
 import Select from 'react-select';
 import T from 'i18n-react/dist/i18n-react';
@@ -73,3 +74,18 @@ export default class SummitDropdown extends React.Component {
 
     }
 }
+
+SummitDropdown.propTypes = {
+    /** Sorted by start_date descending before display. */
+    summits: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        name: PropTypes.string.isRequired,
+        start_date: PropTypes.number
+    })).isRequired,
+    /** Fires with the selected summit id. The button stays disabled until a choice is made. */
+    onClick: PropTypes.func.isRequired,
+    actionLabel: PropTypes.node,
+    actionClass: PropTypes.string,
+    /** Gated on presence, so big={false} still applies the large styling. */
+    big: PropTypes.bool
+};
