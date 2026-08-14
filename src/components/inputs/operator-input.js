@@ -148,7 +148,7 @@ OperatorInput.propTypes = {
     id: PropTypes.string.isRequired,
     /** Receives a synthetic { target: { id, value, type } }. */
     onChange: PropTypes.func.isRequired,
-    /** Enables multi-select. */
+    /** No effect on this component: destructured out of props alongside isMulti, so neither is passed to the underlying Select. Consumers still pass it; it does nothing here. */
     multi: PropTypes.bool,
     /** Non-empty renders an .error-label. */
     error: PropTypes.string,
@@ -159,6 +159,7 @@ OperatorInput.propTypes = {
     })),
     label: PropTypes.node,
     className: PropTypes.string,
+    /** No effect on this component: destructured out of props alongside multi, so neither is passed to the underlying Select. Consumers still pass it; it does nothing here. */
     isMulti: PropTypes.bool,
     isDisabled: PropTypes.bool,
     isClearable: PropTypes.bool,
