@@ -27,14 +27,10 @@ const PENDING_CONFIRMATION_KEY = "uicore.chunk-load-error-pending-confirmation";
 const isWebpackChunkLoadError = (error) =>
   Boolean(error) && error.name === "ChunkLoadError";
 
-// Separately from the promise rejection above, the browser is ALSO trying to
-// execute that stale response's HTML content as the script tag's body, which
-// throws a genuine engine-level SyntaxError as an uncaught global script error -
-// a completely different failure surface that no amount of wrapping import() in
-// a .catch() can observe. There's no clean, structured signal for this one, so we
-// match on the characteristic message and, when a source filename is available,
-// cross-check it against a typical content-hashed chunk filename so this can't
-// false-match an unrelated SyntaxError elsewhere in the app.
+// A stale chunk URL can 200 with the SPA's index.html instead of real JS,
+// which the browser throws as a SyntaxError parsing it as a script. We match
+// on error TYPE (stable across engines) plus a chunk-shaped filename, not
+// the message wording (e.g. "Unexpected token '<'" is V8-specific).
 const DEFAULT_CHUNK_FILENAME_PATTERN = /[._-][0-9a-f]{8,}\.js(\?.*)?$/i;
 
 const isHtmlParsedAsScriptError = (
@@ -43,15 +39,12 @@ const isHtmlParsedAsScriptError = (
   chunkFilenamePattern = DEFAULT_CHUNK_FILENAME_PATTERN
 ) => {
   const message = (error && error.message) || (typeof error === "string" ? error : "");
-  // "SyntaxError" can show up on error.name (a real SyntaxError object) or
-  // inline in the message text (window.onerror's flat event.message string,
-  // e.g. "Uncaught SyntaxError: Unexpected token '<'") - check both.
+  // error.name is set when available; otherwise fall back to the word
+  // "SyntaxError" in the flat message string (window.onerror without event.error).
   const looksLikeSyntaxError =
     (error && error.name === "SyntaxError") || /SyntaxError/i.test(message);
-  if (!looksLikeSyntaxError || !/Unexpected token '<'/i.test(message)) {
-    return false;
-  }
-  return !filename || chunkFilenamePattern.test(filename);
+  if (!looksLikeSyntaxError) return false;
+  return Boolean(filename) && chunkFilenamePattern.test(filename);
 };
 
 export const isChunkLoadError = (error, filename, chunkFilenamePattern) =>
@@ -66,20 +59,15 @@ export const isChunkLoadError = (error, filename, chunkFilenamePattern) =>
 // webpack's runtime appends a <script> tag for every lazy chunk that loads,
 // so reading it lazily-but-uncached would make the fingerprint drift within
 // a single build, not just across a real deploy.
-let cachedBuildFingerprint;
-const getBuildFingerprint = () => {
-  if (cachedBuildFingerprint === undefined) {
-    cachedBuildFingerprint =
-      typeof document !== "undefined"
-        ? Array.from(document.scripts)
-            .map((s) => s.src)
-            .filter(Boolean)
-            .sort()
-            .join(",")
-        : "";
-  }
-  return cachedBuildFingerprint;
-};
+const cachedBuildFingerprint =
+  typeof document !== "undefined"
+    ? Array.from(document.scripts)
+        .map((s) => s.src)
+        .filter(Boolean)
+        .sort()
+        .join(",")
+    : "";
+const getBuildFingerprint = () => cachedBuildFingerprint;
 
 const readReloadState = () => {
   try {
@@ -114,15 +102,24 @@ const reportRecoveryFailed = (error, filename) => {
 // Reloads the page once per *build* when a lazy chunk fails to load
 // (typically a stale content-hashed filename after a deploy). Returns true
 // only when it actually triggers a *new* reload; false if this isn't a chunk
-// error, or if we already tried reloading once for this same build - in the
-// latter case a distinct Sentry report is filed (see reportRecoveryFailed)
-// and the caller should let the error propagate normally instead of
-// looping. Scoping the guard to the build (not just "once this session")
-// means that if a second deploy lands later in the same long-lived tab, a
-// fresh failure on that new build still gets its own reload attempt instead
-// of being silently blocked by an unrelated earlier recovery.
+// error, if a reload was already triggered earlier in this same page
+// lifecycle (see reloadTriggeredThisPage below - concurrent lazy chunks can
+// each reject in the same microtask drain, and window.location.reload()
+// doesn't halt JS, so a later same-tick failure must not re-run the
+// persisted-state check or file a false "recovery failed" report while the
+// first reload is still in flight), or if we already tried reloading once
+// for this same build on a *prior* page load - in the latter case a
+// distinct Sentry report is filed (see reportRecoveryFailed) and the caller
+// should let the error propagate normally instead of looping. Scoping the
+// persisted guard to the build (not just "once this session") means that if
+// a second deploy lands later in the same long-lived tab, a fresh failure
+// on that new build still gets its own reload attempt instead of being
+// silently blocked by an unrelated earlier recovery.
+let reloadTriggeredThisPage = false;
 export const reloadOnChunkError = (error, filename, chunkFilenamePattern) => {
   if (!isChunkLoadError(error, filename, chunkFilenamePattern)) return false;
+
+  if (reloadTriggeredThisPage) return false;
 
   const currentBuild = getBuildFingerprint();
   const state = readReloadState();
@@ -132,6 +129,7 @@ export const reloadOnChunkError = (error, filename, chunkFilenamePattern) => {
     return false;
   }
 
+  reloadTriggeredThisPage = true;
   writeReloadState({ build: currentBuild });
   try {
     window.sessionStorage.setItem(PENDING_CONFIRMATION_KEY, "1");
@@ -212,13 +210,21 @@ export const initChunkErrorRecovery = (chunkFilenamePattern) => {
 // above. A repeat failure (reload didn't help) is reported separately and
 // explicitly via reportRecoveryFailed's Sentry.captureMessage call, which is
 // a message-type event (no .exception), so it is unaffected by this filter.
+// Sentry stack frames are ordered oldest-first; the last one is where the
+// exception was actually thrown - the only frame worth checking against
+// chunkFilenamePattern.
+const getExceptionFilename = (exceptionValue) => {
+  const frames = exceptionValue.stacktrace?.frames;
+  return frames?.length ? frames[frames.length - 1]?.filename : undefined;
+};
+
 export const chunkErrorSentryBeforeSend = (event) => {
   const exceptionValues = event.exception?.values || [];
   const matchesChunkError = exceptionValues.some((exceptionValue) =>
-    isChunkLoadError({
-      name: exceptionValue.type,
-      message: exceptionValue.value
-    })
+    isChunkLoadError(
+      { name: exceptionValue.type, message: exceptionValue.value },
+      getExceptionFilename(exceptionValue)
+    )
   );
   return matchesChunkError ? null : event;
 };
