@@ -8,13 +8,14 @@ jest.mock("@sentry/react", () => ({
     captureMessage: (...args) => mockCaptureMessage(...args),
 }));
 
-import {
-    isChunkLoadError,
-    reloadOnChunkError,
-    lazyWithReload,
-    initChunkErrorRecovery,
-    chunkErrorSentryBeforeSend,
-} from "../lazy-with-reload";
+// reloadOnChunkError's "once per page" guard is module-level state, so each
+// test needs its own fresh module instance (see beforeEach below) - a static
+// import would leak that guard across tests in file-declaration order.
+let isChunkLoadError;
+let reloadOnChunkError;
+let lazyWithReload;
+let initChunkErrorRecovery;
+let chunkErrorSentryBeforeSend;
 
 const chunkLoadError = () => Object.assign(new Error("Loading chunk 3 failed.\n(missing: https://app.test/foo_abc123.js)"), {
     name: "ChunkLoadError",
@@ -47,6 +48,16 @@ beforeEach(() => {
     delete window.location;
     window.location = { reload: jest.fn() };
     setDocumentScripts([]);
+
+    jest.resetModules();
+    // eslint-disable-next-line global-require
+    ({
+        isChunkLoadError,
+        reloadOnChunkError,
+        lazyWithReload,
+        initChunkErrorRecovery,
+        chunkErrorSentryBeforeSend,
+    } = require("../lazy-with-reload"));
 });
 
 describe("isChunkLoadError", () => {
@@ -54,8 +65,15 @@ describe("isChunkLoadError", () => {
         expect(isChunkLoadError(chunkLoadError())).toBe(true);
     });
 
-    test("matches a SyntaxError for 'Unexpected token <' with no filename", () => {
-        expect(isChunkLoadError(htmlParsedAsScriptError())).toBe(true);
+    test("does not match a SyntaxError with no filename (e.g. an unrelated JSON.parse failure)", () => {
+        expect(isChunkLoadError(htmlParsedAsScriptError())).toBe(false);
+    });
+
+    test("matches a SyntaxError regardless of message wording, as long as the filename looks like a content-hashed chunk (cross-browser/locale independence)", () => {
+        const error = Object.assign(new Error("expected expression, got '<'"), { name: "SyntaxError" });
+        expect(
+            isChunkLoadError(error, "https://app.test/static/dashboard_a1b2c3d4e5f6.js")
+        ).toBe(true);
     });
 
     test("matches a SyntaxError for 'Unexpected token <' when the filename looks like a content-hashed chunk", () => {
@@ -113,11 +131,19 @@ describe("reloadOnChunkError", () => {
         expect(mockCaptureMessage).not.toHaveBeenCalled();
     });
 
-    test("does not reload again on a second chunk error on the same build, and reports it instead", () => {
-        reloadOnChunkError(chunkLoadError());
+    test("does not reload again on a second chunk error on the same build (after navigation), and reports it instead", () => {
+        setDocumentScripts(["https://app.test/main_stableBuild.js"]);
+        jest.resetModules();
+        // eslint-disable-next-line global-require
+        let mod = require("../lazy-with-reload");
+        mod.reloadOnChunkError(chunkLoadError());
         window.location.reload.mockClear();
 
-        const handled = reloadOnChunkError(chunkLoadError());
+        // simulate the reload landing back on the same, still-stale build
+        jest.resetModules();
+        // eslint-disable-next-line global-require
+        mod = require("../lazy-with-reload");
+        const handled = mod.reloadOnChunkError(chunkLoadError());
 
         expect(handled).toBe(false);
         expect(window.location.reload).not.toHaveBeenCalled();
@@ -131,10 +157,17 @@ describe("reloadOnChunkError", () => {
 
     test("falls back to console.error when Sentry is not initialized", () => {
         delete window.SENTRY_DSN;
-        reloadOnChunkError(chunkLoadError());
+        setDocumentScripts(["https://app.test/main_stableBuild.js"]);
+        jest.resetModules();
+        // eslint-disable-next-line global-require
+        let mod = require("../lazy-with-reload");
+        mod.reloadOnChunkError(chunkLoadError());
         window.location.reload.mockClear();
 
-        reloadOnChunkError(chunkLoadError());
+        jest.resetModules();
+        // eslint-disable-next-line global-require
+        mod = require("../lazy-with-reload");
+        mod.reloadOnChunkError(chunkLoadError());
 
         expect(mockCaptureMessage).not.toHaveBeenCalled();
         expect(console.error).toHaveBeenCalledWith(
@@ -143,6 +176,17 @@ describe("reloadOnChunkError", () => {
                 tags: { chunkErrorRecovery: "failed" },
             })
         );
+    });
+
+    test("does not report a false recovery failure when two chunks fail in the same tick", () => {
+        const first = reloadOnChunkError(chunkLoadError());
+        const second = reloadOnChunkError(chunkLoadError());
+
+        expect(first).toBe(true);
+        expect(second).toBe(false);
+        expect(window.location.reload).toHaveBeenCalledTimes(1);
+        expect(mockCaptureMessage).not.toHaveBeenCalled();
+        expect(console.error).not.toHaveBeenCalled();
     });
 
     test("does nothing for a non-chunk error", () => {
@@ -241,6 +285,25 @@ describe("initChunkErrorRecovery", () => {
         expect(preventDefault).toHaveBeenCalledTimes(1);
     });
 
+    test("does not reload on an unhandledrejection carrying an unrelated JSON.parse SyntaxError (e.g. Response.json() on an HTML error page)", () => {
+        cleanup = initChunkErrorRecovery();
+        const preventDefault = jest.fn();
+        const jsonParseError = Object.assign(
+            new Error("Unexpected token '<', \"<html>502</html>\" is not valid JSON"),
+            { name: "SyntaxError" }
+        );
+
+        window.dispatchEvent(
+            Object.assign(new Event("unhandledrejection"), {
+                reason: jsonParseError,
+                preventDefault,
+            })
+        );
+
+        expect(window.location.reload).not.toHaveBeenCalled();
+        expect(preventDefault).not.toHaveBeenCalled();
+    });
+
     test("reloads and prevents default on a global error event for the HTML-as-script SyntaxError", () => {
         cleanup = initChunkErrorRecovery();
         const preventDefault = jest.fn();
@@ -248,6 +311,22 @@ describe("initChunkErrorRecovery", () => {
         window.dispatchEvent(
             Object.assign(new Event("error"), {
                 error: htmlParsedAsScriptError(),
+                filename: "https://app.test/static/dashboard_a1b2c3d4e5f6.js",
+                preventDefault,
+            })
+        );
+
+        expect(window.location.reload).toHaveBeenCalledTimes(1);
+        expect(preventDefault).toHaveBeenCalledTimes(1);
+    });
+
+    test("reloads on a global error event for an HTML-as-script SyntaxError with non-Chromium wording, as long as the filename matches", () => {
+        cleanup = initChunkErrorRecovery();
+        const preventDefault = jest.fn();
+
+        window.dispatchEvent(
+            Object.assign(new Event("error"), {
+                error: Object.assign(new Error("expected expression, got '<'"), { name: "SyntaxError" }),
                 filename: "https://app.test/static/dashboard_a1b2c3d4e5f6.js",
                 preventDefault,
             })
@@ -332,9 +411,35 @@ describe("chunkErrorSentryBeforeSend", () => {
         expect(chunkErrorSentryBeforeSend(event)).toBeNull();
     });
 
-    test("drops an event whose exception is the HTML-as-script SyntaxError", () => {
+    test("does not drop a SyntaxError 'Unexpected token <' when no stack frame filename is available", () => {
         const event = {
             exception: { values: [{ type: "SyntaxError", value: "Unexpected token '<'" }] },
+        };
+        expect(chunkErrorSentryBeforeSend(event)).toBe(event);
+    });
+
+    test("does not drop a SyntaxError 'Unexpected token <' whose stack frame filename doesn't look like a chunk (e.g. Response.json() on an HTML error page)", () => {
+        const event = {
+            exception: {
+                values: [{
+                    type: "SyntaxError",
+                    value: "Unexpected token '<', \"<html>...\" is not valid JSON",
+                    stacktrace: { frames: [{ filename: "https://app.test/static/vendor.min.js" }] },
+                }],
+            },
+        };
+        expect(chunkErrorSentryBeforeSend(event)).toBe(event);
+    });
+
+    test("drops a SyntaxError 'Unexpected token <' whose stack frame filename looks like a content-hashed chunk", () => {
+        const event = {
+            exception: {
+                values: [{
+                    type: "SyntaxError",
+                    value: "Unexpected token '<'",
+                    stacktrace: { frames: [{ filename: "https://app.test/static/dashboard_a1b2c3d4e5f6.js" }] },
+                }],
+            },
         };
         expect(chunkErrorSentryBeforeSend(event)).toBeNull();
     });
