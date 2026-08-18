@@ -14,26 +14,12 @@
 import React from "react";
 import PropTypes from "prop-types";
 import T from "i18n-react";
-import { Divider, IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import { Divider, Button, DialogActions, DialogContent, DialogContentText } from "@mui/material";
+import CustomDialog from "../CustomDialog";
 
 const AlertModal = ({ title, message, open, onClose }) => {
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{title}</DialogTitle>
-      <IconButton
-        aria-label="close"
-        onClick={onClose}
-        sx={(theme) => ({
-          position: "absolute",
-          right: 8,
-          top: 8,
-          color: theme.palette.grey[500]
-        })}
-      >
-        <CloseIcon />
-      </IconButton>
-      <Divider />
+    <CustomDialog title={title} open={open} onClose={onClose}>
       <DialogContent>
         <DialogContentText>{message}</DialogContentText>
       </DialogContent>
@@ -43,7 +29,7 @@ const AlertModal = ({ title, message, open, onClose }) => {
           {T.translate("general.ok")}
         </Button>
       </DialogActions>
-    </Dialog>
+    </CustomDialog>
   );
 };
 

@@ -14,18 +14,15 @@
 import React, { useState } from "react";
 import {
   Button,
-  Dialog,
   DialogContent,
-  DialogTitle,
   Divider,
-  IconButton,
   Typography,
   DialogActions
 } from "@mui/material";
 import PropTypes from "prop-types";
 import UploadInputV3 from "../../inputs/upload-input-v3";
 import T from "i18n-react";
-import CloseIcon from "@mui/icons-material/Close";
+import CustomDialog from "../CustomDialog";
 import {
   DECIMAL_DIGITS
 } from "../../../utils/constants";
@@ -79,21 +76,11 @@ const UploadDialog = ({
       : [];
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{T.translate("upload_input.upload_file")}</DialogTitle>
-      <IconButton
-        aria-label="close"
-        onClick={handleClose}
-        sx={(theme) => ({
-          position: "absolute",
-          right: 8,
-          top: 8,
-          color: theme.palette.grey[500]
-        })}
-      >
-        <CloseIcon />
-      </IconButton>
-      <Divider />
+    <CustomDialog
+      title={T.translate("upload_input.upload_file")}
+      open={open}
+      onClose={handleClose}
+    >
       <DialogContent>
         <Typography variant="body1" sx={{ mb: 2 }}>
           {fileMeta.name}
@@ -126,7 +113,7 @@ const UploadDialog = ({
           {T.translate("upload_input.upload_file")}
         </Button>
       </DialogActions>
-    </Dialog>
+    </CustomDialog>
   );
 };
 

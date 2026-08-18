@@ -145,6 +145,7 @@ module.exports = {
         'components/mui/auth-button': './src/components/mui/AuthButton/index.js',
         'components/mui/cart-button': './src/components/mui/CartButton/index.js',
         'components/mui/confirm-delete-dialog': './src/components/mui/ConfirmDeleteDialog/index.js',
+        'components/mui/custom-dialog': './src/components/mui/CustomDialog/index.js',
         'components/mui/cards': './src/components/mui/cards/index.js',
         'components/mui/cards/inline-card': './src/components/mui/cards/InlineCard/index.js',
         'components/mui/cards/list-card': './src/components/mui/cards/ListCard/index.js',
