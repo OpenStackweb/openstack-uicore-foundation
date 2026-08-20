@@ -69,7 +69,10 @@ const MuiTable = ({
 }) => {
   const activeActionsCount =
     (onEdit ? 1 : 0) + (onDelete ? 1 : 0) + (onArchive ? 1 : 0) + (onSelect ? 1 : 0);
-  const collapseActions = activeActionsCount >= 2;
+  // responsive:false opts out of collapsing actions into a menu — needed when
+  // extra rows (e.g. TotalRow) are passed as children with a static column
+  // count that can't track the collapse breakpoint
+  const collapseActions = options.responsive !== false && activeActionsCount >= 2;
   const collapseBreakpoint = getActionsMenuBreakpoint(columns.length);
 
   const totalColumnsCount =
