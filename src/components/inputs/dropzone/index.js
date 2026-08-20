@@ -71,7 +71,9 @@ export class DropzoneJS extends React.Component {
         }
         file._pollingActive = true;
 
-        const statusUrl = `${baseUrl}/status/${fileId}`;
+        // fileId is interpolated straight into the URL path, so it must be encoded even
+        // when the server sanitizes it - defends against any unsafe character reaching here.
+        const statusUrl = `${baseUrl}/status/${encodeURIComponent(fileId)}`;
         const maxAttempts = 300; // 10 minutes at 2s intervals
         let attempts = 0;
 

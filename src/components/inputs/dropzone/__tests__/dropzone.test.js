@@ -232,6 +232,59 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
       }, 2500);
     }, 10);
   }, 10000);
+
+  /**
+   * Test Case 5: pollUploadStatus must percent-encode fileId in the status URL
+   *
+   * For a simple (non-chunked) upload, file-upload-api derives file_id from the raw
+   * original filename (e.g. "...20x10ft@50%_Ver1.4...pdf_<timestamp>"). Interpolating
+   * that straight into the status URL produces an invalid percent-escape ('%_') that
+   * breaks the request. Encode it regardless of what the server sends.
+   */
+  test('test_dropzone_poll_upload_status_encodes_file_id_in_url', (done) => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({
+          status: 'complete',
+          name: 'HPE_OCPSanJose_Backdrop_20x10ft50_Ver1.4_PRINT.pdf',
+          size: 1024000
+        })
+      })
+    );
+
+    const ref = React.createRef();
+
+    render(
+      <DropzoneJS
+        {...defaultProps}
+        ref={ref}
+        onUploadComplete={onUploadCompleteMock}
+        onError={onErrorMock}
+      />
+    );
+
+    setTimeout(() => {
+      const mockFile = {
+        name: 'HPE_OCPSanJose_Backdrop_20x10ft@50%_Ver1.4_PRINT.pdf',
+        size: 1024000,
+        _asyncProcessing: true,
+        _chunksUploadedDone: jest.fn()
+      };
+      const unsafeFileId = 'HPE_OCPSanJose_Backdrop_20x10ft@50%_Ver1.4_PRINT.pdf_1787259323';
+
+      const instance = ref.current;
+      instance.pollUploadStatus(unsafeFileId, 'https://example.com/upload', mockFile);
+
+      setTimeout(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          'https://example.com/upload/status/HPE_OCPSanJose_Backdrop_20x10ft%4050%25_Ver1.4_PRINT.pdf_1787259323',
+          expect.any(Object)
+        );
+
+        done();
+      }, 2500);
+    }, 10);
+  }, 10000);
 });
 
 describe('DropzoneJS - Progress Bar Monotonicity', () => {
