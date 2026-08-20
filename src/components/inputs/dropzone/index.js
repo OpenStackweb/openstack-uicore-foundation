@@ -239,10 +239,8 @@ export class DropzoneJS extends React.Component {
      * React 'componentDidUpdate'
      * If the Dropzone hasn't been created, create it
      */
-    componentDidUpdate () {
+    componentDidUpdate (prevProps) {
         const {config, djsConfig} = this.props;
-        const djsConfigObj = djsConfig ? djsConfig : {};
-        const postUrlConfigObj = config && config.postUrl ? { url: config.postUrl } : {};
         this.queueDestroy = false;
 
         if (!this.dropzone) {
@@ -251,8 +249,19 @@ export class DropzoneJS extends React.Component {
             this.dropzone = new Dropzone(dropzoneNode, this.getDjsConfig());
             this.setupChunkThrottle();
             this.setupEvents();
+            return;
         }
 
+        // Re-merging options deep-clones the whole dropzone.options object (including the
+        // accept/chunksUploaded closures) and re-runs on every parent re-render. During a
+        // chunked upload the parent re-renders on every progress tick, so skip the merge
+        // when djsConfig/postUrl haven't actually changed.
+        if (prevProps.djsConfig === djsConfig && prevProps.config?.postUrl === config?.postUrl) {
+            return;
+        }
+
+        const djsConfigObj = djsConfig ? djsConfig : {};
+        const postUrlConfigObj = config && config.postUrl ? { url: config.postUrl } : {};
         this.dropzone.options = extend(true, {}, this.dropzone.options, djsConfigObj, postUrlConfigObj);
     }
 

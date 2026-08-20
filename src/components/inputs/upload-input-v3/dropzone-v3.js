@@ -44,7 +44,14 @@ export const DropzoneV3 = ({
       if (eventHandlers.removedfile) eventHandlers.removedfile(file);
     },
     uploadprogress: (file, progress, bytesSent) => {
-      if (onUploadProgress) onUploadProgress(file, file.size > 0 ? bytesSent / file.size * 100 : 0);
+      if (onUploadProgress) {
+        // Floor on _completedBytes (chunkSize per finished chunk, set in dropzone/index.js's
+        // xhr.onload) mirrors the legacy DOM progress bar's anti-stall fix - without it, large
+        // chunked uploads can report flat/regressing progress between chunk boundaries.
+        const effectiveBytes = Math.max(bytesSent, file._completedBytes || 0);
+        const pct = file.size > 0 ? Math.min(effectiveBytes / file.size * 100, 100) : 0;
+        onUploadProgress(file, pct);
+      }
       if (eventHandlers.uploadprogress) eventHandlers.uploadprogress(file, progress, bytesSent);
     },
     success: (file) => {
