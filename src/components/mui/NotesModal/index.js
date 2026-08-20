@@ -15,7 +15,7 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import T from "i18n-react";
 import { useField } from "formik";
-import { Button, DialogActions, DialogContent, DialogContentText, TextField } from "@mui/material";
+import { DialogContentText, TextField } from "@mui/material";
 import CustomDialog from "../CustomDialog";
 
 const NotesModal = ({ id, label, open, title, placeholder, onClose }) => {
@@ -38,25 +38,22 @@ const NotesModal = ({ id, label, open, title, placeholder, onClose }) => {
       title={title || T.translate("general.notes")}
       open={open}
       onClose={onClose}
+      primaryAction={{
+        label: T.translate("general.save"),
+        onClick: handleSave
+      }}
     >
-      <DialogContent>
-        <DialogContentText>{label}</DialogContentText>
-        <TextField
-          name={name}
-          onChange={(ev) => setNotes(ev.target.value)}
-          value={notes}
-          margin="normal"
-          multiline
-          fullWidth
-          rows={4}
-          placeholder={placeholder || T.translate("placeholders.notes")}
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleSave} variant="contained" fullWidth>
-          {T.translate("general.save")}
-        </Button>
-      </DialogActions>
+      <DialogContentText>{label}</DialogContentText>
+      <TextField
+        name={name}
+        onChange={(ev) => setNotes(ev.target.value)}
+        value={notes}
+        margin="normal"
+        multiline
+        fullWidth
+        rows={4}
+        placeholder={placeholder || T.translate("placeholders.notes")}
+      />
     </CustomDialog>
   );
 };

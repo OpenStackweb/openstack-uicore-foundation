@@ -15,9 +15,6 @@ import React from "react";
 import PropTypes from "prop-types";
 import T from "i18n-react/dist/i18n-react";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 import CustomDialog from "../CustomDialog";
@@ -32,38 +29,35 @@ const ItemSettingsModal = ({ item, timeZone, open, onClose }) => {
   };
 
   return (
-    <CustomDialog title={T.translate("general.settings")} open={open} onClose={onClose}>
-      <DialogContent>
-        <Typography
-          variant="body2"
-          component="div"
-          sx={{ marginBottom: "20px" }}
-        >
-          {item?.name}
-        </Typography>
-        <Divider
-          sx={{
-            marginBottom: "20px",
-            marginLeft: "-24px",
-            marginRight: "-24px"
-          }}
-        />
-        {itemFields.map((exc) => (
-          <Box key={`item-field-${exc.type_id}`} sx={{ mb: 2 }}>
-            <ItemTableField
-              field={exc}
-              rowId={item.form_item_id}
-              timeZone={timeZone}
-              label={exc.name}
-            />
-          </Box>
-        ))}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleSave} variant="contained" fullWidth>
-          {T.translate("general.save")}
-        </Button>
-      </DialogActions>
+    <CustomDialog
+      title={T.translate("general.settings")}
+      open={open}
+      onClose={onClose}
+      primaryAction={{
+        label: T.translate("general.save"),
+        onClick: handleSave
+      }}
+    >
+      <Typography variant="body2" component="div" sx={{ marginBottom: "20px" }}>
+        {item?.name}
+      </Typography>
+      <Divider
+        sx={{
+          marginBottom: "20px",
+          marginLeft: "-24px",
+          marginRight: "-24px"
+        }}
+      />
+      {itemFields.map((exc) => (
+        <Box key={`item-field-${exc.type_id}`} sx={{ mb: 2 }}>
+          <ItemTableField
+            field={exc}
+            rowId={item.form_item_id}
+            timeZone={timeZone}
+            label={exc.name}
+          />
+        </Box>
+      ))}
     </CustomDialog>
   );
 };

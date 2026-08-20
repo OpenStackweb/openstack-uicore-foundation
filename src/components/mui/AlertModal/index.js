@@ -14,21 +14,18 @@
 import React from "react";
 import PropTypes from "prop-types";
 import T from "i18n-react";
-import { Divider, Button, DialogActions, DialogContent, DialogContentText } from "@mui/material";
+import { DialogContentText } from "@mui/material";
 import CustomDialog from "../CustomDialog";
 
 const AlertModal = ({ title, message, open, onClose }) => {
   return (
-    <CustomDialog title={title} open={open} onClose={onClose}>
-      <DialogContent>
-        <DialogContentText>{message}</DialogContentText>
-      </DialogContent>
-      <Divider />
-      <DialogActions>
-        <Button onClick={onClose} variant="contained" fullWidth>
-          {T.translate("general.ok")}
-        </Button>
-      </DialogActions>
+    <CustomDialog
+      title={title}
+      open={open}
+      onClose={onClose}
+      primaryAction={{ label: T.translate("general.ok"), onClick: onClose }}
+    >
+      <DialogContentText>{message}</DialogContentText>
     </CustomDialog>
   );
 };

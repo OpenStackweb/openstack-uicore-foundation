@@ -12,13 +12,7 @@
  * */
 
 import React, { useState } from "react";
-import {
-  Button,
-  DialogContent,
-  Divider,
-  Typography,
-  DialogActions
-} from "@mui/material";
+import { Divider, Typography } from "@mui/material";
 import PropTypes from "prop-types";
 import UploadInputV3 from "../../inputs/upload-input-v3";
 import T from "i18n-react";
@@ -54,11 +48,10 @@ const UploadDialog = ({
     onClose();
   };
 
-  const handleUpload = () => {
+  const handleUpload = () =>
     onUpload(uploadedFile).then(() => {
       handleClose();
     });
-  };
 
   const handleRemove = () => {
     setUploadedFile(null);
@@ -80,39 +73,32 @@ const UploadDialog = ({
       title={T.translate("upload_input.upload_file")}
       open={open}
       onClose={handleClose}
+      primaryAction={{
+        label: T.translate("upload_input.upload_file"),
+        onClick: handleUpload,
+        disabled: !uploadedFile
+      }}
     >
-      <DialogContent>
-        <Typography variant="body1" sx={{ mb: 2 }}>
-          {fileMeta.name}
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-          {fileMeta.description}
-        </Typography>
-        <Divider sx={{ marginLeft: -2, marginRight: -2, mb: 2 }} />
-        <UploadInputV3
-          id={`media_upload_${name}`}
-          name={name}
-          onUploadComplete={setUploadedFile}
-          value={getInputValue()}
-          mediaType={mediaType}
-          onRemove={handleRemove}
-          postUrl={`${window.FILE_UPLOAD_API_BASE_URL}/api/v1/files/upload`}
-          djsConfig={{ withCredentials: true }}
-          maxFiles={maxFiles}
-          canAdd={canAddMore()}
-          parallelChunkUploads
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button
-          onClick={handleUpload}
-          fullWidth
-          disabled={!uploadedFile}
-          variant="contained"
-        >
-          {T.translate("upload_input.upload_file")}
-        </Button>
-      </DialogActions>
+      <Typography variant="body1" sx={{ mb: 2 }}>
+        {fileMeta.name}
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+        {fileMeta.description}
+      </Typography>
+      <Divider sx={{ marginLeft: -2, marginRight: -2, mb: 2 }} />
+      <UploadInputV3
+        id={`media_upload_${name}`}
+        name={name}
+        onUploadComplete={setUploadedFile}
+        value={getInputValue()}
+        mediaType={mediaType}
+        onRemove={handleRemove}
+        postUrl={`${window.FILE_UPLOAD_API_BASE_URL}/api/v1/files/upload`}
+        djsConfig={{ withCredentials: true }}
+        maxFiles={maxFiles}
+        canAdd={canAddMore()}
+        parallelChunkUploads
+      />
     </CustomDialog>
   );
 };
