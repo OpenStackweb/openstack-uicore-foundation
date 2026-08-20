@@ -75,4 +75,18 @@ describe('DropzoneV3 - uploadprogress to React bridging', () => {
 
     expect(onUploadProgress).toHaveBeenCalledWith(file, 0);
   });
+
+  test('falls back to _completedBytes when bytesSent is NaN (parallelChunkUploads + maxConcurrentChunks queue)', () => {
+    const onUploadProgress = jest.fn();
+    renderDropzoneV3(onUploadProgress);
+
+    // With parallelChunkUploads, dropzone pre-creates every chunk entry up front, but the
+    // maxConcurrentChunks queue defers most of their dispatch. Dropzone's own bytesSent then
+    // sums in still-undefined values from queued chunks and comes out NaN for most of the
+    // upload. Math.max(NaN, x) is NaN, so without the fix this would report NaN, not 40%.
+    const file = { size: 10000000, _completedBytes: 4000000 };
+    capturedEventHandlers.uploadprogress(file, 0, NaN);
+
+    expect(onUploadProgress).toHaveBeenCalledWith(file, 40);
+  });
 });

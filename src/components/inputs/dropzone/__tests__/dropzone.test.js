@@ -414,4 +414,72 @@ describe('DropzoneJS - Progress Bar Monotonicity', () => {
       done();
     }, 10);
   });
+
+  /**
+   * Test: Progress falls back to _completedBytes when dropzone reports NaN
+   *
+   * With parallelChunkUploads, dropzone pre-creates every chunk's entry up front, but the
+   * maxConcurrentChunks queue (setupChunkThrottle) defers most of their actual dispatch.
+   * Dropzone's own bytesSent sums total/bytesSent across every created chunk, including
+   * still-queued ones whose total/bytesSent are still undefined - which makes bytesSent NaN
+   * for most of the upload. Math.max(NaN, x) returns NaN, so the floor must coerce bytesSent
+   * to a finite number before flooring, or it silently stops working exactly when needed.
+   */
+  test('test_dropzone_progress_falls_back_to_completed_bytes_when_bytes_sent_is_nan', (done) => {
+    const DropzoneMock = require('dropzone');
+    DropzoneMock.mockImplementation((element, options) => {
+      return {
+        options: { ...options, chunkSize: 2000000 },
+        on: jest.fn((event, handler) => {
+          capturedHandlers[event] = handler;
+        }),
+        off: jest.fn(),
+        destroy: jest.fn(() => null),
+        getActiveFiles: jest.fn(() => [])
+      };
+    });
+
+    render(
+      <DropzoneJS
+        {...defaultProps}
+        onUploadComplete={jest.fn()}
+        onError={jest.fn()}
+      />
+    );
+
+    setTimeout(() => {
+      const uploadProgressHandler = capturedHandlers['uploadprogress'];
+      expect(uploadProgressHandler).toBeDefined();
+
+      const progressValues = [];
+      const mockProgressElem = {
+        style: {
+          set width(val) {
+            progressValues.push(parseFloat(val));
+          },
+          get width() {
+            return '0%';
+          }
+        }
+      };
+
+      const mockFile = {
+        name: 'large-video.mp4',
+        size: 10000000,
+        _completedBytes: 4000000, // 4 chunks completed so far
+        previewElement: {
+          querySelectorAll: jest.fn(() => [mockProgressElem])
+        }
+      };
+
+      // Dropzone reports NaN, as it does while chunks are still queued behind
+      // maxConcurrentChunks in parallel mode.
+      uploadProgressHandler(mockFile, 0, NaN);
+
+      expect(progressValues.length).toBe(1);
+      expect(progressValues[0]).toBe(40);
+
+      done();
+    }, 10);
+  });
 });

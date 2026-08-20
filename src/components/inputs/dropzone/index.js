@@ -363,8 +363,13 @@ export class DropzoneJS extends React.Component {
         });
 
         this.dropzone.on('uploadprogress', (file, progress, bytesSent) => {
-            // Use completed bytes as floor to prevent progress oscillation
-            const effectiveBytes = Math.max(bytesSent, file._completedBytes || 0);
+            // Use completed bytes as floor to prevent progress oscillation. With
+            // parallelChunkUploads, dropzone's own bytesSent sums total/bytesSent across every
+            // chunk it has created, including ones still queued behind maxConcurrentChunks
+            // (setupChunkThrottle above) whose total/bytesSent are still undefined - that makes
+            // bytesSent NaN, and Math.max(NaN, x) is NaN, so it must be coerced first.
+            const safeBytesSent = Number.isFinite(bytesSent) ? bytesSent : 0;
+            const effectiveBytes = Math.max(safeBytesSent, file._completedBytes || 0);
             progress = Math.min(effectiveBytes / file.size * 100, 100);
             if(file.previewElement) {
                 let elem = file.previewElement.querySelectorAll("[data-dz-uploadprogress]");
