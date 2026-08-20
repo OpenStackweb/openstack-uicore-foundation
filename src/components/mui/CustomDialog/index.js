@@ -11,7 +11,7 @@
  * limitations under the License.
  * */
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import {
   Button,
@@ -36,12 +36,25 @@ const CustomDialog = ({
   children
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // the only purpose of this is to avoid having a console log when modal is closed and setIsSubmitting is called
+  const mountedRef = useRef(true);
+
+  useEffect(
+    () => () => {
+      mountedRef.current = false;
+    },
+    []
+  );
 
   const handlePrimaryClick = () => {
     const result = primaryAction.onClick();
     if (result && typeof result.then === "function") {
       setIsSubmitting(true);
-      result.finally(() => setIsSubmitting(false));
+      Promise.resolve(result)
+        .catch(() => {})
+        .finally(() => {
+          if (mountedRef.current) setIsSubmitting(false);
+        });
     }
   };
 
