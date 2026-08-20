@@ -11,31 +11,106 @@
  * limitations under the License.
  * */
 
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { Dialog, DialogTitle, Divider, IconButton } from "@mui/material";
+import {
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  IconButton
+} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
-const CustomDialog = ({ title, open, onClose, maxWidth, fullWidth, children }) => (
-  <Dialog open={open} onClose={onClose} maxWidth={maxWidth} fullWidth={fullWidth}>
-    <DialogTitle>{title}</DialogTitle>
-    <IconButton
-      aria-label="close"
-      onClick={onClose}
-      size="small"
-      sx={(theme) => ({
-        position: "absolute",
-        right: 12,
-        top: 12,
-        color: theme.palette.grey[500]
-      })}
+const CustomDialog = ({
+  title,
+  open,
+  onClose,
+  maxWidth,
+  fullWidth,
+  primaryAction,
+  secondaryAction,
+  children
+}) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handlePrimaryClick = () => {
+    const result = primaryAction.onClick();
+    if (result && typeof result.then === "function") {
+      setIsSubmitting(true);
+      result.finally(() => setIsSubmitting(false));
+    }
+  };
+
+  const handleClose = () => {
+    if (isSubmitting) return;
+    onClose();
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth={maxWidth}
+      fullWidth={fullWidth}
+      disableEscapeKeyDown={isSubmitting}
     >
-      <CloseIcon fontSize="large" />
-    </IconButton>
-    <Divider />
-    {children}
-  </Dialog>
-);
+      <DialogTitle>{title}</DialogTitle>
+      <IconButton
+        aria-label="close"
+        onClick={handleClose}
+        disabled={isSubmitting}
+        size="small"
+        sx={(theme) => ({
+          position: "absolute",
+          right: 12,
+          top: 12,
+          color: theme.palette.grey[500]
+        })}
+      >
+        <CloseIcon fontSize="large" />
+      </IconButton>
+      <Divider />
+      <DialogContent>{children}</DialogContent>
+      {(primaryAction || secondaryAction) && (
+        <DialogActions>
+          {secondaryAction && (
+            <Button
+              variant="outlined"
+              onClick={secondaryAction.onClick}
+              disabled={isSubmitting || secondaryAction.disabled}
+            >
+              {secondaryAction.label}
+            </Button>
+          )}
+          {primaryAction && (
+            <Button
+              variant="contained"
+              onClick={handlePrimaryClick}
+              disabled={isSubmitting || primaryAction.disabled}
+              startIcon={
+                isSubmitting ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : null
+              }
+            >
+              {primaryAction.label}
+            </Button>
+          )}
+        </DialogActions>
+      )}
+    </Dialog>
+  );
+};
+
+const actionPropType = PropTypes.shape({
+  label: PropTypes.node.isRequired,
+  onClick: PropTypes.func.isRequired,
+  disabled: PropTypes.bool
+});
 
 CustomDialog.propTypes = {
   title: PropTypes.node.isRequired,
@@ -43,12 +118,16 @@ CustomDialog.propTypes = {
   onClose: PropTypes.func.isRequired,
   maxWidth: PropTypes.oneOf(["xs", "sm", "md", "lg", "xl", false]),
   fullWidth: PropTypes.bool,
+  primaryAction: actionPropType,
+  secondaryAction: actionPropType,
   children: PropTypes.node.isRequired
 };
 
 CustomDialog.defaultProps = {
   maxWidth: "sm",
-  fullWidth: true
+  fullWidth: true,
+  primaryAction: null,
+  secondaryAction: null
 };
 
 export default CustomDialog;
