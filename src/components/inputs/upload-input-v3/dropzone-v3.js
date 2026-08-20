@@ -44,7 +44,19 @@ export const DropzoneV3 = ({
       if (eventHandlers.removedfile) eventHandlers.removedfile(file);
     },
     uploadprogress: (file, progress, bytesSent) => {
-      if (onUploadProgress) onUploadProgress(file, file.size > 0 ? bytesSent / file.size * 100 : 0);
+      if (onUploadProgress) {
+        // With parallelChunkUploads, dropzone pre-creates every chunk's entry up front, but
+        // our own maxConcurrentChunks queue (setupChunkThrottle in dropzone/index.js) defers
+        // most of their actual dispatch. Dropzone's own bytesSent is a sum across ALL created
+        // chunks, including still-queued ones whose total/bytesSent are still undefined, which
+        // makes it NaN for most of the upload. Math.max(NaN, x) is NaN, so flooring on
+        // _completedBytes (chunkSize per finished chunk, set in dropzone/index.js's xhr.onload)
+        // only works once bytesSent is coerced to a finite number first.
+        const safeBytesSent = Number.isFinite(bytesSent) ? bytesSent : 0;
+        const effectiveBytes = Math.max(safeBytesSent, file._completedBytes || 0);
+        const pct = file.size > 0 ? Math.min(effectiveBytes / file.size * 100, 100) : 0;
+        onUploadProgress(file, pct);
+      }
       if (eventHandlers.uploadprogress) eventHandlers.uploadprogress(file, progress, bytesSent);
     },
     success: (file) => {
