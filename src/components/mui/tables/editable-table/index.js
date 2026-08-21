@@ -31,7 +31,7 @@ import TableShell from "../components/table-shell";
 import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
 import {
-  getResponsiveTableSx,
+  RESPONSIVE_TABLE_SX,
   getColumnWidthSx,
   getArchivedRowSx,
   getActionCellSx,
@@ -201,7 +201,7 @@ const MuiTableEditable = ({
       onPageChange={onPageChange}
       onPerPageChange={onPerPageChange}
     >
-      <Table sx={{ ...getResponsiveTableSx(columns.length), ...tableSx }}>
+      <Table sx={{ ...RESPONSIVE_TABLE_SX, ...tableSx }}>
         {/* TABLE HEADER */}
         <TableHead sx={{ backgroundColor: "#EAEAEA" }}>
           <TableRow>

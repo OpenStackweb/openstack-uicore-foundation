@@ -36,7 +36,7 @@ import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
 import RowActionsMenu from "../components/row-actions-menu";
 import {
-  getResponsiveTableSx,
+  RESPONSIVE_TABLE_SX,
   getColumnWidthSx,
   getArchivedRowSx,
   getActionCellSx,
@@ -145,7 +145,7 @@ const MuiTable = ({
       onPageChange={onPageChange}
       onPerPageChange={onPerPageChange}
     >
-      <Table sx={{ ...getResponsiveTableSx(columns.length), ...tableSx }}>
+      <Table sx={{ ...RESPONSIVE_TABLE_SX, ...tableSx }}>
         {/* TABLE HEADER */}
         <TableHead sx={{ backgroundColor: "#EAEDF4" }}>
           <TableRow>
