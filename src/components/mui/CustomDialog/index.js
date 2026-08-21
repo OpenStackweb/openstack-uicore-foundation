@@ -39,15 +39,19 @@ const CustomDialog = ({
   // the only purpose of this is to avoid having a console log when modal is closed and setIsSubmitting is called
   const mountedRef = useRef(true);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
       mountedRef.current = false;
-    },
-    []
-  );
+    };
+  }, []);
 
-  const handlePrimaryClick = () => {
-    const result = primaryAction.onClick();
+  const runAction = (action) => {
+    if (isSubmitting) return;
+
+    const result = action.onClick();
+
+    // if action is async then guard double click
     if (result && typeof result.then === "function") {
       setIsSubmitting(true);
       Promise.resolve(result)
@@ -57,6 +61,9 @@ const CustomDialog = ({
         });
     }
   };
+
+  const handlePrimaryClick = () => runAction(primaryAction);
+  const handleSecondaryClick = () => runAction(secondaryAction);
 
   const handleClose = () => {
     if (isSubmitting) return;
@@ -93,7 +100,7 @@ const CustomDialog = ({
           {secondaryAction && (
             <Button
               variant="outlined"
-              onClick={secondaryAction.onClick}
+              onClick={handleSecondaryClick}
               disabled={isSubmitting || secondaryAction.disabled}
             >
               {secondaryAction.label}
