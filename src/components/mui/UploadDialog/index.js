@@ -12,20 +12,11 @@
  * */
 
 import React, { useState } from "react";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  IconButton,
-  Typography,
-  DialogActions
-} from "@mui/material";
+import { Divider, Typography } from "@mui/material";
 import PropTypes from "prop-types";
 import UploadInputV3 from "../../inputs/upload-input-v3";
 import T from "i18n-react";
-import CloseIcon from "@mui/icons-material/Close";
+import CustomDialog from "../CustomDialog";
 import {
   DECIMAL_DIGITS
 } from "../../../utils/constants";
@@ -57,11 +48,10 @@ const UploadDialog = ({
     onClose();
   };
 
-  const handleUpload = () => {
+  const handleUpload = () =>
     onUpload(uploadedFile).then(() => {
       handleClose();
     });
-  };
 
   const handleRemove = () => {
     setUploadedFile(null);
@@ -79,54 +69,37 @@ const UploadDialog = ({
       : [];
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{T.translate("upload_input.upload_file")}</DialogTitle>
-      <IconButton
-        aria-label="close"
-        onClick={handleClose}
-        sx={(theme) => ({
-          position: "absolute",
-          right: 8,
-          top: 8,
-          color: theme.palette.grey[500]
-        })}
-      >
-        <CloseIcon />
-      </IconButton>
-      <Divider />
-      <DialogContent>
-        <Typography variant="body1" sx={{ mb: 2 }}>
-          {fileMeta.name}
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-          {fileMeta.description}
-        </Typography>
-        <Divider sx={{ marginLeft: -2, marginRight: -2, mb: 2 }} />
-        <UploadInputV3
-          id={`media_upload_${name}`}
-          name={name}
-          onUploadComplete={setUploadedFile}
-          value={getInputValue()}
-          mediaType={mediaType}
-          onRemove={handleRemove}
-          postUrl={`${window.FILE_UPLOAD_API_BASE_URL}/api/v1/files/upload`}
-          djsConfig={{ withCredentials: true }}
-          maxFiles={maxFiles}
-          canAdd={canAddMore()}
-          parallelChunkUploads
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button
-          onClick={handleUpload}
-          fullWidth
-          disabled={!uploadedFile}
-          variant="contained"
-        >
-          {T.translate("upload_input.upload_file")}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <CustomDialog
+      title={T.translate("upload_input.upload_file")}
+      open={open}
+      onClose={handleClose}
+      primaryAction={{
+        label: T.translate("upload_input.upload_file"),
+        onClick: handleUpload,
+        disabled: !uploadedFile
+      }}
+    >
+      <Typography variant="body1" sx={{ mb: 2 }}>
+        {fileMeta.name}
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+        {fileMeta.description}
+      </Typography>
+      <Divider sx={{ marginLeft: -2, marginRight: -2, mb: 2 }} />
+      <UploadInputV3
+        id={`media_upload_${name}`}
+        name={name}
+        onUploadComplete={setUploadedFile}
+        value={getInputValue()}
+        mediaType={mediaType}
+        onRemove={handleRemove}
+        postUrl={`${window.FILE_UPLOAD_API_BASE_URL}/api/v1/files/upload`}
+        djsConfig={{ withCredentials: true }}
+        maxFiles={maxFiles}
+        canAdd={canAddMore()}
+        parallelChunkUploads
+      />
+    </CustomDialog>
   );
 };
 

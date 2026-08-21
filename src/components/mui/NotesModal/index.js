@@ -15,8 +15,8 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import T from "i18n-react";
 import { useField } from "formik";
-import { Button, Dialog, DialogActions, DialogContent, Divider, DialogContentText, DialogTitle, IconButton, TextField } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import { DialogContentText, TextField } from "@mui/material";
+import CustomDialog from "../CustomDialog";
 
 const NotesModal = ({ id, label, open, title, placeholder, onClose }) => {
   const name = `i-${id}-c-global-f-notes`;
@@ -34,40 +34,27 @@ const NotesModal = ({ id, label, open, title, placeholder, onClose }) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{title || T.translate("general.notes")}</DialogTitle>
-      <IconButton
-        aria-label="close"
-        onClick={onClose}
-        sx={(theme) => ({
-          position: "absolute",
-          right: 8,
-          top: 8,
-          color: theme.palette.grey[500]
-        })}
-      >
-        <CloseIcon />
-      </IconButton>
-      <Divider />
-      <DialogContent>
-        <DialogContentText>{label}</DialogContentText>
-        <TextField
-          name={name}
-          onChange={(ev) => setNotes(ev.target.value)}
-          value={notes}
-          margin="normal"
-          multiline
-          fullWidth
-          rows={4}
-          placeholder={placeholder || T.translate("placeholders.notes")}
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleSave} variant="contained" fullWidth>
-          {T.translate("general.save")}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <CustomDialog
+      title={title || T.translate("general.notes")}
+      open={open}
+      onClose={onClose}
+      primaryAction={{
+        label: T.translate("general.save"),
+        onClick: handleSave
+      }}
+    >
+      <DialogContentText>{label}</DialogContentText>
+      <TextField
+        name={name}
+        onChange={(ev) => setNotes(ev.target.value)}
+        value={notes}
+        margin="normal"
+        multiline
+        fullWidth
+        rows={4}
+        placeholder={placeholder || T.translate("placeholders.notes")}
+      />
+    </CustomDialog>
   );
 };
 

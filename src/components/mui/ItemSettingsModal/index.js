@@ -15,15 +15,9 @@ import React from "react";
 import PropTypes from "prop-types";
 import T from "i18n-react/dist/i18n-react";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
 import Divider from "@mui/material/Divider";
-import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import CloseIcon from "@mui/icons-material/Close";
+import CustomDialog from "../CustomDialog";
 import ItemTableField from "../FormItemTable/components/ItemTableField";
 
 const ItemSettingsModal = ({ item, timeZone, open, onClose }) => {
@@ -35,53 +29,36 @@ const ItemSettingsModal = ({ item, timeZone, open, onClose }) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{T.translate("general.settings")}</DialogTitle>
-      <IconButton
-        aria-label="close"
-        onClick={onClose}
-        sx={(theme) => ({
-          position: "absolute",
-          right: 8,
-          top: 8,
-          color: theme.palette.grey[500]
-        })}
-      >
-        <CloseIcon />
-      </IconButton>
-      <Divider />
-      <DialogContent>
-        <Typography
-          variant="body2"
-          component="div"
-          sx={{ marginBottom: "20px" }}
-        >
-          {item?.name}
-        </Typography>
-        <Divider
-          sx={{
-            marginBottom: "20px",
-            marginLeft: "-24px",
-            marginRight: "-24px"
-          }}
-        />
-        {itemFields.map((exc) => (
-          <Box key={`item-field-${exc.type_id}`} sx={{ mb: 2 }}>
-            <ItemTableField
-              field={exc}
-              rowId={item.form_item_id}
-              timeZone={timeZone}
-              label={exc.name}
-            />
-          </Box>
-        ))}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleSave} variant="contained" fullWidth>
-          {T.translate("general.save")}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <CustomDialog
+      title={T.translate("general.settings")}
+      open={open}
+      onClose={onClose}
+      primaryAction={{
+        label: T.translate("general.save"),
+        onClick: handleSave
+      }}
+    >
+      <Typography variant="body2" component="div" sx={{ marginBottom: "20px" }}>
+        {item?.name}
+      </Typography>
+      <Divider
+        sx={{
+          marginBottom: "20px",
+          marginLeft: "-24px",
+          marginRight: "-24px"
+        }}
+      />
+      {itemFields.map((exc) => (
+        <Box key={`item-field-${exc.type_id}`} sx={{ mb: 2 }}>
+          <ItemTableField
+            field={exc}
+            rowId={item.form_item_id}
+            timeZone={timeZone}
+            label={exc.name}
+          />
+        </Box>
+      ))}
+    </CustomDialog>
   );
 };
 
