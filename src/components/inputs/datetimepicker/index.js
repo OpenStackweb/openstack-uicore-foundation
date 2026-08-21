@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import './datetimepicker.less';
 import Datetime from 'react-datetime';
 import moment from 'moment-timezone';
@@ -113,3 +114,25 @@ export default class DateTimePicker extends React.Component {
         );
     }
 }
+
+DateTimePicker.propTypes = {
+    id: PropTypes.string.isRequired,
+    /** A moment instance in the given timezone. */
+    value: PropTypes.object,
+    /** Receives a synthetic { target: { id, value, type } } carrying a moment. */
+    onChange: PropTypes.func.isRequired,
+    /** IANA zone; the displayed value is converted into it. */
+    timezone: PropTypes.string,
+    /** { date, time } moment format strings. Pass time: false for a date-only picker. Dereferenced with no default; required. */
+    format: PropTypes.shape({
+        date: PropTypes.string.isRequired,
+        time: PropTypes.oneOfType([PropTypes.string, PropTypes.bool])
+    }).isRequired,
+    /** Constrains selectable dates, e.g. { after, before }. */
+    validation: PropTypes.object,
+    /** Forwarded to the underlying input. */
+    inputProps: PropTypes.object,
+    disabled: PropTypes.bool,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string
+};

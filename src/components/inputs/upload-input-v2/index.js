@@ -12,6 +12,7 @@
  **/
 
 import React from 'react'
+import PropTypes from 'prop-types';
 import DropzoneJS from '../dropzone'
 import './index.less';
 import file_icon from '../upload-input/file.png';
@@ -177,3 +178,34 @@ export default class UploadInputV2 extends React.Component {
         );
     }
 }
+
+UploadInputV2.propTypes = {
+    id: PropTypes.string,
+    /** Already-uploaded files. Destructured with no default and read as value.length; required. */
+    value: PropTypes.array.isRequired,
+    /** Endpoint the dropzone POSTs to. */
+    postUrl: PropTypes.string,
+    /** Drives allowed extensions and max size unless the getters below override them. */
+    mediaType: PropTypes.shape({
+        max_size: PropTypes.number,
+        type: PropTypes.shape({ allowed_extensions: PropTypes.array })
+    }),
+    /** Upload is blocked once value reaches this count. */
+    maxFiles: PropTypes.number,
+    canAdd: PropTypes.bool,
+    onRemove: PropTypes.func,
+    onUploadComplete: PropTypes.func,
+    onError: PropTypes.func,
+    /** Extra Dropzone config, merged last. */
+    djsConfig: PropTypes.object,
+    timeOut: PropTypes.number,
+    parallelChunkUploads: PropTypes.bool,
+    maxConcurrentChunks: PropTypes.number,
+    /** Returns a comma-separated extension list, overriding mediaType. */
+    getAllowedExtensions: PropTypes.func,
+    /** Returns max size in MB, overriding mediaType. */
+    getMaxSize: PropTypes.func,
+    canDelete: PropTypes.bool,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string
+};

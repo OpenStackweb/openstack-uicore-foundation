@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import SelectableTableHeading from './SelectableTableHeading';
 import SelectableTableCell from './SelectableTableCell';
 import SelectableTableRow from './SelectableTableRow';
@@ -181,5 +182,51 @@ class SelectableTable extends React.Component {
         );
     }
 }
+
+SelectableTable.propTypes = {
+    columns: PropTypes.arrayOf(PropTypes.shape({
+        columnKey: PropTypes.string.isRequired,
+        value: PropTypes.node,
+        sortable: PropTypes.bool,
+        width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        /** (row, cellValue) => node. Overrides default cell rendering. */
+        render: PropTypes.func
+    })).isRequired,
+    /** Each row's own `checked` flag drives its checkbox; selection state lives with the caller. `:152` explicitly handles array rows too. */
+    data: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.object, PropTypes.array])).isRequired,
+    options: PropTypes.shape({
+        className: PropTypes.string,
+        /** Hides the header select-all checkbox. */
+        disableSelectAll: PropTypes.bool,
+        /** Controlled checked state of the select-all checkbox. */
+        selectedAll: PropTypes.bool,
+        sortCol: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        sortDir: PropTypes.number,
+        sortFunc: PropTypes.func,
+        actionsHeader: PropTypes.node,
+        actions: PropTypes.shape({
+            edit: PropTypes.shape({
+                /** Row click. Checkbox clicks are excluded. */
+                onClick: PropTypes.func,
+                /** (id, checked) for a single row. */
+                onSelected: PropTypes.func,
+                /** Change handler for the header select-all checkbox. */
+                onSelectedAll: PropTypes.func,
+                display: PropTypes.func
+            }),
+            delete: PropTypes.shape({
+                onClick: PropTypes.func.isRequired,
+                display: PropTypes.func
+            }),
+            custom: PropTypes.arrayOf(PropTypes.shape({
+                name: PropTypes.string.isRequired,
+                icon: PropTypes.node,
+                tooltip: PropTypes.string,
+                onClick: PropTypes.func.isRequired,
+                display: PropTypes.func
+            }))
+        })
+    }).isRequired
+};
 
 export default SelectableTable;

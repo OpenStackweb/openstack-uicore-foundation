@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import AsyncSelect from 'react-select/lib/Async';
 import AsyncCreatableSelect from 'react-select/lib/AsyncCreatable';
 import {queryOrganizations} from '../../utils/query-actions';
@@ -97,5 +98,22 @@ export default class OrganizationInput extends React.Component {
     }
 }
 
-
-
+OrganizationInput.propTypes = {
+    /** Selected organization, read as value.id / value.name. */
+    value: PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        name: PropTypes.string
+    }),
+    /** Echoed back as ev.target.id on the synthetic change event. */
+    id: PropTypes.string.isRequired,
+    /** Receives a synthetic { target: { id, value, type } }. */
+    onChange: PropTypes.func.isRequired,
+    /** No effect on this component: it flows through ...rest into AsyncSelect as multi, but react-select ^2.4.3 renamed that prop to isMulti. Consumers still pass it; it does nothing here. */
+    multi: PropTypes.bool,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string,
+    /** Presence-gated: switches to AsyncCreatableSelect regardless of value. */
+    allowCreate: PropTypes.bool,
+    /** Called with the typed text when a new organization is created. Required whenever allowCreate is present: AsyncCreatableSelect's create action calls it unconditionally. */
+    onCreate: PropTypes.func
+};
