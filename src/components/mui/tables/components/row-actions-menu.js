@@ -26,11 +26,11 @@ const RowActionsMenu = ({ actions }) => {
   return (
     <>
       <IconButton
-        size="small"
+        size="medium"
         onClick={(e) => setAnchorEl(e.currentTarget)}
         data-testid="row-actions-menu-trigger"
       >
-        <MoreVertIcon fontSize="small" />
+        <MoreVertIcon fontSize="large" />
       </IconButton>
       <Menu
         anchorEl={anchorEl}
