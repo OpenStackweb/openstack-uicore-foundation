@@ -211,6 +211,9 @@ const UploadInputV3 = ({
       if (entry?.previewUrl) URL.revokeObjectURL(entry.previewUrl);
       return prev.filter(f => !(f.name === file.name && f.size === file.size));
     });
+    // Dropzone turns a cancelled upload into an error carrying dictUploadCanceled. A cancel
+    // the user asked for is not a failure to report back to them - the row just goes away.
+    if (file._userCanceled) return;
     setErrorFiles(prev => [...prev, { name: file.name, size: file.size, message }]);
   }, []);
 
@@ -232,7 +235,12 @@ const UploadInputV3 = ({
       const dzFile = dropzoneInstanceRef.current.files?.find(
         f => f.name === file.name && f.size === file.size
       );
-      if (dzFile) dropzoneInstanceRef.current.removeFile(dzFile);
+      if (dzFile) {
+        // Flag it before removing so handleFileError can tell this deliberate cancel
+        // apart from a real upload failure.
+        dzFile._userCanceled = true;
+        dropzoneInstanceRef.current.removeFile(dzFile);
+      }
     }
   }, []);
 

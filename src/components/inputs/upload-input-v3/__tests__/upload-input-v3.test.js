@@ -265,6 +265,34 @@ describe('UploadInputV3', () => {
       expect(container.querySelector('.dropzone-mock')).toBeVisible();
     });
 
+    test('does not show an error row when the user cancels the upload themselves', () => {
+      const removeFile = jest.fn();
+      const dzFile = { name: 'sample.png', size: 11264 };
+
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onDropzoneReady({ files: [dzFile], removeFile });
+      });
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'sample.png', size: 11264 });
+      });
+      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+
+      // The delete button on the uploading row is the only button on screen.
+      act(() => {
+        fireEvent.click(screen.getByRole('button'));
+      });
+      expect(removeFile).toHaveBeenCalledWith(dzFile);
+
+      // Dropzone reports a cancelled upload as an error carrying dictUploadCanceled.
+      act(() => {
+        dropzoneCallbacks.onFileError(dzFile, 'Upload canceled.');
+      });
+
+      expect(screen.queryByText('Upload canceled.')).not.toBeInTheDocument();
+      expect(screen.queryByText('sample.png')).not.toBeInTheDocument();
+    });
+
     test('hides dropzone when an error is present', () => {
       const { container } = render(<UploadInputV3 {...defaultProps} />);
       act(() => {

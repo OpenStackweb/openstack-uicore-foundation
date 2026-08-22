@@ -22,6 +22,26 @@ export class DropzoneJS extends React.Component {
         this.activeXHRs = new Map(); // Track active XHR requests per file
         this.chunkQueue = [];
         this.chunksInFlight = 0;
+        // Status-poll interval ids, one per file in flight. Kept as a set (and mirrored on
+        // the file itself) rather than a single slot so a second file starting to poll
+        // cannot orphan the first one's interval.
+        this._pollIntervals = new Set();
+    }
+
+    /**
+     * Stops the status polling started by pollUploadStatus for this file, if any.
+     * Cancelling an upload has to reach the interval too: a file the user removed while the
+     * server was still processing it must stop asking for its status, otherwise the result
+     * lands later and gets committed as if the upload had been kept.
+     */
+    stopPolling(file) {
+        if (!file) return;
+        if (file._pollIntervalId) {
+            clearInterval(file._pollIntervalId);
+            this._pollIntervals.delete(file._pollIntervalId);
+            file._pollIntervalId = null;
+        }
+        file._pollingActive = false;
     }
 
     onError(e, status){
@@ -77,12 +97,15 @@ export class DropzoneJS extends React.Component {
         const maxAttempts = 300; // 10 minutes at 2s intervals
         let attempts = 0;
 
-        this._pollInterval = setInterval(async () => {
+        const intervalId = setInterval(async () => {
+            // The file may have been removed since the last tick.
+            if (file._canceled) {
+                this.stopPolling(file);
+                return;
+            }
             attempts++;
             if (attempts > maxAttempts) {
-                clearInterval(this._pollInterval);
-                this._pollInterval = null;
-                file._pollingActive = false;
+                this.stopPolling(file);
                 this.onError({ message: 'Upload timed out' });
                 return;
             }
@@ -92,28 +115,32 @@ export class DropzoneJS extends React.Component {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
                 const data = await response.json();
+                // Clearing the interval is not enough on its own: this tick was already
+                // awaiting its response when the user cancelled, and committing it now
+                // would restore a file they removed.
+                if (file._canceled) {
+                    this.stopPolling(file);
+                    return;
+                }
                 if (data.status === 'complete') {
-                    clearInterval(this._pollInterval);
-                    this._pollInterval = null;
-                    file._pollingActive = false;
+                    this.stopPolling(file);
                     // Call the stored done callback to trigger Dropzone's success event
                     if (file?._chunksUploadedDone) {
                         file._chunksUploadedDone();
                     }
                     this.onUploadComplete(data);
                 } else if (data.status === 'error') {
-                    clearInterval(this._pollInterval);
-                    this._pollInterval = null;
-                    file._pollingActive = false;
+                    this.stopPolling(file);
                     this.onError(data);
                 }
             } catch (error) {
-                clearInterval(this._pollInterval);
-                this._pollInterval = null;
-                file._pollingActive = false;
+                this.stopPolling(file);
                 this.onError(error);
             }
         }, 2000);
+
+        file._pollIntervalId = intervalId;
+        this._pollIntervals.add(intervalId);
     }
 
     /**
@@ -204,10 +231,8 @@ export class DropzoneJS extends React.Component {
      * Removes dropzone.js (and all its globals) if the component is being unmounted
      */
     componentWillUnmount () {
-        if (this._pollInterval) {
-            clearInterval(this._pollInterval);
-            this._pollInterval = null;
-        }
+        this._pollIntervals.forEach(intervalId => clearInterval(intervalId));
+        this._pollIntervals.clear();
 
         // Clear chunk queue and cancel all pending XHR requests
         this.chunkQueue = [];
@@ -343,6 +368,14 @@ export class DropzoneJS extends React.Component {
         this.dropzone.on('removedfile', (file) => {
             if (!file) return;
 
+            // Mark the file dead FIRST: both commit points (xhr.onload below and the status
+            // poll) check this flag, so a result that lands after the user cancelled is
+            // dropped instead of being pushed to the parent.
+            file._canceled = true;
+            this.stopPolling(file);
+            // A removed file must not fire Dropzone's deferred success event either.
+            file._chunksUploadedDone = null;
+
             // Cancel all active XHR requests for this file
             const xhrs = this.activeXHRs.get(file);
             if (xhrs) {
@@ -433,6 +466,13 @@ export class DropzoneJS extends React.Component {
                 }
 
                 dropzoneOnLoad(e);
+
+                // The user may have cancelled while this response was in flight: abort() on an
+                // already-DONE xhr is a no-op, so without this check the result would still be
+                // committed for a file that is no longer in the list. 'canceled' is the value of
+                // Dropzone.CANCELED, compared as a literal so the guard does not depend on the
+                // Dropzone module being loaded.
+                if (file._canceled || file.status === 'canceled') return;
 
                 if(xhr?.status == 200) {
                     if (typeof uploadResponse.name === 'string') {
