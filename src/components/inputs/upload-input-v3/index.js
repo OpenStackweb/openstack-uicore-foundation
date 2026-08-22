@@ -212,8 +212,11 @@ const UploadInputV3 = ({
       return prev.filter(f => !(f.name === file.name && f.size === file.size));
     });
     // Dropzone turns a cancelled upload into an error carrying dictUploadCanceled. A cancel
-    // the user asked for is not a failure to report back to them - the row just goes away.
-    if (file._userCanceled) return;
+    // is not a failure to report back to the user - the row just goes away. 'canceled' is the
+    // value of Dropzone.CANCELED, matched as a literal so this does not depend on the
+    // Dropzone module being loaded here; _userCanceled also covers files Dropzone never got
+    // to mark, such as one removed before its upload reached the UPLOADING state.
+    if (file._userCanceled || file.status === 'canceled') return;
     setErrorFiles(prev => [...prev, { name: file.name, size: file.size, message }]);
   }, []);
 
