@@ -285,6 +285,236 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
       }, 2500);
     }, 10);
   }, 10000);
+  /**
+   * Resolves a handler DropzoneJS registered on the underlying Dropzone instance,
+   * so a test can drive the real wiring instead of poking at internals.
+   */
+  const getEventHandler = (instance, eventName) => {
+    const call = instance.dropzone.on.mock.calls
+      .slice()
+      .reverse()
+      .find(([evt]) => evt === eventName);
+    return call ? call[1] : null;
+  };
+
+  /**
+   * Test Case 6: cancelling a file stops ITS status polling - and only its own
+   *
+   * While the server processes an upload asynchronously (HTTP 202) the row sits in
+   * "Loading" with a delete button. Removing the file there used to leave the status
+   * interval running, so when processing finished the result was still pushed to the
+   * parent and the "cancelled" file ended up committed to the form.
+   */
+  test('test_dropzone_cancel_stops_polling_for_that_file_only', (done) => {
+    // Server is still processing: every poll answers 'uploading', so polling keeps going.
+    global.fetch = jest.fn(() =>
+      Promise.resolve({ json: () => Promise.resolve({ status: 'uploading' }) })
+    );
+
+    const ref = React.createRef();
+
+    render(
+      <DropzoneJS
+        {...defaultProps}
+        ref={ref}
+        onUploadComplete={onUploadCompleteMock}
+        onError={onErrorMock}
+      />
+    );
+
+    setTimeout(() => {
+      const instance = ref.current;
+      const fileA = { name: 'a.png', size: 1024 };
+      const fileB = { name: 'b.png', size: 2048 };
+
+      instance.pollUploadStatus('file-a', 'https://example.com/upload', fileA);
+      instance.pollUploadStatus('file-b', 'https://example.com/upload', fileB);
+
+      setTimeout(() => {
+        expect(global.fetch).toHaveBeenCalled();
+
+        const onRemovedFile = getEventHandler(instance, 'removedfile');
+        expect(typeof onRemovedFile).toBe('function');
+        onRemovedFile(fileA);
+
+        const callsAtCancel = global.fetch.mock.calls.length;
+
+        setTimeout(() => {
+          const urlsAfterCancel = global.fetch.mock.calls
+            .slice(callsAtCancel)
+            .map(([url]) => url);
+
+          // fileB is untouched and keeps polling on its own interval...
+          expect(urlsAfterCancel.length).toBeGreaterThan(0);
+          // ...while the cancelled file never asks for its status again.
+          expect(urlsAfterCancel.some((url) => url.endsWith('/status/file-a'))).toBe(false);
+
+          done();
+        }, 2500);
+      }, 2500);
+    }, 10);
+  }, 15000);
+
+  /**
+   * Test Case 7: a status response that lands AFTER the cancel must not be committed
+   *
+   * Clearing the interval is not enough on its own: the tick that was already awaiting
+   * its status request resolves after the user cancelled, and used to fire the deferred
+   * success callback plus onUploadComplete.
+   */
+  test('test_dropzone_cancel_while_status_request_in_flight_does_not_commit_result', (done) => {
+    let respondComplete = null;
+    global.fetch = jest.fn(
+      () =>
+        new Promise((resolve) => {
+          respondComplete = () =>
+            resolve({
+              json: () =>
+                Promise.resolve({ status: 'complete', name: 'test.pdf', size: 1024000 })
+            });
+        })
+    );
+
+    const ref = React.createRef();
+
+    render(
+      <DropzoneJS
+        {...defaultProps}
+        ref={ref}
+        onUploadComplete={onUploadCompleteMock}
+        onError={onErrorMock}
+      />
+    );
+
+    setTimeout(() => {
+      const instance = ref.current;
+      const chunksUploadedDone = jest.fn();
+      const mockFile = {
+        name: 'test.pdf',
+        size: 1024000,
+        _asyncProcessing: true,
+        _chunksUploadedDone: chunksUploadedDone
+      };
+
+      instance.pollUploadStatus('file-123', 'https://example.com/upload', mockFile);
+
+      setTimeout(() => {
+        // The first tick fired and is parked on the status request.
+        expect(typeof respondComplete).toBe('function');
+
+        // The user cancels while that request is still in flight...
+        getEventHandler(instance, 'removedfile')(mockFile);
+        // ...and only then does the server report the upload as processed.
+        respondComplete();
+
+        setTimeout(() => {
+          expect(chunksUploadedDone).not.toHaveBeenCalled();
+          expect(onUploadCompleteMock).not.toHaveBeenCalled();
+          done();
+        }, 100);
+      }, 2500);
+    }, 10);
+  }, 15000);
+
+  /**
+   * Test Case 8: unmounting stops polling for EVERY file in flight
+   *
+   * The interval id used to live in a single component-level slot, so a second file
+   * starting to poll orphaned the first one's interval and it outlived the component.
+   */
+  test('test_dropzone_unmount_stops_polling_for_every_file', (done) => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({ json: () => Promise.resolve({ status: 'uploading' }) })
+    );
+
+    const ref = React.createRef();
+
+    const { unmount } = render(
+      <DropzoneJS
+        {...defaultProps}
+        ref={ref}
+        onUploadComplete={onUploadCompleteMock}
+        onError={onErrorMock}
+      />
+    );
+
+    setTimeout(() => {
+      const instance = ref.current;
+
+      instance.pollUploadStatus('file-a', 'https://example.com/upload', {
+        name: 'a.png',
+        size: 1024
+      });
+      instance.pollUploadStatus('file-b', 'https://example.com/upload', {
+        name: 'b.png',
+        size: 2048
+      });
+
+      setTimeout(() => {
+        expect(global.fetch).toHaveBeenCalled();
+
+        unmount();
+        const callsAtUnmount = global.fetch.mock.calls.length;
+
+        setTimeout(() => {
+          expect(global.fetch.mock.calls.length).toBe(callsAtUnmount);
+          done();
+        }, 2500);
+      }, 2500);
+    }, 10);
+  }, 15000);
+
+  /**
+   * Test Case 9: an upload response that arrives after the cancel must not be committed
+   *
+   * xhr.abort() on a request already in DONE state is a no-op, so the synchronous (200)
+   * path could still reach onUploadComplete for a file the user had just removed.
+   */
+  test('test_dropzone_upload_response_after_cancel_does_not_commit_result', (done) => {
+    const ref = React.createRef();
+
+    render(
+      <DropzoneJS
+        {...defaultProps}
+        ref={ref}
+        onUploadComplete={onUploadCompleteMock}
+        onError={onErrorMock}
+      />
+    );
+
+    setTimeout(() => {
+      const instance = ref.current;
+      const mockFile = {
+        name: 'test.pdf',
+        size: 1024000,
+        accessToken: 'mock-token',
+        md5: 'mock-md5'
+      };
+      const mockXhr = {
+        readyState: XMLHttpRequest.DONE,
+        status: 200,
+        responseText: JSON.stringify({
+          name: 'test.pdf',
+          path: 'uploads/',
+          size: 1024000
+        }),
+        setRequestHeader: jest.fn(),
+        onload: jest.fn(),
+        onerror: jest.fn(),
+        abort: jest.fn()
+      };
+
+      // 'sending' is what installs the wrapper deciding what to do with the response.
+      getEventHandler(instance, 'sending')(mockFile, mockXhr, { append: jest.fn() });
+
+      // The user cancels; the response for the last chunk is already on its way back.
+      getEventHandler(instance, 'removedfile')(mockFile);
+      mockXhr.onload({});
+
+      expect(onUploadCompleteMock).not.toHaveBeenCalled();
+      done();
+    }, 10);
+  });
 });
 
 describe('DropzoneJS - Progress Bar Monotonicity', () => {
