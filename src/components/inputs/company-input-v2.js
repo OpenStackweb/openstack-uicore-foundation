@@ -13,7 +13,9 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import { TextField, Autocomplete, Typography } from "@mui/material";
+import TextField from "@mui/material/TextField";
+import Autocomplete from "@mui/material/Autocomplete";
+import Typography from "@mui/material/Typography";
 import { queryRegistrationCompanies } from "../../utils/query-actions";
 import useEventCallback from "../../utils/use-event-callback";
 
