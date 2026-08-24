@@ -52,7 +52,7 @@ const _fetch = async (endpoint, callback, options = {}) => {
     } catch (e) {
         if(typeof callback === 'function')
             callback(e);
-        return Promise.reject();
+        return Promise.reject(e);
     }
 
     endpoint.addQuery('access_token', accessToken);
