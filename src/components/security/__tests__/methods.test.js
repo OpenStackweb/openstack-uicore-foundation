@@ -3,7 +3,7 @@ import {
     AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR,
 } from '../constants';
 
-import { refreshAccessToken, retryWithBackoff } from '../methods';
+import { refreshAccessToken, retryWithBackoff, getAccessToken, setAccessTokenResolver } from '../methods';
 
 // Mock utils/methods imports used by security/methods
 jest.mock('../../../utils/methods', () => ({
@@ -368,5 +368,32 @@ describe('retryWithBackoff', () => {
         expect(retryDelays).toEqual([100, 200]);
 
         setTimeoutSpy.mockRestore();
+    });
+});
+
+describe('setAccessTokenResolver / getAccessToken', () => {
+    afterEach(() => setAccessTokenResolver(null));
+
+    it('delegates to a registered resolver', async () => {
+        const resolver = jest.fn().mockResolvedValue('tok-A');
+        setAccessTokenResolver(resolver);
+        await expect(getAccessToken()).resolves.toBe('tok-A');
+        expect(resolver).toHaveBeenCalledTimes(1);
+    });
+
+    it('a later resolver replaces the previous one', async () => {
+        setAccessTokenResolver(jest.fn().mockResolvedValue('tok-A'));
+        const next = jest.fn().mockResolvedValue('tok-B');
+        setAccessTokenResolver(next);
+        await expect(getAccessToken()).resolves.toBe('tok-B');
+        expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    it('a non-function argument clears the resolver (built-in flow runs)', async () => {
+        const resolver = jest.fn().mockResolvedValue('tok-A');
+        setAccessTokenResolver(resolver);
+        setAccessTokenResolver(undefined);
+        await getAccessToken().catch(() => {});
+        expect(resolver).not.toHaveBeenCalled();
     });
 });
