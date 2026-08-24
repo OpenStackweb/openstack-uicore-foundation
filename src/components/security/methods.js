@@ -343,9 +343,22 @@ const _getAccessToken = async () => {
 }
 
 /**
+ * Optional resolver for getAccessToken, set via setAccessTokenResolver. When
+ * present, getAccessToken delegates to it; otherwise the built-in flow runs.
+ * Pass a non-function (or nothing) to reset to the built-in.
+ */
+let _resolveAccessToken = null;
+
+export const setAccessTokenResolver = (resolver) => {
+    _resolveAccessToken = typeof resolver === 'function' ? resolver : null;
+};
+
+/**
  * @returns {Promise<*|undefined>}
  */
 export const getAccessToken = async () => {
+    if (_resolveAccessToken) return _resolveAccessToken();
+
     if (typeof navigator !== 'undefined' && navigator.locks) {
         return await navigator.locks.request(GET_TOKEN_SILENTLY_LOCK_KEY, async lock => {
             console.log(`openstack-uicore-foundation::Security::methods::getAccessToken web lock api`, lock);

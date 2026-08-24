@@ -2,6 +2,27 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const path = require('path');
 const nodeExternals = require('webpack-node-externals');
 
+const { name: PKG_NAME } = require('./package.json');
+
+// Externalize uicore's OWN token module so every UMD entry shares one instance:
+// methods.js is stateful and must be a singleton. Without this, each importer
+// (e.g. query-actions) inlines its own copy with separate state. Other internal
+// modules are stateless, so they stay inlined.
+const METHODS_SRC = path.resolve(__dirname, 'src/components/security/methods.js');
+const METHODS_MODULE = `${PKG_NAME}/lib/security/methods`;
+
+// Redirect imports of methods.js to the shared lib file. The issuer guard skips
+// the methods entry itself (an entry has no issuer), so it still builds its real
+// implementation instead of requiring itself.
+const shareSecurityMethods = ({ request, context, contextInfo }, cb) => {
+    if (!contextInfo || !contextInfo.issuer || !request.startsWith('.')) return cb();
+    const resolved = path.resolve(context, request);
+    if (resolved === METHODS_SRC || `${resolved}.js` === METHODS_SRC) {
+        return cb(null, METHODS_MODULE);
+    }
+    cb();
+};
+
 module.exports = {
     entry: {
         // security
@@ -98,7 +119,7 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, 'lib'),
         filename: '[name].js',
-        library: 'openstack-uicore-foundation',
+        library: PKG_NAME,
         libraryTarget: 'umd',
         umdNamedDefine: true,
         globalObject: 'this',
@@ -191,5 +212,5 @@ module.exports = {
             }
         ]
     },
-    externals: [nodeExternals()]
+    externals: [nodeExternals(), shareSecurityMethods]
 };
