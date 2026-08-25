@@ -44,6 +44,12 @@ export const MuiBaseCustomTheme = {
           height: "24px"
         }
       }
-    }
+    },
+    MuiTooltip: {
+      tooltip: {
+        fontSize: "1em",
+        fontWeight: "400"
+      },
+    },
   }
 };

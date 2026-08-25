@@ -18,26 +18,30 @@ import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 
-const CancelledItems = ({cancelledItems, sx = {}}) => {
-
+const CancelledItems = ({ cancelledItems, sx = {} }) => {
   if (cancelledItems.length === 0) return null;
 
   return (
-    <Box sx={{display: "flex", flexDirection: "row", ...sx}}>
-      <DoNotDisturbIcon sx={{mr: 1}}/>
-      <Typography variant="body2" sx={{mb: 2, mr: 1}}>
-        {T.translate("sponsor_order_grid.cancelled_items", {count: cancelledItems.length})}
+    <Box sx={{ display: "flex", flexDirection: "row", ...sx }}>
+      <DoNotDisturbIcon sx={{ mr: "3px", top: "2px", position: "relative" }} />
+      <Typography variant="body2" sx={{ mb: 2, mr: 1 }}>
+        {T.translate("sponsor_order_grid.cancelled_items")}
       </Typography>
-      {cancelledItems.map((item) => (
-        <Link
-          key={`cancelled-item-${item.id}`}
-          variant="body1"
-          href={`#item-${item.id}`}
-          sx={{mr: 1, color: "text.disabled", textDecorationColor: "rgba(0, 0, 0, 0.38)"}}
-        >
-          {item.formCode} - {item.itemCode}
-        </Link>
-      ))}
+      {cancelledItems.map((item) => {
+        const fullyCanceled = item.canceled_quantity === item.quantity;
+        const fontWeight = fullyCanceled ? "bold" : "normal";
+
+        return (
+          <Link
+            key={`cancelled-item-${item.id}`}
+            variant="body1"
+            href={`#item-${item.id}`}
+            sx={{ mr: 1, color: "text.disabled", fontWeight, textDecorationColor: "rgba(0, 0, 0, 0.38)" }}
+          >
+            {item.formCode} - {item.itemCode} ({item.canceled_quantity}/{item.quantity})
+          </Link>
+        )
+      })}
     </Box>
   );
 }

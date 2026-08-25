@@ -23,18 +23,19 @@ import TableHead from "@mui/material/TableHead";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-import UndoIcon from "@mui/icons-material/Undo";
-import DeleteIcon from "@mui/icons-material/Delete";
-import {DiscountRow, FeeRow, NotesRow, PaymentRow, RefundRow, TotalRow} from "../table/extra-rows";
-import {SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../utils/constants";
+import Tooltip from "@mui/material/Tooltip";
+import RuleIcon from "@mui/icons-material/Rule";
+import { DiscountRow, FeeRow, NotesRow, PaymentRow, RefundRow, TotalRow } from "../table/extra-rows";
+import { SPONSOR_ORDER_GRID_ITEM_TYPES } from "../../../utils/constants";
 import InfoNote from "../InfoNote";
-import {currencyAmountFromCents} from "../../../utils/money";
+import { currencyAmountFromCents } from "../../../utils/money";
 import TransactionType from "./components/TransactionType";
-import {formatEpoch} from "../../../utils/methods";
+import { formatEpoch } from "../../../utils/methods";
 import TotalFooter from "./components/TotalFooter";
 import ReconciliationBox from "./components/ReconciliationBox";
 import CancelledItems from "./components/CancelledItems";
 import BalanceValue from "./components/BalanceValue";
+import ChangeQuantityModal from "./components/ChangeQuantityModal";
 
 const mapOrderData = (forms) => {
   if (!forms) return [];
@@ -46,7 +47,8 @@ const mapOrderData = (forms) => {
       .map((it, i) => {
         const amount = currencyAmountFromCents(it.amount || 0);
         const itemId = it.line_id ?? `${form.id}-${i}`;
-        const cancelled = !!it.canceled_by_id;
+        const canceledQuantity = it.canceled_quantity ?? 0;
+        const cancelled = canceledQuantity > 0 && canceledQuantity === it.quantity;
         const type = cancelled ? SPONSOR_ORDER_GRID_ITEM_TYPES.CANCELLED : SPONSOR_ORDER_GRID_ITEM_TYPES.CHARGE;
 
         return {
@@ -55,27 +57,25 @@ const mapOrderData = (forms) => {
           itemName: it.type?.name,
           itemCode: it.type?.code,
           quantity: it.quantity,
+          canceled_quantity: canceledQuantity,
           type,
           amount,
           amountValue: it.amount,
           cancelled,
-          cancelledBy: T.translate("sponsor_order_grid.cancelled_by", {
-            user: it.canceled_by_full_name,
-            date: formatEpoch(it.canceled_at)
-          }),
+          cancellations: it.cancellations ?? []
         };
       })
   }));
 };
 
 const SponsorOrderGrid = ({
-                            title = T.translate("sponsor_order_grid.title"),
-                            order,
-                            withReconciliation = false,
-                            withCancelledItemsHeader = false,
-                            onCancelForm,
-                            onUndoCancelForm
-                          }) => {
+  title = T.translate("sponsor_order_grid.title"),
+  order,
+  withReconciliation = false,
+  withCancelledItemsHeader = false,
+  onCancelForm,
+  onUndoCancelForm
+}) => {
 
   const {
     forms = [],
@@ -90,9 +90,10 @@ const SponsorOrderGrid = ({
     refunds_total: refundsTotal = 0
   } = order || {};
   const data = mapOrderData(forms);
-  const cancelledItems = data.flatMap((form) => form.items.filter((it) => it.cancelled));
+  const cancelledItems = data.flatMap((form) => form.items.filter((it) => it.cancellations.length > 0));
   const canCancel = onCancelForm && onUndoCancelForm;
   const trailingCols = canCancel ? 1 : 0;
+  const [changeQuantityRow, setChangeQuantityRow] = React.useState(null);
   let balance = 0;
 
   const calculateBalance = (rowAmount, op = 1) => {
@@ -108,21 +109,33 @@ const SponsorOrderGrid = ({
     {
       columnKey: "type",
       header: T.translate("sponsor_order_grid.type"),
-      render: (row) => (<TransactionType type={row.type}/>)
+      render: (row) => (<TransactionType type={row.type} />)
     },
     {
       columnKey: "details",
       header: T.translate("sponsor_order_grid.details"),
       render: (row) => (
         <>
-          <Typography variant="body1" sx={{...(row.cancelled && {textDecoration: "line-through"})}}>
-            {row.itemName} - {T.translate("sponsor_order_grid.total")}: {row.quantity}
+          <Typography variant="body1" sx={{ ...(row.cancelled && { textDecoration: "line-through" }) }}>
+            {row.itemName} - {T.translate("sponsor_order_grid.total")}: {row.quantity - row.canceled_quantity}
           </Typography>
-          {row.cancelled &&
-            <Typography variant="body1" sx={{color: "text.disabled"}}>
-              {row.cancelledBy}
-            </Typography>
-          }
+          {row.cancellations.map((cancellation) => (
+            <Box key={`cancellation-${row.id}-${cancellation.id}`} sx={{ mt: 1 }}>
+              <Typography variant="body1" sx={{ color: "text.disabled" }}>
+                {T.translate("sponsor_order_grid.cancelled_by", {
+                  x: cancellation.quantity,
+                  y: row.quantity,
+                  user: cancellation.canceled_by_full_name,
+                  date: formatEpoch(cancellation.created, "M/D/YY [@] h:mm A")
+                })}
+              </Typography>
+              {cancellation.reason &&
+                <Typography variant="body1" sx={{ color: "text.disabled", pl: 2, fontStyle: "italic" }}>
+                  ↳ {cancellation.reason}
+                </Typography>
+              }
+            </Box>
+          ))}
         </>
       )
     },
@@ -130,33 +143,32 @@ const SponsorOrderGrid = ({
       columnKey: "amount",
       header: T.translate("sponsor_order_grid.amount"),
       align: "right",
-      strikethrough: true,
     }
   ];
 
   const colCount = columns.length + 1 + trailingCols; // 1 for balance, 1 for action col
 
   const paymentsAndRefundsOrdered = [
-    ...payments?.map((payment) => ({...payment, type: "payment"})) || [],
-    ...refunds?.map((refund) => ({...refund, type: "refund"})) || []
+    ...payments?.map((payment) => ({ ...payment, type: "payment" })) || [],
+    ...refunds?.map((refund) => ({ ...refund, type: "refund" })) || []
   ].sort((a, b) => a.created - b.created);
 
   return (
-    <Box sx={{mt: 1}}>
-      <Box sx={{display: "flex", flexDirection: "row", justifyContent: "space-between", mb: 2}}>
+    <Box sx={{ mt: 1 }}>
+      <Box sx={{ display: "flex", flexDirection: "row", justifyContent: "space-between", mb: 2 }}>
         {title && (
-          <Typography gutterBottom variant="h6" sx={{mb: 4, mr: 2}}>
+          <Typography gutterBottom variant="h6" sx={{ mb: 4, mr: 2 }}>
             {title}
           </Typography>
         )}
         {withCancelledItemsHeader && (
-          <CancelledItems cancelledItems={cancelledItems} sx={{pt: "10px"}}/>
+          <CancelledItems cancelledItems={cancelledItems} sx={{ pt: "10px" }} />
         )}
       </Box>
 
       {canCancel && (
         <InfoNote
-          sx={{mb: 2}}
+          sx={{ mb: 2 }}
           message={T.translate(
             "sponsor_order_grid.cancel_info_note"
           )}
@@ -164,11 +176,11 @@ const SponsorOrderGrid = ({
       )}
       <TableContainer
         component={Box}
-        sx={{borderRadius: "10px", mb: 4, border: "1px solid #E0E0E0"}}
+        sx={{ borderRadius: "10px", mb: 4, border: "1px solid #E0E0E0" }}
       >
         <Table>
           {/* TABLE HEADER */}
-          <TableHead sx={{backgroundColor: "#EAEAEA"}}>
+          <TableHead sx={{ backgroundColor: "#EAEAEA" }}>
             <TableRow>
               {columns.map((col) => (
                 <TableCell key={col.columnKey} align={col.align ?? "left"}>
@@ -185,27 +197,20 @@ const SponsorOrderGrid = ({
               )}
             </TableRow>
           </TableHead>
-          <TableBody sx={{"& td": {fontWeight: "normal"}}}>
+          <TableBody sx={{ "& td": { fontWeight: "normal" } }}>
             {data.map((form) => {
               const rows = form.items.map((row) => (
                 <TableRow
                   id={`item-${row.id}`}
                   key={`item-row-${row.id}`}
-                  sx={{
-                    ...(row.cancelled && {bgcolor: "#FAFAFA"})
-                  }}
+                  sx={{ ...(row.cancelled && { bgcolor: "#FAFAFA" }) }}
                 >
                   {(() => {
                     const cols = columns.map((col) => (
                       <TableCell
                         key={`grid-col-${row.id}-${col.columnKey}`}
                         align={col.align ?? "left"}
-                        sx={{
-                          ...(row.cancelled && {
-                            color: "text.disabled",
-                            ...(col.strikethrough && {textDecoration: "line-through"})
-                          })
-                        }}
+                        sx={{ ...(row.cancelled && { color: "text.disabled" }) }}
                       >
                         {col.render ? (
                           col.render(row)
@@ -221,10 +226,10 @@ const SponsorOrderGrid = ({
                         key={`grid-col-${row.id}-balance`}
                         align="right"
                         sx={{
-                          ...(row.cancelled && {color: "text.disabled"})
+                          ...(row.cancelled && { color: "text.disabled" })
                         }}
                       >
-                        <BalanceValue value={calculateBalance(row.amountValue)}/>
+                        <BalanceValue value={calculateBalance(row.amountValue)} />
                       </TableCell>
                     )
 
@@ -235,15 +240,11 @@ const SponsorOrderGrid = ({
                           key="action"
                           align="right"
                         >
-                          {row.cancelled ? (
-                            <IconButton size="large" onClick={() => onUndoCancelForm(row)}>
-                              <UndoIcon fontSize="large" sx={{color: "primary.dark"}}/>
+                          <Tooltip title={T.translate("sponsor_order_grid.change_quantity_tooltip")}>
+                            <IconButton size="large" onClick={() => setChangeQuantityRow(row)}>
+                              <RuleIcon fontSize="large" />
                             </IconButton>
-                          ) : (
-                            <IconButton size="large" onClick={() => onCancelForm(row)}>
-                              <DeleteIcon fontSize="large"/>
-                            </IconButton>
-                          )}
+                          </Tooltip>
                         </TableCell>
                       )
                     }
@@ -314,7 +315,7 @@ const SponsorOrderGrid = ({
                 total={total}
                 label={T.translate("sponsor_order_grid.amount_due")}
                 trailing={trailingCols}
-                rowSx={{bgcolor: "#F1F3F5", "& td": {borderBottom: "none"}}}
+                rowSx={{ bgcolor: "#F1F3F5", "& td": { borderBottom: "none" } }}
               />
             }
             {data.length === 0 && (
@@ -329,17 +330,26 @@ const SponsorOrderGrid = ({
       </TableContainer>
 
       {withReconciliation &&
-        <Box sx={{mt: 3}}>
-          <Divider/>
+        <Box sx={{ mt: 3 }}>
+          <Divider />
           <ReconciliationBox
             cancelledTotal={cancelledTotal}
             refundsTotal={refundsTotal}
             retained={retained}
             credited={credited}
           />
-          <TotalFooter total={total}/>
+          <TotalFooter total={total} />
         </Box>
       }
+      {changeQuantityRow && (
+        <ChangeQuantityModal
+          open={!!changeQuantityRow}
+          onClose={() => setChangeQuantityRow(null)}
+          item={changeQuantityRow}
+          onCancelForm={onCancelForm}
+          onUndoCancelForm={onUndoCancelForm}
+        />
+      )}
     </Box>
   );
 };

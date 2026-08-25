@@ -29,12 +29,12 @@ describe("CancelledItems", () => {
 
   test("renders a link for each cancelled item", () => {
     const items = [
-      { id: 1, formCode: "GOLD", itemCode: "BOOTH" },
-      { id: 2, formCode: "SILVER", itemCode: "TABLE" }
+      { id: 1, formCode: "GOLD", itemCode: "BOOTH", canceled_quantity: 1, quantity: 2 },
+      { id: 2, formCode: "SILVER", itemCode: "TABLE", canceled_quantity: 3, quantity: 3 }
     ];
     render(<CancelledItems cancelledItems={items} />);
-    expect(screen.getByText("GOLD - BOOTH")).toBeInTheDocument();
-    expect(screen.getByText("SILVER - TABLE")).toBeInTheDocument();
+    expect(screen.getByText("GOLD - BOOTH (1/2)")).toBeInTheDocument();
+    expect(screen.getByText("SILVER - TABLE (3/3)")).toBeInTheDocument();
   });
 
   test("each link href anchors to the item id", () => {
