@@ -46,10 +46,9 @@ export const MuiBaseCustomTheme = {
       }
     },
     MuiTooltip: {
-      tooltip: {
-        fontSize: "1em",
-        fontWeight: "400"
-      },
+      styleOverrides: {
+        tooltip: { fontSize: "1em", fontWeight: "400" }
+      }
     },
   }
 };

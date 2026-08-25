@@ -156,7 +156,7 @@
       "reset": "Reset to Original",
       "reason": "Reason"
     },
-    "cancel_info_note": "Active order items can be canceled. Canceled items show an undo action to restore them. Refund and payment rows are display-only.",
+    "cancel_info_note": "Active order items can be partially or fully canceled, or reverted to original quantity. Refund and payment rows are display-only.",
     "cancelled_by": "Cancelled ({x} of {y}) • {date} • {user}",
     "cancelled_items": "Cancelled items:",
     "reconciliation": "Reconciliation",

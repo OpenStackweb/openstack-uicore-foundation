@@ -84,6 +84,8 @@ const ChangeQuantityModal = ({
                 fullWidth
                 size="small"
                 margin="none"
+                // if fully canceled you can only reset to original quantity
+                disabled={currentQuantity === 0}
                 min={0}
                 max={currentQuantity}
                 label={T.translate("sponsor_order_grid.change_quantity_modal.quantity")}
