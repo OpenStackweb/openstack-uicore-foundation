@@ -37,9 +37,11 @@ const ChangeQuantityModal = ({
     },
     onSubmit: ({ quantity, reason }) => {
       if (quantity < currentQuantity) {
-        onCancelForm(item, currentQuantity - quantity, reason);
-      } else if (quantity > currentQuantity) {
-        onUndoCancelForm(item);
+        return onCancelForm(item, currentQuantity - quantity, reason).then(onClose);
+      }
+      // can only call undo if quantity restored to original
+      if (quantity === originalQuantity) {
+        return onUndoCancelForm(item).then(onClose);
       }
       onClose();
     },
@@ -58,7 +60,9 @@ const ChangeQuantityModal = ({
 
   const canReset = originalQuantity !== currentQuantity;
   const hasChanged = formik.values.quantity !== currentQuantity;
-  const isRestoring = formik.values.quantity > currentQuantity;
+  const isRestoring = formik.values.quantity === originalQuantity;
+  // between currentQuantity and originalQuantity there is no valid action
+  const isInGap = !isRestoring && formik.values.quantity > currentQuantity;
 
   return (
     <CustomDialog
@@ -68,7 +72,7 @@ const ChangeQuantityModal = ({
       primaryAction={{
         label: T.translate("general.apply"),
         onClick: formik.submitForm,
-        disabled: !hasChanged
+        disabled: !hasChanged || isInGap
       }}
       secondaryAction={{
         label: T.translate("general.cancel"),

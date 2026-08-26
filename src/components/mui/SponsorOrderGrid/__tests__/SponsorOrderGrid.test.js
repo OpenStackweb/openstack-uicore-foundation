@@ -30,7 +30,8 @@ jest.mock("../../../../utils/methods", () => ({
 }));
 
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import T from "i18n-react/dist/i18n-react";
 import SponsorOrderGrid from "../index";
@@ -156,8 +157,8 @@ describe("SponsorOrderGrid", () => {
     ).toBeDisabled();
   });
 
-  test("lowering the quantity and applying calls onCancelForm with the delta, item and reason", async () => {
-    const onCancelForm = jest.fn();
+  test("lowering the quantity and applying calls onCancelForm with the delta, item and reason, then closes the dialog", async () => {
+    const onCancelForm = jest.fn(() => Promise.resolve());
     const order = {
       forms: [makeForm({ items: [makeItem({ line_id: 841, quantity: 5, canceled_quantity: 0 })] })],
       total: 0
@@ -166,7 +167,7 @@ describe("SponsorOrderGrid", () => {
       <SponsorOrderGrid
         order={order}
         onCancelForm={onCancelForm}
-        onUndoCancelForm={jest.fn()}
+        onUndoCancelForm={jest.fn(() => Promise.resolve())}
       />
     );
     const button = document.querySelector("tbody button");
@@ -190,10 +191,51 @@ describe("SponsorOrderGrid", () => {
         "Damaged"
       )
     );
+    await waitFor(() =>
+      expect(
+        screen.queryByText("sponsor_order_grid.change_quantity_modal.title")
+      ).not.toBeInTheDocument()
+    );
   });
 
-  test("clicking reset then applying calls onUndoCancelForm with the item", async () => {
-    const onUndoCancelForm = jest.fn();
+  test("dialog stays open and the typed reason is preserved when onCancelForm rejects", async () => {
+    const onCancelForm = jest.fn(() => Promise.reject(new Error("Cannot cancel 3 units; only 2 remain")));
+    const order = {
+      forms: [makeForm({ items: [makeItem({ line_id: 841, quantity: 5, canceled_quantity: 0 })] })],
+      total: 0
+    };
+    render(
+      <SponsorOrderGrid
+        order={order}
+        onCancelForm={onCancelForm}
+        onUndoCancelForm={jest.fn(() => Promise.resolve())}
+      />
+    );
+    const button = document.querySelector("tbody button");
+    fireEvent.click(button);
+
+    const quantityField = screen.getByLabelText(
+      "sponsor_order_grid.change_quantity_modal.quantity"
+    );
+    fireEvent.change(quantityField, { target: { value: "2" } });
+    const reasonField = screen.getByLabelText(
+      "sponsor_order_grid.change_quantity_modal.reason"
+    );
+    fireEvent.change(reasonField, { target: { value: "Damaged" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "general.apply" }));
+
+    await waitFor(() => expect(onCancelForm).toHaveBeenCalled());
+    expect(
+      screen.getByText("sponsor_order_grid.change_quantity_modal.title")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("sponsor_order_grid.change_quantity_modal.reason")).toHaveValue(
+      "Damaged"
+    );
+  });
+
+  test("clicking reset then applying calls onUndoCancelForm with the item, then closes the dialog", async () => {
+    const onUndoCancelForm = jest.fn(() => Promise.resolve());
     const order = {
       forms: [
         makeForm({
@@ -205,7 +247,7 @@ describe("SponsorOrderGrid", () => {
     render(
       <SponsorOrderGrid
         order={order}
-        onCancelForm={jest.fn()}
+        onCancelForm={jest.fn(() => Promise.resolve())}
         onUndoCancelForm={onUndoCancelForm}
       />
     );
@@ -223,6 +265,11 @@ describe("SponsorOrderGrid", () => {
       expect(onUndoCancelForm).toHaveBeenCalledWith(
         expect.objectContaining({ id: 841 })
       )
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByText("sponsor_order_grid.change_quantity_modal.title")
+      ).not.toBeInTheDocument()
     );
   });
 
@@ -262,6 +309,43 @@ describe("SponsorOrderGrid", () => {
     );
     fireEvent.change(quantityField, { target: { value: "1" } });
     expect(reasonField).toBeEnabled();
+  });
+
+  test("a fully cancelled line keeps the quantity field disabled, so it cannot be typed back to a non-zero value that would trigger a silent restore", async () => {
+    const user = userEvent.setup();
+    const onUndoCancelForm = jest.fn();
+    const order = {
+      forms: [
+        makeForm({
+          items: [makeItem({ line_id: 841, quantity: 5, canceled_quantity: 5 })]
+        })
+      ],
+      total: 0
+    };
+    render(
+      <SponsorOrderGrid
+        order={order}
+        onCancelForm={jest.fn()}
+        onUndoCancelForm={onUndoCancelForm}
+      />
+    );
+    const button = document.querySelector("tbody button");
+    fireEvent.click(button);
+
+    const quantityField = screen.getByLabelText(
+      "sponsor_order_grid.change_quantity_modal.quantity"
+    );
+    await user.type(quantityField, "4");
+
+    const applyButton = screen.getByRole("button", { name: "general.apply" });
+    await act(async () => {
+      fireEvent.click(applyButton);
+      // flush the formik async submit pipeline so a call would have landed by now
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(onUndoCancelForm).not.toHaveBeenCalled();
   });
 
   test("does not strikethrough or show Cancelled type when only partially cancelled", () => {

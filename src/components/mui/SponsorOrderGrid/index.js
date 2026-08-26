@@ -90,7 +90,7 @@ const SponsorOrderGrid = ({
     refunds_total: refundsTotal = 0
   } = order || {};
   const data = mapOrderData(forms);
-  const cancelledItems = data.flatMap((form) => form.items.filter((it) => it.cancellations.length > 0));
+  const cancelledItems = data.flatMap((form) => form.items.filter((it) => it.canceled_quantity > 0));
   const canCancel = onCancelForm && onUndoCancelForm;
   const trailingCols = canCancel ? 1 : 0;
   const [changeQuantityRow, setChangeQuantityRow] = React.useState(null);
