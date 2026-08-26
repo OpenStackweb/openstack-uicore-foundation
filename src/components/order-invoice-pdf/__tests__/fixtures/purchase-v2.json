@@ -86,6 +86,51 @@
           "canceled_by_email": "admin@example.com",
           "canceled_by_full_name": "Admin User",
           "cancel_reason": "Sponsor downgraded package",
+          "canceled_quantity": 1,
+          "cancellations": [
+            {
+              "id": 501,
+              "quantity": 1,
+              "amount": 15000,
+              "reason": "Sponsor downgraded package",
+              "canceled_by_id": 7,
+              "canceled_by_email": "admin@example.com",
+              "canceled_by_full_name": "Admin User",
+              "created": 1699900000
+            }
+          ],
+          "meta_fields": []
+        },
+        {
+          "line_id": 9003,
+          "position": 3,
+          "code": "ITEM-C",
+          "title": "Extra Badges",
+          "type": { "id": 213, "code": "ITEM-C", "name": "Extra Badges" },
+          "notes": null,
+          "quantity": 5,
+          "current_rate_type": "Early",
+          "current_rate": 10000,
+          "custom_rate": null,
+          "amount": 50000,
+          "canceled_at": null,
+          "canceled_by_id": null,
+          "canceled_by_email": null,
+          "canceled_by_full_name": null,
+          "cancel_reason": null,
+          "canceled_quantity": 2,
+          "cancellations": [
+            {
+              "id": 502,
+              "quantity": 2,
+              "amount": 20000,
+              "reason": "Partial downgrade",
+              "canceled_by_id": 7,
+              "canceled_by_email": "admin@example.com",
+              "canceled_by_full_name": "Admin User",
+              "created": 1699950000
+            }
+          ],
           "meta_fields": []
         }
       ]

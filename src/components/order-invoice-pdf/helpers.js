@@ -77,16 +77,19 @@ export const buildRows = (order) => {
     (form.items || [])
       .filter((item) => (item.quantity ?? 1) > 0)
       .forEach((item) => {
-        // Cancelled is per-item
-        const cancelled = !!item.canceled_by_id;
-        const cancelledBy = cancelled
-          ? T.translate("sponsor_order_grid.cancelled_by", {
-              user: item.canceled_by_full_name,
-              date: formatDate(item.canceled_at, "LOC", "YYYY/MM/DD HH:mm")
-            })
-          : "";
+        // Cancellation is per-item and quantity-scoped: canceled_quantity may
+        // be anywhere from 0 (not cancelled) up to quantity (fully cancelled),
+        // with the individual cancellation events (and their frozen per-event
+        // amounts) listed in cancellations. Mirrors SponsorOrderGrid's contract.
+        const quantity = item.quantity ?? 1;
+        const canceledQuantity = item.canceled_quantity ?? 0;
+        const cancellations = item.cancellations ?? [];
+        const cancelled = canceledQuantity > 0 && canceledQuantity === quantity;
+        const partiallyCancelled = canceledQuantity > 0 && canceledQuantity < quantity;
 
-        // Cancelled items still accumulate
+        // Matches SponsorOrderGrid: a charge stays in the ledger in full
+        // whether it's cancelled or not, partially or fully -- cancellation
+        // only nets out via the reconciliation block below.
         balanceCents += item.amount;
 
         rows.push({
@@ -96,11 +99,21 @@ export const buildRows = (order) => {
           code: String(form.code || ""),
           description: String(item.type?.name || item.title || ""),
           addon: String(form.add_on?.name || ""),
-          qty: String(item.quantity ?? 1),
+          qty: String(quantity - canceledQuantity),
           price: currencyAmountFromCents(item.amount),
           balanceCents,
           cancelled,
-          cancelledBy
+          partiallyCancelled,
+          cancellations: cancellations.map((c) => ({
+            id: c.id,
+            label: T.translate("sponsor_order_grid.cancelled_by", {
+              x: c.quantity,
+              y: quantity,
+              user: c.canceled_by_full_name,
+              date: formatDate(c.created, "LOC", "YYYY/MM/DD HH:mm")
+            }),
+            reason: c.reason ? String(c.reason) : ""
+          }))
         });
       });
 
