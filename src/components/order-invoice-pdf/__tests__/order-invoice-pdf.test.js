@@ -43,6 +43,7 @@ const TRANSLATIONS = {
   "sponsor_order_grid.retained": "Retained as cancellation fee",
   "sponsor_order_grid.credited": "Credited to Payment Method",
   "sponsor_order_grid.cancelled_by": "Cancelled ({x} of {y}) - {date} - {user}",
+  "sponsor_order_grid.cancelled_items": "Cancelled items:",
   "mui_table.payment": "Payment",
   "mui_table.discount": "Discount",
   "mui_table.refund": "Refund",
@@ -651,6 +652,45 @@ describe("OrderPdf — partial cancellation", () => {
     // Cancellation event line uses the (x of y) translation tokens
     expect(text).toContain("Cancelled (2 of 5) - ");
     expect(text).toContain("Admin User");
+    expect(text).toContain(
+      formatDate(
+        basePartiallyCancelledItem.cancellations[0].created,
+        "LOC",
+        "M/D/YY [@] h:mm A"
+      )
+    );
+  });
+});
+
+// ─── Cancelled items summary (render-level) ───────────────────────────────
+//
+// Mirrors SponsorOrderGrid's CancelledItems: an at-a-glance list of every
+// (partially or fully) cancelled line, so a reader doesn't have to scan the
+// whole table to find them.
+
+describe("OrderPdf — cancelled items summary", () => {
+  it("lists every cancelled line as 'formCode - itemCode (x/y)'", () => {
+    const { container } = render(
+      <OrderPdf order={makeRenderOrder()} summit={makeRenderSummit()} />
+    );
+    const text = container.textContent;
+    expect(text).toContain("Cancelled items:");
+    // baseCancelledItem: form GOLD-1, ITEM-B, fully cancelled (1/1)
+    expect(text).toContain("GOLD-1 - ITEM-B (1/1)");
+    // basePartiallyCancelledItem: form GOLD-1, ITEM-C, partially cancelled (2/5)
+    expect(text).toContain("GOLD-1 - ITEM-C (2/5)");
+  });
+
+  it("omits the summary entirely when no line is cancelled", () => {
+    const { container } = render(
+      <OrderPdf
+        order={makeRenderOrder({
+          forms: [makeForm({ discount_in_cents: 0, items: [makeItem()] })]
+        })}
+        summit={makeRenderSummit()}
+      />
+    );
+    expect(container.textContent).not.toContain("Cancelled items:");
   });
 });
 

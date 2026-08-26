@@ -56,7 +56,9 @@ export const PdfTableRow = ({ row, styles, rowStyles }) => {
           <React.Fragment key={cancellation.id}>
             <Text style={styles.muted}>{cancellation.label}</Text>
             {cancellation.reason && (
-              <Text style={styles.muted}>{cancellation.reason}</Text>
+              <Text style={styles.cancellationReason}>
+                - {cancellation.reason}
+              </Text>
             )}
           </React.Fragment>
         ))}

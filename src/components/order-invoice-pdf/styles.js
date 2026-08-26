@@ -86,6 +86,27 @@ export const createStyles = (fontFamily) => StyleSheet.create({
   fieldValue: {
     flex: 9
   },
+  cancelledItemsWrapper: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    marginTop: 8
+  },
+  cancelledItemsLabel: {
+    fontFamily,
+    fontSize: 8,
+    color: "#212529",
+    marginRight: 6
+  },
+  cancelledItemLink: {
+    fontSize: 8,
+    color: "#6C757D",
+    marginRight: 8
+  },
+  cancelledItemLinkBold: {
+    fontWeight: "bold"
+  },
   tableWrapper: {
     marginTop: 8,
     borderRadius: 8,
@@ -212,6 +233,7 @@ export const createStyles = (fontFamily) => StyleSheet.create({
   },
   paymentDesc: { fontFamily, fontSize: 8, fontWeight: "bold" },
   muted: { color: "#6C757D", fontSize: 8 },
+  cancellationReason: { color: "#6C757D", fontSize: 8, marginLeft: 8, fontStyle: "italic" },
   typeCell: { width: "15%", flexDirection: "row", alignItems: "center" },
   typeBadgeLabel: { fontSize: 8 },
   cancelledText: { color: "#9ca3af", textDecoration: "line-through" },

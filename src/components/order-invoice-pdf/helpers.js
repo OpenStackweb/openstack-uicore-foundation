@@ -97,9 +97,15 @@ export const buildRows = (order) => {
           type: "item",
           // Table shows form.code per item row (columnKey: "formCode", value: form.code)
           code: String(form.code || ""),
+          // Distinct from `code` (the form's code) -- this is the item's own
+          // code, used by the "Cancelled items:" summary to mirror
+          // SponsorOrderGrid's "formCode - itemCode (x/y)" links.
+          itemCode: String(item.type?.code || item.code || ""),
           description: String(item.type?.name || item.title || ""),
           addon: String(form.add_on?.name || ""),
           qty: String(quantity - canceledQuantity),
+          quantity,
+          canceledQuantity,
           price: currencyAmountFromCents(item.amount),
           balanceCents,
           cancelled,
@@ -110,7 +116,7 @@ export const buildRows = (order) => {
               x: c.quantity,
               y: quantity,
               user: c.canceled_by_full_name,
-              date: formatDate(c.created, "LOC", "YYYY/MM/DD HH:mm")
+              date: formatDate(c.created, "LOC", "M/D/YY [@] h:mm A")
             }),
             reason: c.reason ? String(c.reason) : ""
           }))
