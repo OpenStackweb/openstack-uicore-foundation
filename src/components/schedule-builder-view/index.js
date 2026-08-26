@@ -215,6 +215,7 @@ ScheduleBuilderView.propTypes = {
     onClickSelected: PropTypes.func,
     onMoveSingleEvent: PropTypes.func,
     onSelectAll: PropTypes.func,
+    /** Receives the chosen bulk action. Required whenever the bulk selector is shown, i.e. hideBulkSelect is falsy and there is at least one event: BulkActionsSelector declares it required and calls it with no guard. */
     onSelectedBulkAction: PropTypes.func,
     /** Overrides the default bulkOptions passed to BulkActionsSelector. */
     customBulkOptions: PropTypes.array,
