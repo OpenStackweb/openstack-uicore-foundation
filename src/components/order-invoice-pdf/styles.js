@@ -233,7 +233,12 @@ export const createStyles = (fontFamily) => StyleSheet.create({
   },
   paymentDesc: { fontFamily, fontSize: 8, fontWeight: "bold" },
   muted: { color: "#6C757D", fontSize: 8 },
-  cancellationReason: { color: "#6C757D", fontSize: 8, marginLeft: 8, fontStyle: "italic" },
+  cancellationReasonRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 8
+  },
+  cancellationReason: { color: "#6C757D", fontSize: 8, fontStyle: "italic" },
   typeCell: { width: "15%", flexDirection: "row", alignItems: "center" },
   typeBadgeLabel: { fontSize: 8 },
   cancelledText: { color: "#9ca3af", textDecoration: "line-through" },
