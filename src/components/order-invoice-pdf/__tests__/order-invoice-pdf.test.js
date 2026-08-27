@@ -42,7 +42,8 @@ const TRANSLATIONS = {
   "sponsor_order_grid.refunded": "Refunded",
   "sponsor_order_grid.retained": "Retained as cancellation fee",
   "sponsor_order_grid.credited": "Credited to Payment Method",
-  "sponsor_order_grid.cancelled_by": "Cancelled {date} by {user}",
+  "sponsor_order_grid.cancelled_by": "Cancelled ({x} of {y}) - {date} - {user}",
+  "sponsor_order_grid.cancelled_items": "Cancelled items:",
   "mui_table.payment": "Payment",
   "mui_table.discount": "Discount",
   "mui_table.refund": "Refund",
@@ -111,7 +112,8 @@ const MOCK_SUMMIT = { time_zone_id: "UTC" };
 
 const baseForm = purchaseV2Fixture.forms[0];
 const baseItem = baseForm.items[0]; // not cancelled
-const baseCancelledItem = baseForm.items[1]; // cancelled
+const baseCancelledItem = baseForm.items[1]; // fully cancelled
+const basePartiallyCancelledItem = baseForm.items[2]; // partially cancelled
 const baseFee = purchaseV2Fixture.fees[0];
 const basePayment = purchaseV2Fixture.payments[0];
 const baseRefund = purchaseV2Fixture.refunds[0];
@@ -121,6 +123,10 @@ const makeForm = (overrides = {}) => ({ ...baseForm, ...overrides });
 const makeItem = (overrides = {}) => ({ ...baseItem, ...overrides });
 const makeCancelledItem = (overrides = {}) => ({
   ...baseCancelledItem,
+  ...overrides
+});
+const makePartiallyCancelledItem = (overrides = {}) => ({
+  ...basePartiallyCancelledItem,
   ...overrides
 });
 const makeFee = (overrides = {}) => ({ ...baseFee, ...overrides });
@@ -224,34 +230,51 @@ describe("buildRows — item rows", () => {
 // ─── Cancelled items (per-item, not per-form) ─────────────────────────────────
 
 describe("buildRows — cancelled items", () => {
-  it("sets cancelled: true and populates cancelledBy when item.canceled_by_id is set", () => {
+  it("sets cancelled: true and populates cancellations when canceled_quantity equals quantity", () => {
     const rows = buildRows(
       { forms: [makeForm({ items: [makeCancelledItem()] })] },
       MOCK_SUMMIT
     );
     expect(rows[0].cancelled).toBe(true);
-    expect(rows[0].cancelledBy).toMatch(/Admin User/);
+    expect(rows[0].partiallyCancelled).toBe(false);
+    expect(rows[0].cancellations).toHaveLength(1);
+    expect(rows[0].cancellations[0].label).toMatch(/Admin User/);
+    expect(rows[0].qty).toBe("0"); // quantity(1) - canceled_quantity(1)
   });
 
-  it("sets cancelled: false and empty cancelledBy when canceled_by_id is absent or null", () => {
-    const withNull = makeForm({
+  it("sets cancelled: false, partiallyCancelled: false and no cancellations when canceled_quantity is absent or 0", () => {
+    const withZero = makeForm({
       id: 1,
       discount_in_cents: 0,
-      items: [makeItem({ canceled_by_id: null })]
+      items: [makeItem({ canceled_quantity: 0 })]
     });
     const withAbsent = makeForm({
       id: 2,
       discount_in_cents: 0,
       items: [makeItem()]
     });
-    const rows = buildRows({ forms: [withNull, withAbsent] }, MOCK_SUMMIT);
+    const rows = buildRows({ forms: [withZero, withAbsent] }, MOCK_SUMMIT);
     rows.forEach((r) => {
       expect(r.cancelled).toBe(false);
-      expect(r.cancelledBy).toBe("");
+      expect(r.partiallyCancelled).toBe(false);
+      expect(r.cancellations).toEqual([]);
     });
   });
 
-  it("cancelled items still accumulate into the running balance", () => {
+  it("sets partiallyCancelled: true (and cancelled: false) when canceled_quantity is between 0 and quantity", () => {
+    const rows = buildRows(
+      { forms: [makeForm({ items: [makePartiallyCancelledItem()] })] },
+      MOCK_SUMMIT
+    );
+    expect(rows[0].cancelled).toBe(false);
+    expect(rows[0].partiallyCancelled).toBe(true);
+    // quantity(5) - canceled_quantity(2) = 3 remaining
+    expect(rows[0].qty).toBe("3");
+    expect(rows[0].cancellations).toHaveLength(1);
+    expect(rows[0].cancellations[0].label).toMatch(/Admin User/);
+  });
+
+  it("fully cancelled items still accumulate their full amount into the running balance", () => {
     const normalItem = makeItem({ amount: 8000 });
     const cancelledItem = makeCancelledItem({ amount: 10000 });
     const rows = buildRows(
@@ -267,6 +290,15 @@ describe("buildRows — cancelled items", () => {
     const cancelled = rows.find((r) => r.cancelled);
     expect(normal.balanceCents).toBe(8000);
     expect(cancelled.balanceCents).toBe(18000); // 8000 + 10000
+  });
+
+  it("partially cancelled items still accumulate their full amount into the running balance (matches SponsorOrderGrid; cancellation only nets out via reconciliation)", () => {
+    const partialItem = makePartiallyCancelledItem({ amount: 50000 });
+    const rows = buildRows(
+      { forms: [makeForm({ discount_in_cents: 0, items: [partialItem] })] },
+      MOCK_SUMMIT
+    );
+    expect(rows[0].balanceCents).toBe(50000);
   });
 
   it("a form-level canceled_by_id does not mark items as cancelled", () => {
@@ -604,6 +636,61 @@ describe("OrderPdf — reconciliation block", () => {
       <OrderPdf order={order} summit={makeRenderSummit()} />
     );
     expect(container.textContent).not.toContain("Reconciliation");
+  });
+});
+
+// ─── Partial cancellation (render-level) ──────────────────────────────────
+
+describe("OrderPdf — partial cancellation", () => {
+  it("shows a quantity split for a partially-cancelled line instead of a full strikethrough row", () => {
+    const { container } = render(
+      <OrderPdf order={makeRenderOrder()} summit={makeRenderSummit()} />
+    );
+    const text = container.textContent;
+    // basePartiallyCancelledItem: quantity 5, canceled_quantity 2 -> 3 remaining
+    expect(text).toContain("Extra Badges - Total: 3");
+    // Cancellation event line uses the (x of y) translation tokens
+    expect(text).toContain("Cancelled (2 of 5) - ");
+    expect(text).toContain("Admin User");
+    expect(text).toContain(
+      formatDate(
+        basePartiallyCancelledItem.cancellations[0].created,
+        "LOC",
+        "M/D/YY [@] h:mm A"
+      )
+    );
+  });
+});
+
+// ─── Cancelled items summary (render-level) ───────────────────────────────
+//
+// Mirrors SponsorOrderGrid's CancelledItems: an at-a-glance list of every
+// (partially or fully) cancelled line, so a reader doesn't have to scan the
+// whole table to find them.
+
+describe("OrderPdf — cancelled items summary", () => {
+  it("lists every cancelled line as 'formCode - itemCode (x/y)'", () => {
+    const { container } = render(
+      <OrderPdf order={makeRenderOrder()} summit={makeRenderSummit()} />
+    );
+    const text = container.textContent;
+    expect(text).toContain("Cancelled items:");
+    // baseCancelledItem: form GOLD-1, ITEM-B, fully cancelled (1/1)
+    expect(text).toContain("GOLD-1 - ITEM-B (1/1)");
+    // basePartiallyCancelledItem: form GOLD-1, ITEM-C, partially cancelled (2/5)
+    expect(text).toContain("GOLD-1 - ITEM-C (2/5)");
+  });
+
+  it("omits the summary entirely when no line is cancelled", () => {
+    const { container } = render(
+      <OrderPdf
+        order={makeRenderOrder({
+          forms: [makeForm({ discount_in_cents: 0, items: [makeItem()] })]
+        })}
+        summit={makeRenderSummit()}
+      />
+    );
+    expect(container.textContent).not.toContain("Cancelled items:");
   });
 });
 

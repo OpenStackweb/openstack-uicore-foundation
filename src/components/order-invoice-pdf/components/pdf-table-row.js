@@ -52,9 +52,19 @@ export const PdfTableRow = ({ row, styles, rowStyles }) => {
             ? `${row.description} - ${T.translate("mui_table.total")}: ${row.qty}`
             : row.description}
         </Text>
-        {row.cancelledBy && (
-          <Text style={styles.muted}>{row.cancelledBy}</Text>
-        )}
+        {(row.cancellations || []).map((cancellation) => (
+          <React.Fragment key={cancellation.id}>
+            <Text style={styles.muted}>{cancellation.label}</Text>
+            {cancellation.reason && (
+              <View style={styles.cancellationReasonRow}>
+                <PdfIcon name="SubdirectoryArrowRight" color="#6C757D" />
+                <Text style={styles.cancellationReason}>
+                  {cancellation.reason}
+                </Text>
+              </View>
+            )}
+          </React.Fragment>
+        ))}
         {row.subDescription && (
           <Text style={styles.muted}>{row.subDescription}</Text>
         )}

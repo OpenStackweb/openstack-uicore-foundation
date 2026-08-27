@@ -26,6 +26,7 @@ import {
 import { FieldRow } from "./components/field-row";
 import { PdfTableRow } from "./components/pdf-table-row";
 import { ReconciliationBlock } from "./components/reconciliation-block";
+import { CancelledItemsSummary } from "./components/cancelled-items-summary";
 import { formatBalance, getOrderTotal } from "../../utils/money";
 
 export { buildRows };
@@ -45,6 +46,9 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
   const styles = createStyles(fontFamily);
   const rowStyles = createRowStyles(styles);
   const rows = buildRows(order, summit);
+  const cancelledItems = rows.filter(
+    (row) => row.type === "item" && row.cancellations?.length > 0
+  );
   const mainLocation =
     summit.main_locations?.[0] ??
     summit.locations?.find((location) => location.is_main);
@@ -146,6 +150,8 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
             />
           </View>
         </View>
+
+        <CancelledItemsSummary items={cancelledItems} styles={styles} />
 
         {/* Table */}
         <View style={styles.tableWrapper}>
