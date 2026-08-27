@@ -68,23 +68,22 @@ const MuiTableSortable = ({
     reordered.splice(result.destination.index, 0, movedItem);
 
     // change value based on updateOrderKey
-    if (updateOrderKey) {
-      reordered.forEach((item, idx) => {
-        item[updateOrderKey] = idx + 1;
-      });
-    }
+    const withOrder = updateOrderKey
+      ? reordered.map((item, idx) => ({ ...item, [updateOrderKey]: idx + 1 }))
+      : reordered;
 
-    const movedItemId = movedItem.id;
-    const newOrder = reordered.find(
+    const movedItemId = movedItem[idKey || "id"];
+    const newOrder = withOrder.find(
       (item) => item[idKey || "id"] === movedItemId
     )?.[updateOrderKey];
 
-    onReorder?.(reordered, movedItemId, newOrder);
+    onReorder?.(withOrder, movedItemId, newOrder);
   };
 
   const handleDelete = createDeleteHandler({
     onDelete,
     getName,
+    getId: (item) => item[idKey || "id"],
     deleteDialogTitle,
     deleteDialogBody,
     confirmButtonColor: "#DD6B55"

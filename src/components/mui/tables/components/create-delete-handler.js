@@ -4,6 +4,7 @@ import showConfirmDialog from "../../showConfirmDialog";
 const createDeleteHandler = ({
   onDelete,
   getName = (item) => item.name,
+  getId = (item) => item.id,
   deleteDialogTitle,
   deleteDialogBody,
   deleteDialogConfirmText,
@@ -16,7 +17,7 @@ const createDeleteHandler = ({
         ? deleteDialogBody(getName(item))
         : deleteDialogBody ||
           `${T.translate("general.row_remove_warning")} ${getName(item)}`,
-    type: "warning",
+    iconType: "warning",
     showCancelButton: true,
     confirmButtonColor,
     confirmButtonText:
@@ -24,7 +25,7 @@ const createDeleteHandler = ({
   });
 
   if (isConfirmed) {
-    onDelete(item.id);
+    onDelete(getId(item));
   }
 };
 

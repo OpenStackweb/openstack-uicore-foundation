@@ -54,7 +54,7 @@ const MuiTable = ({
   onPageChange,
   onPerPageChange,
   onSort,
-  options = { sortCol: "", sortDir: 1, disableProp: null }, // disableProp is the prop that will disable the row
+  options: userOptions = {},
   getName = (item) => item.name,
   onEdit,
   onArchive,
@@ -67,12 +67,19 @@ const MuiTable = ({
   confirmButtonColor = null,
   tableSx = {}
 }) => {
+  const options = {
+    sortCol: "",
+    sortDir: 1,
+    disableProp: null, // disableProp is the prop that will disable the row
+    ...userOptions
+  };
   const activeActionsCount =
     (onEdit ? 1 : 0) + (onDelete ? 1 : 0) + (onArchive ? 1 : 0) + (onSelect ? 1 : 0);
   // responsive:false opts out of collapsing actions into a menu — needed when
   // extra rows (e.g. TotalRow) are passed as children with a static column
   // count that can't track the collapse breakpoint
-  const collapseActions = options.responsive !== false && activeActionsCount >= 2;
+  const collapseActions =
+    options.responsive !== false && !children && activeActionsCount >= 2;
   const collapseBreakpoint = getActionsMenuBreakpoint(columns.length);
 
   const totalColumnsCount =
@@ -116,7 +123,7 @@ const MuiTable = ({
           disabled: !!(options.disableProp && row[options.disableProp])
         },
       onSelect && {
-        label: "View",
+        label: T.translate("general.view"),
         onClick: () => onSelect(row),
         disabled: !!(options.disableProp && row[options.disableProp])
       }
@@ -286,7 +293,7 @@ const MuiTable = ({
                   }}
                   className={styles.dottedBorderLeft}
                 >
-                  <Tooltip title="View">
+                  <Tooltip title={T.translate("general.view")}>
                     <span>
                       <IconButton
                         size="medium"
