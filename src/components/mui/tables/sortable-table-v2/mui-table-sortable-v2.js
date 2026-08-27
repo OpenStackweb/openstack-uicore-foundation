@@ -34,8 +34,8 @@ import styles from "./styles.module.less";
 
 import showConfirmDialog from "../../showConfirmDialog";
 import SortableRow from "./sortable-row";
-import TableCellContent from "../table/table-cell-content";
-import CustomTablePagination from "../table/CustomTablePagination";
+import TableCellContent from "../components/table-cell-content";
+import CustomTablePagination from "../components/CustomTablePagination";
 import useDndKitReorder from "../../DragNDropList/hooks/useDndKitReorder";
 
 const getRowId = (row, index, idKey) =>
