@@ -43,6 +43,32 @@ const formatFileSize = (bytes) => {
   return `${Math.round(bytes / 1024)} KB`;
 };
 
+/**
+ * Maps the fixed error strings Dropzone and pollUploadStatus report onto translated messages.
+ * Anything else is a server-provided message and is passed through untouched.
+ */
+const resolveErrorMessage = (text, status) => {
+  // status 0 means the request never got a real server response (connection dropped/timed
+  // out) - Dropzone's own message for that case is "Server responded with 0 code.", which
+  // is not something a user can act on.
+  if (status === 0) return T.translate('upload_input_v3.network_error');
+
+  switch (text) {
+    case 'Network error':
+      return T.translate('upload_input_v3.network_error');
+    case 'Upload timed out':
+      return T.translate('upload_input_v3.upload_timed_out');
+    case 'Upload failed':
+      return T.translate('upload_input_v3.upload_failed');
+    case 'Auth error':
+      return T.translate('upload_input_v3.auth_error');
+    case 'Max files reached.':
+      return T.translate('upload_input_v3.max_files_reached');
+    default:
+      return text;
+  }
+};
+
 const UploadInputV3 = ({
   value = [],
   onRemove,
@@ -223,21 +249,7 @@ const UploadInputV3 = ({
       ? message
       : (message?.message ?? T.translate('upload_input_v3.upload_failed'));
 
-    // status 0 means the request never got a real server response (connection dropped/timed
-    // out) - Dropzone's own message for that case is "Server responded with 0 code.", which
-    // is not something a user can act on.
-    const displayMessage =
-      status === 0 || text === 'Network error'
-        ? T.translate('upload_input_v3.network_error')
-        : text === 'Upload timed out'
-          ? T.translate('upload_input_v3.upload_timed_out')
-          : text === 'Upload failed'
-            ? T.translate('upload_input_v3.upload_failed')
-            : text === 'Auth error'
-              ? T.translate('upload_input_v3.auth_error')
-              : text === 'Max files reached.'
-                ? T.translate('upload_input_v3.max_files_reached')
-                : text;
+    const displayMessage = resolveErrorMessage(text, status);
 
     setErrorFiles(prev => {
       const existingIndex = prev.findIndex(f => f.name === file.name && f.size === file.size);
