@@ -218,7 +218,7 @@ const UploadInputV3 = ({
     // status 0 means the request never got a real server response (connection dropped/timed
     // out) - Dropzone's own message for that case is "Server responded with 0 code.", which
     // is not something a user can act on.
-    const displayMessage = status === 0
+    const displayMessage = status === 0 || message === 'Network error'
       ? T.translate('upload_input_v3.network_error')
       : message;
 

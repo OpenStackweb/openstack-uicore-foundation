@@ -271,6 +271,14 @@ describe('UploadInputV3', () => {
       expect(screen.queryByText('Server responded with 0 code.')).not.toBeInTheDocument();
     });
 
+    test('a fetch-rejection during status polling ("Network error") shows the same readable connection message', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'video.mp4', size: 9999999 }, 'Network error');
+      });
+      expect(screen.getByText('Upload interrupted by a connection error. Please retry.')).toBeInTheDocument();
+    });
+
     test('a real non-zero-status server error still shows the server-provided message', () => {
       render(<UploadInputV3 {...defaultProps} />);
       act(() => {

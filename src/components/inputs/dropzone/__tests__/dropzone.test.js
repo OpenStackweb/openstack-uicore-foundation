@@ -655,7 +655,7 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
       setTimeout(() => {
         expect(onErrorMock).toHaveBeenCalledTimes(1);
         const [message] = onErrorMock.mock.calls[0];
-        expect(message).toBe('network down');
+        expect(message).toBe('Network error');
         done();
       }, 2500);
     }, 10);
