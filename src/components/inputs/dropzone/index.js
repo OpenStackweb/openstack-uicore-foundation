@@ -135,7 +135,8 @@ export class DropzoneJS extends React.Component {
                 }
             } catch (error) {
                 this.stopPolling(file);
-                this.dropzone.emit('error', file, error.message || 'Network error');
+                // fetch fail is always connection error
+                this.dropzone.emit('error', file, 'Network error');
             }
         }, 2000);
 
