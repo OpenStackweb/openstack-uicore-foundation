@@ -205,21 +205,26 @@ const UploadInputV3 = ({
     }));
   }, [value]);
 
-  const handleFileError = useCallback((file, message) => {
+  const handleFileError = useCallback((file, message, status) => {
     setUploadingFiles(prev => {
       const entry = prev.find(f => f.name === file.name && f.size === file.size);
       if (entry?.previewUrl) URL.revokeObjectURL(entry.previewUrl);
       return prev.filter(f => !(f.name === file.name && f.size === file.size));
     });
-    // Dropzone turns a cancelled upload into an error carrying dictUploadCanceled. A cancel
-    // is not a failure to report back to the user - the row just goes away. 'canceled' is the
-    // value of Dropzone.CANCELED, matched as a literal so this does not depend on the
-    // Dropzone module being loaded here; _userCanceled also covers files Dropzone never got
-    // to mark, such as one removed before its upload reached the UPLOADING state.
+    // 'canceled' is the value of Dropzone.CANCELED, matched as a literal so this does not depend on the
+    // Dropzone module being loaded here; _userCanceled is when removed before its upload reached the UPLOADING state.
     if (file._userCanceled || file.status === 'canceled') return;
+
+    // status 0 means the request never got a real server response (connection dropped/timed
+    // out) - Dropzone's own message for that case is "Server responded with 0 code.", which
+    // is not something a user can act on.
+    const displayMessage = status === 0
+      ? T.translate('upload_input_v3.network_error')
+      : message;
+
     setErrorFiles(prev => {
       const existingIndex = prev.findIndex(f => f.name === file.name && f.size === file.size);
-      const entry = { name: file.name, size: file.size, message };
+      const entry = { name: file.name, size: file.size, message: displayMessage };
       if (existingIndex === -1) return [...prev, entry];
       return prev.map((f, i) => (i === existingIndex ? entry : f));
     });

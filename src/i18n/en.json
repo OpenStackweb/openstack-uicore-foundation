@@ -187,7 +187,8 @@
       "drag_and_drop": "or drag and drop",
       "see_preview": "See Preview",
       "preview_file": "Preview file",
-      "complete": "Complete"
+      "complete": "Complete",
+      "network_error": "Upload interrupted by a connection error. Please retry."
   },
   "grid_filter": {
     "filter_by": "Filter by ",

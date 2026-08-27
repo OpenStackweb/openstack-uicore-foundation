@@ -252,13 +252,31 @@ describe('UploadInputV3', () => {
         dropzoneCallbacks.onAddedFile({ name: 'big-file.png', size: 9999999 });
       });
       act(() => {
-        dropzoneCallbacks.onFileError({ name: 'big-file.png', size: 9999999 }, 'Server responded with 0 code.');
+        dropzoneCallbacks.onFileError({ name: 'big-file.png', size: 9999999 }, 'Server responded with 0 code.', 0);
       });
       act(() => {
-        dropzoneCallbacks.onFileError({ name: 'big-file.png', size: 9999999 }, 'Server responded with 0 code.');
+        dropzoneCallbacks.onFileError({ name: 'big-file.png', size: 9999999 }, 'Server responded with 0 code.', 0);
       });
       expect(screen.getAllByText('big-file.png')).toHaveLength(1);
-      expect(screen.getAllByText('Server responded with 0 code.')).toHaveLength(1);
+      expect(screen.queryByText('Server responded with 0 code.')).not.toBeInTheDocument();
+      expect(screen.getAllByText('Upload interrupted by a connection error. Please retry.')).toHaveLength(1);
+    });
+
+    test('a status-0 connection failure shows a readable message instead of the raw "Server responded with 0 code."', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'video.mp4', size: 9999999 }, 'Server responded with 0 code.', 0);
+      });
+      expect(screen.getByText('Upload interrupted by a connection error. Please retry.')).toBeInTheDocument();
+      expect(screen.queryByText('Server responded with 0 code.')).not.toBeInTheDocument();
+    });
+
+    test('a real non-zero-status server error still shows the server-provided message', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'video.mp4', size: 9999999 }, 'File type not allowed', 415);
+      });
+      expect(screen.getByText('File type not allowed')).toBeInTheDocument();
     });
 
     test('dismissing an error removes it from the view and restores the dropzone', () => {

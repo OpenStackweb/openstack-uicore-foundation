@@ -63,9 +63,9 @@ export const DropzoneV3 = ({
       if (onFileCompleted) onFileCompleted(file);
       if (eventHandlers.success) eventHandlers.success(file);
     },
-    error: (file, message) => {
-      if (onFileError) onFileError(file, message);
-      if (eventHandlers.error) eventHandlers.error(file, message);
+    error: (file, message, xhr) => {
+      if (onFileError) onFileError(file, message, xhr?.status);
+      if (eventHandlers.error) eventHandlers.error(file, message, xhr?.status);
     },
   };
 
