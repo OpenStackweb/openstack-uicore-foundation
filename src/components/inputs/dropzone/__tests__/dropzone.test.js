@@ -31,13 +31,22 @@ let mockCapturedOptions = {};
 jest.mock('dropzone', () => {
   return jest.fn().mockImplementation((element, options) => {
     mockCapturedOptions = options;
-    return {
+    const dz = {
       options,
       on: jest.fn(),
       off: jest.fn(),
       destroy: jest.fn(() => null),
       getActiveFiles: jest.fn(() => [])
     };
+    // Mimics Dropzone's real Emitter: replays every handler registered via `on`
+    // for that event, in registration order - the same "multiple listeners on
+    // one event" behavior the ontimeout/pollUploadStatus fixes rely on.
+    dz.emit = jest.fn((event, ...args) => {
+      dz.on.mock.calls
+        .filter(([evt]) => evt === event)
+        .forEach(([, handler]) => handler(...args));
+    });
+    return dz;
   });
 });
 
@@ -515,6 +524,142 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
       done();
     }, 10);
   });
+
+  /**
+   * Test Case 10: a chunk that times out releases its concurrency slot
+   *
+   * Dropzone's own default xhr.ontimeout (set before the 'sending' handler runs)
+   * still fires 'error', but without wrapping it here onChunkComplete() never
+   * runs, so chunksInFlight never decrements and later chunks stay queued forever.
+   */
+  test('test_dropzone_ontimeout_releases_chunk_slot', () => {
+    const ref = React.createRef();
+
+    render(
+      <DropzoneJS
+        {...defaultProps}
+        ref={ref}
+        onUploadComplete={onUploadCompleteMock}
+        onError={onErrorMock}
+      />
+    );
+
+    const instance = ref.current;
+    const mockFile = { name: 'test.pdf', size: 1024000 };
+    const dropzoneOnTimeout = jest.fn();
+    const mockXhr = {
+      readyState: XMLHttpRequest.DONE,
+      setRequestHeader: jest.fn(),
+      onload: jest.fn(),
+      onerror: jest.fn(),
+      ontimeout: dropzoneOnTimeout,
+      abort: jest.fn()
+    };
+
+    instance.chunksInFlight = 1;
+    getEventHandler(instance, 'sending')(mockFile, mockXhr, { append: jest.fn() });
+
+    mockXhr.ontimeout({});
+
+    expect(instance.chunksInFlight).toBe(0);
+    // Dropzone's own timeout handling (which still reports the error) must still run.
+    expect(dropzoneOnTimeout).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Test Cases 11-13: pollUploadStatus's three failure branches route through the
+   * file-level error channel (dropzone.emit('error', file, message)) instead of
+   * calling onError directly, so the row clears and the consumer is told exactly once.
+   */
+  test('test_dropzone_poll_timeout_emits_a_string_message_and_calls_onError_once', async () => {
+    jest.useFakeTimers({ doNotFake: ['queueMicrotask'] });
+    global.fetch = jest.fn(() =>
+      Promise.resolve({ json: () => Promise.resolve({ status: 'uploading' }) })
+    );
+
+    const ref = React.createRef();
+    render(
+      <DropzoneJS
+        {...defaultProps}
+        ref={ref}
+        onUploadComplete={onUploadCompleteMock}
+        onError={onErrorMock}
+      />
+    );
+
+    const instance = ref.current;
+    const mockFile = { name: 'big.pdf', size: 1024000 };
+    instance.pollUploadStatus('file-timeout', 'https://example.com/upload', mockFile);
+
+    // maxAttempts is 300 at 2s/tick - advance one tick past the ceiling.
+    await jest.advanceTimersByTimeAsync(2000 * 301);
+
+    expect(onErrorMock).toHaveBeenCalledTimes(1);
+    const [message] = onErrorMock.mock.calls[0];
+    expect(typeof message).toBe('string');
+    expect(message).toBe('Upload timed out');
+
+    jest.useRealTimers();
+  }, 20000);
+
+  test('test_dropzone_poll_server_error_status_emits_readable_message_not_object', (done) => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ status: 'error', message: 'processing failed' })
+      })
+    );
+
+    const ref = React.createRef();
+    render(
+      <DropzoneJS
+        {...defaultProps}
+        ref={ref}
+        onUploadComplete={onUploadCompleteMock}
+        onError={onErrorMock}
+      />
+    );
+
+    setTimeout(() => {
+      const instance = ref.current;
+      const mockFile = { name: 'test.pdf', size: 1024000 };
+      instance.pollUploadStatus('file-server-error', 'https://example.com/upload', mockFile);
+
+      setTimeout(() => {
+        expect(onErrorMock).toHaveBeenCalledTimes(1);
+        const [message] = onErrorMock.mock.calls[0];
+        expect(message).toBe('processing failed');
+        expect(message).not.toBe('[object Object]');
+        done();
+      }, 2500);
+    }, 10);
+  }, 10000);
+
+  test('test_dropzone_poll_fetch_rejection_emits_readable_message_and_calls_onError_once', (done) => {
+    global.fetch = jest.fn(() => Promise.reject(new Error('network down')));
+
+    const ref = React.createRef();
+    render(
+      <DropzoneJS
+        {...defaultProps}
+        ref={ref}
+        onUploadComplete={onUploadCompleteMock}
+        onError={onErrorMock}
+      />
+    );
+
+    setTimeout(() => {
+      const instance = ref.current;
+      const mockFile = { name: 'test.pdf', size: 1024000 };
+      instance.pollUploadStatus('file-network-error', 'https://example.com/upload', mockFile);
+
+      setTimeout(() => {
+        expect(onErrorMock).toHaveBeenCalledTimes(1);
+        const [message] = onErrorMock.mock.calls[0];
+        expect(message).toBe('network down');
+        done();
+      }, 2500);
+    }, 10);
+  }, 10000);
 });
 
 describe('DropzoneJS - Progress Bar Monotonicity', () => {
