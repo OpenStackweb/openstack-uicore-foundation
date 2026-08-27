@@ -205,8 +205,8 @@ ScheduleBuilderView.propTypes = {
     allowDrag: PropTypes.bool,
     /** Renders the print button when provided. */
     showPrint: PropTypes.bool,
-    /** Called unconditionally (no guard) when the venue change invalidates currentDay; effectively required. */
-    onDayChanged: PropTypes.func,
+    /** Called unconditionally (no guard) when the venue change invalidates currentDay. SummitDaysSelect is always rendered and declares it required, so an omission warns from there too. */
+    onDayChanged: PropTypes.func.isRequired,
     onVenueChanged: PropTypes.func,
     onSlotSizeChange: PropTypes.func,
     onScheduleEvent: PropTypes.func,
@@ -215,8 +215,8 @@ ScheduleBuilderView.propTypes = {
     onClickSelected: PropTypes.func,
     onMoveSingleEvent: PropTypes.func,
     onSelectAll: PropTypes.func,
-    /** Receives the chosen bulk action. Required whenever the bulk selector is shown, i.e. hideBulkSelect is falsy and there is at least one event: BulkActionsSelector declares it required and calls it with no guard. */
-    onSelectedBulkAction: PropTypes.func,
+    /** Receives the chosen bulk action. BulkActionsSelector declares it required and calls it with no guard, and is always rendered: hideBulkSelect only drives its show prop, so an omission is validated even when the control is hidden. */
+    onSelectedBulkAction: PropTypes.func.isRequired,
     /** Overrides the default bulkOptions passed to BulkActionsSelector. */
     customBulkOptions: PropTypes.array,
     /** Passed through to ScheduleEventList to gate drop targets. */
