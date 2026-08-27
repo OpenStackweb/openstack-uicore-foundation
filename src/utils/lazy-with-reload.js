@@ -81,8 +81,11 @@ const readReloadState = () => {
 const writeReloadState = (state) => {
   try {
     window.sessionStorage.setItem(RELOAD_STATE_KEY, JSON.stringify(state));
+    return true;
   } catch {
-    // ignore - sessionStorage can throw in some privacy modes
+    // sessionStorage can throw in some privacy modes - false tells the
+    // caller the throttle couldn't persist, so it must not reload
+    return false;
   }
 };
 
@@ -116,6 +119,7 @@ const reportRecoveryFailed = (error, filename) => {
 // on that new build still gets its own reload attempt instead of being
 // silently blocked by an unrelated earlier recovery.
 let reloadTriggeredThisPage = false;
+export const isChunkReloadPending = () => reloadTriggeredThisPage;
 export const reloadOnChunkError = (error, filename, chunkFilenamePattern) => {
   if (!isChunkLoadError(error, filename, chunkFilenamePattern)) return false;
 
@@ -130,7 +134,10 @@ export const reloadOnChunkError = (error, filename, chunkFilenamePattern) => {
   }
 
   reloadTriggeredThisPage = true;
-  writeReloadState({ build: currentBuild });
+  if (!writeReloadState({ build: currentBuild })) {
+    reportRecoveryFailed(error, filename);
+    return false;
+  }
   try {
     window.sessionStorage.setItem(PENDING_CONFIRMATION_KEY, "1");
   } catch {
@@ -164,7 +171,10 @@ const confirmReloadIfPending = () => {
 export const lazyWithReload = (importer, chunkFilenamePattern) =>
   React.lazy(() =>
     importer().catch((error) => {
-      if (reloadOnChunkError(error, undefined, chunkFilenamePattern)) {
+      if (
+        reloadOnChunkError(error, undefined, chunkFilenamePattern) ||
+        isChunkReloadPending()
+      ) {
         // reload is in flight - never resolve so nothing renders (e.g. an
         // error boundary flash) before it takes effect
         return new Promise(() => {});
@@ -173,10 +183,10 @@ export const lazyWithReload = (importer, chunkFilenamePattern) =>
     })
   );
 
-// Fallback safety net for chunk-load failures that don't flow through
-// lazyWithReload (e.g. a bare React.lazy()/dynamic import() call, or the raw
-// SyntaxError case, which is never a promise rejection at all - see
-// isHtmlParsedAsScriptError above). Call once at app bootstrap. Also
+// Fallback safety net for the raw SyntaxError case (see
+// isHtmlParsedAsScriptError above). Does NOT cover a bare React.lazy() inside
+// an error boundary; migrate those to lazyWithReload. Call once at app
+// bootstrap. Also
 // confirms (via console.log) whether a prior chunk-load-error reload
 // actually took effect, since this is the app's one designated bootstrap
 // entry point for this recovery mechanism.
@@ -226,5 +236,5 @@ export const chunkErrorSentryBeforeSend = (event) => {
       getExceptionFilename(exceptionValue)
     )
   );
-  return matchesChunkError ? null : event;
+  return matchesChunkError && isChunkReloadPending() ? null : event;
 };

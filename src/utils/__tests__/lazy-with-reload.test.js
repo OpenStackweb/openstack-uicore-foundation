@@ -257,6 +257,21 @@ describe("lazyWithReload", () => {
 
         await expect(loader()).resolves.toBe(module);
     });
+
+    test("neither promise rejects when two lazyWithReload chunks fail in the same tick, even though only the first triggers the reload", async () => {
+        const loaderA = lazyWithReload(() => Promise.reject(chunkLoadError()));
+        const loaderB = lazyWithReload(() => Promise.reject(chunkLoadError()));
+
+        let settledA = false;
+        let settledB = false;
+        loaderA().then(() => { settledA = true; }, () => { settledA = true; });
+        loaderB().then(() => { settledB = true; }, () => { settledB = true; });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(window.location.reload).toHaveBeenCalledTimes(1);
+        expect(settledA).toBe(false);
+        expect(settledB).toBe(false);
+    });
 });
 
 describe("initChunkErrorRecovery", () => {
@@ -404,11 +419,19 @@ describe("initChunkErrorRecovery", () => {
 });
 
 describe("chunkErrorSentryBeforeSend", () => {
-    test("drops an event whose exception is a ChunkLoadError", () => {
+    test("drops an event whose exception is a ChunkLoadError, when a reload was triggered for it", () => {
+        reloadOnChunkError(chunkLoadError());
         const event = {
             exception: { values: [{ type: "ChunkLoadError", value: "Loading chunk 3 failed" }] },
         };
         expect(chunkErrorSentryBeforeSend(event)).toBeNull();
+    });
+
+    test("does not drop a ChunkLoadError event when no reload was triggered for it (e.g. a bare React.lazy failing behind an error boundary)", () => {
+        const event = {
+            exception: { values: [{ type: "ChunkLoadError", value: "Loading chunk 3 failed" }] },
+        };
+        expect(chunkErrorSentryBeforeSend(event)).toBe(event);
     });
 
     test("does not drop a SyntaxError 'Unexpected token <' when no stack frame filename is available", () => {
@@ -431,7 +454,8 @@ describe("chunkErrorSentryBeforeSend", () => {
         expect(chunkErrorSentryBeforeSend(event)).toBe(event);
     });
 
-    test("drops a SyntaxError 'Unexpected token <' whose stack frame filename looks like a content-hashed chunk", () => {
+    test("drops a SyntaxError 'Unexpected token <' whose stack frame filename looks like a content-hashed chunk, when a reload was triggered for it", () => {
+        reloadOnChunkError(chunkLoadError());
         const event = {
             exception: {
                 values: [{
