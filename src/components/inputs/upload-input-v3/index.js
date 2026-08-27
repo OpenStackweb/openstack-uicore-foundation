@@ -217,7 +217,12 @@ const UploadInputV3 = ({
     // Dropzone module being loaded here; _userCanceled also covers files Dropzone never got
     // to mark, such as one removed before its upload reached the UPLOADING state.
     if (file._userCanceled || file.status === 'canceled') return;
-    setErrorFiles(prev => [...prev, { name: file.name, size: file.size, message }]);
+    setErrorFiles(prev => {
+      const existingIndex = prev.findIndex(f => f.name === file.name && f.size === file.size);
+      const entry = { name: file.name, size: file.size, message };
+      if (existingIndex === -1) return [...prev, entry];
+      return prev.map((f, i) => (i === existingIndex ? entry : f));
+    });
   }, []);
 
   const handleDismissError = useCallback((file) => {

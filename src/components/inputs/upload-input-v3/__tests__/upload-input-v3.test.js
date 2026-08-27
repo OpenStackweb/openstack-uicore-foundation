@@ -246,6 +246,21 @@ describe('UploadInputV3', () => {
       expect(screen.getByText(/File is too big/)).toBeInTheDocument();
     });
 
+    test('two failed chunks for the same file collapse into a single error row', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'big-file.png', size: 9999999 });
+      });
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'big-file.png', size: 9999999 }, 'Server responded with 0 code.');
+      });
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'big-file.png', size: 9999999 }, 'Server responded with 0 code.');
+      });
+      expect(screen.getAllByText('big-file.png')).toHaveLength(1);
+      expect(screen.getAllByText('Server responded with 0 code.')).toHaveLength(1);
+    });
+
     test('dismissing an error removes it from the view and restores the dropzone', () => {
       const { container } = render(<UploadInputV3 {...defaultProps} />);
       act(() => {

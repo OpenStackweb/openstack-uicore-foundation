@@ -106,7 +106,7 @@ export class DropzoneJS extends React.Component {
             attempts++;
             if (attempts > maxAttempts) {
                 this.stopPolling(file);
-                this.onError({ message: 'Upload timed out' });
+                this.dropzone.emit('error', file, 'Upload timed out');
                 return;
             }
             try {
@@ -131,11 +131,11 @@ export class DropzoneJS extends React.Component {
                     this.onUploadComplete(data);
                 } else if (data.status === 'error') {
                     this.stopPolling(file);
-                    this.onError(data);
+                    this.dropzone.emit('error', file, data.message || data.error || 'Upload failed');
                 }
             } catch (error) {
                 this.stopPolling(file);
-                this.onError(error);
+                this.dropzone.emit('error', file, error.message || 'Network error');
             }
         }, 2000);
 
@@ -494,11 +494,19 @@ export class DropzoneJS extends React.Component {
                 _this.onChunkComplete();
                 if (dropzoneOnError) dropzoneOnError(e);
             }
+
+            // Without this wrapper a timed-out chunk never releases its concurrency slot.
+            let dropzoneOnTimeout = xhr.ontimeout;
+            xhr.ontimeout = function(e) {
+                _this.onChunkComplete();
+                if (dropzoneOnTimeout) dropzoneOnTimeout(e);
+            }
         })
 
-        this.dropzone.on('error', (file, message) => {
+        // xhr.status is 0 for a transport failure, vs a real non-2xx server response.
+        this.dropzone.on('error', (file, message, xhr) => {
             console.log(`DropzoneJS::error`, message);
-            this.onError(message);
+            this.onError(message, xhr?.status);
         });
     }
 
