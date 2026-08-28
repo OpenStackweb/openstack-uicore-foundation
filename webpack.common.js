@@ -178,6 +178,7 @@ module.exports = {
         'utils/use-event-callback': './src/utils/use-event-callback.js',
         'utils/external-store': './src/utils/external-store.js',
         'utils/theme': './src/components/mui/MuiBaseCustomTheme.js',
+        'utils/pdf': './src/utils/pdf/index.js',
     },
     output: {
         path: path.resolve(__dirname, 'lib'),
