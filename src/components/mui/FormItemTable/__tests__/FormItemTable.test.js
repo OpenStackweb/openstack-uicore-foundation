@@ -1191,4 +1191,80 @@ describe("FormItemTable Component", () => {
       expect(input).toHaveAttribute("max", "100");
     });
   });
+
+  describe("Sold Out", () => {
+    it("replaces the details icon with a Sold Out label and disables the quantity input when is_sold_out is true", () => {
+      const soldOutItem = { ...MOCK_FORM_A.items[0], is_sold_out: true };
+      const { container } = render(
+        <FormItemTableWrapper
+          data={[soldOutItem]}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+        />
+      );
+
+      expect(screen.getByText("sponsor_edit_form.sold_out")).toBeInTheDocument();
+      expect(
+        screen.queryByText("sponsor_edit_form.limit_reached")
+      ).not.toBeInTheDocument();
+      // Only the first column's collapse toggle remains - the details/info
+      // icon (also labelled "Toggle row details") is gone, replaced by the label.
+      expect(
+        screen.getAllByRole("button", { name: "Toggle row details" })
+      ).toHaveLength(1);
+      expect(
+        container.querySelector(
+          `input[name="i-${soldOutItem.form_item_id}-c-global-f-quantity"]`
+        )
+      ).toBeDisabled();
+    });
+
+    it("shows Limit Reached instead of Sold Out when remaining_quantity_sponsor is 0", () => {
+      const limitReachedItem = {
+        ...MOCK_FORM_A.items[0],
+        is_sold_out: true,
+        remaining_quantity_sponsor: 0
+      };
+      render(
+        <FormItemTableWrapper
+          data={[limitReachedItem]}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+        />
+      );
+
+      expect(
+        screen.getByText("sponsor_edit_form.limit_reached")
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText("sponsor_edit_form.sold_out")
+      ).not.toBeInTheDocument();
+    });
+
+    it("keeps the details icon and quantity input enabled when is_sold_out is false", () => {
+      const availableItem = { ...MOCK_FORM_A.items[0], is_sold_out: false };
+      const { container } = render(
+        <FormItemTableWrapper
+          data={[availableItem]}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+        />
+      );
+
+      expect(
+        screen.queryByText("sponsor_edit_form.sold_out")
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("sponsor_edit_form.limit_reached")
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getAllByRole("button", { name: "Toggle row details" })
+      ).toHaveLength(2);
+      expect(
+        container.querySelector(
+          `input[name="i-${availableItem.form_item_id}-c-global-f-quantity"]`
+        )
+      ).not.toBeDisabled();
+    });
+  });
 });

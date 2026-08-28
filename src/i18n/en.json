@@ -122,7 +122,9 @@
     "notes_placeholder": "Enter your notes here...",
     "additional_info": "Additional Info",
     "discount": "Discount",
-    "total_on_caps": "TOTAL"
+    "total_on_caps": "TOTAL",
+    "sold_out": "Sold Out",
+    "limit_reached": "Limit Reached"
   },
   "upload_input": {
     "upload_file": "Upload file"

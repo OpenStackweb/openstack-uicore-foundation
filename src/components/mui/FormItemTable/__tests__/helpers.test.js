@@ -53,6 +53,16 @@ describe("isItemAvailable", () => {
     const item = { rates: { early_bird: null } };
     expect(isItemAvailable(item, "early_bird")).toBe(false);
   });
+
+  test("returns false when item is sold out even if it has a rate for the given period", () => {
+    const item = { rates: { early_bird: 100 }, is_sold_out: true };
+    expect(isItemAvailable(item, "early_bird")).toBe(false);
+  });
+
+  test("returns true when item is explicitly not sold out and has a rate", () => {
+    const item = { rates: { early_bird: 100 }, is_sold_out: false };
+    expect(isItemAvailable(item, "early_bird")).toBe(true);
+  });
 });
 
 describe("hasDrivingQuantityField", () => {

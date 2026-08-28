@@ -22,7 +22,8 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  Typography
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -293,13 +294,21 @@ const FormItemTable = ({
                     {currencyAmountFromCents(calculateRowTotal(row))}
                   </TableCell>
                   <TableCell align="center" sx={{ verticalAlign: "middle" }}>
-                    <IconButton
-                      size="small"
-                      aria-label="Toggle row details"
-                      onClick={() => toggleRow(row.form_item_id)}
-                    >
-                      <InfoOutlinedIcon color={getDetailsIconColor(row)} />
-                    </IconButton>
+                    {row.is_sold_out ? (
+                      <Typography variant="body2" noWrap sx={{ color: "error.main" }}>
+                        {row.remaining_quantity_sponsor === 0
+                          ? T.translate("sponsor_edit_form.limit_reached")
+                          : T.translate("sponsor_edit_form.sold_out")}
+                      </Typography>
+                    ) : (
+                      <IconButton
+                        size="small"
+                        aria-label="Toggle row details"
+                        onClick={() => toggleRow(row.form_item_id)}
+                      >
+                        <InfoOutlinedIcon color={getDetailsIconColor(row)} />
+                      </IconButton>
+                    )}
                   </TableCell>
                 </TableRow>
                 <TableRow>
