@@ -413,11 +413,11 @@ describe("SponsorOrderGrid", () => {
 
     expect(translateSpy).toHaveBeenCalledWith(
       "sponsor_order_grid.cancelled_by",
-      expect.objectContaining({ x: 2, y: 5, user: "Alice Admin", date: "2026-01-01" })
+      expect.objectContaining({ x: 2, y: 5, money: "$2.00", user: "Alice Admin", date: "2026-01-01" })
     );
     expect(translateSpy).toHaveBeenCalledWith(
       "sponsor_order_grid.cancelled_by",
-      expect.objectContaining({ x: 1, y: 5, user: "Bob Admin", date: "2026-01-01" })
+      expect.objectContaining({ x: 1, y: 5, money: "$1.00", user: "Bob Admin", date: "2026-01-01" })
     );
     expect(screen.getByText(/Too many/)).toBeInTheDocument();
   });
