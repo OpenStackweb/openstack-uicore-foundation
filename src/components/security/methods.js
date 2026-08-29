@@ -17,6 +17,13 @@ let http = request;
 import URI from "urijs";
 import IdTokenVerifier from "idtoken-verifier";
 import {getRandomBytes, getSHA256} from "../../utils/crypto";
+import {
+    getOAuth2ClientId,
+    getOAuth2Flow,
+    useOAuth2RefreshToken,
+    getOAuth2IDPBaseUrl,
+    getOAuth2Scopes,
+} from "../../utils/config";
 
 import {
     SET_LOGGED_USER,
@@ -31,6 +38,8 @@ import {
     AUTH_ERROR_MISSING_PKCE_PARAM,
     AUTH_ERROR_MISSING_NONCE_PARAM,
 } from "./constants";
+
+export { getOAuth2ClientId, getOAuth2Flow, useOAuth2RefreshToken, getOAuth2IDPBaseUrl, getOAuth2Scopes } from "../../utils/config";
 
 /**
  * @ignore
@@ -50,7 +59,6 @@ const NONCE = 'nonce';
 const PKCE = 'pkce';
 const ID_TOKEN = 'idToken';
 const BACK_ULR_PARAM_NAME = 'BackUrl';
-
 
 /**
  *
@@ -427,7 +435,6 @@ export const clearAccessToken = async () => {
     }
 }
 
-
 export const refreshAccessToken = async (refresh_token) => {
 
     let baseUrl = getOAuth2IDPBaseUrl();
@@ -544,41 +551,6 @@ export const getIdToken = () => {
             return authInfo.idToken;
         }
         return null;
-    }
-    return null;
-};
-
-export const getOAuth2ClientId = () => {
-    if (typeof window !== 'undefined') {
-        return window.OAUTH2_CLIENT_ID;
-    }
-    return null;
-};
-
-export const getOAuth2Flow = () => {
-    if (typeof window !== 'undefined') {
-        return window.OAUTH2_FLOW || "token id_token";
-    }
-    return "token id_token";
-}
-
-export const useOAuth2RefreshToken = () => {
-    if (typeof window !== 'undefined') {
-        return new Boolean(window.OAUTH2_USE_REFRESH_TOKEN || true);
-    }
-    return true;
-}
-
-export const getOAuth2IDPBaseUrl = () => {
-    if (typeof window !== 'undefined') {
-        return window.IDP_BASE_URL;
-    }
-    return null;
-};
-
-export const getOAuth2Scopes = () => {
-    if (typeof window !== 'undefined') {
-        return window.SCOPES;
     }
     return null;
 };

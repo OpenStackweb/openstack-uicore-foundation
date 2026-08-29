@@ -13,7 +13,7 @@
 import React from 'react';
 import moment from "moment-timezone";
 import FragmentParser from "./fragment-parser";
-import {getTimeServiceUrl} from '../utils/methods';
+import {getTimeServiceUrl} from '../utils/config';
 
 /**
  * class Clock
