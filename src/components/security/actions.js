@@ -19,17 +19,30 @@ import { getAccessToken, storeAuthInfo, initLogOut} from './methods';
 /**
  * @ignore
  */
-import { SET_LOGGED_USER } from './constants';
-export { SET_LOGGED_USER };
-export const LOGOUT_USER = 'LOGOUT_USER';
-export const REQUEST_USER_INFO = 'REQUEST_USER_INFO';
-export const RECEIVE_USER_INFO = 'RECEIVE_USER_INFO';
-export const CLEAR_SESSION_STATE = 'CLEAR_SESSION_STATE';
-export const UPDATE_SESSION_STATE_STATUS = 'UPDATE_SESSION_STATE_STATUS';
-export const SESSION_STATE_STATUS_UNCHANGED = 'unchanged';
-export const SESSION_STATE_STATUS_CHANGED = 'changed';
-export const SESSION_STATE_STATUS_ERROR = 'error';
-export const UPDATE_USER_INFO = 'UPDATE_USER_INFO';
+import {
+    SET_LOGGED_USER,
+    LOGOUT_USER,
+    REQUEST_USER_INFO,
+    RECEIVE_USER_INFO,
+    CLEAR_SESSION_STATE,
+    UPDATE_SESSION_STATE_STATUS,
+    SESSION_STATE_STATUS_UNCHANGED,
+    SESSION_STATE_STATUS_CHANGED,
+    SESSION_STATE_STATUS_ERROR,
+    UPDATE_USER_INFO,
+} from './constants';
+export {
+    SET_LOGGED_USER,
+    LOGOUT_USER,
+    REQUEST_USER_INFO,
+    RECEIVE_USER_INFO,
+    CLEAR_SESSION_STATE,
+    UPDATE_SESSION_STATE_STATUS,
+    SESSION_STATE_STATUS_UNCHANGED,
+    SESSION_STATE_STATUS_CHANGED,
+    SESSION_STATE_STATUS_ERROR,
+    UPDATE_USER_INFO,
+};
 
 export const onUserAuth = (accessToken, idToken, sessionState, expiresIn = 0, refreshToken = null) => (dispatch) => {
 

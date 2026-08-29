@@ -19,7 +19,7 @@ import {
     SET_LOGGED_USER,
     UPDATE_SESSION_STATE_STATUS,
     UPDATE_USER_INFO
-} from './actions';
+} from './constants';
 
 import IdTokenVerifier from 'idtoken-verifier';
 
