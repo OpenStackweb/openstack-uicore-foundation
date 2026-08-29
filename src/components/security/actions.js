@@ -19,7 +19,8 @@ import { getAccessToken, storeAuthInfo, initLogOut} from './methods';
 /**
  * @ignore
  */
-export const SET_LOGGED_USER = 'SET_LOGGED_USER';
+import { SET_LOGGED_USER } from './constants';
+export { SET_LOGGED_USER };
 export const LOGOUT_USER = 'LOGOUT_USER';
 export const REQUEST_USER_INFO = 'REQUEST_USER_INFO';
 export const RECEIVE_USER_INFO = 'RECEIVE_USER_INFO';
