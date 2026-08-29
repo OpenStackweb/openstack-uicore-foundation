@@ -15,12 +15,12 @@ import URI from "urijs";
 import {
     doLogin,
     emitAccessToken,
-    getOAuth2Flow,
     RESPONSE_TYPE_IMPLICIT,
     RESPONSE_TYPE_CODE,
     validateIdToken
 } from "./methods";
 import {getCurrentPathName, getCurrentHref} from '../../utils/methods';
+import {getOAuth2Flow} from '../../utils/config';
 
 class AbstractAuthorizationCallbackRoute extends React.Component {
 

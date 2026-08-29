@@ -12,6 +12,7 @@
  **/
 
 import React from 'react'
+import { getExclusiveSections } from '../utils/config';
 
 
 export default class Exclusive extends React.Component {
@@ -24,7 +25,7 @@ export default class Exclusive extends React.Component {
 
     showField() {
         let {name} = this.props;
-        let exclusiveSections = window.EXCLUSIVE_SECTIONS;
+        let exclusiveSections = getExclusiveSections();
 
         return exclusiveSections ? exclusiveSections.includes(name) : false;
     }

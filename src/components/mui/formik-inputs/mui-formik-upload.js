@@ -16,6 +16,7 @@ import PropTypes from "prop-types";
 import { FormHelperText } from "@mui/material";
 import T from "i18n-react/dist/i18n-react";
 import UploadInputV3 from "../../inputs/upload-input-v3";
+import { getFileUploadApiBaseUrl } from "../../../utils/config";
 import { useField } from "formik";
 import {
   ALLOWED_INVENTORY_IMAGE_FORMATS,
@@ -97,7 +98,7 @@ const MuiFormikUpload = ({
         value={getInputValue()}
         mediaType={mediaType}
         onRemove={handleRemove}
-        postUrl={`${window.FILE_UPLOAD_API_BASE_URL}/api/v1/files/upload`}
+        postUrl={`${getFileUploadApiBaseUrl()}/api/v1/files/upload`}
         djsConfig={{ withCredentials: true }}
         maxFiles={maxFiles}
         canAdd={canAddMore()}

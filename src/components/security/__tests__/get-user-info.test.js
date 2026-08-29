@@ -11,7 +11,8 @@ jest.mock("../../../utils/actions", () => ({
   startLoading: jest.fn(() => ({ type: "START_LOADING" })),
   stopLoading: jest.fn(() => ({ type: "STOP_LOADING" })),
 }));
-jest.mock("../../../utils/methods", () => ({
+jest.mock("../../../utils/config", () => ({
+  ...jest.requireActual("../../../utils/config"),
   buildAPIBaseUrl: jest.fn((p) => `BASE${p}`),
   getAllowedUserGroups: jest.fn(() => ""),
 }));
