@@ -13,7 +13,7 @@
 
 import { fetchErrorHandler, fetchResponseHandler, escapeFilterValue } from "./actions";
 import { getAccessToken } from '../components/security/methods';
-import { buildAPIBaseUrl } from "./methods";
+import { buildAPIBaseUrl } from "./config";
 import debounce from 'lodash/debounce';
 export const RECEIVE_COUNTRIES  = 'RECEIVE_COUNTRIES';
 const callDelay = 500; // milliseconds
