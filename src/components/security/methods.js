@@ -16,10 +16,10 @@ import Cookies from 'js-cookie'
 let http = request;
 import URI from "urijs";
 import IdTokenVerifier from "idtoken-verifier";
-import {SET_LOGGED_USER} from "./actions";
 import {getRandomBytes, getSHA256} from "../../utils/crypto";
 
 import {
+    SET_LOGGED_USER,
     AUTH_ERROR_ACCESS_TOKEN_EXPIRED,
     AUTH_ERROR_MISSING_AUTH_INFO,
     AUTH_ERROR_MISSING_REFRESH_TOKEN,
