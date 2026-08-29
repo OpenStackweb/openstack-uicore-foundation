@@ -4,22 +4,26 @@ const nodeExternals = require('webpack-node-externals');
 
 const { name: PKG_NAME } = require('./package.json');
 
-// Externalize uicore's OWN token module so every UMD entry shares one instance:
-// methods.js is stateful and must be a singleton. Without this, each importer
-// (e.g. query-actions) inlines its own copy with separate state. Other internal
-// modules are stateless, so they stay inlined.
-const METHODS_SRC = path.resolve(__dirname, 'src/components/security/methods.js');
-const METHODS_MODULE = `${PKG_NAME}/lib/security/methods`;
+// Externalize uicore's OWN stateful modules so every UMD entry shares one
+// instance of each. Without this, each importer (e.g. query-actions) inlines
+// its own copy with separate state. Other internal modules are stateless, so
+// they stay inlined.
+const SHARED_MODULES = [
+    { src: 'src/components/security/methods.js', lib: 'security/methods' },
+    { src: 'src/utils/config.js', lib: 'utils/config' },
+].map(({ src, lib }) => ({
+    src: path.resolve(__dirname, src),
+    module: `${PKG_NAME}/lib/${lib}`,
+}));
 
-// Redirect imports of methods.js to the shared lib file. The issuer guard skips
-// the methods entry itself (an entry has no issuer), so it still builds its real
+// Redirect imports of a shared module to its lib file. The issuer guard skips
+// the module's own entry (an entry has no issuer), so it still builds its real
 // implementation instead of requiring itself.
-const shareSecurityMethods = ({ request, context, contextInfo }, cb) => {
+const shareStatefulModules = ({ request, context, contextInfo }, cb) => {
     if (!contextInfo || !contextInfo.issuer || !request.startsWith('.')) return cb();
     const resolved = path.resolve(context, request);
-    if (resolved === METHODS_SRC || `${resolved}.js` === METHODS_SRC) {
-        return cb(null, METHODS_MODULE);
-    }
+    const shared = SHARED_MODULES.find(({ src }) => resolved === src || `${resolved}.js` === src);
+    if (shared) return cb(null, shared.module);
     cb();
 };
 
@@ -108,6 +112,7 @@ module.exports = {
         'utils/use-fit-text': './src/components/use-fit-text.js',
         'utils/actions': './src/utils/actions.js',
         'utils/methods': './src/utils/methods.js',
+        'utils/config': './src/utils/config.js',
         'utils/query-actions': './src/utils/query-actions.js',
         'utils/reducers': './src/utils/reducers.js',
         'i18n': './src/i18n/i18n.js',
@@ -212,5 +217,5 @@ module.exports = {
             }
         ]
     },
-    externals: [nodeExternals(), shareSecurityMethods]
+    externals: [nodeExternals(), shareStatefulModules]
 };
