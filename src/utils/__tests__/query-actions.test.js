@@ -6,7 +6,8 @@
  * synchronously; the debounce delay is unrelated to the token path.
  */
 import { setAccessTokenResolver } from "../../components/security/methods";
-import { queryMembers, querySummits } from "../query-actions";
+import * as queryActions from "../query-actions";
+const { queryMembers, querySummits, queryRegistrationCompanies } = queryActions;
 
 jest.mock("lodash/debounce", () => (fn) => fn);
 
@@ -56,5 +57,58 @@ describe("query-actions with an access-token resolver", () => {
 
     expect(cb).toHaveBeenCalledWith(expect.any(Error));
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("query-actions public surface and URL building", () => {
+  let origFetch;
+
+  beforeEach(() => {
+    window.API_BASE_URL = "https://api.test";
+    origFetch = global.fetch;
+    global.fetch = jest.fn(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve({ data: [{ id: 1, name: "Acme" }] }) })
+    );
+    setAccessTokenResolver(() => Promise.resolve("TOK"));
+  });
+
+  afterEach(() => {
+    setAccessTokenResolver(null);
+    global.fetch = origFetch;
+    delete window.API_BASE_URL;
+    jest.clearAllMocks();
+  });
+
+  test("every named export is present", () => {
+    [
+      "queryMembers", "queryAttendees", "querySummits", "querySpeakers", "queryTags",
+      "queryTracks", "queryTrackGroups", "queryEvents", "queryEventTypes", "queryGroups",
+      "queryCompanies", "queryRegistrationCompanies", "querySponsors",
+      "querySponsorsWithBadgeScans", "queryAccessLevels", "queryOrganizations",
+      "queryTicketTypes", "querySponsoredProjects", "queryPromocodes",
+      "getCountryList", "getLanguageList", "geoCodeAddress", "geoCodeLatLng",
+    ].forEach((name) => expect(typeof queryActions[name]).toBe("function"));
+    expect(queryActions.RECEIVE_COUNTRIES).toBe("RECEIVE_COUNTRIES");
+  });
+
+  test("builds the URL on window.API_BASE_URL with the filter and paging params", async () => {
+    const cb = jest.fn();
+    queryRegistrationCompanies(13, "acme", cb);
+    await flush();
+
+    const url = decodeURIComponent(global.fetch.mock.calls[0][0]);
+    expect(url).toContain("https://api.test/api/v1/summits/13/registration-companies");
+    expect(url).toContain("order=name");
+    expect(url).toContain("per_page=10");
+    expect(url).toContain("name@@acme");
+    expect(cb).toHaveBeenCalledWith([{ id: 1, name: "Acme" }]);
+  });
+
+  test("a 404 response calls back with []", async () => {
+    global.fetch.mockResolvedValueOnce({ ok: false, status: 404 });
+    const cb = jest.fn();
+    queryMembers("x", cb);
+    await flush();
+    expect(cb).toHaveBeenCalledWith([]);
   });
 });
