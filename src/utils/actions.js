@@ -19,7 +19,7 @@ let http = request;
 import Swal from 'sweetalert2';
 import T from "i18n-react/dist/i18n-react";
 import { isClearingSessionState, setSessionClearingState, getCurrentPathName } from './methods';
-import { CLEAR_SESSION_STATE } from '../components/security/actions';
+import { CLEAR_SESSION_STATE } from '../components/security/constants';
 import { doLogin, initLogOut } from '../components/security/methods';
 import {CODE_200} from "./constants";
 
