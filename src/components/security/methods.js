@@ -374,6 +374,31 @@ export const setAccessTokenResolver = (resolver) => {
 };
 
 /**
+ * Optional handlers set via setAuthHandlers. When present, initLogOut and
+ * authErrorHandler defer to them instead of redirecting the browser:
+ *   initLogOut()                 replaces the IDP end-session redirect
+ *   authErrorHandler({ status }) replaces the 401 login / 403 logout paths
+ * The two keys are independent: with only initLogOut set, a 403 still shows
+ * the built-in dialog and then calls the injected logout. Without handlers
+ * uicore keeps its built-in behavior. Call with no argument to clear both.
+ * The handlers live on globalThis under a Symbol.for key so every copy of
+ * this module shares them.
+ */
+const AUTH_HANDLERS_KEY = Symbol.for('openstack-uicore-foundation.authHandlers');
+
+const readAuthHandlers = () =>
+    globalThis[AUTH_HANDLERS_KEY] || { initLogOut: null, authErrorHandler: null };
+
+export const setAuthHandlers = ({ initLogOut, authErrorHandler } = {}) => {
+    globalThis[AUTH_HANDLERS_KEY] = {
+        initLogOut: typeof initLogOut === 'function' ? initLogOut : null,
+        authErrorHandler: typeof authErrorHandler === 'function' ? authErrorHandler : null,
+    };
+};
+
+export const getAuthHandlers = () => ({ ...readAuthHandlers() });
+
+/**
  * @returns {Promise<*|undefined>}
  */
 export const getAccessToken = async () => {
@@ -605,6 +630,11 @@ export const getOAuth2Scopes = () => {
 };
 
 export const initLogOut = () => {
+    const { initLogOut: injectedLogOut } = readAuthHandlers();
+    if (injectedLogOut) {
+        injectedLogOut();
+        return;
+    }
     let location = getCurrentLocation();
     location.replace(getLogoutUrl(getIdToken()).toString());
 }
