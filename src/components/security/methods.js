@@ -362,6 +362,26 @@ export const setAccessTokenResolver = (resolver) => {
 };
 
 /**
+ * Optional handlers set via setAuthHandlers. When present, initLogOut and
+ * authErrorHandler defer to them instead of redirecting the browser:
+ *   initLogOut()                 replaces the IDP end-session redirect
+ *   authErrorHandler({ status }) replaces the 401 login / 403 logout paths
+ * The two keys are independent: with only initLogOut set, a 403 still shows
+ * the built-in dialog and then calls the injected logout. Without handlers
+ * uicore keeps its built-in behavior. Call with no argument to clear both.
+ */
+let _authHandlers = { initLogOut: null, authErrorHandler: null };
+
+export const setAuthHandlers = ({ initLogOut, authErrorHandler } = {}) => {
+    _authHandlers = {
+        initLogOut: typeof initLogOut === 'function' ? initLogOut : null,
+        authErrorHandler: typeof authErrorHandler === 'function' ? authErrorHandler : null,
+    };
+};
+
+export const getAuthHandlers = () => ({ ..._authHandlers });
+
+/**
  * @returns {Promise<*|undefined>}
  */
 export const getAccessToken = async () => {
@@ -556,6 +576,10 @@ export const getIdToken = () => {
 };
 
 export const initLogOut = () => {
+    if (_authHandlers.initLogOut) {
+        _authHandlers.initLogOut();
+        return;
+    }
     let location = getCurrentLocation();
     location.replace(getLogoutUrl(getIdToken()).toString());
 }

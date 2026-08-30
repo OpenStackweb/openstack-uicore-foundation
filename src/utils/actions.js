@@ -20,7 +20,7 @@ import Swal from 'sweetalert2';
 import T from "i18n-react/dist/i18n-react";
 import { isClearingSessionState, setSessionClearingState, getCurrentPathName } from './methods';
 import { CLEAR_SESSION_STATE } from '../components/security/constants';
-import { doLogin, initLogOut } from '../components/security/methods';
+import { doLogin, initLogOut, getAuthHandlers } from '../components/security/methods';
 
 export const GENERIC_ERROR  = "Yikes. Something seems to be broken. Our web team has been notified, and we apologize for the inconvenience.";
 export const RESET_LOADING  = 'RESET_LOADING';
@@ -103,6 +103,12 @@ export const authErrorHandler = (
     let payload, callback;
 
     dispatch(stopLoading());
+
+    const { authErrorHandler: injected } = getAuthHandlers();
+    if ((code === 401 || code === 403) && injected) {
+        injected({ status: code });
+        return;
+    }
 
     switch (code) {
         case 401:
