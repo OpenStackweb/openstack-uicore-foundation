@@ -288,6 +288,7 @@ const FormItemTable = ({
                       row={row}
                       extraColumns={extraColumns}
                       value={calculateQuantity(row)}
+                      disabled={disabled}
                     />
                   </TableCell>
                   <TableCell>
