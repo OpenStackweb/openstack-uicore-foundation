@@ -125,6 +125,7 @@ const SponsorOrderGrid = ({
                 {T.translate("sponsor_order_grid.cancelled_by", {
                   x: cancellation.quantity,
                   y: row.quantity,
+                  money: currencyAmountFromCents(cancellation.amount),
                   user: cancellation.canceled_by_full_name,
                   date: formatEpoch(cancellation.created, "M/D/YY [@] h:mm A")
                 })}
