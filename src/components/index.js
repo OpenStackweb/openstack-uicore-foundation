@@ -75,12 +75,12 @@ export {default as MuiNotesModal} from './mui/NotesModal'
 export {default as MuiSnackbarNotification} from './mui/SnackbarNotification'
 export {useSnackbarMessage} from './mui/SnackbarNotification/Context'
 export {default as MuiInfiniteTable} from './mui/infinite-table'
-export {default as MuiEditableTable} from './mui/editable-table/mui-table-editable'
-export {default as MuiTable} from './mui/table/mui-table'
-export {default as MuiCustomTablePagination} from './mui/table/CustomTablePagination'
+export {default as MuiEditableTable} from './mui/tables/editable-table'
+export {default as MuiTable} from './mui/tables/mui-table'
+export {default as MuiCustomTablePagination} from './mui/tables/components/CustomTablePagination'
 export {default as MuiBulkEditTable} from './mui/BulkEditTable'
 export {default as MuiSponsorOrderGrid} from './mui/SponsorOrderGrid'
-export {TotalRow as MuiTotalRow, NotesRow as MuiNotesRow, FeeRow as MuiFeeRow, PaymentRow as MuiPaymentRow, RefundRow as MuiRefundRow, DiscountRow as MuiDiscountRow} from './mui/table/extra-rows'
+export {TotalRow as MuiTotalRow, NotesRow as MuiNotesRow, FeeRow as MuiFeeRow, PaymentRow as MuiPaymentRow, RefundRow as MuiRefundRow, DiscountRow as MuiDiscountRow} from './mui/tables/extra-rows'
 export {default as MuiFormikAsyncSelect} from './mui/formik-inputs/mui-formik-async-select'
 export {default as MuiFormikCheckboxGroup} from './mui/formik-inputs/mui-formik-checkbox-group'
 export {default as MuiFormikCheckbox} from './mui/formik-inputs/mui-formik-checkbox'
@@ -137,7 +137,7 @@ export {MuiBaseCustomTheme} from './mui/MuiBaseCustomTheme'
 // export {default as CompanyInputV2} from './inputs/company-input-v2.js'
 // export {default as UploadInputV3} from './inputs/upload-input-v3'                 // @mui/material, @mui/icons-material, @mui/x-date-pickers, spark-md5, dropzone, react-dropzone
 // export {default as MuiDndList} from './mui/dnd-list'                              // react-beautiful-dnd
-// export {default as MuiSortableTable} from './mui/sortable-table/mui-table-sortable' // react-beautiful-dnd
+// export {default as MuiSortableTable} from './mui/tables/sortable-table' // react-beautiful-dnd
 // export {default as MuiStripePayment} from './mui/StripePayment'                   // @stripe/react-stripe-js, @stripe/stripe-js
 // export {default as MuiAdditionalInput} from './mui/formik-inputs/additional-input/additional-input' // react-beautiful-dnd (via dnd-list)
 // export {default as MuiAdditionalInputV2} from './mui/formik-inputs/additional-input/additional-input-v2' // @dnd-kit (via DragNDropList)

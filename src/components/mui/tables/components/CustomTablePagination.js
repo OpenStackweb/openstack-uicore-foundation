@@ -15,7 +15,7 @@ import * as React from "react";
 import T from "i18n-react/dist/i18n-react";
 import TablePagination from "@mui/material/TablePagination";
 import PropTypes from "prop-types";
-import { DEFAULT_PER_PAGE, FIFTY_PER_PAGE, TWENTY_PER_PAGE } from "../../../utils/constants";
+import { DEFAULT_PER_PAGE, FIFTY_PER_PAGE, TWENTY_PER_PAGE } from "../../../../utils/constants";
 
 const PAGINATION_SX = {
   ".MuiTablePagination-toolbar": {
