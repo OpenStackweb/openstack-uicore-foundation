@@ -1,4 +1,4 @@
-import CustomTablePagination from "../src/components/mui/table/CustomTablePagination";
+import CustomTablePagination from "../src/components/mui/tables/components/CustomTablePagination";
 
 export default {
   title: "MUI/Tables/CustomTablePagination",

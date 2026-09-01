@@ -6,7 +6,7 @@ import {
   PaymentRow,
   RefundRow,
   DiscountRow
-} from "../src/components/mui/table/extra-rows";
+} from "../src/components/mui/tables/extra-rows";
 import { inTable } from "./_helpers";
 
 export default {

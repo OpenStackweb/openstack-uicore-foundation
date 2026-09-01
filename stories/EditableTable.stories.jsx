@@ -1,4 +1,4 @@
-import EditableTable from "../src/components/mui/editable-table/mui-table-editable";
+import EditableTable from "../src/components/mui/tables/editable-table";
 import { sampleRows } from "./_helpers";
 
 export default {

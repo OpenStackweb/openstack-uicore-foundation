@@ -1,4 +1,4 @@
-import Table from "../src/components/mui/table/mui-table";
+import Table from "../src/components/mui/tables/mui-table";
 import { sampleRows, sampleColumns } from "./_helpers";
 
 export default {

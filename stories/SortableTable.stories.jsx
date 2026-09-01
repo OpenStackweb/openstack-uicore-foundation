@@ -1,4 +1,4 @@
-import SortableTable from "../src/components/mui/sortable-table/mui-table-sortable";
+import SortableTable from "../src/components/mui/tables/sortable-table";
 import { sampleRows, sampleColumns } from "./_helpers";
 
 export default {
