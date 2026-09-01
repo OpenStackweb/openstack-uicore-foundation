@@ -551,4 +551,50 @@ describe("SponsorOrderGrid — ledger-driven fixes", () => {
     render(<SponsorOrderGrid order={order} />);
     expect(screen.getByText("10% off")).toBeInTheDocument();
   });
+
+  test("falls back to mui_table.card for the payment row when payment.method is absent (matches the invoice PDF)", () => {
+    const order = {
+      forms: [],
+      payments: [{ id: 1, amount: 10000, created: 1, method: null }],
+      total: 0
+    };
+    render(<SponsorOrderGrid order={order} />);
+    expect(screen.getByText(/mui_table\.paid_via mui_table\.card/)).toBeInTheDocument();
+  });
+
+  test("does not override payment.method when present", () => {
+    const order = {
+      forms: [],
+      payments: [{ id: 1, amount: 10000, created: 1, method: "wire" }],
+      total: 0
+    };
+    render(<SponsorOrderGrid order={order} />);
+    expect(screen.getByText(/mui_table\.paid_via wire/)).toBeInTheDocument();
+  });
+
+  test("falls back to mui_table.refund for the refund row when refund.reason is absent (matches the invoice PDF)", () => {
+    const order = {
+      forms: [],
+      refunds: [{ id: 1, amount: 3000, created: 1, reason: null }],
+      total: 0
+    };
+    render(<SponsorOrderGrid order={order} />);
+    // "mui_table.refund" also labels the row's type badge, so a second
+    // occurrence (the reason cell falling back to the same translation) is
+    // exactly what this asserts.
+    expect(screen.getAllByText("mui_table.refund")).toHaveLength(2);
+  });
+
+  test("does not override refund.reason when present", () => {
+    const order = {
+      forms: [],
+      refunds: [{ id: 1, amount: 3000, created: 1, reason: "duplicate charge" }],
+      total: 0
+    };
+    render(<SponsorOrderGrid order={order} />);
+    expect(screen.getByText("duplicate charge")).toBeInTheDocument();
+    // Only the type badge renders "mui_table.refund" -- the reason cell
+    // must not have been overridden with the fallback.
+    expect(screen.getAllByText("mui_table.refund")).toHaveLength(1);
+  });
 });

@@ -72,7 +72,6 @@ const SponsorOrderGrid = ({
 }) => {
 
   const {
-    forms = [],
     total = 0,
     retained = 0,
     credited_to_payment_method: credited = 0,
@@ -272,7 +271,10 @@ const SponsorOrderGrid = ({
                   return (
                     <PaymentRow
                       key={entry.rowKey}
-                      payment={entry.payment}
+                      payment={{
+                        ...entry.payment,
+                        method: entry.payment.method ?? T.translate("mui_table.card")
+                      }}
                       balance={entry.balanceCents}
                       trailing={trailingCols}
                     />
@@ -282,7 +284,10 @@ const SponsorOrderGrid = ({
                   return (
                     <RefundRow
                       key={entry.rowKey}
-                      refund={entry.refund}
+                      refund={{
+                        ...entry.refund,
+                        reason: entry.refund.reason ?? T.translate("mui_table.refund")
+                      }}
                       balance={entry.balanceCents}
                       trailing={trailingCols}
                     />
