@@ -320,6 +320,18 @@ describe("buildRows — discount rows", () => {
     );
     expect(discountRows[0].description).toBe("$5.00");
   });
+
+  it("prefers a pre-formatted form.discount string over discount_amount/discount_type when present (matches SponsorOrderGrid)", () => {
+    const form = makeForm({
+      discount: "10% off",
+      discount_amount: 1000,
+      discount_type: "Rate"
+    });
+    const discountRows = buildRows({ forms: [form] }).filter(
+      (r) => r.type === "discount"
+    );
+    expect(discountRows[0].description).toBe("10% off");
+  });
 });
 
 // ─── Payment rows ─────────────────────────────────────────────────────────────

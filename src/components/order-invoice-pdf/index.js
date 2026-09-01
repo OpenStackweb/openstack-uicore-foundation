@@ -47,7 +47,7 @@ export const OrderPdf = ({ order, summit, logoSrc, theme }) => {
   const rowStyles = createRowStyles(styles);
   const rows = buildRows(order);
   const cancelledItems = rows.filter(
-    (row) => row.type === "item" && row.cancellations?.length > 0
+    (row) => row.type === "item" && row.canceledQuantity > 0
   );
   const mainLocation =
     summit.main_locations?.[0] ??

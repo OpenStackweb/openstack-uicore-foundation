@@ -84,4 +84,42 @@ describe("order ledger consistency — PDF buildRows and SponsorOrderGrid on the
       expect(balanceCell.textContent).toBe(formatBalance(entry.balanceCents));
     });
   });
+
+  it("buildRows (PDF) and SponsorOrderGrid render the same discount description when form.discount is a pre-formatted string", () => {
+    const orderWithNormalizedDiscount = {
+      ...purchaseV2Fixture,
+      forms: [{ ...purchaseV2Fixture.forms[0], discount: "10% off" }]
+    };
+
+    const pdfDiscountRow = buildRows(orderWithNormalizedDiscount).find(
+      (row) => row.type === "discount"
+    );
+    const { container } = render(
+      <SponsorOrderGrid order={orderWithNormalizedDiscount} />
+    );
+
+    expect(pdfDiscountRow.description).toBe("10% off");
+    expect(container.textContent).toContain("10% off");
+  });
+
+  it("PDF's cancelled-items filter and the grid's cancelled-items header agree on which items are cancelled", () => {
+    const pdfCancelledRatios = buildRows(purchaseV2Fixture)
+      .filter((row) => row.type === "item" && row.canceledQuantity > 0)
+      .map((row) => `(${row.canceledQuantity}/${row.quantity})`);
+
+    // Sanity check the fixture actually exercises both a fully and a
+    // partially cancelled item -- otherwise this test would pass vacuously.
+    expect(pdfCancelledRatios.length).toBeGreaterThanOrEqual(2);
+
+    const { container } = render(
+      <SponsorOrderGrid order={purchaseV2Fixture} withCancelledItemsHeader />
+    );
+
+    // Matched on the "(canceled/total)" ratio the CancelledItems header
+    // renders per item -- itemCode is deliberately not part of this check,
+    // since real purchases-api-v2 items always carry a populated `type`.
+    pdfCancelledRatios.forEach((ratio) => {
+      expect(container.textContent).toContain(ratio);
+    });
+  });
 });

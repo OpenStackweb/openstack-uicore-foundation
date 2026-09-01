@@ -127,7 +127,10 @@ export const buildRows = (order) =>
           rowKey: entry.rowKey,
           type: "discount",
           code: T.translate("mui_table.dis"),
-          description: formatDiscount(form.discount_amount, form.discount_type),
+          // Prefers a consumer-normalized form.discount when present, same
+          // as SponsorOrderGrid -- otherwise the two can show different
+          // discount text for the same order.
+          description: form.discount ?? formatDiscount(form.discount_amount, form.discount_type),
           addon: "",
           qty: "",
           price: currencyAmountFromCents(amountCents),
