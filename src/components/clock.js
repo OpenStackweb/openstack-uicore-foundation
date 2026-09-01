@@ -11,6 +11,7 @@
  * limitations under the License.
  **/
 import React from 'react';
+import PropTypes from 'prop-types';
 import moment from "moment-timezone";
 import FragmentParser from "./fragment-parser";
 import {getTimeServiceUrl} from '../utils/methods';
@@ -155,4 +156,14 @@ class Clock extends React.Component {
 
 }
 
+Clock.propTypes = {
+    /** Renders nothing until true and a timestamp has been resolved. */
+    display: PropTypes.bool,
+    /** IANA zone used to format the clock. */
+    timezone: PropTypes.string,
+    /** Called on each tick with the current epoch seconds. */
+    onTick: PropTypes.func,
+    /** Overrides the resolved time; otherwise the summit time service is queried. */
+    now: PropTypes.number
+};
 export default Clock;

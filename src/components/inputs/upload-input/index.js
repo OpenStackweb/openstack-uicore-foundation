@@ -12,6 +12,7 @@
  **/
 
 import React, {useEffect, useState} from 'react';
+import PropTypes from 'prop-types';
 import Dropzone from 'react-dropzone';
 import T from 'i18n-react/dist/i18n-react';
 import './upload.less';
@@ -120,4 +121,16 @@ const UploadInput = ({value, error, handleRemove, handleUpload, handleError, ...
     )
 }
 
+UploadInput.propTypes = {
+    /** Existing file URL. An image renders as a preview, anything else as a file icon. */
+    value: PropTypes.string,
+    /** Called with the accepted file(s). Called unconditionally on drop, unlike handleError below; effectively required. */
+    handleUpload: PropTypes.func,
+    /** Called when the existing file is cleared. Called unconditionally on remove-icon click, with no guard; effectively required. */
+    handleRemove: PropTypes.func,
+    /** Called with rejected files, e.g. wrong type or too large. */
+    handleError: PropTypes.func,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string
+};
 export default UploadInput;
