@@ -1267,4 +1267,80 @@ describe("FormItemTable Component", () => {
       ).not.toBeDisabled();
     });
   });
+
+  describe("Remaining Quantity Caps", () => {
+    // No Form-class Quantity metafields, so the global quantity field is a
+    // plain editable input rather than driven/readOnly.
+    const cappedItem = (overrides) => [
+      {
+        form_item_id: 20,
+        code: "CAP",
+        name: "Capped Item",
+        quantity: 0,
+        rates: { early_bird: 10000, standard: 12000, onsite: 15000 },
+        meta_fields: [],
+        ...overrides
+      }
+    ];
+
+    it("clamps typed value to remaining_quantity_show when it is tighter than remaining_quantity_sponsor", () => {
+      render(
+        <FormItemTableWrapper
+          data={cappedItem({
+            remaining_quantity_show: 2,
+            remaining_quantity_sponsor: 5
+          })}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+          initialValues={{ "i-20-c-global-f-quantity": 0 }}
+        />
+      );
+
+      const input = screen.getByTestId("textfield-i-20-c-global-f-quantity");
+      expect(input).toHaveAttribute("max", "2");
+      fireEvent.change(input, { target: { value: "10" } });
+      // eslint-disable-next-line
+      expect(input).toHaveValue(2);
+    });
+
+    it("clamps typed value to remaining_quantity_sponsor when it is tighter than remaining_quantity_show", () => {
+      render(
+        <FormItemTableWrapper
+          data={cappedItem({
+            remaining_quantity_show: 8,
+            remaining_quantity_sponsor: 3
+          })}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+          initialValues={{ "i-20-c-global-f-quantity": 0 }}
+        />
+      );
+
+      const input = screen.getByTestId("textfield-i-20-c-global-f-quantity");
+      expect(input).toHaveAttribute("max", "3");
+      fireEvent.change(input, { target: { value: "10" } });
+      // eslint-disable-next-line
+      expect(input).toHaveValue(3);
+    });
+
+    it("does not apply an upper bound when both remaining quantities are null", () => {
+      render(
+        <FormItemTableWrapper
+          data={cappedItem({
+            remaining_quantity_show: null,
+            remaining_quantity_sponsor: null
+          })}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+          initialValues={{ "i-20-c-global-f-quantity": 0 }}
+        />
+      );
+
+      const input = screen.getByTestId("textfield-i-20-c-global-f-quantity");
+      expect(input).not.toHaveAttribute("max");
+      fireEvent.change(input, { target: { value: "50" } });
+      // eslint-disable-next-line
+      expect(input).toHaveValue(50);
+    });
+  });
 });
