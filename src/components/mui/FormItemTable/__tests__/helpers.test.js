@@ -54,9 +54,9 @@ describe("isItemAvailable", () => {
     expect(isItemAvailable(item, "early_bird")).toBe(false);
   });
 
-  test("returns false when item is sold out even if it has a rate for the given period", () => {
+  test("returns true when item is sold out but has a rate for the given period (stock is a separate concern, see itemHasStock)", () => {
     const item = { rates: { early_bird: 100 }, is_sold_out: true };
-    expect(isItemAvailable(item, "early_bird")).toBe(false);
+    expect(isItemAvailable(item, "early_bird")).toBe(true);
   });
 
   test("returns true when item is explicitly not sold out and has a rate", () => {

@@ -40,7 +40,7 @@ import MuiFormikSelect from "../formik-inputs/mui-formik-select";
 import MuiFormikPriceField from "../formik-inputs/mui-formik-pricefield";
 import MuiFormikDiscountField from "../formik-inputs/mui-formik-discountfield";
 import ExpandedRowContent from "./components/ExpandedRowContent";
-import { hasDrivingQuantityField, isItemAvailable } from "./helpers";
+import { hasDrivingQuantityField, isItemAvailable, itemHasStock } from "./helpers";
 
 const FormItemTable = ({
   data,
@@ -231,7 +231,12 @@ const FormItemTable = ({
         </TableHead>
         <TableBody>
           {data.map((row) => {
-            const disabled = !isItemAvailable(row, currentApplicableRate);
+            const currentQuantity = calculateQuantity(row);
+            const hasStock = itemHasStock(row);
+            // User can always lower the quantity down to 0
+            const disabled =
+              !isItemAvailable(row, currentApplicableRate) ||
+              (!hasStock && currentQuantity === 0);
             const isOpen = !!openRows[row.form_item_id];
 
             return (
@@ -287,7 +292,7 @@ const FormItemTable = ({
                     <GlobalQuantityField
                       row={row}
                       extraColumns={extraColumns}
-                      value={calculateQuantity(row)}
+                      value={currentQuantity}
                       disabled={disabled}
                     />
                   </TableCell>
@@ -295,13 +300,7 @@ const FormItemTable = ({
                     {currencyAmountFromCents(calculateRowTotal(row))}
                   </TableCell>
                   <TableCell align="center" sx={{ verticalAlign: "middle" }}>
-                    {row.is_sold_out ? (
-                      <Typography variant="body2" noWrap sx={{ color: "error.main" }}>
-                        {row.remaining_quantity_sponsor === 0
-                          ? T.translate("sponsor_edit_form.limit_reached")
-                          : T.translate("sponsor_edit_form.sold_out")}
-                      </Typography>
-                    ) : (
+                    {hasStock ? (
                       <IconButton
                         size="small"
                         aria-label="Toggle row details"
@@ -309,6 +308,12 @@ const FormItemTable = ({
                       >
                         <InfoOutlinedIcon color={getDetailsIconColor(row)} />
                       </IconButton>
+                    ) : (
+                      <Typography variant="body2" noWrap sx={{ color: "error.main" }}>
+                        {row.remaining_quantity_sponsor === 0
+                          ? T.translate("sponsor_edit_form.limit_reached")
+                          : T.translate("sponsor_edit_form.sold_out")}
+                      </Typography>
                     )}
                   </TableCell>
                 </TableRow>
