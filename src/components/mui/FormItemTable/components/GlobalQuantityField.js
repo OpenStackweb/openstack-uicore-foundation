@@ -14,7 +14,7 @@
 import React, { useEffect } from "react";
 import { useField } from "formik";
 import MuiFormikTextField from "../../formik-inputs/mui-formik-textfield";
-import { hasDrivingQuantityField } from "../helpers";
+import { hasDrivingQuantityField, itemHasStock } from "../helpers";
 
 const GlobalQuantityField = ({
   row,
@@ -29,6 +29,13 @@ const GlobalQuantityField = ({
   // using readOnly since formik won't validate disabled fields
   const isReadOnly = hasDrivingQuantityField(extraColumns);
 
+  // A row with no remaining stock can't accept a higher quantity, but a
+  // sponsor who already holds a non-zero quantity here must still be able
+  // to lower it - fully disabling the field would leave them unable to
+  // shed a stale quantity the backend will otherwise reject on save.
+  const hasStock = itemHasStock(row);
+  const sponsorLimit = row.quantity_limit_per_sponsor;
+
   useEffect(() => {
     helpers.setValue(value);
   }, [value]);
@@ -40,8 +47,12 @@ const GlobalQuantityField = ({
     // forces the DOM to normalize the displayed value (e.g. strip leading zeros,
     // clamp to max) before React's reconciliation runs.
     if (isNaN(val)) { e.target.value = 0; helpers.setValue(0); return; }
-    const max = row.quantity_limit_per_sponsor;
-    const clamped = max ? Math.min(Math.max(val, 0), max) : Math.max(val, 0);
+    let clamped = Math.max(val, 0);
+    if (hasStock) {
+      if (sponsorLimit) clamped = Math.min(clamped, sponsorLimit);
+    } else {
+      clamped = Math.min(clamped, value);
+    }
     e.target.value = clamped;
     helpers.setValue(clamped);
   };
@@ -58,9 +69,11 @@ const GlobalQuantityField = ({
         htmlInput: {
           readOnly: isReadOnly,
           min: 0,
-          ...(row.quantity_limit_per_sponsor
-            ? { max: row.quantity_limit_per_sponsor }
-            : {})
+          ...(hasStock
+            ? sponsorLimit
+              ? { max: sponsorLimit }
+              : {}
+            : { max: value })
         }
       }}
       sx={
