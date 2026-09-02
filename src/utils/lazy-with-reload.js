@@ -133,11 +133,11 @@ export const reloadOnChunkError = (error, filename, chunkFilenamePattern) => {
     return false;
   }
 
-  reloadTriggeredThisPage = true;
   if (!writeReloadState({ build: currentBuild })) {
     reportRecoveryFailed(error, filename);
     return false;
   }
+  reloadTriggeredThisPage = true;
   try {
     window.sessionStorage.setItem(PENDING_CONFIRMATION_KEY, "1");
   } catch {
@@ -168,11 +168,11 @@ const confirmReloadIfPending = () => {
 // or a repeat chunk failure after the reload already happened once for this
 // build, the error is rethrown so it still reaches the app's own error
 // boundary/fallback UI.
-export const lazyWithReload = (importer, chunkFilenamePattern) =>
+export const lazyWithReload = (importer) =>
   React.lazy(() =>
     importer().catch((error) => {
       if (
-        reloadOnChunkError(error, undefined, chunkFilenamePattern) ||
+        reloadOnChunkError(error, undefined) ||
         isChunkReloadPending()
       ) {
         // reload is in flight - never resolve so nothing renders (e.g. an
