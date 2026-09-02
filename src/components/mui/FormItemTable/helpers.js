@@ -40,7 +40,7 @@ export const getCurrentApplicableRate = (timeZone, rateDates) => {
 };
 
 export const isItemAvailable = (item, currentApplicableRate, customRate = 0) =>
-  customRate || item.rates?.[currentApplicableRate] != null;
+  !!customRate || item.rates?.[currentApplicableRate] != null;
 
 // The global quantity for a row is driven (and therefore read-only/computed)
 // when a Form-class metafield of type Quantity exists for it (extraColumns,
