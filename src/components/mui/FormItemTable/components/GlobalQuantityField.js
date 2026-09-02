@@ -29,19 +29,22 @@ const GlobalQuantityField = ({
   // using readOnly since formik won't validate disabled fields
   const isReadOnly = hasDrivingQuantityField(extraColumns);
 
+  // if remaining quantities are null then there is no cap
+  const maxAllowed = Math.min(
+    row.remaining_quantity_show ?? Infinity,
+    row.remaining_quantity_sponsor ?? Infinity
+  );
+
   useEffect(() => {
     helpers.setValue(value);
   }, [value]);
 
   const handleChange = (e) => {
     const val = parseInt(e.target.value, 10);
-    // React intentionally skips syncing controlled number inputs during typing
-    // to avoid cursor/composition issues. Setting e.target.value directly
-    // forces the DOM to normalize the displayed value (e.g. strip leading zeros,
-    // clamp to max) before React's reconciliation runs.
+    // Setting e.target.value directly forces the DOM to normalize the displayed value
     if (isNaN(val)) { e.target.value = 0; helpers.setValue(0); return; }
-    const max = row.quantity_limit_per_sponsor;
-    const clamped = max ? Math.min(Math.max(val, 0), max) : Math.max(val, 0);
+    let clamped = Math.max(val, 0);
+    clamped = Math.min(clamped, maxAllowed);
     e.target.value = clamped;
     helpers.setValue(clamped);
   };
@@ -58,9 +61,7 @@ const GlobalQuantityField = ({
         htmlInput: {
           readOnly: isReadOnly,
           min: 0,
-          ...(row.quantity_limit_per_sponsor
-            ? { max: row.quantity_limit_per_sponsor }
-            : {})
+          ...(Number.isFinite(maxAllowed) ? { max: maxAllowed } : {})
         }
       }}
       sx={
