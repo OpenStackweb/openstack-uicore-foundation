@@ -113,6 +113,9 @@ class Clock extends React.Component {
 
     getServerTime = () => {
         const timeServiceUrl = getTimeServiceUrl();
+        // No endpoint configured: go straight to the local-clock fallback
+        // instead of fetching '' or "undefined".
+        if (!timeServiceUrl) return Promise.reject(null);
         return fetch(`${timeServiceUrl}`).then(async (response) => {
             if (response.status === 200) {
                 return response.json();
