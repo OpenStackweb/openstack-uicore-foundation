@@ -218,9 +218,18 @@ const UploadInputV3 = ({
     // status 0 means the request never got a real server response (connection dropped/timed
     // out) - Dropzone's own message for that case is "Server responded with 0 code.", which
     // is not something a user can act on.
-    const displayMessage = status === 0 || message === 'Network error'
-      ? T.translate('upload_input_v3.network_error')
-      : message;
+    const displayMessage =
+      status === 0 || message === 'Network error'
+        ? T.translate('upload_input_v3.network_error')
+        : message === 'Upload timed out'
+          ? T.translate('upload_input_v3.upload_timed_out')
+          : message === 'Upload failed'
+            ? T.translate('upload_input_v3.upload_failed')
+            : message === 'Auth error'
+              ? T.translate('upload_input_v3.auth_error')
+              : message === 'Max files reached.'
+                ? T.translate('upload_input_v3.max_files_reached')
+                : message;
 
     setErrorFiles(prev => {
       const existingIndex = prev.findIndex(f => f.name === file.name && f.size === file.size);
@@ -391,7 +400,7 @@ const UploadInputV3 = ({
                   {file.name}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {formatFileSize(file.size)} · {file.complete ? 'Complete' : 'Loading'}
+                  {formatFileSize(file.size)} · {file.complete ? T.translate("upload_input_v3.complete") : T.translate("upload_input_v3.loading")}
                 </Typography>
                 {!file.complete && (
                   <LinearProgress
