@@ -396,4 +396,19 @@ describe('setAccessTokenResolver / getAccessToken', () => {
         await getAccessToken().catch(() => {});
         expect(resolver).not.toHaveBeenCalled();
     });
+
+    it('a resolver registered on one module copy is visible to a second copy', async () => {
+        // The slot rides globalThis under Symbol.for, so duplicate installs of
+        // the package (nested node_modules, symlinked dev installs) share it.
+        const resolver = jest.fn().mockResolvedValue('tok-shared');
+        setAccessTokenResolver(resolver);
+
+        let secondCopy;
+        jest.isolateModules(() => {
+            secondCopy = require('../methods');
+        });
+        expect(secondCopy.getAccessToken).not.toBe(getAccessToken);
+        await expect(secondCopy.getAccessToken()).resolves.toBe('tok-shared');
+        expect(resolver).toHaveBeenCalledTimes(1);
+    });
 });
