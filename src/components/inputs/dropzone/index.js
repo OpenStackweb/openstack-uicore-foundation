@@ -49,6 +49,16 @@ export class DropzoneJS extends React.Component {
             this.props.onError(e, status, this.props.id);
     }
 
+    // this.dropzone may already be dropzone.destroy()'s return value (an Array,
+    // not the Dropzone instance) if a poll tick resolves after unmount.
+    reportPollingError(file, message) {
+        if (typeof this.dropzone?.emit === 'function') {
+            this.dropzone.emit('error', file, message);
+        } else {
+            this.onError(message);
+        }
+    }
+
     onUploadComplete(response){
         if(this.props.onUploadComplete)
             this.props.onUploadComplete(response, this.props.id, this.props.data);
@@ -106,7 +116,7 @@ export class DropzoneJS extends React.Component {
             attempts++;
             if (attempts > maxAttempts) {
                 this.stopPolling(file);
-                this.dropzone.emit('error', file, 'Upload timed out');
+                this.reportPollingError(file, 'Upload timed out');
                 return;
             }
             try {
@@ -114,6 +124,11 @@ export class DropzoneJS extends React.Component {
                 const response = await fetch(statusUrl, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
+                if (!response.ok) {
+                    this.stopPolling(file);
+                    this.reportPollingError(file, 'Network error');
+                    return;
+                }
                 const data = await response.json();
                 // Clearing the interval is not enough on its own: this tick was already
                 // awaiting its response when the user cancelled, and committing it now
@@ -131,12 +146,12 @@ export class DropzoneJS extends React.Component {
                     this.onUploadComplete(data);
                 } else if (data.status === 'error') {
                     this.stopPolling(file);
-                    this.dropzone.emit('error', file, data.message || data.error || 'Upload failed');
+                    this.reportPollingError(file, data.message || 'Upload failed');
                 }
             } catch (error) {
                 this.stopPolling(file);
                 // fetch fail is always connection error
-                this.dropzone.emit('error', file, 'Network error');
+                this.reportPollingError(file, 'Network error');
             }
         }, 2000);
 
