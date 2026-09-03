@@ -192,6 +192,7 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
     // Mock fetch to return complete status
     global.fetch = jest.fn(() =>
       Promise.resolve({
+        ok: true,
         json: () => Promise.resolve({
           status: 'complete',
           name: 'test.pdf',
@@ -317,7 +318,7 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
   test('test_dropzone_cancel_stops_polling_for_that_file_only', (done) => {
     // Server is still processing: every poll answers 'uploading', so polling keeps going.
     global.fetch = jest.fn(() =>
-      Promise.resolve({ json: () => Promise.resolve({ status: 'uploading' }) })
+      Promise.resolve({ ok: true, json: () => Promise.resolve({ status: 'uploading' }) })
     );
 
     const ref = React.createRef();
@@ -574,7 +575,7 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
   test('test_dropzone_poll_timeout_emits_a_string_message_and_calls_onError_once', async () => {
     jest.useFakeTimers({ doNotFake: ['queueMicrotask'] });
     global.fetch = jest.fn(() =>
-      Promise.resolve({ json: () => Promise.resolve({ status: 'uploading' }) })
+      Promise.resolve({ ok: true, json: () => Promise.resolve({ status: 'uploading' }) })
     );
 
     const ref = React.createRef();
@@ -605,6 +606,7 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
   test('test_dropzone_poll_server_error_status_emits_readable_message_not_object', (done) => {
     global.fetch = jest.fn(() =>
       Promise.resolve({
+        ok: true,
         json: () => Promise.resolve({ status: 'error', message: 'processing failed' })
       })
     );
