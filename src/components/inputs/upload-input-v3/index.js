@@ -25,6 +25,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CloseIcon from "@mui/icons-material/Close";
+import ReplayIcon from "@mui/icons-material/Replay";
 import { DropzoneV3 } from './dropzone-v3';
 import ProgressiveImg from '../../progressive-img';
 import file_icon from '../upload-input/file.png';
@@ -249,6 +250,27 @@ const UploadInputV3 = ({
     setErrorFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
   }, []);
 
+  // An errored file is never auto-removed from dropzone's own file list, so the same
+  // (name,size) lookup handleDismissError uses still finds it here - re-adding it
+  // re-triggers accept(), which is where the resume ledger lookup happens.
+  const handleRetryError = useCallback((file) => {
+    const dz = dropzoneInstanceRef.current;
+    const dzFile = dz?.files?.find(f => f.name === file.name && f.size === file.size);
+    setErrorFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
+    if (!dz || !dzFile) return; // file object gone (e.g. full remount) - re-selecting the
+    // same file still resumes via the md5-keyed ledger the next time it hits accept()
+    dz.removeFile(dzFile);
+    // Reusing the same File object means it still carries flags from its previous pass.
+    // dropzone's OWN accept() gate runs before our custom options.accept ever does, and
+    // rejects the file as "too many files" if accepted stays true from its original
+    // successful accept. Our removedfile handler also sets _canceled, which later blocks
+    // xhr.onload from ever calling onUploadComplete/pollUploadStatus once resent chunks
+    // succeed. Neither is cleared by removeFile/addFile - must reset both here.
+    dzFile.accepted = false;
+    dzFile._canceled = false;
+    dz.addFile(dzFile);
+  }, []);
+
   const handleDeleteUploading = useCallback((file) => {
     const entry = uploadingFilesRef.current.find(f => f.name === file.name && f.size === file.size);
     if (entry?.previewUrl) URL.revokeObjectURL(entry.previewUrl);
@@ -452,6 +474,14 @@ const UploadInputV3 = ({
                 </Typography>
               </Box>
 
+              <IconButton
+                size="small"
+                onClick={() => handleRetryError(file)}
+                title={T.translate("upload_input_v3.retry")}
+                sx={{ color: 'primary.main' }}
+              >
+                <ReplayIcon fontSize="small" />
+              </IconButton>
               <IconButton
                 size="small"
                 onClick={() => handleDismissError(file)}
