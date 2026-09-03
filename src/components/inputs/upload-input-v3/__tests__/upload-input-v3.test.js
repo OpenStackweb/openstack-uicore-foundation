@@ -298,8 +298,10 @@ describe('UploadInputV3', () => {
       expect(screen.getByText(/File is too big/)).toBeInTheDocument();
       expect(container.querySelector('.dropzone-mock')).not.toBeVisible();
 
+      // The error row has two buttons (Retry, then dismiss) - dismiss is last.
+      const errorRowButtons = screen.getAllByRole('button');
       act(() => {
-        fireEvent.click(screen.getByRole('button'));
+        fireEvent.click(errorRowButtons[errorRowButtons.length - 1]);
       });
 
       expect(screen.queryByText(/File is too big/)).not.toBeInTheDocument();
@@ -362,6 +364,54 @@ describe('UploadInputV3', () => {
         );
       });
       expect(container.querySelector('.dropzone-mock')).not.toBeVisible();
+    });
+
+    test('retrying an error resumes: removeFile + addFile on the same dropzone file object, flags reset', () => {
+      const removeFile = jest.fn();
+      const addFile = jest.fn();
+      // still carrying flags from its previous pass, same as after a real interrupted upload
+      const dzFile = { name: 'video.mp4', size: 9999999, accepted: true, _canceled: true };
+
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onDropzoneReady({ files: [dzFile], removeFile, addFile });
+      });
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'video.mp4', size: 9999999 }, 'Network error');
+      });
+
+      act(() => {
+        fireEvent.click(screen.getByTitle('Retry'));
+      });
+
+      expect(removeFile).toHaveBeenCalledWith(dzFile);
+      expect(addFile).toHaveBeenCalledWith(dzFile);
+      // dropzone's own accept() gate and our xhr.onload guard both key off these -
+      // stale values from the failed attempt must not survive into the retry.
+      expect(dzFile.accepted).toBe(false);
+      expect(dzFile._canceled).toBe(false);
+      expect(screen.queryByText('video.mp4')).not.toBeInTheDocument();
+    });
+
+    test('retrying an error is a no-op when the underlying dropzone file is gone', () => {
+      const removeFile = jest.fn();
+      const addFile = jest.fn();
+
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onDropzoneReady({ files: [], removeFile, addFile });
+      });
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'video.mp4', size: 9999999 }, 'Network error');
+      });
+
+      act(() => {
+        fireEvent.click(screen.getByTitle('Retry'));
+      });
+
+      expect(removeFile).not.toHaveBeenCalled();
+      expect(addFile).not.toHaveBeenCalled();
+      expect(screen.queryByText('video.mp4')).not.toBeInTheDocument();
     });
   });
 
@@ -590,7 +640,9 @@ describe('UploadInputV3', () => {
       });
       expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:photo-a.jpg');
 
-      act(() => { fireEvent.click(screen.getByRole('button')); });
+      // The error row now has two buttons (Retry, then dismiss) - the dismiss one is last.
+      const errorRowButtons = screen.getAllByRole('button');
+      act(() => { fireEvent.click(errorRowButtons[errorRowButtons.length - 1]); });
       act(() => {
         dropzoneCallbacks.onAddedFile({ name: 'photo-b.jpg', size: 20000, type: 'image/jpeg' });
         dropzoneCallbacks.onFileCompleted({ name: 'photo-b.jpg', size: 20000 });
