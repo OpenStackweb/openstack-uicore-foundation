@@ -185,7 +185,7 @@ describe('UploadInputV3', () => {
         dropzoneCallbacks.onAddedFile({ name: 'sample.png', size: 11264 });
       });
       expect(screen.getByText('sample.png')).toBeInTheDocument();
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
     });
 
     test('shows Complete status and hides progress bar after upload finishes', () => {
@@ -197,7 +197,7 @@ describe('UploadInputV3', () => {
         dropzoneCallbacks.onFileCompleted({ name: 'sample.png', size: 11264 });
       });
       expect(screen.getByText(/Complete/)).toBeInTheDocument();
-      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Uploading/)).not.toBeInTheDocument();
     });
 
     test('hides dropzone when max files reached', () => {
@@ -234,7 +234,7 @@ describe('UploadInputV3', () => {
       act(() => {
         dropzoneCallbacks.onAddedFile({ name: 'big-file.png', size: 9999999 });
       });
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
 
       act(() => {
         dropzoneCallbacks.onFileError(
@@ -242,7 +242,7 @@ describe('UploadInputV3', () => {
           'File is too big (9.54MiB). Max filesize: 5MiB.'
         );
       });
-      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Uploading/)).not.toBeInTheDocument();
       expect(screen.getByText(/File is too big/)).toBeInTheDocument();
     });
 
@@ -317,7 +317,7 @@ describe('UploadInputV3', () => {
       act(() => {
         dropzoneCallbacks.onAddedFile({ name: 'sample.png', size: 11264 });
       });
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
 
       // The delete button on the uploading row is the only button on screen.
       act(() => {
@@ -662,7 +662,7 @@ describe('UploadInputV3', () => {
 
       // Assert: file should still show "Loading" (not "Complete") because async processing is in progress
       expect(screen.getByText('video.mp4')).toBeInTheDocument();
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
       expect(screen.queryByText(/Complete/)).not.toBeInTheDocument();
     });
 
@@ -685,7 +685,7 @@ describe('UploadInputV3', () => {
       });
 
       // File should still be Loading despite progress being 100
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
       expect(screen.queryByText(/Complete/)).not.toBeInTheDocument();
 
       // Polling completes - onUploadComplete fires after async processing finishes
@@ -696,7 +696,7 @@ describe('UploadInputV3', () => {
       // Assert: file should now show "Complete"
       expect(screen.getByText('video.mp4')).toBeInTheDocument();
       expect(screen.getByText(/Complete/)).toBeInTheDocument();
-      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Uploading/)).not.toBeInTheDocument();
     });
 
     test('completing one file does not mark other in-flight files as complete when maxFiles > 1', () => {
@@ -713,7 +713,7 @@ describe('UploadInputV3', () => {
       // Both should be Loading
       expect(screen.getByText('file-a.png')).toBeInTheDocument();
       expect(screen.getByText('file-b.png')).toBeInTheDocument();
-      expect(screen.getAllByText(/Loading/)).toHaveLength(2);
+      expect(screen.getAllByText(/Uploading/)).toHaveLength(2);
 
       // File A finishes uploading all chunks - progress reaches 100
       act(() => {
@@ -737,7 +737,7 @@ describe('UploadInputV3', () => {
 
       // Assert: file B should still show "Loading" - it has not finished uploading
       expect(screen.getByText('file-b.png')).toBeInTheDocument();
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
     });
 
     test('HTTP 202 parallel: onUploadComplete for one file does not prematurely mark sibling file as complete', () => {
@@ -758,7 +758,7 @@ describe('UploadInputV3', () => {
         dropzoneCallbacks.onFileCompleted({ name: 'clip-b.mp4', size: 8000000, _asyncProcessing: true });
       });
 
-      expect(screen.getAllByText(/Loading/)).toHaveLength(2);
+      expect(screen.getAllByText(/Uploading/)).toHaveLength(2);
 
       // Only clip-a.mp4 polling finishes
       act(() => {
@@ -767,9 +767,9 @@ describe('UploadInputV3', () => {
 
       // clip-b must still be Loading - it has not finished async processing
       expect(screen.getByText('clip-b.mp4')).toBeInTheDocument();
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
       // Only one Loading entry should remain (clip-b)
-      expect(screen.getAllByText(/Loading/)).toHaveLength(1);
+      expect(screen.getAllByText(/Uploading/)).toHaveLength(1);
     });
   });
 });
