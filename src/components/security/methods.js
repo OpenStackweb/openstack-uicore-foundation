@@ -343,9 +343,27 @@ const _getAccessToken = async () => {
 }
 
 /**
+ * Optional resolver for getAccessToken, set via setAccessTokenResolver. When
+ * present, getAccessToken delegates to it; otherwise the built-in flow runs.
+ * Pass a non-function (or nothing) to reset to the built-in.
+ *
+ * The slot lives on globalThis under a Symbol.for key so every copy of this
+ * module shares it: bundles that inlined methods.js, nested installs of the
+ * package, and symlinked dev installs all read the same registry entry.
+ */
+const ACCESS_TOKEN_RESOLVER_KEY = Symbol.for('openstack-uicore-foundation.accessTokenResolver');
+
+export const setAccessTokenResolver = (resolver) => {
+    globalThis[ACCESS_TOKEN_RESOLVER_KEY] = typeof resolver === 'function' ? resolver : null;
+};
+
+/**
  * @returns {Promise<*|undefined>}
  */
 export const getAccessToken = async () => {
+    const resolveAccessToken = globalThis[ACCESS_TOKEN_RESOLVER_KEY];
+    if (resolveAccessToken) return resolveAccessToken();
+
     if (typeof navigator !== 'undefined' && navigator.locks) {
         return await navigator.locks.request(GET_TOKEN_SILENTLY_LOCK_KEY, async lock => {
             console.log(`openstack-uicore-foundation::Security::methods::getAccessToken web lock api`, lock);
