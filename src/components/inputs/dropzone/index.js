@@ -6,6 +6,14 @@ import PropTypes from 'prop-types';
 import {getAccessToken, initLogOut} from '../../security/methods';
 import {AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR} from '../../security/constants';
 import {getMD5} from "../../../utils/crypto";
+import {
+    getOrCreateUploadLedger,
+    acknowledgeChunk,
+    isChunkAcknowledged,
+    markCorrectionAttempted,
+    clearLedger,
+    UPLOAD_LEDGER_TTL_MS,
+} from "./upload-ledger";
 
 let Dropzone = null;
 /**
@@ -80,6 +88,14 @@ export class DropzoneJS extends React.Component {
         this.dropzone._uploadData = (files, dataBlocks) => {
             // Only throttle chunked uploads (single dataBlock with chunkIndex)
             if (dataBlocks.length === 1 && dataBlocks[0].chunkIndex !== undefined) {
+                const [file] = files;
+                const chunkIndex = dataBlocks[0].chunkIndex;
+                // A resumed chunk the server already acked is resolved here, before it
+                // ever takes a concurrency slot - never queued, never sent over the wire.
+                if (isChunkAcknowledged(file._resumeLedger, chunkIndex)) {
+                    this.skipAcknowledgedChunk(file, chunkIndex);
+                    return;
+                }
                 this.chunkQueue.push({ files, dataBlocks });
                 this.processChunkQueue();
             } else {
@@ -89,9 +105,26 @@ export class DropzoneJS extends React.Component {
         };
     }
 
+    // Synthesizes a successful chunk without a network round-trip, using Dropzone's own
+    // finishedChunkUpload to drive its native chunk state machine (next chunk / chunksUploaded)
+    // exactly as a real success would.
+    skipAcknowledgedChunk(file, chunkIndex) {
+        const chunk = file.upload?.chunks?.[chunkIndex];
+        if (!chunk) return;
+        file._resumeSkippedThisAttempt = true;
+        const chunkSize = this.dropzone?.options?.chunkSize || 2000000;
+        file._completedBytes = Math.min((file._completedBytes || 0) + chunkSize, file.size);
+        file.upload.finishedChunkUpload(chunk);
+    }
+
     onChunkComplete() {
         this.chunksInFlight = Math.max(0, this.chunksInFlight - 1);
         this.processChunkQueue();
+    }
+
+    clearResumeLedger(file) {
+        clearLedger(this.props.id, file.md5, file.size);
+        file._resumeLedger = null;
     }
 
     pollUploadStatus(fileId, baseUrl, file) {
@@ -139,6 +172,7 @@ export class DropzoneJS extends React.Component {
                 }
                 if (data.status === 'complete') {
                     this.stopPolling(file);
+                    if (file._resumeLedger) this.clearResumeLedger(file);
                     // Call the stored done callback to trigger Dropzone's success event
                     if (file?._chunksUploadedDone) {
                         file._chunksUploadedDone();
@@ -202,11 +236,67 @@ export class DropzoneJS extends React.Component {
                 return;
             }
 
+            // A retried File (removeFile + addFile) keeps whatever these were set to on its
+            // previous failed pass - addFile/removeFile never clear custom properties.
+            file._asyncProcessing = false;
+            file._chunksUploadedDone = null;
+            file._resumeSkippedThisAttempt = false;
+
+            if (options.chunking) {
+                const chunkSize = options.chunkSize || 2000000;
+                const totalChunks = Math.ceil(file.size / chunkSize) || 1;
+                const ledger = getOrCreateUploadLedger(
+                    this.props.id, file.md5, file.size, chunkSize, totalChunks,
+                    this.props.resumeLedgerTtlMs || UPLOAD_LEDGER_TTL_MS
+                );
+                // Overwrites Dropzone's own randomly-generated dzuuid (already set by
+                // addFile() before accept() ever runs) with our persisted, stable one -
+                // the only thing that lets a retry reuse the server's in-progress upload.
+                file.upload.uuid = ledger.uploadId;
+                file._resumeLedger = ledger;
+
+                if (ledger.ackedChunks.length > 0) {
+                    const acknowledgedBytes = Math.min(ledger.ackedChunks.length * chunkSize, file.size);
+                    file._completedBytes = acknowledgedBytes;
+                    // Reuses the existing uploadprogress bridge so a resumed row shows its
+                    // real starting percentage immediately, with no new event/plumbing.
+                    if (typeof this.dropzone.emit === 'function') {
+                        this.dropzone.emit(
+                            'uploadprogress', file, (acknowledgedBytes / file.size) * 100, acknowledgedBytes
+                        );
+                    }
+                }
+            }
+
             done();
         };
 
         // Override chunksUploaded to defer success event for async processing (HTTP 202)
         options.chunksUploaded = (file, done) => {
+            // Every local chunk succeeded (real or resume-skipped) but the file never got
+            // a real 202 - proof a skipped chunk wasn't actually held by the server. The
+            // ledger's belief was wrong, not just incomplete: self-correct, bounded to one
+            // retry under the same id, then one clean full upload under a fresh id - never
+            // loop, and never surface this to the user, since a clean pass can't skip
+            // anything and so can't re-trigger this branch.
+            if (file._resumeLedger && file._resumeSkippedThisAttempt && !file._asyncProcessing) {
+                file._resumeSkippedThisAttempt = false;
+                file._completedBytes = 0;
+                if (!file._resumeLedger.correctionAttempted) {
+                    file._resumeLedger = markCorrectionAttempted(file._resumeLedger);
+                } else {
+                    const chunkSize = file._resumeLedger.chunkSize;
+                    const totalChunks = file._resumeLedger.totalChunks;
+                    this.clearResumeLedger(file);
+                    file._resumeLedger = getOrCreateUploadLedger(
+                        this.props.id, file.md5, file.size, chunkSize, totalChunks,
+                        this.props.resumeLedgerTtlMs || UPLOAD_LEDGER_TTL_MS
+                    );
+                    file.upload.uuid = file._resumeLedger.uploadId;
+                }
+                this.dropzone.uploadFiles([file]);
+                return;
+            }
             if (file._asyncProcessing) {
                 // Store the done callback for later execution after polling completes
                 file._chunksUploadedDone = done;
@@ -456,6 +546,13 @@ export class DropzoneJS extends React.Component {
             // load callback from dropzone
             let dropzoneOnLoad = xhr.onload;
             xhr.onload = function (e) {
+                // Resolved BEFORE dropzoneOnLoad: on a successful chunked response, Dropzone's
+                // native finishedChunkUpload (called from within dropzoneOnLoad) nulls
+                // chunk.xhr, so _getChunk can no longer find it afterwards.
+                const chunk = (file?.upload?.chunked && _this.dropzone?._getChunk)
+                    ? _this.dropzone._getChunk(file, xhr)
+                    : null;
+
                 // Remove this XHR from active tracking
                 const xhrs = _this.activeXHRs.get(file);
                 if (xhrs) {
@@ -481,6 +578,13 @@ export class DropzoneJS extends React.Component {
                     file._asyncProcessing = true;
                 }
 
+                // Acknowledge only on a real 200/202 - never on a connection failure (status 0,
+                // xhr.onerror/ontimeout below), so an unacknowledged chunk always gets re-sent
+                // on the next resume, which is safe because the server dedups a held chunk.
+                if (chunk && (xhr?.status === 200 || xhr?.status === 202) && file._resumeLedger) {
+                    acknowledgeChunk(file._resumeLedger, chunk.index);
+                }
+
                 dropzoneOnLoad(e);
 
                 // The user may have cancelled while this response was in flight: abort() on an
@@ -492,6 +596,7 @@ export class DropzoneJS extends React.Component {
 
                 if(xhr?.status == 200) {
                     if (typeof uploadResponse.name === 'string') {
+                        if (file._resumeLedger) _this.clearResumeLedger(file);
                         _this.onUploadComplete(uploadResponse);
                     }
                 }

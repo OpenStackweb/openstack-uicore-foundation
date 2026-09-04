@@ -193,7 +193,8 @@
       "upload_failed": "Upload failed. Please retry.",
       "auth_error": "Authentication error. Please sign in again.",
       "max_files_reached": "Maximum number of files reached.",
-      "loading": "Uploading"
+      "loading": "Uploading",
+      "retry": "Retry"
   },
   "grid_filter": {
     "filter_by": "Filter by ",
