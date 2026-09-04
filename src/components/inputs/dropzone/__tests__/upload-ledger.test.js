@@ -126,4 +126,47 @@ describe('upload-ledger', () => {
     expect(second.uploadId).not.toBe(first.uploadId);
     expect(second.ackedChunks).toEqual([]);
   });
+
+  describe('when localStorage throws (blocked/full storage)', () => {
+    let getItemSpy;
+    let setItemSpy;
+    let removeItemSpy;
+
+    beforeEach(() => {
+      getItemSpy = jest.spyOn(window.localStorage.__proto__, 'getItem').mockImplementation(() => {
+        throw new Error('storage blocked');
+      });
+      setItemSpy = jest.spyOn(window.localStorage.__proto__, 'setItem').mockImplementation(() => {
+        throw new Error('storage blocked');
+      });
+      removeItemSpy = jest.spyOn(window.localStorage.__proto__, 'removeItem').mockImplementation(() => {
+        throw new Error('storage blocked');
+      });
+    });
+
+    afterEach(() => {
+      getItemSpy.mockRestore();
+      setItemSpy.mockRestore();
+      removeItemSpy.mockRestore();
+    });
+
+    test('getOrCreateUploadLedger still returns a fresh in-memory ledger instead of throwing', () => {
+      expect(() => getOrCreateUploadLedger('ns', 'md5-a', 1000, 100, 10)).not.toThrow();
+
+      const ledger = getOrCreateUploadLedger('ns', 'md5-a', 1000, 100, 10);
+      expect(typeof ledger.uploadId).toBe('string');
+      expect(ledger.ackedChunks).toEqual([]);
+    });
+
+    test('acknowledgeChunk does not throw when the underlying write fails', () => {
+      const ledger = getOrCreateUploadLedger('ns', 'md5-a', 1000, 100, 10);
+
+      expect(() => acknowledgeChunk(ledger, 0)).not.toThrow();
+      expect(ledger.ackedChunks).toEqual([0]);
+    });
+
+    test('clearLedger does not throw when the underlying removal fails', () => {
+      expect(() => clearLedger('ns', 'md5-a', 1000)).not.toThrow();
+    });
+  });
 });
