@@ -172,7 +172,11 @@ export class DropzoneJS extends React.Component {
                     return;
                 } else if (data.status === 'error') {
                     this.stopPolling(file);
+<<<<<<< HEAD
                     this.reportPollingError(file, data.message || data.error || 'Upload failed');
+=======
+                    this.reportPollingError(file, data.message || 'Upload failed');
+>>>>>>> 68fd188 (chore: pr review)
                     return;
                 }
                 // any other status (e.g. 'uploading') means keep polling
