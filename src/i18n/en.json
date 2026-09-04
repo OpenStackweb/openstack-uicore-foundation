@@ -187,7 +187,13 @@
       "drag_and_drop": "or drag and drop",
       "see_preview": "See Preview",
       "preview_file": "Preview file",
-      "complete": "Complete"
+      "complete": "Complete",
+      "network_error": "Upload interrupted by a connection error. Please retry.",
+      "upload_timed_out": "Upload timed out. Please retry.",
+      "upload_failed": "Upload failed. Please retry.",
+      "auth_error": "Authentication error. Please sign in again.",
+      "max_files_reached": "Maximum number of files reached.",
+      "loading": "Uploading"
   },
   "grid_filter": {
     "filter_by": "Filter by ",

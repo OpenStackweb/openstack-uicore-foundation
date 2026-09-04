@@ -205,19 +205,45 @@ const UploadInputV3 = ({
     }));
   }, [value]);
 
-  const handleFileError = useCallback((file, message) => {
+  const handleFileError = useCallback((file, message, status) => {
     setUploadingFiles(prev => {
       const entry = prev.find(f => f.name === file.name && f.size === file.size);
       if (entry?.previewUrl) URL.revokeObjectURL(entry.previewUrl);
       return prev.filter(f => !(f.name === file.name && f.size === file.size));
     });
-    // Dropzone turns a cancelled upload into an error carrying dictUploadCanceled. A cancel
-    // is not a failure to report back to the user - the row just goes away. 'canceled' is the
-    // value of Dropzone.CANCELED, matched as a literal so this does not depend on the
-    // Dropzone module being loaded here; _userCanceled also covers files Dropzone never got
-    // to mark, such as one removed before its upload reached the UPLOADING state.
+    // 'canceled' is the value of Dropzone.CANCELED, matched as a literal so this does not depend on the
+    // Dropzone module being loaded here; _userCanceled is when removed before its upload reached the UPLOADING state.
     if (file._userCanceled || file.status === 'canceled') return;
-    setErrorFiles(prev => [...prev, { name: file.name, size: file.size, message }]);
+
+    // Dropzone parses any application/json error body before checking status, so a real
+    // server validation error (e.g. file-upload-api's {"message": "..."}) arrives as an
+    // object here, not a string - render it as one or React crashes on the JSX below.
+    const text = typeof message === 'string'
+      ? message
+      : (message?.message ?? T.translate('upload_input_v3.upload_failed'));
+
+    // status 0 means the request never got a real server response (connection dropped/timed
+    // out) - Dropzone's own message for that case is "Server responded with 0 code.", which
+    // is not something a user can act on.
+    const displayMessage =
+      status === 0 || text === 'Network error'
+        ? T.translate('upload_input_v3.network_error')
+        : text === 'Upload timed out'
+          ? T.translate('upload_input_v3.upload_timed_out')
+          : text === 'Upload failed'
+            ? T.translate('upload_input_v3.upload_failed')
+            : text === 'Auth error'
+              ? T.translate('upload_input_v3.auth_error')
+              : text === 'Max files reached.'
+                ? T.translate('upload_input_v3.max_files_reached')
+                : text;
+
+    setErrorFiles(prev => {
+      const existingIndex = prev.findIndex(f => f.name === file.name && f.size === file.size);
+      const entry = { name: file.name, size: file.size, message: displayMessage };
+      if (existingIndex === -1) return [...prev, entry];
+      return prev.map((f, i) => (i === existingIndex ? entry : f));
+    });
   }, []);
 
   const handleDismissError = useCallback((file) => {
@@ -381,7 +407,7 @@ const UploadInputV3 = ({
                   {file.name}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {formatFileSize(file.size)} · {file.complete ? 'Complete' : 'Loading'}
+                  {formatFileSize(file.size)} · {file.complete ? T.translate("upload_input_v3.complete") : T.translate("upload_input_v3.loading")}
                 </Typography>
                 {!file.complete && (
                   <LinearProgress
