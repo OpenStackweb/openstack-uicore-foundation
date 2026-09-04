@@ -254,6 +254,7 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
   test('test_dropzone_poll_upload_status_encodes_file_id_in_url', (done) => {
     global.fetch = jest.fn(() =>
       Promise.resolve({
+        ok: true,
         json: () => Promise.resolve({
           status: 'complete',
           name: 'HPE_OCPSanJose_Backdrop_20x10ft50_Ver1.4_PRINT.pdf',
@@ -379,6 +380,7 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
         new Promise((resolve) => {
           respondComplete = () =>
             resolve({
+              ok: true,
               json: () =>
                 Promise.resolve({ status: 'complete', name: 'test.pdf', size: 1024000 })
             });
@@ -434,7 +436,7 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
    */
   test('test_dropzone_unmount_stops_polling_for_every_file', (done) => {
     global.fetch = jest.fn(() =>
-      Promise.resolve({ json: () => Promise.resolve({ status: 'uploading' }) })
+      Promise.resolve({ ok: true, json: () => Promise.resolve({ status: 'uploading' }) })
     );
 
     const ref = React.createRef();
@@ -546,7 +548,8 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
     );
 
     const instance = ref.current;
-    const mockFile = { name: 'test.pdf', size: 1024000 };
+    // Only requests that went through the chunk-throttle queue occupy a concurrency slot.
+    const mockFile = { name: 'test.pdf', size: 1024000, _isThrottledChunk: true };
     const dropzoneOnTimeout = jest.fn();
     const mockXhr = {
       readyState: XMLHttpRequest.DONE,
@@ -565,6 +568,50 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
     expect(instance.chunksInFlight).toBe(0);
     // Dropzone's own timeout handling (which still reports the error) must still run.
     expect(dropzoneOnTimeout).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Test Case 10b: a non-chunked upload's completion must not free a concurrency slot
+   * it never occupied.
+   *
+   * chunksInFlight is only ever incremented for requests routed through the chunk-throttle
+   * queue (setupChunkThrottle). A file that bypasses the queue (no _isThrottledChunk tag)
+   * finishing its single request used to still call onChunkComplete() unconditionally,
+   * decrementing the counter for chunked uploads that were still genuinely in flight and
+   * letting more than maxConcurrentChunks run at once.
+   */
+  test('test_dropzone_non_chunked_upload_does_not_release_a_chunk_slot', () => {
+    const ref = React.createRef();
+
+    render(
+      <DropzoneJS
+        {...defaultProps}
+        ref={ref}
+        onUploadComplete={onUploadCompleteMock}
+        onError={onErrorMock}
+      />
+    );
+
+    const instance = ref.current;
+    // No _isThrottledChunk tag - this file bypassed the throttle queue.
+    const mockFile = { name: 'small.pdf', size: 1024 };
+    const mockXhr = {
+      readyState: XMLHttpRequest.DONE,
+      status: 200,
+      responseText: JSON.stringify({ name: 'small.pdf', path: 'uploads/', size: 1024 }),
+      setRequestHeader: jest.fn(),
+      onload: jest.fn(),
+      onerror: jest.fn(),
+      abort: jest.fn()
+    };
+
+    // Two real chunked uploads for a different file are genuinely in flight.
+    instance.chunksInFlight = 2;
+    getEventHandler(instance, 'sending')(mockFile, mockXhr, { append: jest.fn() });
+
+    mockXhr.onload({});
+
+    expect(instance.chunksInFlight).toBe(2);
   });
 
   /**
@@ -634,6 +681,67 @@ describe('DropzoneJS - HTTP 202 Polling UX', () => {
         done();
       }, 2500);
     }, 10);
+  }, 10000);
+
+  /**
+   * Test Case 14: a slow status request must not let a second one start alongside it.
+   *
+   * The old setInterval-based poll fired every 2s regardless of whether the previous
+   * tick's fetch had resolved yet, so a slow response could still be in flight when a
+   * later tick's request resolved first - letting two terminal results race (e.g. a
+   * stray error landing after an already-committed completion). The self-scheduling loop
+   * only calls sleep(2000) again after its current request fully resolves, so no second
+   * request can ever start while one is outstanding - this asserts that directly, then
+   * confirms the single in-flight request still completes normally once it resolves.
+   */
+  test('test_dropzone_poll_does_not_start_a_new_request_while_one_is_still_in_flight', async () => {
+    jest.useFakeTimers({ doNotFake: ['queueMicrotask'] });
+    let resolveFetch;
+    global.fetch = jest.fn(
+      () => new Promise((resolve) => { resolveFetch = resolve; })
+    );
+
+    const ref = React.createRef();
+    render(
+      <DropzoneJS
+        {...defaultProps}
+        ref={ref}
+        onUploadComplete={onUploadCompleteMock}
+        onError={onErrorMock}
+      />
+    );
+
+    const instance = ref.current;
+    const mockFile = {
+      name: 'test.pdf',
+      size: 1024000,
+      _asyncProcessing: true,
+      _chunksUploadedDone: jest.fn()
+    };
+
+    instance.pollUploadStatus('file-123', 'https://example.com/upload', mockFile);
+
+    // First tick fires at 2000ms and parks on the still-unresolved request.
+    await jest.advanceTimersByTimeAsync(2000);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+
+    // Several more tick-intervals' worth of time pass while that request is still
+    // outstanding - a second request must not start.
+    await jest.advanceTimersByTimeAsync(2000 * 5);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+
+    // Now the one in-flight request finally resolves with a terminal result.
+    resolveFetch({
+      ok: true,
+      json: () => Promise.resolve({ status: 'complete', name: 'test.pdf', size: 1024000 })
+    });
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockFile._chunksUploadedDone).toHaveBeenCalledTimes(1);
+    expect(onUploadCompleteMock).toHaveBeenCalledTimes(1);
+    expect(onErrorMock).not.toHaveBeenCalled();
+
+    jest.useRealTimers();
   }, 10000);
 
   test('test_dropzone_poll_fetch_rejection_emits_readable_message_and_calls_onError_once', (done) => {
