@@ -22,25 +22,22 @@ export class DropzoneJS extends React.Component {
         this.activeXHRs = new Map(); // Track active XHR requests per file
         this.chunkQueue = [];
         this.chunksInFlight = 0;
-        // Status-poll interval ids, one per file in flight. Kept as a set (and mirrored on
-        // the file itself) rather than a single slot so a second file starting to poll
-        // cannot orphan the first one's interval.
-        this._pollIntervals = new Set();
+        // Checked by every in-flight pollUploadStatus loop so unmount stops all of them.
+        this._unmounted = false;
+    }
+
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     /**
-     * Stops the status polling started by pollUploadStatus for this file, if any.
-     * Cancelling an upload has to reach the interval too: a file the user removed while the
+     * Stops the status polling loop started by pollUploadStatus for this file, if any.
+     * Cancelling an upload has to reach the loop too: a file the user removed while the
      * server was still processing it must stop asking for its status, otherwise the result
      * lands later and gets committed as if the upload had been kept.
      */
     stopPolling(file) {
         if (!file) return;
-        if (file._pollIntervalId) {
-            clearInterval(file._pollIntervalId);
-            this._pollIntervals.delete(file._pollIntervalId);
-            file._pollIntervalId = null;
-        }
         file._pollingActive = false;
     }
 
@@ -78,8 +75,10 @@ export class DropzoneJS extends React.Component {
         // Wrap _uploadData to queue chunked uploads with concurrency limit
         this._originalUploadData = this.dropzone._uploadData.bind(this.dropzone);
         this.dropzone._uploadData = (files, dataBlocks) => {
-            // Only throttle chunked uploads (single dataBlock with chunkIndex)
-            if (dataBlocks.length === 1 && dataBlocks[0].chunkIndex !== undefined) {
+            // Tag the file so 'sending' below only releases a slot for requests that took one.
+            const isThrottledChunk = dataBlocks.length === 1 && dataBlocks[0].chunkIndex !== undefined;
+            files.forEach(file => { file._isThrottledChunk = isThrottledChunk; });
+            if (isThrottledChunk) {
                 this.chunkQueue.push({ files, dataBlocks });
                 this.processChunkQueue();
             } else {
@@ -94,8 +93,8 @@ export class DropzoneJS extends React.Component {
         this.processChunkQueue();
     }
 
-    pollUploadStatus(fileId, baseUrl, file) {
-        // Guard against multiple polling intervals for the same file
+    async pollUploadStatus(fileId, baseUrl, file) {
+        // Guard against multiple polling loops for the same file
         if (file._pollingActive) {
             return;
         }
@@ -107,9 +106,12 @@ export class DropzoneJS extends React.Component {
         const maxAttempts = 300; // 10 minutes at 2s intervals
         let attempts = 0;
 
-        const intervalId = setInterval(async () => {
-            // The file may have been removed since the last tick.
-            if (file._canceled) {
+        // A self-scheduling loop (not setInterval) keeps only one request in flight at a time.
+        while (true) {
+            await this.sleep(2000);
+
+            // The file may have been removed, or the component unmounted, since the last check.
+            if (file._canceled || this._unmounted) {
                 this.stopPolling(file);
                 return;
             }
@@ -126,14 +128,17 @@ export class DropzoneJS extends React.Component {
                 });
                 if (!response.ok) {
                     this.stopPolling(file);
-                    this.reportPollingError(file, 'Network error');
+                    // Don't report an error for a file the user already removed, or after unmount.
+                    if (!file._canceled && !this._unmounted) {
+                        this.reportPollingError(file, response.status === 403 ? 'Auth error' : 'Network error');
+                    }
                     return;
                 }
                 const data = await response.json();
-                // Clearing the interval is not enough on its own: this tick was already
-                // awaiting its response when the user cancelled, and committing it now
-                // would restore a file they removed.
-                if (file._canceled) {
+                // This request was already awaiting its response when the user cancelled
+                // (or the component unmounted), and committing it now would restore a file
+                // they removed.
+                if (file._canceled || this._unmounted) {
                     this.stopPolling(file);
                     return;
                 }
@@ -144,19 +149,20 @@ export class DropzoneJS extends React.Component {
                         file._chunksUploadedDone();
                     }
                     this.onUploadComplete(data);
+                    return;
                 } else if (data.status === 'error') {
                     this.stopPolling(file);
                     this.reportPollingError(file, data.message || 'Upload failed');
+                    return;
                 }
+                // any other status (e.g. 'uploading') means keep polling
             } catch (error) {
                 this.stopPolling(file);
                 // fetch fail is always connection error
                 this.reportPollingError(file, 'Network error');
+                return;
             }
-        }, 2000);
-
-        file._pollIntervalId = intervalId;
-        this._pollIntervals.add(intervalId);
+        }
     }
 
     /**
@@ -247,8 +253,7 @@ export class DropzoneJS extends React.Component {
      * Removes dropzone.js (and all its globals) if the component is being unmounted
      */
     componentWillUnmount () {
-        this._pollIntervals.forEach(intervalId => clearInterval(intervalId));
-        this._pollIntervals.clear();
+        this._unmounted = true;
 
         // Clear chunk queue and cancel all pending XHR requests
         this.chunkQueue = [];
@@ -463,8 +468,10 @@ export class DropzoneJS extends React.Component {
                     if (index > -1) xhrs.splice(index, 1);
                 }
 
-                // Release a slot in the chunk queue for the next chunk
-                _this.onChunkComplete();
+                // Release a slot only if this request actually took one from the queue.
+                if (file._isThrottledChunk) {
+                    _this.onChunkComplete();
+                }
 
                 // Track completed bytes for accurate progress (prevents oscillation)
                 const chunkSize = _this.dropzone?.options?.chunkSize || 2000000;
@@ -507,14 +514,18 @@ export class DropzoneJS extends React.Component {
 
             let dropzoneOnError = xhr.onerror;
             xhr.onerror = function(e) {
-                _this.onChunkComplete();
+                if (file._isThrottledChunk) {
+                    _this.onChunkComplete();
+                }
                 if (dropzoneOnError) dropzoneOnError(e);
             }
 
             // Without this wrapper a timed-out chunk never releases its concurrency slot.
             let dropzoneOnTimeout = xhr.ontimeout;
             xhr.ontimeout = function(e) {
-                _this.onChunkComplete();
+                if (file._isThrottledChunk) {
+                    _this.onChunkComplete();
+                }
                 if (dropzoneOnTimeout) dropzoneOnTimeout(e);
             }
         })

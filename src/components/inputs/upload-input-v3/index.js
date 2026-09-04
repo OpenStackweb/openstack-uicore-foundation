@@ -215,21 +215,28 @@ const UploadInputV3 = ({
     // Dropzone module being loaded here; _userCanceled is when removed before its upload reached the UPLOADING state.
     if (file._userCanceled || file.status === 'canceled') return;
 
+    // Dropzone parses any application/json error body before checking status, so a real
+    // server validation error (e.g. file-upload-api's {"message": "..."}) arrives as an
+    // object here, not a string - render it as one or React crashes on the JSX below.
+    const text = typeof message === 'string'
+      ? message
+      : (message?.message ?? T.translate('upload_input_v3.upload_failed'));
+
     // status 0 means the request never got a real server response (connection dropped/timed
     // out) - Dropzone's own message for that case is "Server responded with 0 code.", which
     // is not something a user can act on.
     const displayMessage =
-      status === 0 || message === 'Network error'
+      status === 0 || text === 'Network error'
         ? T.translate('upload_input_v3.network_error')
-        : message === 'Upload timed out'
+        : text === 'Upload timed out'
           ? T.translate('upload_input_v3.upload_timed_out')
-          : message === 'Upload failed'
+          : text === 'Upload failed'
             ? T.translate('upload_input_v3.upload_failed')
-            : message === 'Auth error'
+            : text === 'Auth error'
               ? T.translate('upload_input_v3.auth_error')
-              : message === 'Max files reached.'
+              : text === 'Max files reached.'
                 ? T.translate('upload_input_v3.max_files_reached')
-                : message;
+                : text;
 
     setErrorFiles(prev => {
       const existingIndex = prev.findIndex(f => f.name === file.name && f.size === file.size);
