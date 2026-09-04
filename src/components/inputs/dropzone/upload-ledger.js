@@ -34,9 +34,9 @@ const buildKey = (namespace, fileMd5, fileSize) =>
     `${LEDGER_KEY_PREFIX}:${namespace || 'default'}:${fileMd5}:${fileSize}`;
 
 const readLedger = (key) => {
-    const raw = getFromLocalStorage(key);
-    if (!raw) return null;
     try {
+        const raw = getFromLocalStorage(key);
+        if (!raw) return null;
         const parsed = JSON.parse(raw);
         return parsed && typeof parsed === 'object' ? parsed : null;
     } catch (e) {
@@ -44,9 +44,15 @@ const readLedger = (key) => {
     }
 };
 
+// Best-effort: a write failure (storage blocked/full) must not break the upload itself -
+// the caller already has the ledger object in memory and keeps using it for this attempt.
 const writeLedger = (ledger) => {
-    const { _key, ...persisted } = ledger;
-    putOnLocalStorage(_key, JSON.stringify(persisted));
+    try {
+        const { _key, ...persisted } = ledger;
+        putOnLocalStorage(_key, JSON.stringify(persisted));
+    } catch (e) {
+        // no-op - persistence is opportunistic
+    }
 };
 
 /**
@@ -107,5 +113,9 @@ export const markCorrectionAttempted = (ledger) => {
 };
 
 export const clearLedger = (namespace, fileMd5, fileSize) => {
-    removeFromLocalStorage(buildKey(namespace, fileMd5, fileSize));
+    try {
+        removeFromLocalStorage(buildKey(namespace, fileMd5, fileSize));
+    } catch (e) {
+        // no-op - a failed clear is harmless, the ledger just expires via its TTL
+    }
 };
