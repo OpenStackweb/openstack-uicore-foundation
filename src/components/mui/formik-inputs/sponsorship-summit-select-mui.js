@@ -91,6 +91,7 @@ const SponsorshipsBySummitSelectMUI = ({
       <Select
         multiple
         fullWidth
+        name={name}
         value={selectedValues}
         onChange={handleChange}
         input={<OutlinedInput />}
