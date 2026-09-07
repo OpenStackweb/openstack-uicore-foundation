@@ -921,6 +921,103 @@ describe("FormItemTable Component", () => {
     });
   });
 
+  // A custom rate is an explicit override that must win over the tier rate
+  // even when no tier rate applies (expired window, or null rates), both for
+  // pricing and for whether the row's fields stay editable. 0 is the
+  // "no custom rate" sentinel, matching what the API treats as unset.
+  describe("Custom Rate", () => {
+    const CUSTOM_RATE = 5000;
+    const QUANTITY = 3;
+
+    it("prices the row off the custom rate when the applicable rate is expired", () => {
+      // 3 * 5000 = 15000 cents -> $150.00, as row total and as grand total.
+      render(
+        <FormItemTableWrapper
+          data={MOCK_ITEMS_WITH_NULL_RATES}
+          currentApplicableRate="expired"
+          timeZone="America/New_York"
+          initialValues={{
+            "i-5-c-global-f-quantity": QUANTITY,
+            "i-5-c-global-f-custom_rate": CUSTOM_RATE
+          }}
+        />
+      );
+
+      const dollarValues = screen
+        .getAllByText(/\$/)
+        .map((el) => el.textContent);
+
+      expect(dollarValues).toContain("$150.00");
+      expect(dollarValues).not.toContain("$0.00");
+    });
+
+    it("keeps the row total at zero when the rate is expired and no custom rate is set", () => {
+      render(
+        <FormItemTableWrapper
+          data={MOCK_ITEMS_WITH_NULL_RATES}
+          currentApplicableRate="expired"
+          timeZone="America/New_York"
+          initialValues={{ "i-5-c-global-f-quantity": QUANTITY }}
+        />
+      );
+
+      const dollarValues = screen
+        .getAllByText(/\$/)
+        .map((el) => el.textContent);
+
+      expect(dollarValues).toContain("$0.00");
+      expect(dollarValues).not.toContain("$150.00");
+    });
+
+    it("leaves the row's fields editable when a custom rate is set but no tier rate applies", () => {
+      render(
+        <FormItemTableWrapper
+          data={MOCK_ITEMS_WITH_REQUIRED_FIELD}
+          currentApplicableRate="expired"
+          timeZone="America/New_York"
+          initialValues={{ "i-9-c-global-f-custom_rate": CUSTOM_RATE }}
+        />
+      );
+
+      expect(screen.getByTestId("textfield-i-9-c-Item-f-1")).toBeEnabled();
+    });
+
+    it("disables the row's fields when no tier rate applies and no custom rate is set", () => {
+      render(
+        <FormItemTableWrapper
+          data={MOCK_ITEMS_WITH_REQUIRED_FIELD}
+          currentApplicableRate="expired"
+          timeZone="America/New_York"
+          initialValues={{ "i-9-c-global-f-custom_rate": 0 }}
+        />
+      );
+
+      expect(screen.getByTestId("textfield-i-9-c-Item-f-1")).toBeDisabled();
+    });
+
+    it("re-disables the row's fields when the custom rate is cleared back to 0", async () => {
+      render(
+        <FormItemTableWrapper
+          data={MOCK_ITEMS_WITH_REQUIRED_FIELD}
+          currentApplicableRate="expired"
+          timeZone="America/New_York"
+          initialValues={{ "i-9-c-global-f-custom_rate": CUSTOM_RATE }}
+        />
+      );
+
+      expect(screen.getByTestId("textfield-i-9-c-Item-f-1")).toBeEnabled();
+
+      fireEvent.change(
+        screen.getByTestId("pricefield-i-9-c-global-f-custom_rate"),
+        { target: { value: "0" } }
+      );
+
+      await waitFor(() =>
+        expect(screen.getByTestId("textfield-i-9-c-Item-f-1")).toBeDisabled()
+      );
+    });
+  });
+
   describe("Rate Highlighting", () => {
     it("highlights early_bird rate when currentApplicableRate is early_bird", () => {
       render(

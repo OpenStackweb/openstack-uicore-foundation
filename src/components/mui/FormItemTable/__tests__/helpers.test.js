@@ -53,6 +53,29 @@ describe("isItemAvailable", () => {
     const item = { rates: { early_bird: null } };
     expect(isItemAvailable(item, "early_bird")).toBe(false);
   });
+
+  test("returns true when a custom rate is set and no rate applies for the period", () => {
+    const item = { rates: { early_bird: 100 } };
+    // Strict toBe(true) also pins the boolean coercion: without it the
+    // short-circuit would hand back the raw custom rate (5000).
+    expect(isItemAvailable(item, "expired", 5000)).toBe(true);
+  });
+
+  test("returns true when a custom rate is set and the item has no rates at all", () => {
+    expect(isItemAvailable({}, "early_bird", 5000)).toBe(true);
+  });
+
+  test("returns false when the custom rate is 0 and no rate applies", () => {
+    // 0 is the "no custom rate" sentinel on both sides of the wire — it must
+    // not make an otherwise-unavailable item available.
+    const item = { rates: { early_bird: 100 } };
+    expect(isItemAvailable(item, "expired", 0)).toBe(false);
+  });
+
+  test("stays available on the applicable rate when no custom rate is passed", () => {
+    const item = { rates: { early_bird: 100 } };
+    expect(isItemAvailable(item, "early_bird", 0)).toBe(true);
+  });
 });
 
 describe("hasDrivingQuantityField", () => {
