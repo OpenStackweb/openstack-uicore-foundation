@@ -56,6 +56,7 @@ const UploadInputV3 = ({
   onUploadStart = null,
   djsConfig,
   id,
+  name,
   parallelChunkUploads = false,
   maxConcurrentChunks = 6,
   onError = () => { },
@@ -326,7 +327,7 @@ const UploadInputV3 = ({
   };
 
   return (
-    <Box className="upload-input-v3">
+    <Box className="upload-input-v3" id={id} name={name}>
       {label && (
         <Typography variant="subtitle1" fontWeight={600} gutterBottom>
           {label}

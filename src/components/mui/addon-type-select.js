@@ -18,6 +18,7 @@ import { querySummitAddons } from "../../utils/query-actions";
 
 const AddonTypeSelect = ({
   value,
+  name,
   placeholder = "Select...",
   onChange,
   inputProps = {}
@@ -41,6 +42,7 @@ const AddonTypeSelect = ({
   return (
     <Select
       fullWidth
+      name={name}
       value={value}
       onChange={handleChange}
       displayEmpty
