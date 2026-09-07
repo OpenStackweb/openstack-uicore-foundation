@@ -164,13 +164,12 @@ const FormItemTable = ({
   );
 
   const calculateRowTotal = (row) => {
+    const customRate = values[`i-${row.form_item_id}-c-global-f-custom_rate`];
     const qty =
       values[`i-${row.form_item_id}-c-global-f-quantity`] ||
       calculateQuantity(row);
 
-    if (currentApplicableRate === "expired") return 0;
-
-    const customRate = values[`i-${row.form_item_id}-c-global-f-custom_rate`];
+    // if currentRate is expired or not set then we return, unless customRate is set
     const rate = customRate || row.rates[currentApplicableRate];
 
     if (rate == null || qty == null) return 0;
@@ -230,7 +229,8 @@ const FormItemTable = ({
         </TableHead>
         <TableBody>
           {data.map((row) => {
-            const disabled = !isItemAvailable(row, currentApplicableRate);
+            const customRate = values[`i-${row.form_item_id}-c-global-f-custom_rate`];
+            const disabled = !isItemAvailable(row, currentApplicableRate, customRate);
             const isOpen = !!openRows[row.form_item_id];
 
             return (
