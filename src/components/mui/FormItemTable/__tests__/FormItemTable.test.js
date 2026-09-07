@@ -1316,15 +1316,35 @@ describe("FormItemTable Component", () => {
       ).toBeDisabled();
     });
 
-    it("shows Limit Reached instead of Sold Out when remaining_quantity_sponsor is 0", () => {
-      const limitReachedItem = {
+    it("shows Sold Out (not Limit Reached) when both is_sold_out and remaining_quantity_sponsor === 0 are true", () => {
+      const bothExhaustedItem = {
         ...MOCK_FORM_A.items[0],
         is_sold_out: true,
         remaining_quantity_sponsor: 0
       };
       render(
         <FormItemTableWrapper
-          data={[limitReachedItem]}
+          data={[bothExhaustedItem]}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+        />
+      );
+
+      expect(screen.getByText("sponsor_edit_form.sold_out")).toBeInTheDocument();
+      expect(
+        screen.queryByText("sponsor_edit_form.limit_reached")
+      ).not.toBeInTheDocument();
+    });
+
+    it("shows Limit Reached when only remaining_quantity_sponsor is 0 and is_sold_out is false", () => {
+      const sponsorLimitItem = {
+        ...MOCK_FORM_A.items[0],
+        is_sold_out: false,
+        remaining_quantity_sponsor: 0
+      };
+      render(
+        <FormItemTableWrapper
+          data={[sponsorLimitItem]}
           currentApplicableRate="early_bird"
           timeZone="America/New_York"
         />
@@ -1438,6 +1458,66 @@ describe("FormItemTable Component", () => {
       fireEvent.change(input, { target: { value: "50" } });
       // eslint-disable-next-line
       expect(input).toHaveValue(50);
+    });
+
+    it("keeps the field enabled while retyping a sold-out item's quantity, using the saved quantity not the transient live value", () => {
+      render(
+        <FormItemTableWrapper
+          data={cappedItem({ is_sold_out: true, quantity: 5 })}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+          initialValues={{ "i-20-c-global-f-quantity": 5 }}
+        />
+      );
+
+      const input = screen.getByTestId("textfield-i-20-c-global-f-quantity");
+      expect(input).not.toBeDisabled();
+
+      fireEvent.change(input, { target: { value: "" } });
+
+      expect(input).not.toBeDisabled();
+    });
+
+    it("carries a Form-class driven quantity that exceeds remaining_quantity_show into Formik state for validation to catch", async () => {
+      // GlobalQuantityField is read-only for driven rows, so calculateQuantity's
+      // raw product (not a clamped display value) is what a consumer's Yup
+      // schema has to reject - this proves that product actually reaches the
+      // exact Formik key such a schema would validate.
+      const drivenItem = {
+        ...MOCK_FORM_A.items[0],
+        remaining_quantity_show: 2,
+        remaining_quantity_sponsor: 5
+      };
+      const quantityKey = "i-1-c-global-f-quantity";
+      const maxQty = Math.min(
+        drivenItem.remaining_quantity_show ?? Infinity,
+        drivenItem.remaining_quantity_sponsor ?? Infinity
+      );
+      const validate = jest.fn((values) => {
+        const errors = {};
+        if (values[quantityKey] > maxQty) errors[quantityKey] = "max exceeded";
+        return errors;
+      });
+
+      render(
+        <FormItemTableWrapper
+          data={[drivenItem]}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+          initialValues={{
+            "i-1-c-Form-f-1": 2,
+            "i-1-c-Form-f-2": 4 // product = 8, exceeds remaining_quantity_show = 2
+          }}
+          validate={validate}
+        />
+      );
+
+      await waitFor(() => {
+        const overLimitCall = validate.mock.calls.find(
+          ([values]) => values[quantityKey] === 8
+        );
+        expect(overLimitCall).toBeDefined();
+      });
     });
   });
 });

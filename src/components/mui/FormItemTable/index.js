@@ -233,10 +233,12 @@ const FormItemTable = ({
             const customRate = values[`i-${row.form_item_id}-c-global-f-custom_rate`];
             const currentQuantity = calculateQuantity(row);
             const hasStock = itemHasStock(row);
+            // don't use live value, it will disable when 0
+            const savedQuantity = row.quantity ?? 0;
             // User can always lower the quantity down to 0
             const disabled =
               !isItemAvailable(row, currentApplicableRate, customRate) ||
-              (!hasStock && currentQuantity === 0);
+              (!hasStock && savedQuantity === 0);
             const isOpen = !!openRows[row.form_item_id];
 
             return (
@@ -310,9 +312,9 @@ const FormItemTable = ({
                       </IconButton>
                     ) : (
                       <Typography variant="body2" noWrap sx={{ color: "error.main" }}>
-                        {row.remaining_quantity_sponsor === 0
-                          ? T.translate("sponsor_edit_form.limit_reached")
-                          : T.translate("sponsor_edit_form.sold_out")}
+                        {row.is_sold_out
+                          ? T.translate("sponsor_edit_form.sold_out")
+                          : T.translate("sponsor_edit_form.limit_reached")}
                       </Typography>
                     )}
                   </TableCell>
