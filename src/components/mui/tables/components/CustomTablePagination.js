@@ -206,6 +206,8 @@ const CustomTablePagination = ({
       onRowsPerPageChange={onPerPageChange ? handleRowsPerPageChange : undefined}
       labelRowsPerPage={T.translate("mui_table.rows_per_page")}
       labelDisplayedRows={showPageJump ? renderDisplayedRows : undefined}
+      // default displayedRows slot is a <p>, invalid around the TextField's block markup
+      slots={showPageJump ? { displayedRows: "span" } : undefined}
       ActionsComponent={showPageJump ? renderActions : undefined}
       sx={PAGINATION_SX}
     />
