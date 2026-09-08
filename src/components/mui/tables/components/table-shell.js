@@ -13,7 +13,8 @@ const TableShell = ({
   perPage,
   currentPage,
   onPageChange,
-  onPerPageChange
+  onPerPageChange,
+  showPageJump
 }) => {
   const { containerRef, showLeftFade, showRightFade } = useScrollFade();
 
@@ -39,6 +40,7 @@ const TableShell = ({
             currentPage={currentPage}
             onPageChange={onPageChange}
             onPerPageChange={onPerPageChange}
+            showPageJump={showPageJump}
           />
         )}
       </Paper>
@@ -52,7 +54,8 @@ TableShell.propTypes = {
   perPage: PropTypes.number,
   currentPage: PropTypes.number,
   onPageChange: PropTypes.func,
-  onPerPageChange: PropTypes.func
+  onPerPageChange: PropTypes.func,
+  showPageJump: PropTypes.bool
 };
 
 export default TableShell;
