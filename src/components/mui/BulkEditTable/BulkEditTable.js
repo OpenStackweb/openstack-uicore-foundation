@@ -42,6 +42,7 @@ const BulkEditTable = ({
   currentPage,
   onPageChange,
   onPerPageChange,
+  showPageJump,
   idKey,
   onEdit,
   onDelete,
@@ -199,6 +200,7 @@ const BulkEditTable = ({
             currentPage={currentPage}
             onPageChange={onPageChange}
             onPerPageChange={onPerPageChange}
+            showPageJump={showPageJump}
           />
         )}
       </Paper>
@@ -218,6 +220,7 @@ BulkEditTable.propTypes = {
   currentPage: PropTypes.number,
   onPageChange: PropTypes.func,
   onPerPageChange: PropTypes.func,
+  showPageJump: PropTypes.bool,
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
   getName: PropTypes.func,

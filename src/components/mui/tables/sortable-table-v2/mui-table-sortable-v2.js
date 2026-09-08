@@ -51,6 +51,7 @@ const MuiTableSortableV2 = ({
   currentPage,
   onPageChange,
   onPerPageChange,
+  showPageJump,
   onSort,
   options = { sortCol: "", sortDir: 1 },
   getName = (item) => item.name,
@@ -265,6 +266,7 @@ const MuiTableSortableV2 = ({
             currentPage={currentPage}
             onPageChange={onPageChange}
             onPerPageChange={onPerPageChange}
+            showPageJump={showPageJump}
           />
         )}
       </Paper>

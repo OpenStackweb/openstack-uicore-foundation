@@ -146,6 +146,7 @@ const MuiTableEditable = ({
   currentPage,
   onPageChange,
   onPerPageChange,
+  showPageJump,
   onSort,
   options = { sortCol: "", sortDir: 1, disableProp: null },
   getName = (item) => item.name,
@@ -201,6 +202,7 @@ const MuiTableEditable = ({
       currentPage={currentPage}
       onPageChange={onPageChange}
       onPerPageChange={onPerPageChange}
+      showPageJump={showPageJump}
     >
       <Table sx={{ ...RESPONSIVE_TABLE_SX, ...tableSx }}>
         {/* TABLE HEADER */}
@@ -374,6 +376,7 @@ MuiTableEditable.propTypes = {
   currentPage: PropTypes.number,
   onPageChange: PropTypes.func,
   onPerPageChange: PropTypes.func,
+  showPageJump: PropTypes.bool,
   onSort: PropTypes.func,
   options: PropTypes.shape({
     sortCol: PropTypes.string,
