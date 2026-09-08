@@ -53,6 +53,7 @@ const MuiTable = ({
   currentPage,
   onPageChange,
   onPerPageChange,
+  showPageJump,
   onSort,
   options: userOptions = {},
   getName = (item) => item.name,
@@ -151,6 +152,7 @@ const MuiTable = ({
       currentPage={currentPage}
       onPageChange={onPageChange}
       onPerPageChange={onPerPageChange}
+      showPageJump={showPageJump}
     >
       <Table sx={{ ...RESPONSIVE_TABLE_SX, ...tableSx }}>
         {/* TABLE HEADER */}
@@ -343,6 +345,7 @@ MuiTable.propTypes = {
   currentPage: PropTypes.number,
   onPageChange: PropTypes.func,
   onPerPageChange: PropTypes.func,
+  showPageJump: PropTypes.bool,
   onSort: PropTypes.func,
   options: PropTypes.object,
   getName: PropTypes.func,
