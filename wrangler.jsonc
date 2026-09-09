@@ -1,0 +1,11 @@
+{
+  // Assets-only Worker: serves the Storybook bundle at docs.foxtrotnov.app/core-ui/*
+  // The bundle is built into dist/core-ui/ so the directory structure matches the
+  // URL path — Workers static assets match on pathname, so a flat storybook-static/
+  // would 404 under /core-ui/.
+  "name": "ftn-core-ui-storybook",
+  "compatibility_date": "2026-08-13",
+  "assets": {
+    "directory": "./dist"
+  }
+}

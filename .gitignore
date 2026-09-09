@@ -8,3 +8,6 @@ package.json.lock
 docs
 package-lock.json
 .claude
+
+storybook-static
+dist
