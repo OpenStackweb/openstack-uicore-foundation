@@ -36,6 +36,7 @@ import showConfirmDialog from "../../showConfirmDialog";
 import SortableRow from "./sortable-row";
 import TableCellContent from "../components/table-cell-content";
 import CustomTablePagination from "../components/CustomTablePagination";
+import parsePaginationPosition from "../components/pagination-position";
 import useDndKitReorder from "../../DragNDropList/hooks/useDndKitReorder";
 
 const getRowId = (row, index, idKey) =>
@@ -51,7 +52,8 @@ const MuiTableSortableV2 = ({
   currentPage,
   onPageChange,
   onPerPageChange,
-  showPageJump,
+  paginationPosition,
+  pageSliderVisible,
   onSort,
   options = { sortCol: "", sortDir: 1 },
   getName = (item) => item.name,
@@ -108,9 +110,24 @@ const MuiTableSortableV2 = ({
     }
   };
 
+  const showPagination = !!(onPerPageChange && onPageChange);
+  const { showTop, showBottom } = parsePaginationPosition(paginationPosition);
+  const renderPagination = (showRange) => (
+    <CustomTablePagination
+      totalRows={totalRows}
+      perPage={perPage}
+      currentPage={currentPage}
+      onPageChange={onPageChange}
+      onPerPageChange={onPerPageChange}
+      showRange={showRange}
+      pageSliderVisible={pageSliderVisible}
+    />
+  );
+
   return (
     <Box sx={{ width: "100%" }}>
       <Paper elevation={0} sx={{ width: "100%", mb: 2 }}>
+        {showPagination && showTop && renderPagination(false)}
         <DndContext
           sensors={sensors}
           collisionDetection={collisionDetection}
@@ -258,16 +275,7 @@ const MuiTableSortableV2 = ({
         </DndContext>
 
         {/* PAGINATION */}
-        {onPerPageChange && onPageChange && (
-          <CustomTablePagination
-            totalRows={totalRows}
-            perPage={perPage}
-            currentPage={currentPage}
-            onPageChange={onPageChange}
-            onPerPageChange={onPerPageChange}
-            showPageJump={showPageJump}
-          />
-        )}
+        {showPagination && showBottom && renderPagination(true)}
       </Paper>
     </Box>
   );
