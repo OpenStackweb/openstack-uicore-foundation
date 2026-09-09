@@ -342,26 +342,42 @@ const _getAccessToken = async () => {
     return accessToken;
 }
 
-/**
- * Optional resolver for getAccessToken, set via setAccessTokenResolver. When
- * present, getAccessToken delegates to it; otherwise the built-in flow runs.
- * Pass a non-function (or nothing) to reset to the built-in.
- *
- * The slot lives on globalThis under a Symbol.for key so every copy of this
- * module shares it: bundles that inlined methods.js, nested installs of the
- * package, and symlinked dev installs all read the same registry entry.
- */
+const _global =
+    typeof globalThis !== 'undefined'
+        ? globalThis
+        : typeof window !== 'undefined'
+          ? window
+          : {};
+
 const ACCESS_TOKEN_RESOLVER_KEY = Symbol.for('openstack-uicore-foundation.accessTokenResolver');
 
+/**
+ * Optional resolver for getAccessToken. When present, getAccessToken
+ * delegates to it; otherwise the built-in flow runs. Pass a non-function
+ * (or nothing) to reset to the built-in.
+ *
+ * The slot lives on a global under a Symbol.for key so every copy of this
+ * module shares it: bundles that inlined methods.js, nested installs of the
+ * package, and symlinked dev installs all read the same registry entry.
+ *
+ * Resolver contract:
+ * - must resolve to the access token string; nothing downstream validates it,
+ *   so resolving undefined sends `access_token=undefined` rather than failing.
+ * - a rejection is treated as an auth failure by every caller (the Dropzone
+ *   input logs the user out via initLogOut); handle transient errors inside
+ *   the resolver.
+ * - when this module runs on a server the registration is process-wide, so the
+ *   resolver must not capture per-request state.
+ */
 export const setAccessTokenResolver = (resolver) => {
-    globalThis[ACCESS_TOKEN_RESOLVER_KEY] = typeof resolver === 'function' ? resolver : null;
+    _global[ACCESS_TOKEN_RESOLVER_KEY] = typeof resolver === 'function' ? resolver : null;
 };
 
 /**
  * @returns {Promise<*|undefined>}
  */
 export const getAccessToken = async () => {
-    const resolveAccessToken = globalThis[ACCESS_TOKEN_RESOLVER_KEY];
+    const resolveAccessToken = _global[ACCESS_TOKEN_RESOLVER_KEY];
     if (resolveAccessToken) return resolveAccessToken();
 
     if (typeof navigator !== 'undefined' && navigator.locks) {
