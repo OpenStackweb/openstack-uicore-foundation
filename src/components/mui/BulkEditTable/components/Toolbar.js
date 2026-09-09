@@ -17,20 +17,34 @@ import T from "i18n-react/dist/i18n-react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 
-const Toolbar = ({ editEnabled, hasSelection, onEdit, onApply, onCancel }) => (
-  <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+const Toolbar = ({ editEnabled, selectedCount, onEdit, onApply, onCancel }) => (
+  <Box sx={{ display: "flex", gap: 1, width: { xs: "100%", sm: "auto" } }}>
     {editEnabled ? (
       <>
-        <Button variant="contained" onClick={onApply}>
+        <Button
+          variant="contained"
+          onClick={onApply}
+          sx={{ flex: { xs: 1, sm: "0 0 auto" } }}
+        >
           {T.translate("bulk_edit_table.apply_changes")}
         </Button>
-        <Button variant="outlined" onClick={onCancel}>
+        <Button
+          variant="outlined"
+          onClick={onCancel}
+          sx={{ flex: { xs: 1, sm: "0 0 auto" } }}
+        >
           {T.translate("general.cancel")}
         </Button>
       </>
     ) : (
-      <Button variant="contained" onClick={onEdit} disabled={!hasSelection}>
+      <Button
+        variant="contained"
+        onClick={onEdit}
+        disabled={selectedCount === 0}
+        sx={{ width: { xs: "100%", sm: "auto" } }}
+      >
         {T.translate("bulk_edit_table.edit_selected")}
+        {selectedCount > 0 ? ` (${selectedCount})` : ""}
       </Button>
     )}
   </Box>
@@ -38,10 +52,14 @@ const Toolbar = ({ editEnabled, hasSelection, onEdit, onApply, onCancel }) => (
 
 Toolbar.propTypes = {
   editEnabled: PropTypes.bool,
-  hasSelection: PropTypes.bool,
+  selectedCount: PropTypes.number,
   onEdit: PropTypes.func,
   onApply: PropTypes.func,
   onCancel: PropTypes.func
+};
+
+Toolbar.defaultProps = {
+  selectedCount: 0
 };
 
 export default Toolbar;
