@@ -29,6 +29,7 @@ import Row from "./components/Row";
 import useRowSelection from "./hooks/useRowSelection";
 import styles from "./BulkEditTable.module.less";
 import CustomTablePagination from "../tables/components/CustomTablePagination";
+import parsePaginationPosition from "../tables/components/pagination-position";
 import showConfirmDialog from "../showConfirmDialog";
 
 const BulkEditTable = ({
@@ -42,7 +43,8 @@ const BulkEditTable = ({
   currentPage,
   onPageChange,
   onPerPageChange,
-  showPageJump,
+  paginationPosition,
+  pageSliderVisible,
   idKey,
   onEdit,
   onDelete,
@@ -109,6 +111,20 @@ const BulkEditTable = ({
     }
   };
 
+  const showPagination = !!(perPage && currentPage && onPageChange);
+  const { showTop, showBottom } = parsePaginationPosition(paginationPosition);
+  const renderPagination = (showRange) => (
+    <CustomTablePagination
+      totalRows={totalRows}
+      perPage={perPage}
+      currentPage={currentPage}
+      onPageChange={onPageChange}
+      onPerPageChange={onPerPageChange}
+      showRange={showRange}
+      pageSliderVisible={pageSliderVisible}
+    />
+  );
+
   return (
     <Box sx={{ width: "100%" }}>
       <Toolbar
@@ -119,6 +135,7 @@ const BulkEditTable = ({
         onCancel={cancel}
       />
       <Paper elevation={0} sx={{ width: "100%", mb: 2 }}>
+        {showPagination && showTop && renderPagination(false)}
         <TableContainer
           component={Paper}
           className={styles.tableWrapper}
@@ -193,16 +210,7 @@ const BulkEditTable = ({
             </TableBody>
           </Table>
         </TableContainer>
-        {perPage && currentPage && onPageChange && (
-          <CustomTablePagination
-            totalRows={totalRows}
-            perPage={perPage}
-            currentPage={currentPage}
-            onPageChange={onPageChange}
-            onPerPageChange={onPerPageChange}
-            showPageJump={showPageJump}
-          />
-        )}
+        {showPagination && showBottom && renderPagination(true)}
       </Paper>
     </Box>
   );
@@ -220,7 +228,8 @@ BulkEditTable.propTypes = {
   currentPage: PropTypes.number,
   onPageChange: PropTypes.func,
   onPerPageChange: PropTypes.func,
-  showPageJump: PropTypes.bool,
+  paginationPosition: PropTypes.string,
+  pageSliderVisible: PropTypes.bool,
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
   getName: PropTypes.func,
