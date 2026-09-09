@@ -398,7 +398,7 @@ describe('setAccessTokenResolver / getAccessToken', () => {
     });
 
     it('a resolver registered on one module copy is visible to a second copy', async () => {
-        // The slot rides globalThis under Symbol.for, so duplicate installs of
+        // The slot rides a global under Symbol.for, so duplicate installs of
         // the package (nested node_modules, symlinked dev installs) share it.
         const resolver = jest.fn().mockResolvedValue('tok-shared');
         setAccessTokenResolver(resolver);
