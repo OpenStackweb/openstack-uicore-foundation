@@ -69,7 +69,7 @@
     "sorted_desc": "sorted descending",
     "sorted_asc": "sorted ascending",
     "total": "Total",
-    "of": "of",
+    "page_of": "Page {page} of {totalPages}",
     "previous_page": "Previous page",
     "next_page": "Next page",
     "go_to_page": "Go to page",

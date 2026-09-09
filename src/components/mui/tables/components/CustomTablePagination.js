@@ -153,9 +153,9 @@ const CustomTablePagination = ({
     if (ev.key === "Escape") cancelPageEdit();
   };
 
-  const renderDisplayedRows = ({ from, to, count }) => {
+  const renderDisplayedRows = () => {
     if (!isEditingPage) {
-      return `${from}-${to === -1 ? count : to} ${T.translate("mui_table.of")} ${count}`;
+      return T.translate("mui_table.page_of", { page: currentPage, totalPages });
     }
     return (
       <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
@@ -165,6 +165,7 @@ const CustomTablePagination = ({
           value={pageInput}
           onChange={(ev) => setPageInput(ev.target.value.replace(/\D/g, ""))}
           onKeyDown={handlePageInputKeyDown}
+          onFocus={(ev) => ev.target.select()}
           inputProps={{
             inputMode: "numeric",
             pattern: "[0-9]*",
@@ -205,8 +206,8 @@ const CustomTablePagination = ({
       onPageChange={handlePageChange}
       onRowsPerPageChange={onPerPageChange ? handleRowsPerPageChange : undefined}
       labelRowsPerPage={T.translate("mui_table.rows_per_page")}
-      labelDisplayedRows={showPageJump ? renderDisplayedRows : undefined}
-      // swap the <p> for a <span> only while editing (avoids invalid nesting) — swapping it always drops the default body2 styling from the "x-y of z" text
+      labelDisplayedRows={renderDisplayedRows}
+      // swap the <p> for a <span> only while editing (avoids invalid nesting) — swapping it always drops the default body2 styling from the "Page N of M" text
       slots={showPageJump && isEditingPage ? { displayedRows: "span" } : undefined}
       ActionsComponent={showPageJump ? renderActions : undefined}
       sx={PAGINATION_SX}
