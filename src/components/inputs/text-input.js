@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 
 export default class Input extends React.Component {
 
@@ -55,6 +56,20 @@ export default class Input extends React.Component {
 
     }
 }
+
+Input.propTypes = {
+    /** Applied as defaultValue — the input is uncontrolled and only re-synced when this prop changes. */
+    value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    /** Receives the raw DOM change event. */
+    onChange: PropTypes.func.isRequired,
+    /** Replaces the default 'form-control' class on the input. */
+    className: PropTypes.string,
+    /** Wrapper class; defaults to 'container-form-control'. */
+    containerClassName: PropTypes.string,
+    /** Non-empty renders an .error-label and adds the error class. */
+    error: PropTypes.string,
+    ariaLabelledBy: PropTypes.string
+};
 
 Input.defaultProps = {
     ariaLabelledBy : null,

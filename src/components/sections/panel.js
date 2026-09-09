@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 
 
 export default class Panel extends React.Component {
@@ -45,3 +46,15 @@ export default class Panel extends React.Component {
 
     }
 }
+
+Panel.propTypes = {
+    /** Heading text. Also seeds the fallback DOM id (`id_${title}`) when `id` is omitted — that fallback only produces a usable id when title is a string or number; callers passing an element should supply `id` explicitly. */
+    title: PropTypes.node,
+    /** Body is only mounted while true; the heading stays visible either way. */
+    show: PropTypes.bool,
+    /** Click handler on the heading. The component holds no open/closed state itself. */
+    handleClick: PropTypes.func,
+    children: PropTypes.node,
+    className: PropTypes.string,
+    id: PropTypes.string
+};
