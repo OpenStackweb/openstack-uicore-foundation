@@ -127,15 +127,28 @@ const BulkEditTable = ({
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Toolbar
-        editEnabled={editEnabled}
-        hasSelection={selectedRows.length > 0}
-        onEdit={enterEditMode}
-        onApply={handleUpdateEvents}
-        onCancel={cancel}
-      />
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 1.5,
+          mb: 2
+        }}
+      >
+        <Toolbar
+          editEnabled={editEnabled}
+          selectedCount={selectedRows.length}
+          onEdit={enterEditMode}
+          onApply={handleUpdateEvents}
+          onCancel={cancel}
+        />
+        {showPagination && showTop && (
+          <Box sx={{ display: { xs: "none", sm: "block" } }}>{renderPagination(false)}</Box>
+        )}
+      </Box>
       <Paper elevation={0} sx={{ width: "100%", mb: 2 }}>
-        {showPagination && showTop && renderPagination(false)}
         <TableContainer
           component={Paper}
           className={styles.tableWrapper}
