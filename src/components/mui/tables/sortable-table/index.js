@@ -45,6 +45,8 @@ const MuiTableSortable = ({
   currentPage,
   onPageChange,
   onPerPageChange,
+  paginationPosition,
+  pageSliderVisible,
   onSort,
   options = { sortCol: "", sortDir: 1 },
   getName = (item) => item.name,
@@ -96,6 +98,8 @@ const MuiTableSortable = ({
       currentPage={currentPage}
       onPageChange={onPageChange}
       onPerPageChange={onPerPageChange}
+      paginationPosition={paginationPosition}
+      pageSliderVisible={pageSliderVisible}
     >
       <Table sx={{ ...RESPONSIVE_TABLE_SX, ...tableSx }}>
         {/* TABLE HEADER */}

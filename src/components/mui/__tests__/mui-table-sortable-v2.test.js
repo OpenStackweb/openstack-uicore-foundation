@@ -57,34 +57,6 @@ jest.mock("@dnd-kit/utilities", () => ({
   CSS: { Transform: { toString: () => "" } }
 }));
 
-jest.mock("@mui/material/TablePagination", () => {
-  const React = require("react");
-  return {
-    __esModule: true,
-    default: ({ count, page, onPageChange, onRowsPerPageChange, rowsPerPageOptions }) => (
-      <div data-testid="pagination">
-        <span>count:{count}</span>
-        <button
-          onClick={() => onPageChange({}, page + 1)}
-          aria-label="next-page"
-        >
-          next
-        </button>
-        <button
-          onClick={() =>
-            onRowsPerPageChange({
-              target: { value: rowsPerPageOptions?.[0] ?? 10 }
-            })
-          }
-          aria-label="change-rows"
-        >
-          change-rows
-        </button>
-      </div>
-    )
-  };
-});
-
 import React from "react";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -148,7 +120,8 @@ describe("MuiTableSortableV2", () => {
   test("calls onEdit when edit button is clicked", async () => {
     const onEdit = jest.fn();
     setup({ onEdit });
-    const buttons = screen.getAllByRole("button");
+    // scoped to the table itself, since pagination (top+bottom) also renders buttons
+    const buttons = within(screen.getByRole("table")).getAllByRole("button");
     // buttons[0] is the sort label button for the sortable "Name" column;
     // buttons[1] is the first edit button (row 1)
     await userEvent.click(buttons[1]);
@@ -159,7 +132,7 @@ describe("MuiTableSortableV2", () => {
     const onDelete = jest.fn();
     showConfirmDialog.mockResolvedValueOnce(true);
     setup({ onDelete });
-    const buttons = screen.getAllByRole("button");
+    const buttons = within(screen.getByRole("table")).getAllByRole("button");
     // buttons[0] is the sort label button; buttons[1] is the first delete button (row 1)
     await userEvent.click(buttons[1]);
     await new Promise((r) => setTimeout(r, 0));
@@ -167,18 +140,16 @@ describe("MuiTableSortableV2", () => {
     expect(onDelete).toHaveBeenCalledWith(1);
   });
 
-  test("renders pagination", () => {
+  test("renders pagination (top and bottom)", () => {
     setup();
-    expect(screen.getByTestId("pagination")).toBeInTheDocument();
+    expect(screen.getAllByText("mui_table.page_of")).toHaveLength(2);
   });
 
   test("calls onPageChange when next page is clicked", async () => {
     const onPageChange = jest.fn();
-    setup({ onPageChange, currentPage: 1 });
+    setup({ onPageChange, currentPage: 1, totalRows: 20, perPage: 10 });
     await userEvent.click(
-      within(screen.getByTestId("pagination")).getByRole("button", {
-        name: "next-page"
-      })
+      screen.getAllByRole("button", { name: "mui_table.next_page" })[0]
     );
     expect(onPageChange).toHaveBeenCalledWith(2);
   });
@@ -268,7 +239,7 @@ describe("MuiTableSortableV2", () => {
         2
       );
 
-      const buttons = screen.getAllByRole("button");
+      const buttons = within(screen.getByRole("table")).getAllByRole("button");
       // buttons[0] is the sort label button; buttons[1] is the first delete button (row 1)
       await userEvent.click(buttons[1]);
       await new Promise((r) => setTimeout(r, 0));

@@ -21,35 +21,8 @@ jest.mock("../showConfirmDialog", () => ({
   default: jest.fn()
 }));
 
-jest.mock("@mui/material/TablePagination", () => {
-  const React = require("react");
-  return {
-    __esModule: true,
-    default: ({ count, rowsPerPage, page, onPageChange, onRowsPerPageChange }) => (
-      <div data-testid="pagination">
-        <span>count:{count}</span>
-        <span>page:{page}</span>
-        <button
-          onClick={() => onPageChange({}, page + 1)}
-          aria-label="next-page"
-        >
-          next
-        </button>
-        <button
-          onClick={() =>
-            onRowsPerPageChange({ target: { value: 20 } })
-          }
-          aria-label="change-rows"
-        >
-          change-rows
-        </button>
-      </div>
-    )
-  };
-});
-
 import React from "react";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import MuiTable from "../tables/mui-table";
@@ -163,37 +136,31 @@ describe("MuiTable", () => {
     expect(screen.getAllByTestId("action-delete")).toHaveLength(1);
   });
 
-  test("renders pagination when perPage and currentPage are set", () => {
+  test("renders pagination (top and bottom) when perPage and currentPage are set", () => {
     setup();
-    expect(screen.getByTestId("pagination")).toBeInTheDocument();
+    expect(screen.getAllByText("mui_table.page_of")).toHaveLength(2);
   });
 
-  test("pagination shows correct count", () => {
-    setup({ totalRows: 50 });
-    expect(
-      within(screen.getByTestId("pagination")).getByText("count:50")
-    ).toBeInTheDocument();
+  test("pagination reflects totalRows via the slider's page count", async () => {
+    setup({ totalRows: 50, perPage: 10 });
+    await userEvent.click(screen.getAllByText("mui_table.page_of")[0]);
+    expect(screen.getAllByRole("slider")[0]).toHaveAttribute("aria-valuemax", "5");
   });
 
   test("calls onPageChange when next page button clicked", async () => {
     const onPageChange = jest.fn();
-    setup({ onPageChange, currentPage: 1 });
+    setup({ onPageChange, currentPage: 1, totalRows: 20, perPage: 10 });
     await userEvent.click(
-      within(screen.getByTestId("pagination")).getByRole("button", {
-        name: "next-page"
-      })
+      screen.getAllByRole("button", { name: "mui_table.next_page" })[0]
     );
     expect(onPageChange).toHaveBeenCalledWith(2);
   });
 
-  test("calls onPerPageChange when rows-per-page button clicked", async () => {
+  test("calls onPerPageChange when rows-per-page select changed", async () => {
     const onPerPageChange = jest.fn();
     setup({ onPerPageChange });
-    await userEvent.click(
-      within(screen.getByTestId("pagination")).getByRole("button", {
-        name: "change-rows"
-      })
-    );
+    await userEvent.click(screen.getAllByLabelText("mui_table.rows_per_page")[0]);
+    await userEvent.click(screen.getAllByRole("option", { name: "20" })[0]);
     expect(onPerPageChange).toHaveBeenCalledWith(20);
   });
 
