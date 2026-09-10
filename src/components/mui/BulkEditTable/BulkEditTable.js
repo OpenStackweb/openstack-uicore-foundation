@@ -31,6 +31,10 @@ import styles from "./BulkEditTable.module.less";
 import CustomTablePagination from "../tables/components/CustomTablePagination";
 import parsePaginationPosition from "../tables/components/pagination-position";
 import showConfirmDialog from "../showConfirmDialog";
+import {
+  RESPONSIVE_TABLE_SX,
+  getActionsMenuBreakpoint
+} from "../tables/components/table-styles";
 
 const BulkEditTable = ({
   options,
@@ -66,6 +70,9 @@ const BulkEditTable = ({
     cancel,
     reset
   } = useRowSelection(idKey);
+
+  const collapseActions = (onEdit ? 1 : 0) + (onDelete ? 1 : 0) >= 2;
+  const actionsBreakpoint = getActionsMenuBreakpoint(columns.length);
 
   const dataIds = data.map((row) => row[idKey]).join(",");
 
@@ -154,7 +161,7 @@ const BulkEditTable = ({
           className={styles.tableWrapper}
           sx={{ borderRadius: 0, boxShadow: "none" }}
         >
-          <Table>
+          <Table sx={RESPONSIVE_TABLE_SX}>
             <TableHead sx={{ backgroundColor: "#EAEDF4" }}>
               <TableRow>
                 <TableCell
@@ -173,7 +180,6 @@ const BulkEditTable = ({
                 </TableCell>
                 {columns.map((col, i) => {
                   const sortable = !!col.sortable;
-                  const colWidth = col.width ?? "";
 
                   return (
                     <Heading
@@ -183,7 +189,7 @@ const BulkEditTable = ({
                       sortable={sortable}
                       columnIndex={i}
                       columnKey={col.columnKey}
-                      width={colWidth}
+                      col={col}
                       key={`heading_${col.columnKey}`}
                     >
                       {col.header ?? col.label ?? col.value}
@@ -218,6 +224,8 @@ const BulkEditTable = ({
                     columns={columns}
                     onEdit={onEdit}
                     onDelete={onDelete ? handleDelete : null}
+                    collapseActions={collapseActions}
+                    actionsBreakpoint={actionsBreakpoint}
                   />
                 ))}
             </TableBody>
