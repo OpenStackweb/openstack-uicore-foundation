@@ -55,7 +55,8 @@ const MuiTableSortable = ({
   onReorder,
   idKey = "id",
   updateOrderKey = "order",
-  tableSx = {}
+  tableSx = {},
+  confirmButtonColor = null
 }) => {
   const { sortCol, sortDir } = options;
 
@@ -86,7 +87,7 @@ const MuiTableSortable = ({
     getId: (item) => item[idKey || "id"],
     deleteDialogTitle,
     deleteDialogBody,
-    confirmButtonColor: "#DD6B55"
+    confirmButtonColor: confirmButtonColor || "error"
   });
 
   return (

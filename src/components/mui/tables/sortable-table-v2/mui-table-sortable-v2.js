@@ -60,7 +60,8 @@ const MuiTableSortableV2 = ({
   deleteDialogBody = null,
   onReorder,
   idKey = "id",
-  updateOrderKey = "order"
+  updateOrderKey = "order",
+  confirmButtonColor = null
 }) => {
   const { sortCol, sortDir } = options;
 
@@ -98,7 +99,7 @@ const MuiTableSortableV2 = ({
           `${T.translate("general.row_remove_warning")} ${getName(item)}`,
       iconType: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#DD6B55",
+      confirmButtonColor: confirmButtonColor || "error",
       confirmButtonText: T.translate("general.yes_delete")
     });
 
