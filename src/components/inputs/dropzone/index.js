@@ -8,6 +8,15 @@ import {AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR} from '../../security/constants';
 import {getMD5} from "../../../utils/crypto";
 
 let Dropzone = null;
+
+// Mirror Dropzone.CANCELED/Dropzone.ERROR as literals instead of reading them off the
+// lazily require()'d Dropzone module. In practice Dropzone is always loaded by the time
+// these are compared (componentDidMount requires it before any upload/polling can start),
+// but comparing against a literal keeps these checks self-contained rather than relying
+// on that load-order invariant.
+const DROPZONE_STATUS_CANCELED = 'canceled';
+const DROPZONE_STATUS_ERROR = 'error';
+
 /**
  * class DropzoneJS
  */
@@ -65,6 +74,8 @@ export class DropzoneJS extends React.Component {
         const maxConcurrent = this.props.maxConcurrentChunks || 6;
         while (this.chunkQueue.length > 0 && this.chunksInFlight < maxConcurrent) {
             const { files, dataBlocks } = this.chunkQueue.shift();
+            // Only one file per chunk array; skip chunks left queued for an already-errored file.
+            if (files[0].status === DROPZONE_STATUS_ERROR) continue;
             this.chunksInFlight++;
             this._originalUploadData(files, dataBlocks);
         }
@@ -121,8 +132,17 @@ export class DropzoneJS extends React.Component {
                 this.reportPollingError(file, 'Upload timed out');
                 return;
             }
+            let accessToken;
             try {
-                const accessToken = await getAccessToken();
+                accessToken = await getAccessToken();
+            } catch (error) {
+                this.stopPolling(file);
+                if (!file._canceled && !this._unmounted) {
+                    this.reportPollingError(file, 'Auth error');
+                }
+                return;
+            }
+            try {
                 const response = await fetch(statusUrl, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
@@ -158,8 +178,11 @@ export class DropzoneJS extends React.Component {
                 // any other status (e.g. 'uploading') means keep polling
             } catch (error) {
                 this.stopPolling(file);
-                // fetch fail is always connection error
-                this.reportPollingError(file, 'Network error');
+                // Same as the !response.ok branch: the request may have been in flight when the
+                // user removed the file or the component unmounted.
+                if (!file._canceled && !this._unmounted) {
+                    this.reportPollingError(file, 'Network error');
+                }
                 return;
             }
         }
@@ -492,10 +515,8 @@ export class DropzoneJS extends React.Component {
 
                 // The user may have cancelled while this response was in flight: abort() on an
                 // already-DONE xhr is a no-op, so without this check the result would still be
-                // committed for a file that is no longer in the list. 'canceled' is the value of
-                // Dropzone.CANCELED, compared as a literal so the guard does not depend on the
-                // Dropzone module being loaded.
-                if (file._canceled || file.status === 'canceled') return;
+                // committed for a file that is no longer in the list.
+                if (file._canceled || file.status === DROPZONE_STATUS_CANCELED) return;
 
                 if(xhr?.status == 200) {
                     if (typeof uploadResponse.name === 'string') {
@@ -506,9 +527,8 @@ export class DropzoneJS extends React.Component {
                     const baseUrl = _this.props.config.postUrl;
                     _this.pollUploadStatus(uploadResponse.file_id, baseUrl, file);
                 }
-                else if(xhr?.status != 200 && xhr?.status != 202){
-                    _this.onError(uploadResponse, xhr?.status);
-                }
+                // Non-2xx: dropzoneOnLoad above already retried the chunk or emitted 'error',
+                // which reaches onError through the 'error' listener below.
 
             }
 
@@ -533,6 +553,10 @@ export class DropzoneJS extends React.Component {
         // xhr.status is 0 for a transport failure, vs a real non-2xx server response.
         this.dropzone.on('error', (file, message, xhr) => {
             console.log(`DropzoneJS::error`, message);
+            // Parallel chunks exhaust their retries independently, so Dropzone emits one
+            // 'error' per chunk for the same file - notify the consumer once.
+            if (file?._errorReported) return;
+            if (file) file._errorReported = true;
             this.onError(message, xhr?.status);
         });
     }
