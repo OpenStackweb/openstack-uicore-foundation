@@ -122,9 +122,8 @@ export class DropzoneJS extends React.Component {
         const chunk = file.upload?.chunks?.[chunkIndex];
         if (!chunk) return;
         file._resumeSkippedThisAttempt = true;
-        const chunkSize = this.dropzone?.options?.chunkSize || 2000000;
-        file._completedBytes = Math.min((file._completedBytes || 0) + chunkSize, file.size);
-        file.upload.finishedChunkUpload(chunk);
+        // Deferred: finishedChunkUpload can recurse back into skipAcknowledgedChunk synchronously.
+        Promise.resolve().then(() => file.upload.finishedChunkUpload(chunk));
     }
 
     onChunkComplete() {

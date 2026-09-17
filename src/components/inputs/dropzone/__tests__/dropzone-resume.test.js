@@ -121,7 +121,7 @@ describe('DropzoneJS - Resumable Chunked Uploads', () => {
     expect(instance.dropzone.emit).not.toHaveBeenCalledWith('uploadprogress', expect.anything(), expect.anything(), expect.anything());
   });
 
-  test('a chunk already acknowledged is skipped: never dispatched, never occupies a slot', () => {
+  test('a chunk already acknowledged is skipped: never dispatched, never occupies a slot', async () => {
     const ledger = getOrCreateUploadLedger('test-namespace', 'mock-md5-hash', 5000, 1000, 5);
     acknowledgeChunk(ledger, 0);
 
@@ -139,8 +139,13 @@ describe('DropzoneJS - Resumable Chunked Uploads', () => {
     instance.dropzone._uploadData([file], [{ chunkIndex: 0 }]);
 
     expect(mockUploadDataFn).not.toHaveBeenCalled();
+    // finishedChunkUpload is deferred to a microtask to avoid recursing the stack
+    // through Dropzone's own handleNextChunk on a long run of skipped chunks.
+    await Promise.resolve();
     expect(file.upload.finishedChunkUpload).toHaveBeenCalledWith(chunk0);
-    expect(file._completedBytes).toBe(1000);
+    // accept() is what restores _completedBytes in bulk from the ledger; skipping
+    // a chunk here doesn't touch it, so it stays whatever it started as.
+    expect(file._completedBytes).toBeUndefined();
     // never took a concurrency slot, so there is none to release
     expect(instance.chunksInFlight).toBe(3);
   });
