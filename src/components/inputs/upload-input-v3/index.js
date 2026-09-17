@@ -241,8 +241,9 @@ const UploadInputV3 = ({
                 : text;
 
     setErrorFiles(prev => {
-      const existingIndex = prev.findIndex(f => f.name === file.name && f.size === file.size);
-      const entry = { name: file.name, size: file.size, message: displayMessage };
+      const uuid = file.upload?.uuid;
+      const existingIndex = prev.findIndex(f => f.uuid === uuid);
+      const entry = { uuid, name: file.name, size: file.size, message: displayMessage };
       if (existingIndex === -1) return [...prev, entry];
       return prev.map((f, i) => (i === existingIndex ? entry : f));
     });
@@ -251,20 +252,20 @@ const UploadInputV3 = ({
   const handleDismissError = useCallback((file) => {
     if (dropzoneInstanceRef.current) {
       const dzFile = dropzoneInstanceRef.current.files?.find(
-        f => f.name === file.name && f.size === file.size
+        f => f.upload?.uuid === file.uuid
       );
       if (dzFile) dropzoneInstanceRef.current.removeFile(dzFile);
     }
-    setErrorFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
+    setErrorFiles(prev => prev.filter(f => f.uuid !== file.uuid));
   }, []);
 
   // An errored file is never auto-removed from dropzone's own file list, so the same
-  // (name,size) lookup handleDismissError uses still finds it here - re-adding it
+  // uuid lookup handleDismissError uses still finds it here - re-adding it
   // re-triggers accept(), which is where the resume ledger lookup happens.
   const handleRetryError = useCallback((file) => {
     const dz = dropzoneInstanceRef.current;
-    const dzFile = dz?.files?.find(f => f.name === file.name && f.size === file.size);
-    setErrorFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
+    const dzFile = dz?.files?.find(f => f.upload?.uuid === file.uuid);
+    setErrorFiles(prev => prev.filter(f => f.uuid !== file.uuid));
     if (!dz || !dzFile) return; // file object gone (e.g. full remount) - re-selecting the
     // same file still resumes via the md5-keyed ledger the next time it hits accept()
     dz.removeFile(dzFile);
