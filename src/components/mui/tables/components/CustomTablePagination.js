@@ -13,63 +13,106 @@
 
 import * as React from "react";
 import T from "i18n-react/dist/i18n-react";
-import TablePagination from "@mui/material/TablePagination";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 import PropTypes from "prop-types";
 import { DEFAULT_PER_PAGE, FIFTY_PER_PAGE, TWENTY_PER_PAGE } from "../../../../utils/constants";
-
-const PAGINATION_SX = {
-  ".MuiTablePagination-toolbar": {
-    alignItems: "baseline",
-    marginTop: "1.6rem"
-  },
-  ".MuiTablePagination-selectLabel": {
-    color: "rgba(0, 0, 0, 0.6)",
-    fontSize: "12px",
-    fontWeight: "normal"
-  },
-  ".MuiTablePagination-select": {
-    color: "rgba(0, 0, 0, 0.6)",
-    fontSize: "12px",
-    fontWeight: "normal"
-  },
-  ".MuiTablePagination-spacer": {
-    display: "none"
-  },
-  ".MuiTablePagination-displayedRows": {
-    marginLeft: "auto"
-  }
-};
+import SliderPagination from "./SliderPagination";
 
 const BASE_PER_PAGE_OPTIONS = [DEFAULT_PER_PAGE, TWENTY_PER_PAGE, FIFTY_PER_PAGE];
 
-const CustomTablePagination = ({ totalRows, perPage, currentPage, onPageChange, onPerPageChange }) => {
-  const perPageOptions = React.useMemo(() => {
-    if (!onPerPageChange) return [perPage];
-    return BASE_PER_PAGE_OPTIONS.includes(perPage)
-      ? BASE_PER_PAGE_OPTIONS
-      : [...BASE_PER_PAGE_OPTIONS, perPage].sort((a, b) => a - b);
-  }, [perPage, onPerPageChange]);
-
-  const handlePageChange = (_, newPage) => {
-    onPageChange(newPage + 1);
-  };
+const CustomTablePagination = ({
+  totalRows,
+  perPage,
+  currentPage,
+  onPageChange,
+  onPerPageChange,
+  showRange,
+  pageSliderVisible
+}) => {
+  const perPageOptions = React.useMemo(
+    () =>
+      BASE_PER_PAGE_OPTIONS.includes(perPage)
+        ? BASE_PER_PAGE_OPTIONS
+        : [...BASE_PER_PAGE_OPTIONS, perPage].sort((a, b) => a - b),
+    [perPage]
+  );
 
   const handleRowsPerPageChange = (ev) => {
-    onPerPageChange(parseInt(ev.target.value, 10));
+    onPerPageChange(Number(ev.target.value));
   };
 
+  const total = totalRows ?? 0;
+  const from = total > 0 ? (currentPage - 1) * perPage + 1 : 0;
+  const to = Math.min(currentPage * perPage, total);
+
   return (
-    <TablePagination
-      component="div"
-      count={totalRows ?? 0}
-      rowsPerPageOptions={perPageOptions}
-      rowsPerPage={perPage}
-      page={currentPage - 1}
-      onPageChange={handlePageChange}
-      onRowsPerPageChange={onPerPageChange ? handleRowsPerPageChange : undefined}
-      labelRowsPerPage={T.translate("mui_table.rows_per_page")}
-      sx={PAGINATION_SX}
-    />
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: 1.5,
+        my: 1
+      }}
+    >
+      <Box sx={{ display: { xs: "none", md: "block" } }}>
+        {showRange && (
+          <Typography variant="body1" color="text.secondary">
+            {T.translate("mui_table.showing_range", { from, to, total })}
+          </Typography>
+        )}
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          flexWrap: "wrap",
+          justifyContent: { xs: "space-between", md: "flex-end" },
+          width: { xs: "100%", md: "auto" },
+          gap: 1.5,
+          minWidth: 0
+        }}
+      >
+        {onPerPageChange && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+              {T.translate("mui_table.rows_per_page")}
+            </Typography>
+            <Select
+              size="small"
+              value={perPage}
+              onChange={handleRowsPerPageChange}
+              sx={{
+                height: 40,
+                borderRadius: "20px",
+                minWidth: 80,
+                bgcolor: "background.paper",
+                "& .MuiOutlinedInput-notchedOutline": { borderColor: "divider" },
+                "& .MuiSelect-select": { color: "text.secondary" }
+              }}
+              inputProps={{ "aria-label": T.translate("mui_table.rows_per_page") }}
+            >
+              {perPageOptions.map((opt) => (
+                <MenuItem key={opt} value={opt}>
+                  {opt}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
+        )}
+        <SliderPagination
+          totalRows={totalRows}
+          perPage={perPage}
+          currentPage={currentPage}
+          onPageChange={onPageChange}
+          initialExpanded={pageSliderVisible}
+        />
+      </Box>
+    </Box>
   );
 };
 
@@ -78,7 +121,14 @@ CustomTablePagination.propTypes = {
   perPage: PropTypes.number.isRequired,
   currentPage: PropTypes.number.isRequired,
   onPageChange: PropTypes.func.isRequired,
-  onPerPageChange: PropTypes.func
+  onPerPageChange: PropTypes.func,
+  showRange: PropTypes.bool,
+  pageSliderVisible: PropTypes.bool
+};
+
+CustomTablePagination.defaultProps = {
+  showRange: false,
+  pageSliderVisible: false
 };
 
 export default CustomTablePagination;

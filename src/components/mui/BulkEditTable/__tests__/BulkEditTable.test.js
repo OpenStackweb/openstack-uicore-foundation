@@ -57,7 +57,7 @@ describe("BulkEditTable", () => {
     const checkboxes = screen.getAllByRole("checkbox");
 
     await user.click(checkboxes[1]);
-    await user.click(screen.getByText("bulk_edit_table.edit_selected"));
+    await user.click(screen.getByText(/^bulk_edit_table\.edit_selected/));
     await act(async () => {
       await user.click(screen.getByText("bulk_edit_table.apply_changes"));
     });
@@ -86,7 +86,7 @@ describe("BulkEditTable", () => {
 
     // select row 1 and enter edit mode
     await user.click(checkboxes[1]);
-    await user.click(screen.getByText("bulk_edit_table.edit_selected"));
+    await user.click(screen.getByText(/^bulk_edit_table\.edit_selected/));
 
     // type an edit into row 1's editable title cell
     fireEvent.change(screen.getByRole("textbox"), {

@@ -59,53 +59,6 @@ jest.mock("@mui/material/TableCell", () => {
   };
 });
 
-// TablePagination shim
-jest.mock("@mui/material/TablePagination", () => {
-  const React = require("react");
-  return {
-    __esModule: true,
-    default: function TablePaginationMock(props) {
-      const {
-        count,
-        rowsPerPage,
-        page,
-        rowsPerPageOptions,
-        onPageChange,
-        onRowsPerPageChange,
-        labelRowsPerPage
-      } = props;
-
-      return (
-        <div data-testid="pagination">
-          <div>count:{count}</div>
-          <div>rowsPerPage:{rowsPerPage}</div>
-          <div>page:{page}</div>
-          <div>label:{labelRowsPerPage}</div>
-          <div>
-            options:{rowsPerPageOptions && rowsPerPageOptions.join(",")}
-          </div>
-          <button
-            onClick={() => onPageChange({}, page + 1)}
-            aria-label="next-page"
-          >
-            next
-          </button>
-          <button
-            onClick={() =>
-              onRowsPerPageChange({
-                target: { value: rowsPerPageOptions?.[0] ?? 10 }
-              })
-            }
-            aria-label="change-rows"
-          >
-            change-rows
-          </button>
-        </div>
-      );
-    }
-  };
-});
-
 // TableSortLabel shim -> renders an actual <button>
 jest.mock("@mui/material/TableSortLabel", () => {
   const React = require("react");
@@ -276,37 +229,31 @@ describe("MuiTableEditable", () => {
 
   test("pagination next -> onPageChange(2) when starting at page 1", async () => {
     const user = userEvent.setup();
-    const { onPageChange } = setup({ currentPage: 1 });
-    const next = within(screen.getByTestId("pagination")).getByRole("button", {
-      name: "next-page"
-    });
-    await user.click(next);
+    const { onPageChange } = setup({ currentPage: 1, totalRows: 20, perPage: 10 });
+    await user.click(screen.getAllByRole("button", { name: "mui_table.next_page" })[0]);
     expect(onPageChange).toHaveBeenCalledWith(2);
   });
 
   test("change rows per page triggers onPerPageChange", async () => {
     const user = userEvent.setup();
     const { onPerPageChange } = setup({ perPage: 25 });
-    const change = within(screen.getByTestId("pagination")).getByRole(
-      "button",
-      { name: "change-rows" }
-    );
-    await user.click(change);
-    expect(onPerPageChange).toHaveBeenCalledWith(expect.any(Number));
+    await user.click(screen.getAllByLabelText("mui_table.rows_per_page")[0]);
+    await user.click(screen.getAllByRole("option", { name: "10" })[0]);
+    expect(onPerPageChange).toHaveBeenCalledWith(10);
   });
 
-  test("uses totalRows when provided", () => {
-    setup({ totalRows: 123 });
-    expect(
-      within(screen.getByTestId("pagination")).getByText("count:123")
-    ).toBeInTheDocument();
+  test("uses totalRows when provided", async () => {
+    const user = userEvent.setup();
+    setup({ totalRows: 123, perPage: 10 });
+    await user.click(screen.getAllByText("mui_table.page_of")[0]);
+    expect(screen.getAllByRole("slider")[0]).toHaveAttribute("aria-valuemax", "13");
   });
 
-  test("falls back to data.length when totalRows missing", () => {
-    setup({ totalRows: undefined, data: [{ id: 1 }, { id: 2 }, { id: 3 }] });
-    expect(
-      within(screen.getByTestId("pagination")).getByText("count:3")
-    ).toBeInTheDocument();
+  test("falls back to data.length when totalRows missing", async () => {
+    const user = userEvent.setup();
+    setup({ totalRows: undefined, data: [{ id: 1 }, { id: 2 }, { id: 3 }], perPage: 10 });
+    await user.click(screen.getAllByText("mui_table.page_of")[0]);
+    expect(screen.getAllByRole("slider")[0]).toHaveAttribute("aria-valuemax", "1");
   });
 
   test("sort click triggers onSort with flipped dir", async () => {
