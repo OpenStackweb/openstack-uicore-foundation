@@ -154,7 +154,8 @@ const MuiTableEditable = ({
   onDelete,
   onCellChange, // New prop for handling cell value changes
   deleteDialogBody,
-  tableSx = {}
+  tableSx = {},
+  confirmButtonColor = null
 }) => {
   // State to track which cell is currently being edited
   const [editingCell, setEditingCell] = React.useState(null);
@@ -170,7 +171,7 @@ const MuiTableEditable = ({
     onDelete,
     getName,
     deleteDialogBody,
-    confirmButtonColor: "warning"
+    confirmButtonColor: confirmButtonColor || "error"
   });
 
   const isEditable = (col, row) =>
@@ -384,7 +385,8 @@ MuiTableEditable.propTypes = {
   onArchive: PropTypes.func,
   onDelete: PropTypes.func,
   onCellChange: PropTypes.func,
-  deleteDialogBody: PropTypes.func
+  deleteDialogBody: PropTypes.func,
+  confirmButtonColor: PropTypes.string
 };
 
 export default MuiTableEditable;
