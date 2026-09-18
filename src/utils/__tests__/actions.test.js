@@ -1,4 +1,5 @@
-import {authErrorHandler} from "../actions";
+import {authErrorHandler, snackbarErrorHandler, SET_SNACKBAR_MESSAGE} from "../actions";
+import { CLEAR_SESSION_STATE } from "../../components/security/actions";
 import configureMockStore from 'redux-mock-store';
 import request from 'superagent/lib/client';
 import Swal from 'sweetalert2';
@@ -83,6 +84,26 @@ describe('Utils Actions', () => {
 
             store.dispatch(authErrorHandler({ status:403 }));
             expect(Swal.fire).toBeCalled();
+        });
+    });
+
+    describe('snackbarErrorHandler', () => {
+        test('401 shows the snackbar and still runs the re-login', () => {
+            windowSpy.mockImplementation(() => ({
+                location: {
+                    href: 'https://example.com',
+                    pathname:'/',
+                    replace: () => {}
+                },
+                localStorage: localStorageMock
+            }));
+
+            store.dispatch(snackbarErrorHandler({ status:401 }));
+
+            const types = store.getActions().map((a) => a.type);
+            expect(types).toContain(SET_SNACKBAR_MESSAGE);
+            // CLEAR_SESSION_STATE is only dispatched by initLogin
+            expect(types).toContain(CLEAR_SESSION_STATE);
         });
     });
 });
