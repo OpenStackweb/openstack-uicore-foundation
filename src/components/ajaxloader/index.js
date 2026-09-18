@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const AjaxLoader = ({
                         show,
@@ -73,6 +74,19 @@ const AjaxLoader = ({
             <div style={styleBackground} className="loader-background"></div>
         </div>
     );
+};
+
+AjaxLoader.propTypes = {
+    /** Toggles display; the overlay stays mounted either way. */
+    show: PropTypes.bool,
+    /** Positions absolute inside the nearest positioned ancestor instead of fixed to the viewport. */
+    relative: PropTypes.bool,
+    /** Background colour of the dimming layer behind the spinner. */
+    color: PropTypes.string,
+    /** Spinner font-size in px. */
+    size: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    /** Optional caption rendered under the spinner. */
+    children: PropTypes.node
 };
 
 export default AjaxLoader;

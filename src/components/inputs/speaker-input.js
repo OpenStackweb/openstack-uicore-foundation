@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import AsyncSelect from 'react-select/lib/Async';
 import { components } from 'react-select/lib/components'
 import { querySpeakers } from '../../utils/query-actions';
@@ -104,3 +105,23 @@ export default class SpeakerInput extends React.Component {
     }
 }
 
+SpeakerInput.propTypes = {
+    /** Selected speaker(s). */
+    value: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.string, PropTypes.number]),
+    /** Echoed back as ev.target.id on the synthetic change event. */
+    id: PropTypes.string.isRequired,
+    /** Receives a synthetic { target: { id, value, type } }. */
+    onChange: PropTypes.func.isRequired,
+    /** Gated on the prop being present, so multi={false} still enables multi-select. */
+    multi: PropTypes.bool,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string,
+    /** Scopes the lookup to a summit; omit to search all speakers. */
+    summitId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    /** Router history. Effectively required whenever multi is present: the click handler calls history.push with no guard. */
+    history: PropTypes.shape({ push: PropTypes.func }),
+    /** (speaker) => value. Defaults to speaker.id. */
+    getOptionValue: PropTypes.func,
+    /** (speaker) => label. */
+    getOptionLabel: PropTypes.func
+};

@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import TableHeading from './TableHeading';
 import TableCell from './TableCell';
 import TableRow from './TableRow';
@@ -112,6 +113,53 @@ const Table = (props) => {
             <Tooltip delayShow={10} />
         </div>
     );
+};
+
+const actionShape = PropTypes.shape({
+    onClick: PropTypes.func.isRequired,
+    /** (id) => bool — return false to hide this action for a given row. */
+    display: PropTypes.func
+});
+
+Table.propTypes = {
+    columns: PropTypes.arrayOf(PropTypes.shape({
+        /** Key used to read the cell out of each row: row[columnKey]. */
+        columnKey: PropTypes.string.isRequired,
+        /** Heading content. */
+        value: PropTypes.node,
+        sortable: PropTypes.bool,
+        width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        /** Presence adds a title attribute to the cell, set to the raw value. */
+        title: PropTypes.any,
+        /** (row, cellValue) => node. Overrides default cell rendering. */
+        render: PropTypes.func,
+        styles: PropTypes.object
+    })).isRequired,
+    /** Row objects keyed by columnKey. Each needs an `id` when actions are used. */
+    data: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.object, PropTypes.array])).isRequired,
+    /** Called by sortable headings. */
+    onSort: PropTypes.func,
+    options: PropTypes.shape({
+        className: PropTypes.string,
+        /** Matched against either a column's columnKey or its numeric index. */
+        sortCol: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        sortDir: PropTypes.number,
+        sortFunc: PropTypes.func,
+        /** Heading for the actions column. */
+        actionsHeader: PropTypes.node,
+        actions: PropTypes.shape({
+            /** Makes whole rows clickable and adds the table-hover class. */
+            edit: actionShape,
+            delete: actionShape,
+            custom: PropTypes.arrayOf(PropTypes.shape({
+                name: PropTypes.string.isRequired,
+                icon: PropTypes.node,
+                tooltip: PropTypes.string,
+                onClick: PropTypes.func.isRequired,
+                display: PropTypes.func
+            }))
+        })
+    }).isRequired
 };
 
 export default Table;
