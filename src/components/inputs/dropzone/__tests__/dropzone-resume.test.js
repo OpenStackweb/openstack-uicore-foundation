@@ -218,44 +218,89 @@ describe('DropzoneJS - Resumable Chunked Uploads', () => {
     expect(isChunkAcknowledged(ledger, 2)).toBe(true);
   });
 
-  test('an over-claiming ledger self-corrects once under the same id, then gives up cleanly with no error', () => {
-    const instance = mountInstance();
+  test('an over-claiming ledger self-corrects once under the same id, then starts a clean upload under a fresh one', async () => {
     const ledger = getOrCreateUploadLedger('test-namespace', 'mock-md5-hash', 5000, 1000, 5);
+    acknowledgeChunk(ledger, 0);
     const originalId = ledger.uploadId;
+
+    const instance = mountInstance();
+    const chunk0 = { index: 0 };
     const file = {
       name: 'video.mp4',
       size: 5000,
       md5: 'mock-md5-hash',
       _resumeLedger: ledger,
-      _resumeSkippedThisAttempt: true,
-      _asyncProcessing: false,
-      upload: { uuid: originalId }
+      upload: { uuid: originalId, chunks: [chunk0], finishedChunkUpload: jest.fn() }
     };
     const done = jest.fn();
 
-    // First occurrence: same id, ackedChunks cleared, one clean re-drive.
+    // Drive the skip for real: the ledger claims chunk 0, so _uploadData resolves it
+    // without a request and sets _resumeSkippedThisAttempt itself.
+    instance.dropzone._uploadData([file], [{ chunkIndex: 0 }]);
+    await Promise.resolve();
+    expect(file._resumeSkippedThisAttempt).toBe(true);
+
+    // Pass 1 ended without a 202: one correction under the same id.
     mockCapturedOptions.chunksUploaded(file, done);
 
     expect(instance.dropzone.uploadFiles).toHaveBeenCalledWith([file]);
     expect(file.upload.uuid).toBe(originalId);
     expect(file._resumeLedger.correctionAttempted).toBe(true);
     expect(file._resumeLedger.ackedChunks).toEqual([]);
+    expect(file._resumeCorrectionPass).toBe(true);
     expect(file._completedBytes).toBe(0);
     expect(done).not.toHaveBeenCalled();
-    expect(instance.dropzone.emit).not.toHaveBeenCalledWith('error', expect.anything(), expect.anything());
 
-    // Second occurrence: the corrected pass ALSO came up short - discard the id,
-    // start a clean full upload under a fresh one, still no error surfaced.
-    file._resumeSkippedThisAttempt = true;
+    // Pass 2 re-sent every chunk, so it skipped nothing - no flag is set by hand here:
+    // _resumeCorrectionPass is what carries the pass, and its own lack of a 202 is the signal.
     instance.dropzone.uploadFiles.mockClear();
-
     mockCapturedOptions.chunksUploaded(file, done);
 
     expect(instance.dropzone.uploadFiles).toHaveBeenCalledWith([file]);
     expect(file.upload.uuid).not.toBe(originalId);
     expect(file._resumeLedger.ackedChunks).toEqual([]);
+    expect(file._resumeCorrectionPass).toBe(false);
     expect(done).not.toHaveBeenCalled();
     expect(instance.dropzone.emit).not.toHaveBeenCalledWith('error', expect.anything(), expect.anything());
+  });
+
+  test('a 202 clears the ledger, so a retry after a failed poll uploads cleanly under a new id', () => {
+    const ledger = getOrCreateUploadLedger('test-namespace', 'mock-md5-hash', 5000, 1000, 5);
+    acknowledgeChunk(ledger, 0);
+    const originalId = ledger.uploadId;
+
+    const instance = mountInstance();
+    // The 202 starts polling; this test is only about the ledger, and a live poll loop
+    // would outlive it.
+    instance.pollUploadStatus = jest.fn();
+    const mockXhr = {
+      readyState: XMLHttpRequest.DONE,
+      status: 202,
+      responseText: JSON.stringify({ file_id: 'server-file-id', status: 'uploading' }),
+      setRequestHeader: jest.fn(),
+      onload: jest.fn(),
+      onerror: jest.fn(),
+      abort: jest.fn()
+    };
+    const file = {
+      name: 'video.mp4',
+      size: 5000,
+      md5: 'mock-md5-hash',
+      _resumeLedger: ledger,
+      upload: { uuid: originalId, chunked: true, chunks: [{ index: 4, xhr: mockXhr }] }
+    };
+
+    getEventHandler(instance, 'sending')(file, mockXhr, { append: jest.fn() });
+    mockXhr.onload({});
+
+    expect(file._asyncProcessing).toBe(true);
+    expect(file._resumeLedger).toBeNull();
+
+    // Whatever happens to the poll from here, the next attempt for this same physical
+    // file cannot resume against an upload the server has already assembled.
+    const next = getOrCreateUploadLedger('test-namespace', 'mock-md5-hash', 5000, 1000, 5);
+    expect(next.uploadId).not.toBe(originalId);
+    expect(next.ackedChunks).toEqual([]);
   });
 
   test('a genuinely completed resume (async 202) never enters the correction path', () => {
