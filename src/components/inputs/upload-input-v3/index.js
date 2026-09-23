@@ -25,6 +25,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CloseIcon from "@mui/icons-material/Close";
+import ReplayIcon from "@mui/icons-material/Replay";
 import { DropzoneV3 } from './dropzone-v3';
 import ProgressiveImg from '../../progressive-img';
 import file_icon from '../upload-input/file.png';
@@ -41,6 +42,32 @@ const formatFileSize = (bytes) => {
   if (!bytes) return '0 KB';
   if (bytes >= 1024 * 1024) return `${Math.round(bytes / (1024 * 1024))} MB`;
   return `${Math.round(bytes / 1024)} KB`;
+};
+
+/**
+ * Maps the fixed error strings Dropzone and pollUploadStatus report onto translated messages.
+ * Anything else is a server-provided message and is passed through untouched.
+ */
+const resolveErrorMessage = (text, status) => {
+  // status 0 means the request never got a real server response (connection dropped/timed
+  // out) - Dropzone's own message for that case is "Server responded with 0 code.", which
+  // is not something a user can act on.
+  if (status === 0) return T.translate('upload_input_v3.network_error');
+
+  switch (text) {
+    case 'Network error':
+      return T.translate('upload_input_v3.network_error');
+    case 'Upload timed out':
+      return T.translate('upload_input_v3.upload_timed_out');
+    case 'Upload failed':
+      return T.translate('upload_input_v3.upload_failed');
+    case 'Auth error':
+      return T.translate('upload_input_v3.auth_error');
+    case 'Max files reached.':
+      return T.translate('upload_input_v3.max_files_reached');
+    default:
+      return text;
+  }
 };
 
 const UploadInputV3 = ({
@@ -223,25 +250,12 @@ const UploadInputV3 = ({
       ? message
       : (message?.message ?? T.translate('upload_input_v3.upload_failed'));
 
-    // status 0 means the request never got a real server response (connection dropped/timed
-    // out) - Dropzone's own message for that case is "Server responded with 0 code.", which
-    // is not something a user can act on.
-    const displayMessage =
-      status === 0 || text === 'Network error'
-        ? T.translate('upload_input_v3.network_error')
-        : text === 'Upload timed out'
-          ? T.translate('upload_input_v3.upload_timed_out')
-          : text === 'Upload failed'
-            ? T.translate('upload_input_v3.upload_failed')
-            : text === 'Auth error'
-              ? T.translate('upload_input_v3.auth_error')
-              : text === 'Max files reached.'
-                ? T.translate('upload_input_v3.max_files_reached')
-                : text;
+    const displayMessage = resolveErrorMessage(text, status);
 
     setErrorFiles(prev => {
-      const existingIndex = prev.findIndex(f => f.name === file.name && f.size === file.size);
-      const entry = { name: file.name, size: file.size, message: displayMessage };
+      const uuid = file.upload?.uuid;
+      const existingIndex = prev.findIndex(f => f.uuid === uuid);
+      const entry = { uuid, name: file.name, size: file.size, message: displayMessage };
       if (existingIndex === -1) return [...prev, entry];
       return prev.map((f, i) => (i === existingIndex ? entry : f));
     });
@@ -250,11 +264,32 @@ const UploadInputV3 = ({
   const handleDismissError = useCallback((file) => {
     if (dropzoneInstanceRef.current) {
       const dzFile = dropzoneInstanceRef.current.files?.find(
-        f => f.name === file.name && f.size === file.size
+        f => f.upload?.uuid === file.uuid
       );
       if (dzFile) dropzoneInstanceRef.current.removeFile(dzFile);
     }
-    setErrorFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
+    setErrorFiles(prev => prev.filter(f => f.uuid !== file.uuid));
+  }, []);
+
+  // An errored file is never auto-removed from dropzone's own file list, so the same
+  // uuid lookup handleDismissError uses still finds it here - re-adding it
+  // re-triggers accept(), which is where the resume ledger lookup happens.
+  const handleRetryError = useCallback((file) => {
+    const dz = dropzoneInstanceRef.current;
+    const dzFile = dz?.files?.find(f => f.upload?.uuid === file.uuid);
+    setErrorFiles(prev => prev.filter(f => f.uuid !== file.uuid));
+    if (!dz || !dzFile) return; // file object gone (e.g. full remount) - re-selecting the
+    // same file still resumes via the md5-keyed ledger the next time it hits accept()
+    dz.removeFile(dzFile);
+    // Reusing the same File object means it still carries flags from its previous pass.
+    // dropzone's OWN accept() gate runs before our custom options.accept ever does, and
+    // rejects the file as "too many files" if accepted stays true from its original
+    // successful accept. Our removedfile handler also sets _canceled, which later blocks
+    // xhr.onload from ever calling onUploadComplete/pollUploadStatus once resent chunks
+    // succeed. Neither is cleared by removeFile/addFile - must reset both here.
+    dzFile.accepted = false;
+    dzFile._canceled = false;
+    dz.addFile(dzFile);
   }, []);
 
   const handleDeleteUploading = useCallback((file) => {
@@ -460,6 +495,14 @@ const UploadInputV3 = ({
                 </Typography>
               </Box>
 
+              <IconButton
+                size="small"
+                onClick={() => handleRetryError(file)}
+                title={T.translate("upload_input_v3.retry")}
+                sx={{ color: 'primary.main' }}
+              >
+                <ReplayIcon fontSize="small" />
+              </IconButton>
               <IconButton
                 size="small"
                 onClick={() => handleDismissError(file)}
