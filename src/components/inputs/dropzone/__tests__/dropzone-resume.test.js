@@ -117,8 +117,38 @@ describe('DropzoneJS - Resumable Chunked Uploads', () => {
 
     expect(file.upload.uuid).not.toBe('dropzone-own-random-uuid');
     expect(file._resumeLedger.ackedChunks).toEqual([]);
-    expect(file._completedBytes).toBeUndefined();
+    expect(file._completedBytes).toBe(0);
     expect(instance.dropzone.emit).not.toHaveBeenCalledWith('uploadprogress', expect.anything(), expect.anything(), expect.anything());
+  });
+
+  test('a retry after the async phase failed starts from 0, not from the previous pass', async () => {
+    const instance = mountInstance();
+    instance.pollUploadStatus = jest.fn();
+    const file = { name: 'video.mp4', size: 5000, upload: { uuid: 'dz-1', chunked: true, chunks: [] } };
+
+    await mockCapturedOptions.accept(file, jest.fn());
+    for (let i = 0; i < 5; i++) {
+      const last = i === 4;
+      const xhr = {
+        readyState: XMLHttpRequest.DONE,
+        status: last ? 202 : 200,
+        responseText: JSON.stringify(last ? { file_id: 'fid' } : { done: 20 * (i + 1), status: true }),
+        setRequestHeader: jest.fn(), onload: jest.fn(), onerror: jest.fn(), abort: jest.fn()
+      };
+      file.upload.chunks[i] = { index: i, xhr };
+      getEventHandler(instance, 'sending')(file, xhr, { append: jest.fn() });
+      xhr.onload({});
+    }
+    // Assembled: nothing left to resume, but every byte was counted on the way.
+    expect(file._resumeLedger).toBeNull();
+    expect(file._completedBytes).toBe(5000);
+
+    // Polling then fails -> Retry: removeFile + addFile hands accept() a new upload object.
+    file.upload = { uuid: 'dz-2', chunked: true, chunks: [] };
+    await mockCapturedOptions.accept(file, jest.fn());
+
+    expect(file._resumeLedger.ackedChunks).toEqual([]);
+    expect(file._completedBytes).toBe(0);
   });
 
   test('a chunk already acknowledged is skipped: never dispatched, never occupies a slot', async () => {

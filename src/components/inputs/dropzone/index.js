@@ -278,6 +278,9 @@ export class DropzoneJS extends React.Component {
             file._resumeSkippedThisAttempt = false;
             file._resumeCorrectionPass = false;
             file._errorReported = false;
+            // Progress floor from the previous pass: the ledger restore below re-seeds it
+            // from the acked chunks, and an attempt with nothing to resume starts from 0.
+            file._completedBytes = 0;
 
             if (options.chunking) {
                 const chunkSize = options.chunkSize || 2000000;
