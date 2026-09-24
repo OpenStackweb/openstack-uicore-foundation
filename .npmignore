@@ -8,3 +8,7 @@ webpack.prod.js
 .nvmrc
 babel.config.json
 .editorconfig
+stories
+.storybook
+wrangler.jsonc
+dist
