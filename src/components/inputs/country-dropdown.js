@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import Dropdown from './dropdown';
 import {getCountryList} from '../../utils/query-actions';
 
@@ -67,3 +68,18 @@ export default class CountryDropdown extends React.Component {
 
     }
 }
+
+CountryDropdown.propTypes = {
+    /** Selected ISO country code. */
+    value: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.string, PropTypes.number]),
+    /** Echoed back as ev.target.id on the synthetic change event. */
+    id: PropTypes.string.isRequired,
+    /** Receives a synthetic { target: { id, value, type } }. */
+    onChange: PropTypes.func.isRequired,
+    /** No effect: forwarded via {...this.props} to Dropdown, which reads isMulti, not multi. */
+    multi: PropTypes.bool,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string,
+    /** Forwarded via {...this.props} to Dropdown, then to react-select's Select as its placeholder text. */
+    placeholder: PropTypes.string
+};
