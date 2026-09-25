@@ -11,32 +11,37 @@
  * limitations under the License.
  * */
 
-import { epochToMomentTimeZone } from "../../../utils/methods";
 import { MILLISECONDS_IN_SECOND } from "../../../utils/constants";
 
-export const getCurrentApplicableRate = (timeZone, rateDates) => {
-  const now = epochToMomentTimeZone(
-    Math.floor(new Date() / MILLISECONDS_IN_SECOND),
-    timeZone
-  );
+// Mirrors purchases-api SummitMetadata.get_current_tier / is_ordering_closed,
+// which decides the rate the cart is actually priced at. The dates are exact
+// instants (already stored as full days in the show timezone), so they are
+// compared as-is: rounding them to whole days here made the UI report a tier
+// the backend considered closed. No tier applies in two cases: "closed"
+// between standard_price_end_date and onsite_price_start_date, "expired"
+// after onsite_price_end_date. Same contract as sponsor-services'
+// FormItemTable helper. The time zone argument is kept for API compatibility.
+export const getCurrentApplicableRate = (_timeZone, rateDates) => {
+  if (!rateDates) return "expired";
 
-  const earlyBirdEnd = epochToMomentTimeZone(
-    rateDates.early_bird_end_date,
-    timeZone
-  )?.endOf("day");
-  const onsiteStart = epochToMomentTimeZone(
-    rateDates.onsite_price_start_date,
-    timeZone
-  )?.startOf("day");
-  const onsiteEnd = epochToMomentTimeZone(
-    rateDates.onsite_price_end_date,
-    timeZone
-  )?.endOf("day");
+  const now = Date.now() / MILLISECONDS_IN_SECOND;
+  const {
+    early_bird_end_date: earlyBirdEnd,
+    standard_price_end_date: standardEnd,
+    onsite_price_start_date: onsiteStart,
+    onsite_price_end_date: onsiteEnd
+  } = rateDates;
 
-  if (earlyBirdEnd && now.isSameOrBefore(earlyBirdEnd)) return "early_bird";
-  if (onsiteStart && now.isSameOrBefore(onsiteStart)) return "standard";
-  if (!onsiteEnd || now.isSameOrBefore(onsiteEnd)) return "onsite";
-  return "expired";
+  // temporary gap between the standard and the onsite periods
+  if (standardEnd && onsiteStart && standardEnd < now && now < onsiteStart)
+    return "closed";
+  if (onsiteEnd && now > onsiteEnd) return "expired";
+  if (earlyBirdEnd && now <= earlyBirdEnd) return "early_bird";
+
+  const standardCutoff = standardEnd || onsiteStart;
+  if (standardCutoff && now <= standardCutoff) return "standard";
+
+  return "onsite";
 };
 
 export const isItemAvailable = (item, currentApplicableRate, customRate = 0) =>
