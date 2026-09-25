@@ -11,22 +11,11 @@
  * limitations under the License.
  * */
 
-const mockMoment = (isSameOrBeforeFn) => ({
-  isSameOrBefore: isSameOrBeforeFn,
-  endOf: () => ({ isSameOrBefore: isSameOrBeforeFn }),
-  startOf: () => ({ isSameOrBefore: isSameOrBeforeFn })
-});
-
-jest.mock("../../../../utils/methods", () => ({
-  epochToMomentTimeZone: jest.fn()
-}));
-
 jest.mock("../../../../utils/constants", () => ({
   MILLISECONDS_IN_SECOND: 1000,
   SPONSOR_FORMS_METAFIELD_CLASS: { FORM: "Form", ITEM: "Item" }
 }));
 
-import { epochToMomentTimeZone } from "../../../../utils/methods";
 import {
   getCurrentApplicableRate,
   isItemAvailable,
@@ -72,6 +61,12 @@ describe("isItemAvailable", () => {
     expect(isItemAvailable(item, "expired", 0)).toBe(false);
   });
 
+  test("is unavailable while ordering is closed unless a custom rate is set", () => {
+    const item = { rates: { standard: 100, onsite: 150 } };
+    expect(isItemAvailable(item, "closed")).toBe(false);
+    expect(isItemAvailable(item, "closed", 5000)).toBe(true);
+  });
+
   test("stays available on the applicable rate when no custom rate is passed", () => {
     const item = { rates: { early_bird: 100 } };
     expect(isItemAvailable(item, "early_bird", 0)).toBe(true);
@@ -102,106 +97,96 @@ describe("hasDrivingQuantityField", () => {
 });
 
 describe("getCurrentApplicableRate", () => {
-  beforeEach(() => jest.clearAllMocks());
+  // Summit 73 pricing dates, stored as full days in America/Los_Angeles.
+  const EARLY_BIRD_END = 1788505199; // 09/03 23:59:59 PT
+  const STANDARD_END = 1790319599; // 09/24 23:59:59 PT
+  const ONSITE_START = 1790319600; // 09/25 00:00:00 PT
+  const ONSITE_END = 1792652399; // 10/21 23:59:59 PT
 
-  test("returns early_bird when now is before earlyBirdEnd", () => {
-    const nowMoment = mockMoment((other) => true);
-    epochToMomentTimeZone.mockReturnValue(nowMoment);
+  const rateDates = {
+    early_bird_end_date: EARLY_BIRD_END,
+    standard_price_end_date: STANDARD_END,
+    onsite_price_start_date: ONSITE_START,
+    onsite_price_end_date: ONSITE_END
+  };
 
-    const result = getCurrentApplicableRate("UTC", {
-      early_bird_end_date: 1000,
-      onsite_price_start_date: 2000,
-      onsite_price_end_date: 3000
-    });
-    expect(result).toBe("early_bird");
+  const at = (epoch) => jest.setSystemTime(epoch * 1000);
+
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  test("returns early_bird up to and including early_bird_end_date", () => {
+    at(EARLY_BIRD_END);
+    expect(getCurrentApplicableRate("America/Los_Angeles", rateDates)).toBe("early_bird");
   });
 
-  test("returns standard when past earlyBird but before onsiteStart", () => {
-    let calls = 0;
-    const nowMock = {
-      isSameOrBefore: jest
-        .fn()
-        .mockReturnValueOnce(false) // not before earlyBirdEnd
-        .mockReturnValueOnce(true) // before onsiteStart
-    };
-    epochToMomentTimeZone.mockImplementation(() => {
-      calls++;
-      if (calls === 1) return nowMock;
-      if (calls === 2) return { endOf: () => ({}) }; // earlyBirdEnd (truthy)
-      if (calls === 3) return { startOf: () => ({}) }; // onsiteStart (truthy)
-      if (calls === 4) return { endOf: () => ({}) }; // onsiteEnd (not reached)
-      return null;
-    });
-
-    const result = getCurrentApplicableRate("UTC", {
-      early_bird_end_date: 1000,
-      onsite_price_start_date: 2000,
-      onsite_price_end_date: 3000
-    });
-    expect(result).toBe("standard");
+  test("returns standard after early bird ends", () => {
+    at(EARLY_BIRD_END + 1);
+    expect(getCurrentApplicableRate("America/Los_Angeles", rateDates)).toBe("standard");
   });
 
-  test("returns onsite when in onsite period", () => {
-    let calls = 0;
-    const nowMock = {
-      isSameOrBefore: jest
-        .fn()
-        .mockReturnValueOnce(false) // not before earlyBirdEnd
-        .mockReturnValueOnce(false) // not before onsiteStart
-        .mockReturnValueOnce(true) // before onsiteEnd
-    };
-    epochToMomentTimeZone.mockImplementation(() => {
-      calls++;
-      if (calls === 1) return nowMock;
-      if (calls === 2) return { endOf: () => ({}) }; // earlyBirdEnd (truthy)
-      if (calls === 3) return { startOf: () => ({}) }; // onsiteStart (truthy)
-      if (calls === 4) return { endOf: () => ({}) }; // onsiteEnd (truthy)
-      return null;
-    });
-
-    const result = getCurrentApplicableRate("UTC", {
-      early_bird_end_date: 1000,
-      onsite_price_start_date: 2000,
-      onsite_price_end_date: 3000
-    });
-    expect(result).toBe("onsite");
+  test("returns standard up to and including standard_price_end_date", () => {
+    at(STANDARD_END);
+    expect(getCurrentApplicableRate("America/Los_Angeles", rateDates)).toBe("standard");
   });
 
-  test("returns expired when all dates are past", () => {
-    let calls = 0;
-    epochToMomentTimeZone.mockImplementation(() => {
-      calls++;
-      if (calls === 1) return { isSameOrBefore: () => false };
-      if (calls === 2) return { endOf: () => ({ isSameOrBefore: () => false }) };
-      if (calls === 3) return { startOf: () => ({ isSameOrBefore: () => false }) };
-      if (calls === 4) return { endOf: () => ({ isSameOrBefore: () => false }) };
-      return null;
-    });
-
-    const result = getCurrentApplicableRate("UTC", {
-      early_bird_end_date: 1000,
-      onsite_price_start_date: 2000,
-      onsite_price_end_date: 3000
-    });
-    expect(result).toBe("expired");
+  test("returns onsite from onsite_price_start_date on", () => {
+    at(ONSITE_START);
+    expect(getCurrentApplicableRate("America/Los_Angeles", rateDates)).toBe("onsite");
   });
 
-  test("returns onsite when onsiteEnd is not provided", () => {
-    let calls = 0;
-    epochToMomentTimeZone.mockImplementation(() => {
-      calls++;
-      if (calls === 1) return { isSameOrBefore: () => false };
-      if (calls === 2) return { endOf: () => ({ isSameOrBefore: () => false }) };
-      if (calls === 3) return { startOf: () => ({ isSameOrBefore: () => false }) };
-      if (calls === 4) return null; // no onsiteEnd
-      return null;
-    });
+  test("returns onsite up to and including onsite_price_end_date", () => {
+    at(ONSITE_END);
+    expect(getCurrentApplicableRate("America/Los_Angeles", rateDates)).toBe("onsite");
+  });
 
-    const result = getCurrentApplicableRate("UTC", {
-      early_bird_end_date: 1000,
-      onsite_price_start_date: 2000,
-      onsite_price_end_date: null
-    });
-    expect(result).toBe("onsite");
+  test("returns expired after onsite_price_end_date", () => {
+    at(ONSITE_END + 1);
+    expect(getCurrentApplicableRate("America/Los_Angeles", rateDates)).toBe("expired");
+  });
+
+  test("returns closed between standard_price_end_date and onsite_price_start_date", () => {
+    // The gap summit 73 had while onsite_price_start_date was stored as
+    // 09/25 22:00 PT: the backend treats ordering as closed there, so no
+    // catalog rate applies. The old day-rounding reported onsite instead.
+    const gapped = { ...rateDates, onsite_price_start_date: 1790398800 };
+    at(1790345880); // 09/25 07:18 PT
+    expect(getCurrentApplicableRate("America/Los_Angeles", gapped)).toBe("closed");
+  });
+
+  test("compares exact instants instead of rounding to whole days", () => {
+    // Onsite starting at 22:00 PT is not active at 21:59 PT that same day,
+    // even though both fall on the same calendar date.
+    const gapped = { ...rateDates, onsite_price_start_date: 1790398800 };
+    at(1790398800 - 60);
+    expect(getCurrentApplicableRate("America/Los_Angeles", gapped)).toBe("closed");
+    at(1790398800);
+    expect(getCurrentApplicableRate("America/Los_Angeles", gapped)).toBe("onsite");
+  });
+
+  test("falls back to onsite_price_start_date as the standard cutoff", () => {
+    const noStandardEnd = { ...rateDates, standard_price_end_date: null };
+    at(ONSITE_START);
+    expect(getCurrentApplicableRate("America/Los_Angeles", noStandardEnd)).toBe("standard");
+    at(ONSITE_START + 1);
+    expect(getCurrentApplicableRate("America/Los_Angeles", noStandardEnd)).toBe("onsite");
+  });
+
+  test("returns onsite when onsite_price_end_date is not provided", () => {
+    at(ONSITE_END + 1);
+    expect(
+      getCurrentApplicableRate("America/Los_Angeles", { ...rateDates, onsite_price_end_date: null })
+    ).toBe("onsite");
+  });
+
+  test("returns expired when there are no rate dates", () => {
+    at(ONSITE_START);
+    expect(getCurrentApplicableRate("America/Los_Angeles", null)).toBe("expired");
+    expect(getCurrentApplicableRate("America/Los_Angeles", undefined)).toBe("expired");
+  });
+
+  test("returns onsite when no pricing dates are set", () => {
+    at(ONSITE_START);
+    expect(getCurrentApplicableRate("America/Los_Angeles", {})).toBe("onsite");
   });
 });
