@@ -585,6 +585,7 @@ const UploadInputV3 = ({
 
 UploadInputV3.propTypes = {
     id: PropTypes.string,
+    name: PropTypes.string,
     /** Already-uploaded files. */
     value: PropTypes.array,
     /** Endpoint the dropzone POSTs to. */
