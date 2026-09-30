@@ -131,6 +131,7 @@
     "lodash": "^4.17.14",
     "moment": "^2.22.2",
     "moment-timezone": "^0.5.21",
+    "pdfmake": "^0.3.11",
     "react": "^16.6.3",
     "react-bootstrap": "^0.31.5",
     "react-datetime": "^2.16.2",
@@ -153,6 +154,11 @@
     "urijs": "^1.19.11",
     "validator": "^9.4.1",
     "video.js": "^7.8.2"
+  },
+  "peerDependenciesMeta": {
+    "pdfmake": {
+      "optional": true
+    }
   },
   "jest": {
     "collectCoverageFrom": [
