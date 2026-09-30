@@ -12,6 +12,7 @@
  **/
 
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import Select from 'react-select';
 
 const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, className, isDisabled, isClearable, options, selectStyles, customStyle, ...rest }) => {
@@ -138,4 +139,31 @@ OperatorInput.defaultProps = {
         { value: '==', label: 'Equal' },
         { value: 'between', label: 'Between' },
     ],
+};
+
+OperatorInput.propTypes = {
+    /** Either a scalar like '>10', or a two-element array for the 'between' operator. */
+    value: PropTypes.oneOfType([PropTypes.string, PropTypes.array]),
+    /** Echoed back as ev.target.id on the synthetic change event. */
+    id: PropTypes.string.isRequired,
+    /** Receives a synthetic { target: { id, value, type } }. */
+    onChange: PropTypes.func.isRequired,
+    /** No effect on this component: destructured out of props alongside isMulti, so neither is passed to the underlying Select. Consumers still pass it; it does nothing here. */
+    multi: PropTypes.bool,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string,
+    /** Operator choices; 'between' switches the control to two inputs. Has a defaultProps fallback above. */
+    options: PropTypes.arrayOf(PropTypes.shape({
+        value: PropTypes.string,
+        label: PropTypes.string
+    })),
+    label: PropTypes.node,
+    className: PropTypes.string,
+    /** No effect on this component: destructured out of props alongside multi, so neither is passed to the underlying Select. Consumers still pass it; it does nothing here. */
+    isMulti: PropTypes.bool,
+    isDisabled: PropTypes.bool,
+    isClearable: PropTypes.bool,
+    /** Merged into the operator select's react-select styles. */
+    selectStyles: PropTypes.object,
+    customStyle: PropTypes.object
 };
