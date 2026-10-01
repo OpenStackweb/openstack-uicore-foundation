@@ -16,6 +16,7 @@ import T from "i18n-react/dist/i18n-react";
 import { Font } from "@react-pdf/renderer";
 import { currencyAmountFromCents, formatDiscount } from "../../utils/money";
 import { MILLISECONDS_IN_SECOND } from "../../utils/constants";
+import { buildOrderLedger } from "../../utils/order-ledger";
 
 export const DEFAULT_FONT_FAMILY = "Helvetica";
 
@@ -69,31 +70,28 @@ export const getThemeFontFamily = (theme) => {
     : DEFAULT_FONT_FAMILY;
 };
 
-export const buildRows = (order) => {
-  const rows = [];
-  let balanceCents = 0;
+// Thin presentational mapper: buildOrderLedger holds the derivation rules
+// (sign conventions, ordering, quantity filtering, row keys) shared with
+// SponsorOrderGrid — this only translates labels, formats currency/dates,
+// and shapes the row fields PdfTableRow expects.
+export const buildRows = (order) =>
+  buildOrderLedger(order).map((entry) => {
+    switch (entry.type) {
+      case "item": {
+        const {
+          form,
+          item,
+          quantity,
+          canceledQuantity,
+          cancellations,
+          cancelled,
+          partiallyCancelled,
+          amountCents,
+          balanceCents
+        } = entry;
 
-  (order.forms || []).forEach((form) => {
-    (form.items || [])
-      .filter((item) => (item.quantity ?? 1) > 0)
-      .forEach((item) => {
-        // Cancellation is per-item and quantity-scoped: canceled_quantity may
-        // be anywhere from 0 (not cancelled) up to quantity (fully cancelled),
-        // with the individual cancellation events (and their frozen per-event
-        // amounts) listed in cancellations. Mirrors SponsorOrderGrid's contract.
-        const quantity = item.quantity ?? 1;
-        const canceledQuantity = item.canceled_quantity ?? 0;
-        const cancellations = item.cancellations ?? [];
-        const cancelled = canceledQuantity > 0 && canceledQuantity === quantity;
-        const partiallyCancelled = canceledQuantity > 0 && canceledQuantity < quantity;
-
-        // Matches SponsorOrderGrid: a charge stays in the ledger in full
-        // whether it's cancelled or not, partially or fully -- cancellation
-        // only nets out via the reconciliation block below.
-        balanceCents += item.amount;
-
-        rows.push({
-          rowKey: `item-${item.line_id ?? item.id}`,
+        return {
+          rowKey: entry.rowKey,
           type: "item",
           // Table shows form.code per item row (columnKey: "formCode", value: form.code)
           code: String(form.code || ""),
@@ -106,7 +104,7 @@ export const buildRows = (order) => {
           qty: String(quantity - canceledQuantity),
           quantity,
           canceledQuantity,
-          price: currencyAmountFromCents(item.amount),
+          price: currencyAmountFromCents(amountCents),
           balanceCents,
           cancelled,
           partiallyCancelled,
@@ -120,82 +118,78 @@ export const buildRows = (order) => {
             }),
             reason: c.reason ? String(c.reason) : ""
           }))
-        });
-      });
+        };
+      }
 
-    const discountCents = form.discount_in_cents ?? 0;
-    if (discountCents) {
-      balanceCents -= discountCents;
-      rows.push({
-        rowKey: `discount-${form.id}`,
-        type: "discount",
-        code: T.translate("mui_table.dis"),
-        description: formatDiscount(form.discount_amount, form.discount_type),
-        addon: "",
-        qty: "",
-        price: currencyAmountFromCents(discountCents),
-        balanceCents
-      });
+      case "discount": {
+        const { form, amountCents, balanceCents } = entry;
+        return {
+          rowKey: entry.rowKey,
+          type: "discount",
+          code: T.translate("mui_table.dis"),
+          // Prefers a consumer-normalized form.discount when present, same
+          // as SponsorOrderGrid -- otherwise the two can show different
+          // discount text for the same order.
+          description: form.discount ?? formatDiscount(form.discount_amount, form.discount_type),
+          addon: "",
+          qty: "",
+          price: currencyAmountFromCents(amountCents),
+          balanceCents
+        };
+      }
+
+      case "fee": {
+        const { fee, amountCents, balanceCents } = entry;
+        return {
+          rowKey: entry.rowKey,
+          type: "fee",
+          code: T.translate("mui_table.payfee"),
+          description: String(fee.title || ""),
+          addon: "",
+          qty: "1",
+          price: currencyAmountFromCents(amountCents),
+          balanceCents
+        };
+      }
+
+      case "payment": {
+        const { payment, amountCents, balanceCents } = entry;
+        return {
+          rowKey: entry.rowKey,
+          type: "payment",
+          code: T.translate("mui_table.pay"),
+          description: `${T.translate("mui_table.paid_via")} ${payment.method || T.translate("mui_table.card")}`,
+          subDescription: formatDate(payment.created, "LOC", "YYYY/MM/DD HH:mm"),
+          addon: "",
+          qty: "1",
+          price: currencyAmountFromCents(amountCents),
+          balanceCents
+        };
+      }
+
+      case "refund": {
+        const { refund, amountCents, balanceCents } = entry;
+        return {
+          rowKey: entry.rowKey,
+          type: "refund",
+          code: T.translate("mui_table.ref"),
+          description: String(refund.reason || T.translate("mui_table.refund")),
+          subDescription: String(refund.status || ""),
+          addon: "",
+          qty: "1",
+          price: currencyAmountFromCents(amountCents),
+          balanceCents
+        };
+      }
+
+      case "note":
+        return {
+          rowKey: entry.rowKey,
+          type: "note",
+          content: String(entry.note.content || "")
+        };
+
+      default:
+        return null;
     }
-  });
-
-  (order.fees || []).forEach((fee) => {
-    balanceCents += fee.amount;
-    rows.push({
-      rowKey: `fee-${fee.line_id ?? fee.id}`,
-      type: "fee",
-      code: T.translate("mui_table.payfee"),
-      description: String(fee.title || ""),
-      addon: "",
-      qty: "1",
-      price: currencyAmountFromCents(fee.amount),
-      balanceCents
-    });
-  });
-
-  // Payments and refunds interleaved and sorted by created:
-  const paymentsAndRefundsOrdered = [
-    ...(order.payments || []).map((p) => ({ ...p, _rowType: "payment" })),
-    ...(order.refunds || []).map((r) => ({ ...r, _rowType: "refund" }))
-  ].sort((a, b) => a.created - b.created);
-
-  paymentsAndRefundsOrdered.forEach((item) => {
-    if (item._rowType === "payment") {
-      balanceCents -= item.amount;
-      rows.push({
-        rowKey: `payment-${item.id}`,
-        type: "payment",
-        code: T.translate("mui_table.pay"),
-        description: `${T.translate("mui_table.paid_via")} ${item.method || T.translate("mui_table.card")}`,
-        subDescription: formatDate(item.created, "LOC", "YYYY/MM/DD HH:mm"),
-        addon: "",
-        qty: "1",
-        price: currencyAmountFromCents(item.amount),
-        balanceCents
-      });
-    } else {
-      balanceCents += item.amount;
-      rows.push({
-        rowKey: `refund-${item.id}`,
-        type: "refund",
-        code: T.translate("mui_table.ref"),
-        description: String(item.reason || T.translate("mui_table.refund")),
-        subDescription: String(item.status || ""),
-        addon: "",
-        qty: "1",
-        price: currencyAmountFromCents(item.amount),
-        balanceCents
-      });
-    }
-  });
-
-  (order.notes || []).forEach((note) => {
-    rows.push({
-      rowKey: `note-${note.id}`,
-      type: "note",
-      content: String(note.content || "")
-    });
-  });
-
-  return rows;
-};
+  }).filter(Boolean);

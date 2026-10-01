@@ -108,8 +108,6 @@ jest.mock("@react-pdf/renderer", () => {
 // A field this component reads that the fixture doesn't carry (or carries under a different key)
 // now surfaces as a failing assertion instead of a silently blank cell in the PDF.
 
-const MOCK_SUMMIT = { time_zone_id: "UTC" };
-
 const baseForm = purchaseV2Fixture.forms[0];
 const baseItem = baseForm.items[0]; // not cancelled
 const baseCancelledItem = baseForm.items[1]; // fully cancelled
@@ -161,13 +159,19 @@ const makeRenderSummit = (overrides = {}) => ({
   ...overrides
 });
 
+// buildRows is now a thin presentational mapper over utils/order-ledger —
+// derivation rules (filtering, ordering, sign conventions, row keys) are
+// unit-tested against raw cents in utils/__tests__/order-ledger.test.js.
+// What's left here is the mapping from ledger entries to presentational
+// fields: i18n labels, currency/date formatting, and description composition.
+
 // ─── Empty / missing collections ─────────────────────────────────────────────
 
 describe("buildRows — empty / missing collections", () => {
   it("returns [] without throwing for any empty input", () => {
-    expect(buildRows({}, MOCK_SUMMIT)).toEqual([]);
+    expect(buildRows({})).toEqual([]);
     expect(
-      buildRows({ forms: [], fees: [], payments: [], refunds: [] }, MOCK_SUMMIT)
+      buildRows({ forms: [], fees: [], payments: [], refunds: [] })
     ).toEqual([]);
   });
 });
@@ -176,10 +180,7 @@ describe("buildRows — empty / missing collections", () => {
 
 describe("buildRows — item rows", () => {
   it("emits item rows directly with no group row", () => {
-    const rows = buildRows(
-      { forms: [makeForm({ items: [makeItem()] })] },
-      MOCK_SUMMIT
-    );
+    const rows = buildRows({ forms: [makeForm({ items: [makeItem()] })] });
     expect(rows[0].type).toBe("item");
     expect(rows.every((r) => r.type !== "group")).toBe(true);
   });
@@ -189,9 +190,7 @@ describe("buildRows — item rows", () => {
       code: "ABC-1",
       items: [makeItem({ amount: 5000, quantity: 3 })]
     });
-    const itemRow = buildRows({ forms: [form] }, MOCK_SUMMIT).find(
-      (r) => r.type === "item"
-    );
+    const itemRow = buildRows({ forms: [form] }).find((r) => r.type === "item");
     expect(itemRow.price).toBe("$50.00");
     expect(itemRow.qty).toBe("3");
     expect(itemRow.code).toBe("ABC-1");
@@ -200,30 +199,15 @@ describe("buildRows — item rows", () => {
   it("prefers item.type.name over item.title for description", () => {
     const withType = makeItem(); // base item already carries type.name = "Platinum Sponsor"
     const withoutType = makeItem({ type: null }); // falls back to title = "Logo Placement"
-    const rows = buildRows(
-      {
-        forms: [
-          makeForm({ id: 1, items: [withType] }),
-          makeForm({ id: 2, items: [withoutType] })
-        ]
-      },
-      MOCK_SUMMIT
-    );
+    const rows = buildRows({
+      forms: [
+        makeForm({ id: 1, items: [withType] }),
+        makeForm({ id: 2, items: [withoutType] })
+      ]
+    });
     const itemRows = rows.filter((r) => r.type === "item");
     expect(itemRows[0].description).toBe("Platinum Sponsor");
     expect(itemRows[1].description).toBe("Logo Placement");
-  });
-
-  it("excludes items with quantity 0", () => {
-    const rows = buildRows(
-      {
-        forms: [
-          makeForm({ discount_in_cents: 0, items: [makeItem({ quantity: 0 })] })
-        ]
-      },
-      MOCK_SUMMIT
-    );
-    expect(rows).toHaveLength(0);
   });
 });
 
@@ -231,10 +215,7 @@ describe("buildRows — item rows", () => {
 
 describe("buildRows — cancelled items", () => {
   it("sets cancelled: true and populates cancellations when canceled_quantity equals quantity", () => {
-    const rows = buildRows(
-      { forms: [makeForm({ items: [makeCancelledItem()] })] },
-      MOCK_SUMMIT
-    );
+    const rows = buildRows({ forms: [makeForm({ items: [makeCancelledItem()] })] });
     expect(rows[0].cancelled).toBe(true);
     expect(rows[0].partiallyCancelled).toBe(false);
     expect(rows[0].cancellations).toHaveLength(1);
@@ -253,7 +234,7 @@ describe("buildRows — cancelled items", () => {
       discount_in_cents: 0,
       items: [makeItem()]
     });
-    const rows = buildRows({ forms: [withZero, withAbsent] }, MOCK_SUMMIT);
+    const rows = buildRows({ forms: [withZero, withAbsent] });
     rows.forEach((r) => {
       expect(r.cancelled).toBe(false);
       expect(r.partiallyCancelled).toBe(false);
@@ -262,10 +243,7 @@ describe("buildRows — cancelled items", () => {
   });
 
   it("sets partiallyCancelled: true (and cancelled: false) when canceled_quantity is between 0 and quantity", () => {
-    const rows = buildRows(
-      { forms: [makeForm({ items: [makePartiallyCancelledItem()] })] },
-      MOCK_SUMMIT
-    );
+    const rows = buildRows({ forms: [makeForm({ items: [makePartiallyCancelledItem()] })] });
     expect(rows[0].cancelled).toBe(false);
     expect(rows[0].partiallyCancelled).toBe(true);
     // quantity(5) - canceled_quantity(2) = 3 remaining
@@ -277,15 +255,12 @@ describe("buildRows — cancelled items", () => {
   it("fully cancelled items still accumulate their full amount into the running balance", () => {
     const normalItem = makeItem({ amount: 8000 });
     const cancelledItem = makeCancelledItem({ amount: 10000 });
-    const rows = buildRows(
-      {
-        forms: [
-          makeForm({ id: 1, discount_in_cents: 0, items: [normalItem] }),
-          makeForm({ id: 2, discount_in_cents: 0, items: [cancelledItem] })
-        ]
-      },
-      MOCK_SUMMIT
-    );
+    const rows = buildRows({
+      forms: [
+        makeForm({ id: 1, discount_in_cents: 0, items: [normalItem] }),
+        makeForm({ id: 2, discount_in_cents: 0, items: [cancelledItem] })
+      ]
+    });
     const normal = rows.find((r) => !r.cancelled);
     const cancelled = rows.find((r) => r.cancelled);
     expect(normal.balanceCents).toBe(8000);
@@ -294,16 +269,13 @@ describe("buildRows — cancelled items", () => {
 
   it("partially cancelled items still accumulate their full amount into the running balance (matches SponsorOrderGrid; cancellation only nets out via reconciliation)", () => {
     const partialItem = makePartiallyCancelledItem({ amount: 50000 });
-    const rows = buildRows(
-      { forms: [makeForm({ discount_in_cents: 0, items: [partialItem] })] },
-      MOCK_SUMMIT
-    );
+    const rows = buildRows({ forms: [makeForm({ discount_in_cents: 0, items: [partialItem] })] });
     expect(rows[0].balanceCents).toBe(50000);
   });
 
   it("a form-level canceled_by_id does not mark items as cancelled", () => {
     const form = makeForm({ canceled_by_id: 99, items: [makeItem()] });
-    const rows = buildRows({ forms: [form] }, MOCK_SUMMIT);
+    const rows = buildRows({ forms: [form] });
     expect(rows[0].cancelled).toBe(false);
   });
 });
@@ -312,43 +284,22 @@ describe("buildRows — cancelled items", () => {
 
 describe("buildRows — fee rows", () => {
   it("emits code PAYFEE with formatted amount", () => {
-    const feeRow = buildRows(
-      { fees: [makeFee({ title: "Processing Fee", amount: 200 })] },
-      MOCK_SUMMIT
-    ).find((r) => r.type === "fee");
+    const feeRow = buildRows({
+      fees: [makeFee({ title: "Processing Fee", amount: 200 })]
+    }).find((r) => r.type === "fee");
     expect(feeRow.code).toBe("PAYFEE");
     expect(feeRow.price).toBe("$2.00");
-  });
-
-  it("gives distinct row keys to multiple fees, none of which carry an `id` field", () => {
-    // Real purchases-api v2 fees only ever carry line_id/position/title/amount (see fixture) —
-    // no `id`. Two fees on the same order must not collide on rowKey.
-    expect(baseFee.id).toBeUndefined();
-    const rows = buildRows(
-      { fees: [purchaseV2Fixture.fees[0], purchaseV2Fixture.fees[1]] },
-      MOCK_SUMMIT
-    ).filter((r) => r.type === "fee");
-    expect(rows).toHaveLength(2);
-    expect(new Set(rows.map((r) => r.rowKey)).size).toBe(2);
   });
 });
 
 // ─── Discount rows ────────────────────────────────────────────────────────────
 
 describe("buildRows — discount rows", () => {
-  it("emits no discount rows when discount_in_cents is 0", () => {
-    const rows = buildRows(
-      { forms: [makeForm({ discount_in_cents: 0 })] },
-      MOCK_SUMMIT
-    );
-    expect(rows.filter((r) => r.type === "discount")).toHaveLength(0);
-  });
-
   it("emits one discount row with code DIS and formatted amount, describing a Rate discount from raw discount_amount/discount_type", () => {
     // Base form already carries discount_in_cents/discount_amount/discount_type
     // as raw fields — never a pre-formatted `discount` string (the API doesn't send one).
     const form = makeForm();
-    const discountRows = buildRows({ forms: [form] }, MOCK_SUMMIT).filter(
+    const discountRows = buildRows({ forms: [form] }).filter(
       (r) => r.type === "discount"
     );
     expect(discountRows).toHaveLength(1);
@@ -364,10 +315,22 @@ describe("buildRows — discount rows", () => {
       discount_amount: 500,
       discount_type: "Amount"
     });
-    const discountRows = buildRows({ forms: [form] }, MOCK_SUMMIT).filter(
+    const discountRows = buildRows({ forms: [form] }).filter(
       (r) => r.type === "discount"
     );
     expect(discountRows[0].description).toBe("$5.00");
+  });
+
+  it("prefers a pre-formatted form.discount string over discount_amount/discount_type when present (matches SponsorOrderGrid)", () => {
+    const form = makeForm({
+      discount: "10% off",
+      discount_amount: 1000,
+      discount_type: "Rate"
+    });
+    const discountRows = buildRows({ forms: [form] }).filter(
+      (r) => r.type === "discount"
+    );
+    expect(discountRows[0].description).toBe("10% off");
   });
 });
 
@@ -375,17 +338,15 @@ describe("buildRows — discount rows", () => {
 
 describe("buildRows — payment rows", () => {
   it("sets description to 'Paid via <method>' and defaults method to card", () => {
-    const withMethod = buildRows(
-      { payments: [makePayment({ method: "wire" })] },
-      MOCK_SUMMIT
-    ).find((r) => r.type === "payment");
+    const withMethod = buildRows({
+      payments: [makePayment({ method: "wire" })]
+    }).find((r) => r.type === "payment");
     expect(withMethod.price).toBe("$600.00");
     expect(withMethod.description).toBe("Paid via wire");
 
-    const withoutMethod = buildRows(
-      { payments: [makePayment({ id: 2, method: undefined })] },
-      MOCK_SUMMIT
-    ).find((r) => r.type === "payment");
+    const withoutMethod = buildRows({
+      payments: [makePayment({ id: 2, method: undefined })]
+    }).find((r) => r.type === "payment");
     expect(withoutMethod.description).toBe("Paid via card");
   });
 });
@@ -394,22 +355,18 @@ describe("buildRows — payment rows", () => {
 
 describe("buildRows — refund rows", () => {
   it("maps reason to description and status to subDescription, with defaults when absent", () => {
-    const withFields = buildRows(
-      { refunds: [makeRefund()] },
-      MOCK_SUMMIT
-    ).find((r) => r.type === "refund");
+    const withFields = buildRows({ refunds: [makeRefund()] }).find(
+      (r) => r.type === "refund"
+    );
     expect(withFields.price).toBe("$30.00");
     expect(withFields.description).toBe("duplicate charge");
     expect(withFields.subDescription).toBe("approved");
 
-    const withDefaults = buildRows(
-      {
-        refunds: [
-          makeRefund({ id: 2, reason: undefined, status: undefined, amount: 1000 })
-        ]
-      },
-      MOCK_SUMMIT
-    ).find((r) => r.type === "refund");
+    const withDefaults = buildRows({
+      refunds: [
+        makeRefund({ id: 2, reason: undefined, status: undefined, amount: 1000 })
+      ]
+    }).find((r) => r.type === "refund");
     expect(withDefaults.description).toBe("Refund");
     expect(withDefaults.subDescription).toBe("");
   });
@@ -419,34 +376,14 @@ describe("buildRows — refund rows", () => {
 
 describe("buildRows — note rows", () => {
   it("emits type 'note' with content, defaulting to empty string when absent", () => {
-    const withContent = buildRows({ notes: [makeNote()] }, MOCK_SUMMIT);
+    const withContent = buildRows({ notes: [makeNote()] });
     expect(withContent[0].type).toBe("note");
     expect(withContent[0].content).toBe("Call client to confirm shipping address");
 
-    const withoutContent = buildRows(
-      { notes: [makeNote({ id: 2, content: undefined })] },
-      MOCK_SUMMIT
-    );
+    const withoutContent = buildRows({
+      notes: [makeNote({ id: 2, content: undefined })]
+    });
     expect(withoutContent[0].content).toBe("");
-  });
-});
-
-// ─── Balance accumulation ─────────────────────────────────────────────────────
-
-describe("buildRows — balance accumulation", () => {
-  it("interleaves payments and refunds by created date and updates balance correctly", () => {
-    const rows = buildRows(
-      {
-        payments: [makePayment({ amount: 10000, created: 2 })],
-        refunds: [makeRefund({ amount: 3000, created: 1 })]
-      },
-      MOCK_SUMMIT
-    );
-    // refund first (created: 1), then payment (created: 2)
-    expect(rows[0].type).toBe("refund");
-    expect(rows[0].balanceCents).toBe(3000);
-    expect(rows[1].type).toBe("payment");
-    expect(rows[1].balanceCents).toBe(-7000); // 3000 - 10000
   });
 });
 
