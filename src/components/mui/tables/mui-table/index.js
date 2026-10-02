@@ -184,7 +184,10 @@ const MuiTable = ({
 
         {/* TABLE BODY */}
         <TableBody>
-          {data.map((row) => (
+          {/* rows with renderRow (e.g. NotesRow) replace the default row, receiving the column count */}
+          {data.map((row) => row.renderRow ? (
+            <React.Fragment key={row.id}>{row.renderRow(totalColumnsCount)}</React.Fragment>
+          ) : (
             <TableRow key={row.id}>
               {/* Main content columns */}
               {columns.map((col) => (
