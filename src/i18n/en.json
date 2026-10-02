@@ -145,6 +145,7 @@
   },
   "sponsor_order_grid": {
     "title": "Order Items Ledger",
+    "note": "Note:",
     "code": "Code",
     "type": "Type",
     "addon": "Add-on",
