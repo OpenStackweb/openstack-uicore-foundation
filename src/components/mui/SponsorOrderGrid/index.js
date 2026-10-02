@@ -62,7 +62,8 @@ const mapOrderData = (forms) => {
           amount,
           amountValue: it.amount,
           cancelled,
-          cancellations: it.cancellations ?? []
+          cancellations: it.cancellations ?? [],
+          notes: it.notes
         };
       })
   }));
@@ -74,7 +75,8 @@ const SponsorOrderGrid = ({
   withReconciliation = false,
   withCancelledItemsHeader = false,
   onCancelForm,
-  onUndoCancelForm
+  onUndoCancelForm,
+  hideItemNotes = false
 }) => {
 
   const {
@@ -119,6 +121,14 @@ const SponsorOrderGrid = ({
           <Typography variant="body1" sx={{ ...(row.cancelled && { textDecoration: "line-through" }) }}>
             {row.itemName} - {T.translate("sponsor_order_grid.total")}: {row.quantity - row.canceled_quantity}
           </Typography>
+          {!hideItemNotes && row.notes?.trim() && (
+            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: "normal" }}>
+              <Box component="span" sx={{ fontWeight: 500 }}>
+                {T.translate("sponsor_order_grid.note")}
+              </Box>{" "}
+              {row.notes}
+            </Typography>
+          )}
           {row.cancellations.map((cancellation) => (
             <Box key={`cancellation-${row.id}-${cancellation.id}`} sx={{ mt: 1 }}>
               <Typography variant="body1" sx={{ color: "text.disabled" }}>
