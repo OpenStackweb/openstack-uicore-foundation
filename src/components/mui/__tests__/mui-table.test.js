@@ -254,4 +254,33 @@ describe("MuiTable", () => {
       expect(await screen.findByRole("tooltip")).toHaveTextContent("Alice");
     });
   });
+
+  describe("renderRow", () => {
+    const customRow = {
+      id: "custom-1",
+      name: "Hidden",
+      renderRow: jest.fn((colCount) => (
+        <tr data-testid="custom-row">
+          <td colSpan={colCount}>Custom content</td>
+        </tr>
+      ))
+    };
+
+    test("renders the row's own output in place of the default cells, in data order", () => {
+      setup({ data: [data[0], customRow, data[1]] });
+
+      const rows = screen.getAllByRole("row");
+      const customIndex = rows.indexOf(screen.getByTestId("custom-row"));
+      expect(rows[customIndex - 1]).toHaveTextContent("Alice");
+      expect(rows[customIndex + 1]).toHaveTextContent("Bob");
+      expect(screen.getByText("Custom content")).toBeInTheDocument();
+      expect(screen.queryByText("Hidden")).not.toBeInTheDocument();
+    });
+
+    test("passes the total column count, including action columns", () => {
+      setup({ data: [customRow], onDelete: jest.fn() });
+      expect(customRow.renderRow).toHaveBeenCalledWith(columns.length + 1);
+      expect(screen.queryByTestId("action-delete")).not.toBeInTheDocument();
+    });
+  });
 });

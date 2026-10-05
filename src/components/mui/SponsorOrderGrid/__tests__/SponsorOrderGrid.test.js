@@ -457,4 +457,45 @@ describe("SponsorOrderGrid", () => {
     render(<SponsorOrderGrid order={{ forms: [], total: 0 }} />);
     expect(screen.queryByText("sponsor_order_grid.reconciliation")).not.toBeInTheDocument();
   });
+
+  describe("item notes", () => {
+    const notedOrder = {
+      forms: [
+        makeForm({
+          items: [
+            makeItem({ line_id: 1, notes: "Arrives Monday", type: { id: 1, name: "Inbound", code: "IT1" } }),
+            makeItem({ line_id: 2, notes: "  ", type: { id: 2, name: "Storage", code: "IT2" } }),
+            makeItem({ line_id: 3, notes: null, type: { id: 3, name: "Handling", code: "IT3" } })
+          ]
+        })
+      ],
+      total: 30000
+    };
+
+    test("renders an item's note in its own details cell, below the item line", () => {
+      render(<SponsorOrderGrid order={notedOrder} />);
+      const note = screen.getByText(/Arrives Monday/);
+      expect(note).toHaveTextContent("sponsor_order_grid.note Arrives Monday");
+      expect(note.closest("tr")).toHaveAttribute("id", "item-1");
+      expect(note.previousElementSibling).toHaveTextContent(/Inbound/);
+    });
+
+    test("does not add extra rows for item notes", () => {
+      render(<SponsorOrderGrid order={notedOrder} />);
+      expect(document.querySelectorAll("tbody tr[id^='item-']")).toHaveLength(3);
+      expect(screen.queryByText("mui_table.note")).not.toBeInTheDocument();
+    });
+
+    test("renders no note for items with a blank or missing note", () => {
+      render(<SponsorOrderGrid order={notedOrder} />);
+      expect(screen.getAllByText("sponsor_order_grid.note")).toHaveLength(1);
+    });
+
+    test("hides item notes when hideItemNotes is set, keeping cart notes", () => {
+      const order = { ...notedOrder, notes: [{ id: 5, content: "Cart note" }] };
+      render(<SponsorOrderGrid order={order} hideItemNotes />);
+      expect(screen.queryByText(/Arrives Monday/)).not.toBeInTheDocument();
+      expect(screen.getByText("Cart note")).toBeInTheDocument();
+    });
+  });
 });
