@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import AsyncSelect from 'react-select/lib/Async';
 import {queryEvents} from '../../utils/query-actions';
 
@@ -64,3 +65,19 @@ export default class EventInput extends React.Component {
     }
 }
 
+EventInput.propTypes = {
+    /** Selected event(s). */
+    value: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.string, PropTypes.number]),
+    /** Echoed back as ev.target.id on the synthetic change event. */
+    id: PropTypes.string.isRequired,
+    /** Receives a synthetic { target: { id, value, type } }. */
+    onChange: PropTypes.func.isRequired,
+    /** Gated on the prop being present, so multi={false} still enables multi-select. */
+    multi: PropTypes.bool,
+    /** Not read by this component; not destructured, so it flows through ...rest into AsyncSelect, which does not render it. */
+    error: PropTypes.string,
+    /** Scopes the lookup; summit.id is what is actually read. */
+    summit: PropTypes.shape({ id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]) }).isRequired,
+    /** Restricts results to published events. */
+    onlyPublished: PropTypes.bool
+};
