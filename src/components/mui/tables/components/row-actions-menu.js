@@ -30,7 +30,7 @@ const RowActionsMenu = ({ actions }) => {
         onClick={(e) => setAnchorEl(e.currentTarget)}
         data-testid="row-actions-menu-trigger"
       >
-        <MoreVertIcon fontSize="large" />
+        <MoreVertIcon />
       </IconButton>
       <Menu
         anchorEl={anchorEl}

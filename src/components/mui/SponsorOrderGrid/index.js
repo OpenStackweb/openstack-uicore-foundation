@@ -253,7 +253,7 @@ const SponsorOrderGrid = ({
                         >
                           <Tooltip title={T.translate("sponsor_order_grid.change_quantity_tooltip")}>
                             <IconButton size="large" onClick={() => setChangeQuantityRow(row)}>
-                              <RuleIcon fontSize="large" />
+                              <RuleIcon />
                             </IconButton>
                           </Tooltip>
                         </TableCell>

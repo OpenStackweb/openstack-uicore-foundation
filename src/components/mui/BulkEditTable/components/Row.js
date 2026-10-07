@@ -121,7 +121,7 @@ const Row = (props) => {
                 sx={{ padding: 0 }}
                 aria-label={`Edit row ${row[idKey]}`}
               >
-                <EditIcon fontSize="large" />
+                <EditIcon />
               </IconButton>
             )}
             {onDelete && (
@@ -131,7 +131,7 @@ const Row = (props) => {
                 sx={{ padding: 0 }}
                 aria-label={`Delete row ${row[idKey]}`}
               >
-                <DeleteIcon fontSize="large" />
+                <DeleteIcon />
               </IconButton>
             )}
           </Box>

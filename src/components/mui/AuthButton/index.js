@@ -40,8 +40,8 @@ const AuthButton = ({
   const anchorRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const menuFontSize = theme?.custom?.menu?.fontSize || "1.4rem";
-  const menuLineHeight = theme?.custom?.menu?.lineHeight || "2rem";
+  const menuFontSize = theme?.custom?.menu?.fontSize || "0.875rem";
+  const menuLineHeight = theme?.custom?.menu?.lineHeight || "1.25rem";
   const menuIconColor = theme?.custom?.menu?.icon || theme.palette.text.secondary;
 
   const openMenu = () => {
