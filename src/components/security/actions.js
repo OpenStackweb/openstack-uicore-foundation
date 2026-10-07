@@ -13,7 +13,7 @@
 
 import T from "i18n-react/dist/i18n-react";
 import {authErrorHandler, createAction, getRequest, showMessage, startLoading, stopLoading} from "../../utils/actions";
-import {buildAPIBaseUrl, getAllowedUserGroups} from '../../utils/config';
+import {buildAPIBaseUrl, getAllowedUserGroups, parseUserGroups} from '../../utils/config';
 import { getAccessToken, storeAuthInfo, initLogOut} from './methods';
 
 /**
@@ -50,8 +50,7 @@ export const doLogout = (backUrl) => (dispatch, getState) => {
 export const getUserInfo = (expand = 'groups', fields='', backUrl = null, history = null, errorHandler = null, forcePull = false ) =>
     async (dispatch, getState) => {
 
-    let AllowedUserGroups = getAllowedUserGroups();
-    AllowedUserGroups = AllowedUserGroups !== '' ? AllowedUserGroups.split(' ') : [];
+    let AllowedUserGroups = parseUserGroups(getAllowedUserGroups());
     let {loggedUserState} = getState();
     let {member} = loggedUserState;
 

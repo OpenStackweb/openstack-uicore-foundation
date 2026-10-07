@@ -12,6 +12,7 @@ import {
   buildAPIBaseUrl,
   getTimeServiceUrl,
   getAllowedUserGroups,
+  parseUserGroups,
   getOAuth2ClientId,
   getOAuth2Flow,
   useOAuth2RefreshToken,
@@ -123,5 +124,21 @@ describe("setConfig", () => {
       secondCopy = require("../config");
     });
     expect(secondCopy.getOAuth2ClientId()).toBe("shared-client");
+  });
+});
+
+describe("parseUserGroups", () => {
+  test("splits a space-separated string into a list", () => {
+    expect(parseUserGroups("a b c")).toEqual(["a", "b", "c"]);
+  });
+
+  test("a single value yields a one-item list", () => {
+    expect(parseUserGroups("staff")).toEqual(["staff"]);
+  });
+
+  test("a falsy value (empty string, null, undefined) yields an empty list", () => {
+    expect(parseUserGroups("")).toEqual([]);
+    expect(parseUserGroups(null)).toEqual([]);
+    expect(parseUserGroups(undefined)).toEqual([]);
   });
 });
