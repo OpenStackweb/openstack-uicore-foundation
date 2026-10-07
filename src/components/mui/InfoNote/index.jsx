@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 const InfoNote = ({ message, sx }) => (
   <Box display="flex" alignItems="flex-start" gap={1} sx={sx}>
     <InfoOutlinedIcon
-      size="small"
+      fontSize="small"
       sx={{ color: "text.secondary", mt: "2px" }}
     />
     <Typography variant="body1" color="text.secondary" sx={{fontSize: "13px"}}>
