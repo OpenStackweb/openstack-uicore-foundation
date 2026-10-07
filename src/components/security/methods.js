@@ -381,16 +381,16 @@ export const setAccessTokenResolver = (resolver) => {
  * The two keys are independent: with only initLogOut set, a 403 still shows
  * the built-in dialog and then calls the injected logout. Without handlers
  * uicore keeps its built-in behavior. Call with no argument to clear both.
- * The handlers live on globalThis under a Symbol.for key so every copy of
+ * The handlers live on a global under a Symbol.for key so every copy of
  * this module shares them.
  */
 const AUTH_HANDLERS_KEY = Symbol.for('openstack-uicore-foundation.authHandlers');
 
 const readAuthHandlers = () =>
-    globalThis[AUTH_HANDLERS_KEY] || { initLogOut: null, authErrorHandler: null };
+    _global[AUTH_HANDLERS_KEY] || { initLogOut: null, authErrorHandler: null };
 
 export const setAuthHandlers = ({ initLogOut, authErrorHandler } = {}) => {
-    globalThis[AUTH_HANDLERS_KEY] = {
+    _global[AUTH_HANDLERS_KEY] = {
         initLogOut: typeof initLogOut === 'function' ? initLogOut : null,
         authErrorHandler: typeof authErrorHandler === 'function' ? authErrorHandler : null,
     };
