@@ -58,6 +58,12 @@ export const getTimeServiceUrl = () =>
 export const getAllowedUserGroups = () =>
     configuredOr('allowedUserGroups', () => (hasWindow() ? window.ALLOWED_USER_GROUPS || '' : null));
 
+/**
+ * Split the space-separated allowed-user-groups string into a list. A falsy
+ * value yields an empty list.
+ */
+export const parseUserGroups = (value) => (value ? value.split(' ') : []);
+
 export const getOAuth2ClientId = () =>
     configuredOr('oauth2ClientId', () => (hasWindow() ? window.OAUTH2_CLIENT_ID : null));
 
