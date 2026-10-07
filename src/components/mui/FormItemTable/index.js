@@ -308,7 +308,7 @@ const FormItemTable = ({
                         aria-label="Toggle row details"
                         onClick={() => toggleRow(row.form_item_id)}
                       >
-                        <InfoOutlinedIcon color={getDetailsIconColor(row)} />
+                        <InfoOutlinedIcon fontSize="small" color={getDetailsIconColor(row)} />
                       </IconButton>
                     ) : (
                       <Typography variant="body2" noWrap sx={{ color: "error.main" }}>

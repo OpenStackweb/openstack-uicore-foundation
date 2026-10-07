@@ -219,7 +219,7 @@ const MuiTable = ({
                         data-testid="action-edit"
                         disabled={options.disableProp && row[options.disableProp]}
                       >
-                        <EditIcon fontSize="large" />
+                        <EditIcon />
                       </IconButton>
                     </span>
                   </Tooltip>
@@ -255,9 +255,9 @@ const MuiTable = ({
                         }
                       >
                         {row.is_archived ? (
-                          <UnarchiveIcon fontSize="large" />
+                          <UnarchiveIcon />
                         ) : (
-                          <ArchiveIcon fontSize="large" />
+                          <ArchiveIcon />
                         )}
                       </IconButton>
                     </span>
@@ -284,7 +284,7 @@ const MuiTable = ({
                           sx={{ padding: 0 }}
                           disabled={options.disableProp && row[options.disableProp]}
                         >
-                          <DeleteIcon fontSize="large" />
+                          <DeleteIcon />
                         </IconButton>
                       </span>
                     </Tooltip>

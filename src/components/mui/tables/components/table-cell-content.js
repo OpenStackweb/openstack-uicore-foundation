@@ -16,9 +16,9 @@ const TableCellContent = ({ row, col }) => {
         col.render(row)
       ) : isBoolean(row[col.columnKey]) ? (
         row[col.columnKey] ? (
-          <CheckIcon fontSize="large" />
+          <CheckIcon />
         ) : (
-          <CloseIcon fontSize="large" />
+          <CloseIcon />
         )
       ) : col.truncateText ? (
         <TruncateText charLimit={col.truncateText}>

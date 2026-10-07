@@ -188,7 +188,7 @@ const MuiTableSortable = ({
                               onClick={() => onEdit(row)}
                               sx={{ padding: 0 }}
                             >
-                              <EditIcon fontSize="large" />
+                              <EditIcon />
                             </IconButton>
                           </TableCell>
                         )}
@@ -204,7 +204,7 @@ const MuiTableSortable = ({
                               onClick={() => handleDelete(row)}
                               sx={{ padding: 0 }}
                             >
-                              <DeleteIcon fontSize="large" />
+                              <DeleteIcon />
                             </IconButton>
                           </TableCell>
                         )}
@@ -217,7 +217,7 @@ const MuiTableSortable = ({
                             {...provided.dragHandleProps}
                           >
                             <IconButton size="large">
-                              <UnfoldMoreIcon fontSize="large" />
+                              <UnfoldMoreIcon />
                             </IconButton>
                           </TableCell>
                         )}

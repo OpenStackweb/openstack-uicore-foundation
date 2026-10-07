@@ -91,7 +91,7 @@ const CustomDialog = ({
           color: theme.palette.grey[500]
         })}
       >
-        <CloseIcon fontSize="large" />
+        <CloseIcon />
       </IconButton>
       <Divider />
       <DialogContent>{children}</DialogContent>
