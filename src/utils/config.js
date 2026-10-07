@@ -12,16 +12,23 @@
  * (always truthy), so a configured `oauth2UseRefreshToken: false` is the
  * way to turn the refresh-token flow off.
  *
- * The state lives on globalThis under a Symbol.for key so every copy of
+ * The state lives on a global under a Symbol.for key so every copy of
  * this module shares it.
  */
+const _global =
+    typeof globalThis !== 'undefined'
+        ? globalThis
+        : typeof window !== 'undefined'
+          ? window
+          : {};
+
 const CONFIG_KEY = Symbol.for('openstack-uicore-foundation.config');
 
-const readConfig = () => globalThis[CONFIG_KEY] || {};
+const readConfig = () => _global[CONFIG_KEY] || {};
 
 export const setConfig = (next) => {
     const source = next && typeof next === 'object' && !Array.isArray(next) ? next : {};
-    globalThis[CONFIG_KEY] = Object.fromEntries(
+    _global[CONFIG_KEY] = Object.fromEntries(
         Object.entries(source).filter(([, value]) => value !== undefined && value !== ''),
     );
 };
