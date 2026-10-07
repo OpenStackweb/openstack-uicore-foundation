@@ -179,6 +179,7 @@ module.exports = {
         'utils/external-store': './src/utils/external-store.js',
         'utils/theme': './src/components/mui/MuiBaseCustomTheme.js',
         'utils/lazy-with-reload': './src/utils/lazy-with-reload.js',
+        'utils/pdf': './src/utils/pdf/index.js',
     },
     output: {
         path: path.resolve(__dirname, 'lib'),
