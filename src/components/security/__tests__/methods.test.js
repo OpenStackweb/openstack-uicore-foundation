@@ -3,7 +3,14 @@ import {
     AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR,
 } from '../constants';
 
-import { refreshAccessToken, retryWithBackoff } from '../methods';
+import {
+    refreshAccessToken,
+    retryWithBackoff,
+    getAccessToken,
+    ACCESS_TOKEN_SKEW_TIME,
+    ACCESS_TOKEN_REFRESH_AHEAD_SECS,
+    ACCESS_TOKEN_REFRESH_SPREAD_MS,
+} from '../methods';
 
 // Mock utils/methods imports used by security/methods
 jest.mock('../../../utils/methods', () => ({
@@ -17,6 +24,7 @@ jest.mock('../../../utils/methods', () => ({
     putOnLocalStorage: jest.fn(),
     retryPromise: jest.fn(),
     setSessionClearingState: jest.fn(),
+    isClearingSessionState: jest.fn(() => false),
 }));
 
 jest.mock('../../../utils/crypto', () => ({
@@ -53,7 +61,13 @@ jest.mock('../actions', () => ({
     SET_LOGGED_USER: 'SET_LOGGED_USER',
 }));
 
-const { setSessionClearingState } = require('../../../utils/methods');
+const {
+    setSessionClearingState,
+    getFromLocalStorage,
+    putOnLocalStorage,
+    removeFromLocalStorage,
+    retryPromise,
+} = require('../../../utils/methods');
 
 // Helper to set window globals needed by methods.js
 const setupWindowGlobals = () => {
@@ -368,5 +382,210 @@ describe('retryWithBackoff', () => {
         expect(retryDelays).toEqual([100, 200]);
 
         setTimeoutSpy.mockRestore();
+    });
+});
+
+describe('getAccessToken background refresh', () => {
+    // moment().unix() is mocked to 1000
+    const NOW = 1000;
+    const EXPIRES_IN = 7200;
+    const LIFETIME = EXPIRES_IN - ACCESS_TOKEN_SKEW_TIME;
+    // first second of the background refresh window
+    const SOFT_EXPIRY_ELAPSED = LIFETIME - ACCESS_TOKEN_REFRESH_AHEAD_SECS;
+    const realSetImmediate = jest.requireActual('timers').setImmediate;
+    const flushPromises = () => new Promise(resolve => realSetImmediate(resolve));
+
+    let storage;
+
+    const storeAuthInfoRaw = (authInfo) => {
+        storage.authInfo = JSON.stringify(authInfo);
+    };
+
+    const readAuthInfo = () => JSON.parse(storage.authInfo);
+
+    const authInfoWithElapsed = (elapsedSecs, expiresIn = EXPIRES_IN) => ({
+        accessToken: 'current-access-token',
+        expiresIn,
+        accessTokenUpdatedAt: NOW - elapsedSecs,
+        refreshToken: 'current-refresh-token',
+    });
+
+    const okRefreshResponse = () => ({
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+            access_token: 'new-access-token',
+            expires_in: EXPIRES_IN,
+        }),
+    });
+
+    beforeEach(() => {
+        storage = {};
+        // storeAuthInfo stamps accessTokenUpdatedAt with Date.now()
+        jest.setSystemTime(NOW * 1000);
+        getFromLocalStorage.mockImplementation((key) => storage[key] ?? null);
+        putOnLocalStorage.mockImplementation((key, value) => { storage[key] = value; });
+        removeFromLocalStorage.mockImplementation((key) => { delete storage[key]; });
+        retryPromise.mockResolvedValue(true);
+        jest.spyOn(Math, 'random').mockReturnValue(0.5);
+        global.fetch = jest.fn().mockResolvedValue(okRefreshResponse());
+    });
+
+    afterEach(async () => {
+        // let a pending background refresh settle so it does not leak into the next test
+        jest.runOnlyPendingTimers();
+        await flushPromises();
+        Math.random.mockRestore();
+    });
+
+    it('does not refresh nor schedule anything while the token is outside the refresh window', async () => {
+        storeAuthInfoRaw(authInfoWithElapsed(SOFT_EXPIRY_ELAPSED - 1));
+
+        await expect(getAccessToken()).resolves.toBe('current-access-token');
+
+        expect(jest.getTimerCount()).toBe(0);
+        expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    it('returns the current token and refreshes it after a random delay inside the refresh window', async () => {
+        storeAuthInfoRaw(authInfoWithElapsed(SOFT_EXPIRY_ELAPSED));
+        const delay = ACCESS_TOKEN_REFRESH_SPREAD_MS / 2; // Math.random() = 0.5
+
+        await expect(getAccessToken()).resolves.toBe('current-access-token');
+        expect(global.fetch).not.toHaveBeenCalled();
+
+        jest.advanceTimersByTime(delay - 1);
+        await flushPromises();
+        expect(global.fetch).not.toHaveBeenCalled();
+
+        jest.advanceTimersByTime(1);
+        await flushPromises();
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+        expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toMatchObject({
+            grant_type: 'refresh_token',
+            refresh_token: 'current-refresh-token',
+        });
+        expect(readAuthInfo()).toMatchObject({
+            accessToken: 'new-access-token',
+            accessTokenUpdatedAt: NOW + delay / 1000,
+            refreshToken: 'current-refresh-token',
+        });
+    });
+
+    it('spreads the background refresh across [0, spread) using Math.random', async () => {
+        storeAuthInfoRaw(authInfoWithElapsed(SOFT_EXPIRY_ELAPSED));
+        Math.random.mockReturnValue(0);
+
+        await getAccessToken();
+        jest.advanceTimersByTime(0);
+        await flushPromises();
+
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('schedules a single background refresh for several calls in the same tab', async () => {
+        storeAuthInfoRaw(authInfoWithElapsed(SOFT_EXPIRY_ELAPSED + 10));
+
+        await getAccessToken();
+        await getAccessToken();
+        await getAccessToken();
+        expect(jest.getTimerCount()).toBe(1);
+
+        jest.advanceTimersByTime(ACCESS_TOKEN_REFRESH_SPREAD_MS);
+        await flushPromises();
+
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('skips the background refresh when another tab already stored a newer token', async () => {
+        storeAuthInfoRaw(authInfoWithElapsed(SOFT_EXPIRY_ELAPSED));
+
+        await getAccessToken();
+        // another tab refreshes first and writes the shared storage
+        storeAuthInfoRaw({ ...authInfoWithElapsed(0), accessToken: 'other-tab-access-token' });
+
+        jest.advanceTimersByTime(ACCESS_TOKEN_REFRESH_SPREAD_MS);
+        await flushPromises();
+
+        expect(global.fetch).not.toHaveBeenCalled();
+        expect(readAuthInfo().accessToken).toBe('other-tab-access-token');
+    });
+
+    it('still refreshes synchronously once the token is past its expiry', async () => {
+        storeAuthInfoRaw(authInfoWithElapsed(LIFETIME));
+
+        await expect(getAccessToken()).resolves.toBe('new-access-token');
+
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+        expect(jest.getTimerCount()).toBe(0);
+    });
+
+    it('keeps the current token and does not retry when the background refresh hits a transient error', async () => {
+        storeAuthInfoRaw(authInfoWithElapsed(SOFT_EXPIRY_ELAPSED));
+        const before = storage.authInfo;
+        global.fetch = jest.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+
+        await getAccessToken();
+        jest.advanceTimersByTime(ACCESS_TOKEN_REFRESH_SPREAD_MS);
+        await flushPromises();
+
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+        expect(storage.authInfo).toBe(before);
+        expect(setSessionClearingState).not.toHaveBeenCalled();
+        expect(jest.getTimerCount()).toBe(0);
+
+        // a later call inside the window schedules a new attempt
+        global.fetch = jest.fn().mockResolvedValue(okRefreshResponse());
+        await getAccessToken();
+        jest.advanceTimersByTime(ACCESS_TOKEN_REFRESH_SPREAD_MS);
+        await flushPromises();
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+        expect(readAuthInfo().accessToken).toBe('new-access-token');
+    });
+
+    it('leaves the logout to the hard expiry path when the background refresh token is rejected', async () => {
+        storeAuthInfoRaw(authInfoWithElapsed(SOFT_EXPIRY_ELAPSED));
+        const before = storage.authInfo;
+        global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 400, statusText: 'Bad Request' });
+
+        await expect(getAccessToken()).resolves.toBe('current-access-token');
+        jest.advanceTimersByTime(ACCESS_TOKEN_REFRESH_SPREAD_MS);
+        await flushPromises();
+
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+        expect(storage.authInfo).toBe(before);
+        // refreshAccessToken sets it to true, the background path restores the previous value
+        expect(setSessionClearingState.mock.calls).toEqual([[true], [false]]);
+    });
+
+    it('caps the refresh window to a quarter of a short token lifetime', async () => {
+        const expiresIn = 300; // lifetime 240s, window 60s
+        storeAuthInfoRaw(authInfoWithElapsed(100, expiresIn));
+
+        await getAccessToken();
+        expect(jest.getTimerCount()).toBe(0);
+
+        storeAuthInfoRaw(authInfoWithElapsed(180, expiresIn));
+        await getAccessToken();
+        expect(jest.getTimerCount()).toBe(1);
+    });
+
+    it('does not schedule a background refresh without a refresh token', async () => {
+        const { refreshToken, ...withoutRefreshToken } = authInfoWithElapsed(SOFT_EXPIRY_ELAPSED);
+        storeAuthInfoRaw(withoutRefreshToken);
+
+        await expect(getAccessToken()).resolves.toBe('current-access-token');
+
+        expect(jest.getTimerCount()).toBe(0);
+    });
+
+    it('does not schedule a background refresh on the implicit flow', async () => {
+        global.window.OAUTH2_FLOW = 'token id_token';
+        storeAuthInfoRaw(authInfoWithElapsed(SOFT_EXPIRY_ELAPSED));
+
+        await expect(getAccessToken()).resolves.toBe('current-access-token');
+
+        expect(jest.getTimerCount()).toBe(0);
+        expect(readAuthInfo().accessToken).toBe('current-access-token');
     });
 });
