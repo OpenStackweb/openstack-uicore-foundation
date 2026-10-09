@@ -8,6 +8,7 @@ import {
     putOnLocalStorage,
     retryPromise,
     setSessionClearingState,
+    isClearingSessionState,
 } from "../../utils/methods";
 import moment from "moment-timezone";
 import request from 'superagent/lib/client';
@@ -43,6 +44,11 @@ const GET_TOKEN_SILENTLY_LOCK_KEY = 'openstackuicore.lock.getTokenSilently';
 const GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT = 6000;
 const NONCE_LEN = 16;
 export const ACCESS_TOKEN_SKEW_TIME = 60;
+// a still valid token starts being refreshed in background this many seconds before it expires
+export const ACCESS_TOKEN_REFRESH_AHEAD_SECS = 300;
+// the background refresh runs after a random delay in [0, spread) so clients that ask for a
+// token on the same shared event (e.g. a real time push) do not refresh on the same second
+export const ACCESS_TOKEN_REFRESH_SPREAD_MS = 30000;
 export const RESPONSE_TYPE_IMPLICIT = "token id_token";
 export const RESPONSE_TYPE_CODE = 'code';
 const AUTH_INFO = 'authInfo';
@@ -294,15 +300,19 @@ export const retryWithBackoff = async (fn, maxRetries = MAX_RETRIES, baseDelayMs
     }
 };
 
-const processRefreshToken = async (flow, refreshToken) => {
+const canRefreshAccessToken = (flow) => flow === RESPONSE_TYPE_CODE && useOAuth2RefreshToken();
 
-    if (flow === RESPONSE_TYPE_CODE && useOAuth2RefreshToken()) {
+const processRefreshToken = async (flow, refreshToken, withRetry = true) => {
+
+    if (canRefreshAccessToken(flow)) {
         if (!refreshToken) {
             clearAuthInfo();
             throw Error(AUTH_ERROR_MISSING_REFRESH_TOKEN);
         }
 
-        let response = await retryWithBackoff(() => refreshAccessToken(refreshToken));
+        let response = withRetry ?
+            await retryWithBackoff(() => refreshAccessToken(refreshToken)) :
+            await refreshAccessToken(refreshToken);
         let {access_token, expires_in, refresh_token, id_token} = response;
         if (typeof refresh_token === 'undefined') {
             refresh_token = null; // not using rotate policy
@@ -338,6 +348,13 @@ const _getAccessToken = async () => {
     if (timeElapsedSecs >= expiresIn || accessToken == null) {
         console.log(`openstack-uicore-foundation::Security::methods::_getAccessToken  access token expired, refreshing it ...`);
         accessToken = await processRefreshToken(flow, refreshToken);
+    } else if (
+        refreshToken &&
+        canRefreshAccessToken(flow) &&
+        timeElapsedSecs >= expiresIn - getRefreshAheadSecs(expiresIn)
+    ) {
+        // still valid but about to expire: hand it back now and refresh it in background
+        scheduleBackgroundRefresh();
     }
     return accessToken;
 }
@@ -374,34 +391,110 @@ export const setAccessTokenResolver = (resolver) => {
 };
 
 /**
+ * Seconds before expiry at which a still valid token starts being refreshed in background.
+ * Capped to a quarter of the token lifetime so a short lived token is not refreshed right
+ * after being issued.
+ * @param lifetimeSecs
+ * @returns {number}
+ */
+const getRefreshAheadSecs = (lifetimeSecs) =>
+    Math.min(ACCESS_TOKEN_REFRESH_AHEAD_SECS, Math.floor(lifetimeSecs / 4));
+
+let backgroundRefreshTimer = null;
+
+/**
+ * Schedules one background refresh per tab after a random delay. Callers that ask for a token
+ * on the same shared event (a real time push reaches every open tab at once) would otherwise
+ * all refresh on the same second once their tokens expire.
+ */
+const scheduleBackgroundRefresh = () => {
+    if (backgroundRefreshTimer !== null || typeof window === 'undefined') return;
+    const delay = Math.floor(Math.random() * ACCESS_TOKEN_REFRESH_SPREAD_MS);
+    console.log(`openstack-uicore-foundation::Security::methods::scheduleBackgroundRefresh in ${delay} ms`);
+    backgroundRefreshTimer = setTimeout(async () => {
+        try {
+            await withAccessTokenLock(_backgroundRefresh);
+        } catch (err) {
+            // the current token is still valid; the hard expiry path refreshes it if this keeps failing
+            console.log(`openstack-uicore-foundation::Security::methods::scheduleBackgroundRefresh error`, err);
+        } finally {
+            backgroundRefreshTimer = null;
+        }
+    }, delay);
+}
+
+/**
+ * Runs under the access token lock.
+ * @returns {Promise<void>}
+ * @private
+ */
+const _backgroundRefresh = async () => {
+    const authInfo = getAuthInfo();
+    if (!authInfo || !authInfo.accessToken || !authInfo.refreshToken) return;
+
+    const {accessTokenUpdatedAt, refreshToken} = authInfo;
+    const expiresIn = authInfo.expiresIn - ACCESS_TOKEN_SKEW_TIME;
+    const timeElapsedSecs = moment().unix() - accessTokenUpdatedAt;
+
+    if (timeElapsedSecs < expiresIn - getRefreshAheadSecs(expiresIn)) {
+        // another tab (or a call that hit the hard expiry) already stored a newer token
+        console.log(`openstack-uicore-foundation::Security::methods::_backgroundRefresh token already refreshed`);
+        return;
+    }
+
+    console.log(`openstack-uicore-foundation::Security::methods::_backgroundRefresh refreshing access token ...`);
+    const wasClearingSessionState = isClearingSessionState();
+    try {
+        // single attempt: retrying with backoff would hold the lock for every tab while the
+        // current token is still valid
+        await processRefreshToken(getOAuth2Flow(), refreshToken, false);
+    } catch (err) {
+        if (err.message && err.message.startsWith(AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR)) {
+            // refreshAccessToken flags the session as being cleared on a rejected refresh token,
+            // which makes initLogin skip the re-login. Nobody handles this error here, so leave
+            // the logout to the hard expiry path, which surfaces it to the caller.
+            setSessionClearingState(wasClearingSessionState);
+        }
+        throw err;
+    }
+}
+
+/**
+ * Runs fn holding the access token lock, which is shared across tabs.
+ * @param fn
+ * @returns {Promise<*>}
+ */
+const withAccessTokenLock = async (fn) => {
+    if (typeof navigator !== 'undefined' && navigator.locks) {
+        return await navigator.locks.request(GET_TOKEN_SILENTLY_LOCK_KEY, async lock => {
+            console.log(`openstack-uicore-foundation::Security::methods::withAccessTokenLock web lock api`, lock);
+            return await fn();
+        });
+    }
+    if (
+        await retryPromise(
+            () => Lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT),
+            10
+        )
+    ) {
+        try {
+            return await fn();
+        } finally {
+            await Lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
+        }
+    }
+    // error on locking
+    throw Error(AUTH_ERROR_LOCK_ACQUIRE_ERROR);
+}
+
+/**
  * @returns {Promise<*|undefined>}
  */
 export const getAccessToken = async () => {
     const resolveAccessToken = _global[ACCESS_TOKEN_RESOLVER_KEY];
     if (resolveAccessToken) return resolveAccessToken();
 
-    if (typeof navigator !== 'undefined' && navigator.locks) {
-        return await navigator.locks.request(GET_TOKEN_SILENTLY_LOCK_KEY, async lock => {
-            console.log(`openstack-uicore-foundation::Security::methods::getAccessToken web lock api`, lock);
-            return await _getAccessToken();
-        });
-    } else {
-        if (
-            await retryPromise(
-                () => Lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, GET_TOKEN_SILENTLY_LOCK_KEY_TIMEOUT),
-                10
-            )
-        ) {
-            try {
-                return await _getAccessToken();
-            } finally {
-                await Lock.releaseLock(GET_TOKEN_SILENTLY_LOCK_KEY);
-            }
-        } else {
-            // error on locking
-            throw Error(AUTH_ERROR_LOCK_ACQUIRE_ERROR);
-        }
-    }
+    return withAccessTokenLock(_getAccessToken);
 }
 
 /**
