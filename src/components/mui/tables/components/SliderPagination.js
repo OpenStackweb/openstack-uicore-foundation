@@ -93,9 +93,16 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
             border: "none",
             background: "none",
             px: 1.5,
-            height: 40,
+            height: 34,
+            borderRadius: "17px",
             cursor: "pointer",
-            whiteSpace: "nowrap"
+            whiteSpace: "nowrap",
+            transition: (theme) =>
+              theme.transitions.create("background-color", {
+                duration: theme.transitions.duration.shortest
+              }),
+            "&:hover": { bgcolor: "action.hover" },
+            "@media (hover: none)": { "&:hover": { bgcolor: "transparent" } }
           }}
         >
           {T.translate("mui_table.page_of", {
