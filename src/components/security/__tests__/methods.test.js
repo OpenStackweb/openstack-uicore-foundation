@@ -543,8 +543,9 @@ describe('getAccessToken background refresh', () => {
         expect(readAuthInfo().accessToken).toBe('new-access-token');
     });
 
+    // the rejected refresh token is remembered per module, so these tests use their own tokens
     it('leaves the logout to the hard expiry path when the background refresh token is rejected', async () => {
-        storeAuthInfoRaw(authInfoWithElapsed(SOFT_EXPIRY_ELAPSED));
+        storeAuthInfoRaw({ ...authInfoWithElapsed(SOFT_EXPIRY_ELAPSED), refreshToken: 'revoked-refresh-token-1' });
         const before = storage.authInfo;
         global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 400, statusText: 'Bad Request' });
 
@@ -556,6 +557,83 @@ describe('getAccessToken background refresh', () => {
         expect(storage.authInfo).toBe(before);
         // refreshAccessToken sets it to true, the background path restores the previous value
         expect(setSessionClearingState.mock.calls).toEqual([[true], [false]]);
+    });
+
+    it('does not retry a rejected refresh token in background, but resumes for a new session', async () => {
+        storeAuthInfoRaw({ ...authInfoWithElapsed(SOFT_EXPIRY_ELAPSED), refreshToken: 'revoked-refresh-token-2' });
+        global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 400, statusText: 'Bad Request' });
+
+        await getAccessToken();
+        jest.advanceTimersByTime(ACCESS_TOKEN_REFRESH_SPREAD_MS);
+        await flushPromises();
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+
+        // still inside the window with the same rejected token: nothing is scheduled
+        await expect(getAccessToken()).resolves.toBe('current-access-token');
+        expect(jest.getTimerCount()).toBe(0);
+
+        // a new login brings a new refresh token
+        storeAuthInfoRaw({ ...authInfoWithElapsed(SOFT_EXPIRY_ELAPSED), refreshToken: 'new-login-refresh-token' });
+        global.fetch = jest.fn().mockResolvedValue(okRefreshResponse());
+        await getAccessToken();
+        expect(jest.getTimerCount()).toBe(1);
+    });
+
+    it('still retries a transient background failure on a later call', async () => {
+        storeAuthInfoRaw(authInfoWithElapsed(SOFT_EXPIRY_ELAPSED));
+        global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 503, statusText: 'Service Unavailable' });
+
+        await getAccessToken();
+        jest.advanceTimersByTime(ACCESS_TOKEN_REFRESH_SPREAD_MS);
+        await flushPromises();
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+
+        await getAccessToken();
+        expect(jest.getTimerCount()).toBe(1);
+    });
+
+    describe('when the session changes while the background request is in flight', () => {
+        let resolveFetch;
+
+        beforeEach(() => {
+            global.fetch = jest.fn(() => new Promise(resolve => { resolveFetch = resolve; }));
+        });
+
+        const startBackgroundRefresh = async () => {
+            storeAuthInfoRaw(authInfoWithElapsed(SOFT_EXPIRY_ELAPSED));
+            await getAccessToken();
+            jest.advanceTimersByTime(ACCESS_TOKEN_REFRESH_SPREAD_MS);
+            await flushPromises();
+            expect(global.fetch).toHaveBeenCalledTimes(1);
+        };
+
+        it('does not restore the credentials after a logout', async () => {
+            await startBackgroundRefresh();
+
+            // LOGOUT_USER clears the auth info without taking the lock
+            delete storage.authInfo;
+            resolveFetch(okRefreshResponse());
+            await flushPromises();
+
+            expect(storage.authInfo).toBeUndefined();
+        });
+
+        it('does not overwrite a new login', async () => {
+            await startBackgroundRefresh();
+
+            // onUserAuth stores a new session without taking the lock
+            const newLogin = {
+                accessToken: 'new-login-access-token',
+                expiresIn: EXPIRES_IN,
+                accessTokenUpdatedAt: NOW,
+                refreshToken: 'new-login-refresh-token',
+            };
+            storeAuthInfoRaw(newLogin);
+            resolveFetch(okRefreshResponse());
+            await flushPromises();
+
+            expect(readAuthInfo()).toEqual(newLogin);
+        });
     });
 
     it('caps the refresh window to a quarter of a short token lifetime', async () => {

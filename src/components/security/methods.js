@@ -302,7 +302,15 @@ export const retryWithBackoff = async (fn, maxRetries = MAX_RETRIES, baseDelayMs
 
 const canRefreshAccessToken = (flow) => flow === RESPONSE_TYPE_CODE && useOAuth2RefreshToken();
 
-const processRefreshToken = async (flow, refreshToken, withRetry = true) => {
+/**
+ * @param flow
+ * @param refreshToken
+ * @param withRetry retry transient errors with backoff
+ * @param expectedAuthInfo when set, the response is stored only if the stored session is still
+ * this one; returns null otherwise
+ * @returns {Promise<*>}
+ */
+const processRefreshToken = async (flow, refreshToken, withRetry = true, expectedAuthInfo = null) => {
 
     if (canRefreshAccessToken(flow)) {
         if (!refreshToken) {
@@ -313,6 +321,12 @@ const processRefreshToken = async (flow, refreshToken, withRetry = true) => {
         let response = withRetry ?
             await retryWithBackoff(() => refreshAccessToken(refreshToken)) :
             await refreshAccessToken(refreshToken);
+        if (expectedAuthInfo && !isSameSession(getAuthInfo(), expectedAuthInfo)) {
+            // logged out or logged in again while the request was in flight: do not bring the
+            // previous session back
+            console.log(`openstack-uicore-foundation::Security::methods::processRefreshToken session changed, discarding refreshed token`);
+            return null;
+        }
         let {access_token, expires_in, refresh_token, id_token} = response;
         if (typeof refresh_token === 'undefined') {
             refresh_token = null; // not using rotate policy
@@ -350,6 +364,7 @@ const _getAccessToken = async () => {
         accessToken = await processRefreshToken(flow, refreshToken);
     } else if (
         refreshToken &&
+        refreshToken !== rejectedRefreshToken &&
         canRefreshAccessToken(flow) &&
         timeElapsedSecs >= expiresIn - getRefreshAheadSecs(expiresIn)
     ) {
@@ -369,7 +384,21 @@ const _getAccessToken = async () => {
 const getRefreshAheadSecs = (lifetimeSecs) =>
     Math.min(ACCESS_TOKEN_REFRESH_AHEAD_SECS, Math.floor(lifetimeSecs / 4));
 
+/**
+ * Both describe the same session: same refresh token, same access token issue time.
+ * @param authInfo
+ * @param expected
+ * @returns {boolean}
+ */
+const isSameSession = (authInfo, expected) =>
+    !!authInfo &&
+    authInfo.refreshToken === expected.refreshToken &&
+    authInfo.accessTokenUpdatedAt === expected.accessTokenUpdatedAt;
+
 let backgroundRefreshTimer = null;
+// refresh token the IDP rejected on a background refresh; no more background attempts with it,
+// the hard expiry path handles the logout
+let rejectedRefreshToken = null;
 
 /**
  * Schedules one background refresh per tab after a random delay. Callers that ask for a token
@@ -416,13 +445,14 @@ const _backgroundRefresh = async () => {
     try {
         // single attempt: retrying with backoff would hold the lock for every tab while the
         // current token is still valid
-        await processRefreshToken(getOAuth2Flow(), refreshToken, false);
+        await processRefreshToken(getOAuth2Flow(), refreshToken, false, authInfo);
     } catch (err) {
         if (err.message && err.message.startsWith(AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR)) {
             // refreshAccessToken flags the session as being cleared on a rejected refresh token,
             // which makes initLogin skip the re-login. Nobody handles this error here, so leave
             // the logout to the hard expiry path, which surfaces it to the caller.
             setSessionClearingState(wasClearingSessionState);
+            rejectedRefreshToken = refreshToken;
         }
         throw err;
     }
