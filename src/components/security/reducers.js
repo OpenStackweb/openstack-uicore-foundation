@@ -23,7 +23,8 @@ import {
 
 import IdTokenVerifier from 'idtoken-verifier';
 
-import {clearAuthInfo, getIdToken, getOAuth2ClientId, getOAuth2IDPBaseUrl} from './methods';
+import {clearAuthInfo, getIdToken} from './methods';
+import {getOAuth2ClientId, getOAuth2IDPBaseUrl} from '../../utils/config';
 
 const DEFAULT_STATE = {
     isLoggedUser: false,

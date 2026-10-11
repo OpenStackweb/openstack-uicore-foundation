@@ -169,6 +169,7 @@ module.exports = {
         'utils/fragment-parser': './src/components/fragment-parser.js',
         'utils/use-fit-text': './src/components/use-fit-text.js',
         'utils/actions': './src/utils/actions.js',
+        'utils/config': './src/utils/config.js',
         'utils/methods': './src/utils/methods.js',
         'utils/query-actions': './src/utils/query-actions.js',
         'utils/reducers': './src/utils/reducers.js',
