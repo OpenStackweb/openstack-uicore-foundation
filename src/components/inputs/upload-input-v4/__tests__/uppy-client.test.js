@@ -330,3 +330,136 @@ describe('buildUppy, single uploads', () => {
     expect(onTicket.mock.calls[1][0].id).toBe(bad);
   });
 });
+
+describe('buildUppy, multipart uploads', () => {
+  // 11 MiB over a 10 MiB threshold: three parts of 5, 5 and 1 MiB.
+  const big = (name = 'talk.mp4') => fileOf(name, 11 * MiB, 'video/mp4');
+  const startMultipart = (options = {}) => start({ multipartThreshold: 10 * MiB, ...options });
+
+  test('signs, PUTs and completes each part at the declared part size, then delivers', async () => {
+    startMultipart();
+    const id = add(uppy, big());
+    await delivered();
+
+    const create = api.calls('POST', /^\/uploads\/multipart$/)[0].body;
+    expect(create).toEqual({
+      filename: 'talk.mp4', content_type: 'video/mp4', size: 11 * MiB, md5: 'md5-talk.mp4', part_size: 5 * MiB,
+    });
+    const sizes = api.puts().map((put) => put.size);
+    expect(sizes).toEqual([5 * MiB, 5 * MiB, MiB]);
+    sizes.slice(0, -1).forEach((size) => expect(size).toBe(create.part_size));
+    expect(api.calls('POST', /sign-part$/).map((r) => r.body).sort((x, y) => x.part_number - y.part_number))
+      .toEqual([{ part_number: 1 }, { part_number: 2 }, { part_number: 3 }]);
+    const complete = api.calls('POST', /^\/uploads\/multipart\/t1\/complete$/);
+    expect(complete).toHaveLength(1);
+    expect(complete[0].body.parts.map((p) => p.PartNumber)).toEqual([1, 2, 3]);
+    complete[0].body.parts.forEach((part) => expect(Object.keys(part).sort()).toEqual(['ETag', 'PartNumber']));
+    const [file, body] = onTicket.mock.calls[0];
+    expect(file.id).toBe(id);
+    expect(body).toBe(complete[0].response);
+  });
+
+  test('a failed part PUT retries only that part', async () => {
+    api.respond('PUT', /partNumber=2$/, () => api.reply(500), { times: 1 });
+    startMultipart();
+    add(uppy, big());
+    await delivered();
+
+    expect(api.calls('POST', /^\/uploads\/multipart$/)).toHaveLength(1);
+    expect(api.puts().map((put) => put.url.split('=').pop()).sort()).toEqual(['1', '2', '2', '3']);
+  });
+
+  test('removing a file while its create is in flight lets the create finish, then DELETEs that ticket', async () => {
+    const create = deferred();
+    api.respond('POST', /^\/uploads\/multipart$/, (req) => create.promise.then(() => api.reply(201, {
+      ticket_id: 't1', upload_id: 'upload-t1', key: `upload/2026-10-11/t1/${req.body.filename}`,
+    })), { times: 1 });
+    startMultipart();
+    const id = add(uppy, big());
+    await waitUntil(() => api.calls('POST', /^\/uploads\/multipart$/).length === 1, 'the create in flight');
+
+    uppy.removeFile(id);
+    create.resolve();
+    await waitUntil(() => deletes().length === 1, 'the cleanup');
+    await tick();
+
+    expect(api.calls('POST', /^\/uploads\/multipart$/)[0].signalled).toBe(false);
+    expect(deletes()).toEqual(['/uploads/t1']);
+    expect(api.calls('POST', /sign-part$/)).toHaveLength(0);
+    expect(onTicket).not.toHaveBeenCalled();
+  });
+
+  test('a transient completion failure is retried without re-uploading', async () => {
+    api.respond('POST', /^\/uploads\/multipart\/t1\/complete$/, () => api.reply(503, { message: 'busy' }), { times: 1 });
+    startMultipart();
+    add(uppy, big());
+    await delivered();
+
+    expect(api.calls('POST', /^\/uploads\/multipart$/)).toHaveLength(1);
+    expect(api.puts()).toHaveLength(3);
+    expect(api.calls('POST', /\/complete$/)).toHaveLength(2);
+    expect(onTicket).toHaveBeenCalledTimes(1);
+  });
+
+  test('a 412 on completion is not retried; the file errors and its upload is aborted', async () => {
+    api.respond('POST', /^\/uploads\/multipart\/t1\/complete$/, () => api.reply(412, { message: 'invalid part' }), { times: 1 });
+    startMultipart();
+    const id = add(uppy, big());
+    await failed();
+    await waitUntil(() => deletes().length === 1, 'the abort');
+
+    expect(api.calls('POST', /\/complete$/)).toHaveLength(1);
+    expect(errors[0]).toEqual({ id, message: 'invalid part' });
+    expect(deletes()).toEqual(['/uploads/t1']);
+    expect(onTicket).not.toHaveBeenCalled();
+  });
+
+  test('a delivered multipart ticket is never DELETEd, by removeFile or by destroy', async () => {
+    startMultipart();
+    const id = add(uppy, big());
+    await delivered();
+
+    uppy.removeFile(id);
+    uppy.destroy();
+    uppy = undefined;
+    await tick();
+
+    expect(deletes()).toEqual([]);
+  });
+
+  test('removing a file while its completion is in flight DELETEs once and delivers nothing', async () => {
+    const pending = deferred();
+    api.respond('POST', /^\/uploads\/multipart\/t1\/complete$/, () => pending.promise, { times: 1 });
+    startMultipart();
+    const id = add(uppy, big());
+    await waitUntil(() => api.calls('POST', /t1\/complete$/).length === 1, 'the completion in flight');
+
+    uppy.removeFile(id);
+    pending.resolve(api.reply(200, api.contractA('t1')));
+    await waitUntil(() => deletes().length === 1, 'the cleanup');
+    await tick();
+
+    expect(deletes()).toEqual(['/uploads/t1']);
+    expect(onTicket).not.toHaveBeenCalled();
+  });
+
+  test('resuming a paused upload lists the stored parts and does not PUT them again', async () => {
+    const parts23 = deferred();
+    api.respond('PUT', /partNumber=[23]$/, () => parts23.promise, { times: 2 });
+    api.respond('GET', /^\/uploads\/multipart\/t1\/parts$/, () => api.reply(200, {
+      parts: [{ PartNumber: 1, Size: 5 * MiB, ETag: '"etag-1"' }],
+    }));
+    startMultipart();
+    const id = add(uppy, big());
+    await waitUntil(() => api.puts().length === 3 && api.puts().find((put) => put.url.endsWith('partNumber=1')).settled, 'part 1 stored and parts 2-3 in flight');
+
+    uppy.pauseResume(id);
+    uppy.pauseResume(id);
+    await delivered();
+
+    expect(api.calls('GET', /\/parts$/)).toHaveLength(1);
+    expect(api.puts().filter((put) => put.url.endsWith('partNumber=1'))).toHaveLength(1);
+    const { parts } = api.calls('POST', /t1\/complete$/)[0].body;
+    expect(parts[0]).toEqual({ PartNumber: 1, ETag: '"etag-1"' });
+  });
+});
