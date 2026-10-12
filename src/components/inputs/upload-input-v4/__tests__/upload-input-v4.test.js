@@ -32,9 +32,9 @@ jest.mock('i18n-react/dist/i18n-react', () => {
   return {
     __esModule: true,
     default: {
-      translate: (key) => {
+      translate: (key, params = {}) => {
         const value = key.split('.').reduce((obj, part) => obj?.[part], en);
-        return value ?? key;
+        return value?.replace(/\{(\w+)\}/g, (match, name) => params[name] ?? match) ?? key;
       }
     }
   };
@@ -186,6 +186,21 @@ describe('UploadInputV4', () => {
     test('does not show delete button when onRemove is not provided', () => {
       render(<UploadInputV4 {...defaultProps} value={files} canDelete={true} />);
       expect(screen.queryAllByRole('button')).toHaveLength(0);
+    });
+  });
+
+  describe('Accessibility', () => {
+    test('every icon button is named for its action and its file', async () => {
+      holdPuts();
+      const { container } = render(
+        <UploadInputV4 {...defaultProps} maxFiles={3} value={[{ filename: 'document.pdf', size: 102400 }]} onRemove={jest.fn()} />
+      );
+      select(container, fileOf('photo.png', 2048, 'image/png'), fileOf('tool.exe', 2048, 'application/octet-stream'));
+
+      expect(await screen.findByRole('button', { name: 'Remove photo.png' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Remove document.pdf' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Dismiss tool.exe' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
     });
   });
 
