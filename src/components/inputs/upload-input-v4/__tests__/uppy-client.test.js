@@ -219,6 +219,20 @@ describe('buildUppy, single uploads', () => {
     expect(onTicket.mock.calls[0][1].path).toBe('upload/2026-10-11/t2/');
   });
 
+  test('retrying a failed PUT DELETEs the abandoned ticket and delivers the new one', async () => {
+    api.respond('PUT', /bucket\.test/, () => api.networkError(), { times: 1 });
+    start();
+    add(uppy, fileOf('a.png', 10));
+    await failed();
+
+    await uppy.retryAll();
+    await delivered();
+
+    // The dropped PUT may still have stored t1's object; only the DELETE purges it.
+    expect(deletes()).toEqual(['/uploads/t1']);
+    expect(onTicket.mock.calls[0][1].path).toBe('upload/2026-10-11/t2/');
+  });
+
   test.each([
     ['a 503', () => api.respond('POST', /^\/uploads\/single\/t1\/complete$/, () => api.reply(503, { message: 'busy' }), { times: 1 })],
     ['a token network failure', () => getAccessToken

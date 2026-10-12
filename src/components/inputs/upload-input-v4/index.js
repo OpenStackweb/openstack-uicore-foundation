@@ -71,8 +71,11 @@ const resolveErrorMessage = (err) => {
     return T.translate('upload_input_v3.network_error');
   }
   if (message.startsWith('AUTH_ERROR')) return T.translate('upload_input_v3.auth_error');
-  // @uppy/aws-s3's message for a non-2xx PUT response
-  if (!message || message === 'Non 2xx') return T.translate('upload_input_v3.upload_failed');
+  // @uppy/aws-s3's message for a non-2xx PUT response, or a file API error with no
+  // message of its own
+  if (!message || message === 'Non 2xx' || (err?.status && !err.fromServer)) {
+    return T.translate('upload_input_v3.upload_failed');
+  }
   return message;
 };
 
@@ -320,6 +323,8 @@ const UploadInputV4 = ({
     const uppyFile = uppy?.getFile(file.id);
     if (!uppyFile) return;  // rejected before Uppy took it: nothing to retry
     setUploadingFiles(prev => [...prev, rowFor(uppyFile)]);
+    // V3 re-added the file on retry, which called onUploadStart again.
+    propsRef.current.onUploadStart?.(uppyFile.data);
     uppy.retryUpload(uppyFile.id).catch(() => { });  // failures arrive as upload-error
   }, [uppy]);
 

@@ -136,6 +136,7 @@ export {MuiBaseCustomTheme} from './mui/MuiBaseCustomTheme'
 // export {default as TextEditorV3} from './inputs/editor-input-v3'
 // export {default as CompanyInputV2} from './inputs/company-input-v2.js'
 // export {default as UploadInputV3} from './inputs/upload-input-v3'                 // @mui/material, @mui/icons-material, @mui/x-date-pickers, spark-md5, dropzone, react-dropzone
+// export {default as UploadInputV4} from './inputs/upload-input-v4'                 // @mui/material, @mui/icons-material, spark-md5, @uppy/core, @uppy/aws-s3
 // export {default as MuiDndList} from './mui/dnd-list'                              // react-beautiful-dnd
 // export {default as MuiSortableTable} from './mui/tables/sortable-table' // react-beautiful-dnd
 // export {default as MuiStripePayment} from './mui/StripePayment'                   // @stripe/react-stripe-js, @stripe/stripe-js
