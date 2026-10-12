@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import Select from 'react-select';
 
 export default class Dropdown extends React.Component {
@@ -83,6 +84,32 @@ export default class Dropdown extends React.Component {
 
     }
 }
+
+Dropdown.propTypes = {
+    /** Echoed back as ev.target.id on change. */
+    id: PropTypes.string.isRequired,
+    options: PropTypes.arrayOf(PropTypes.shape({
+        value: PropTypes.any.isRequired,
+        /** Injected as raw HTML into the option label. */
+        label: PropTypes.string.isRequired
+    })).isRequired,
+    /** An array of option values when isMulti, otherwise a single value or option object. */
+    value: PropTypes.oneOfType([
+        PropTypes.array, PropTypes.object, PropTypes.string, PropTypes.number
+    ]),
+    /** Receives a synthetic { target: { id, value, type: 'dropdown' } }. */
+    onChange: PropTypes.func.isRequired,
+    isMulti: PropTypes.bool,
+    className: PropTypes.string,
+    /** Non-empty renders an .error-label and adds the error class. */
+    error: PropTypes.string,
+    ariaLabelledBy: PropTypes.string,
+    /** Set true to keep className as-is instead of prefixing 'dropdown'. */
+    overrideCSS: PropTypes.bool,
+    disabled: PropTypes.bool,
+    /** Gated on the prop being present, so clearable={false} still enables clearing. */
+    clearable: PropTypes.bool
+};
 
 Dropdown.defaultProps = {
     ariaLabelledBy : null,
