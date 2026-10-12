@@ -17,7 +17,16 @@ import { getAccessToken, initLogOut } from '../../security/methods';
 import { AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR } from '../../security/constants';
 import { getMD5 } from '../../../utils/crypto';
 
+export const MULTIPART_THRESHOLD = 100 * 2 ** 20;   // 100 MiB, Uppy's documented default
+const MIN_PART_SIZE = 5 * 2 ** 20;                   // S3 minimum
+const MAX_PARTS = 1000;                              // one ListParts page; S3 itself allows 10,000
 export const RETRY_DELAYS = [0, 1000, 3000, 5000];
+
+// Uppy evaluates getChunkSize in the MultipartUploader constructor, before
+// createMultipartUpload runs, so the server cannot dictate the part size. The client
+// fixes it here and tells the server, which bounds it and holds every part signature
+// to it. Dividing by 1,000 keeps every upload inside a single ListParts page.
+export const partSizeFor = (size) => Math.max(MIN_PART_SIZE, Math.ceil(size / MAX_PARTS));
 
 // getMD5 rejects with a bare string; everything downstream reads err.message.
 const toError = (err) => (err instanceof Error ? err : new Error(String(err)));
@@ -81,6 +90,7 @@ export const buildUppy = ({
   maxFileSize = null,
   allowedFileTypes = null,
   onTicket,
+  multipartThreshold = MULTIPART_THRESHOLD,
   retryDelays = RETRY_DELAYS,
 }) => {
   // uppy fileID -> { ticketId, uploadId? } for the file's current attempt. Uppy's file id
@@ -153,6 +163,9 @@ export const buildUppy = ({
   });
 
   uppy.use(AwsS3, {
+    shouldUseMultipart: (file) => file.size > multipartThreshold,
+    // Called with the file's Blob, not the Uppy file; both carry .size.
+    getChunkSize: (data) => partSizeFor(data.size),
     retryDelays,
 
     // An aborted single create leaves at most a Redis ticket with a TTL: no object exists
@@ -165,6 +178,60 @@ export const buildUppy = ({
       // r.headers is {'Content-Type': <declared>}, the value the PUT was presigned with.
       // Sending anything else is SignatureDoesNotMatch.
       return { method: 'PUT', url: r.url, fields: {}, headers: r.headers };
+    },
+
+    // NOT signalled, deliberately. If the file is removed while this is in flight, Uppy
+    // clears its own cache entry and never calls abortMultipartUpload for it. Handing the
+    // signal to fetch would reject this await while the server has already opened the S3
+    // upload and written the ticket, and the cleanup below would never run. So the
+    // request finishes and the hook deletes the ticket it just learned about.
+    async createMultipartUpload(file, signal) {
+      const r = await apiFetch(baseUrl, '/uploads/multipart', {
+        method: 'POST',
+        body: JSON.stringify({ ...describe(file), part_size: partSizeFor(file.size) }),
+      });
+      if (signal?.aborted) {
+        await apiFetch(baseUrl, `/uploads/${r.ticket_id}`, { method: 'DELETE' }).catch(() => {});
+        throw new DOMException('Upload cancelled', 'AbortError');
+      }
+      tickets.set(file.id, { ticketId: r.ticket_id, uploadId: r.upload_id });
+      return { uploadId: r.upload_id, key: r.key };
+    },
+
+    // uploadId and key arrive from Uppy but are not forwarded: the server reads them
+    // from the ticket.
+    async signPart(file, { partNumber, signal }) {
+      return apiFetch(baseUrl, `/uploads/multipart/${tickets.get(file.id)?.ticketId}/sign-part`, {
+        method: 'POST', signal, body: JSON.stringify({ part_number: partNumber }),
+      });
+    },
+
+    async listParts(file, { signal }) {
+      const r = await apiFetch(baseUrl, `/uploads/multipart/${tickets.get(file.id)?.ticketId}/parts`, { signal });
+      return r.parts;
+    },
+
+    async completeMultipartUpload(file, { parts, signal }) {
+      const entry = tickets.get(file.id);
+      if (!entry) throw new DOMException('Upload cancelled', 'AbortError');
+      const { ticketId } = entry;                   // captured before the await
+      const r = await completeWithRetry(() => apiFetch(baseUrl, `/uploads/multipart/${ticketId}/complete`, {
+        method: 'POST',
+        signal,
+        body: JSON.stringify({ parts: parts.map(({ PartNumber, ETag }) => ({ PartNumber, ETag })) }),
+      }), signal, retryDelays);
+      settle(file.id, ticketId, r);
+      return { location: r.location };
+    },
+
+    // Reached on removal and on any upload error (Uppy aborts rather than retries).
+    // `uploadId` is Uppy's handle for the attempt being aborted, so a stale abort can
+    // never take a newer attempt's ticket with it.
+    async abortMultipartUpload(file, { uploadId }) {
+      const t = tickets.get(file.id);
+      if (!t || t.uploadId !== uploadId) return;
+      tickets.delete(file.id);
+      await apiFetch(baseUrl, `/uploads/${t.ticketId}`, { method: 'DELETE' }).catch(() => {});
     },
   });
 
