@@ -149,17 +149,26 @@ export const buildUppy = ({
   // Runs to completion before any uploader starts (pre-processors, uploaders,
   // post-processors). A hash taken in `file-added` would lose to autoProceed's upload()
   // and the ticket would store md5: null.
+  // The hash in flight per file id. A file removed and added again keeps its id, so a
+  // hash that settles after that belongs to the old attempt and must not touch the new one.
+  const hashing = new Map();
+
   uppy.addPreProcessor(async (fileIDs) => {
     await Promise.all(fileIDs.map(async (fileID) => {
       const file = uppy.getFile(fileID);
       if (!file) return;
+      const attempt = {};
+      hashing.set(fileID, attempt);
       try {
-        uppy.setFileMeta(fileID, { md5: await getMD5(file.data) });
+        const md5 = await getMD5(file.data);
+        if (hashing.get(fileID) === attempt) uppy.setFileMeta(fileID, { md5 });
       } catch (err) {
         // Per file: a rejection here would fail the batch with no file error set, and
         // retry would find nothing. An errored file is skipped by the uploader and
         // re-hashed on retry.
-        failFile(fileID, err, 'Could not hash file: ');
+        if (hashing.get(fileID) === attempt) failFile(fileID, err, 'Could not hash file: ');
+      } finally {
+        if (hashing.get(fileID) === attempt) hashing.delete(fileID);
       }
     }));
   });
