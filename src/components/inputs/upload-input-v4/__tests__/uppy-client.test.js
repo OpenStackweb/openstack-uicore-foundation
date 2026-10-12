@@ -343,6 +343,27 @@ describe('buildUppy, single uploads', () => {
     expect(onTicket).toHaveBeenCalledTimes(2);
     expect(onTicket.mock.calls[1][0].id).toBe(bad);
   });
+
+  test('a hash from a removed attempt does not touch the same file added again', async () => {
+    const first = deferred();
+    const second = deferred();
+    getMD5.mockImplementationOnce(() => first.promise).mockImplementationOnce(() => second.promise);
+    start();
+    const file = fileOf('a.png', 10);
+    const id = add(uppy, file);
+    await waitUntil(() => getMD5.mock.calls.length === 1, 'the first hash');
+    uppy.removeFile(id);
+    expect(add(uppy, file)).toBe(id);  // same file, same Uppy id
+    await waitUntil(() => getMD5.mock.calls.length === 2, 'the second hash');
+
+    first.reject('old read failed');
+    await tick();
+    second.resolve('md5-new');
+    await delivered();
+
+    expect(errors).toEqual([]);
+    expect(api.calls('POST', /^\/uploads\/single$/).map((r) => r.body.md5)).toEqual(['md5-new']);
+  });
 });
 
 describe('buildUppy, multipart uploads', () => {
