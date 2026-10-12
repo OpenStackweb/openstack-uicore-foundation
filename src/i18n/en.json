@@ -201,7 +201,9 @@
       "auth_error": "Authentication error. Please sign in again.",
       "max_files_reached": "Maximum number of files reached.",
       "loading": "Uploading",
-      "retry": "Retry"
+      "retry": "Retry",
+      "remove_file": "Remove {filename}",
+      "dismiss_file": "Dismiss {filename}"
   },
   "grid_filter": {
     "filter_by": "Filter by ",

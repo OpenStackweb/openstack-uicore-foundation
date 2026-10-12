@@ -454,6 +454,7 @@ const UploadInputV4 = ({
                 <IconButton
                   size="small"
                   onClick={() => handleDeleteUploading(file)}
+                  aria-label={T.translate("upload_input_v3.remove_file", { filename: file.name })}
                   sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
                 >
                   <DeleteIcon />
@@ -502,6 +503,7 @@ const UploadInputV4 = ({
               <IconButton
                 size="small"
                 onClick={() => handleDismissError(file)}
+                aria-label={T.translate("upload_input_v3.dismiss_file", { filename: file.name })}
                 sx={{ color: 'error.main' }}
               >
                 <CloseIcon fontSize="small" />
@@ -561,6 +563,7 @@ const UploadInputV4 = ({
                     <IconButton
                       size="small"
                       onClick={handleRemove(file)}
+                      aria-label={T.translate("upload_input_v3.remove_file", { filename: file.filename })}
                       sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
                     >
                       <DeleteIcon />
