@@ -55,15 +55,17 @@ const apiFetch = async (baseUrl, path, options = {}) => {
     },
   });
   if (!response.ok) {
-    let detail = `File API returned HTTP ${response.status}`;
+    const err = new Error(`File API returned HTTP ${response.status}`);
+    err.status = response.status;
     try {
       const body = await response.json();
-      detail = body.message || body.detail || detail;
+      if (body.message || body.detail) {
+        err.message = body.message || body.detail;
+        err.fromServer = true;  // a message meant for the user, shown as is
+      }
     } catch (e) {
       // not a JSON body: keep the status line
     }
-    const err = new Error(detail);
-    err.status = response.status;
     throw err;
   }
   return response.status === 204 ? null : response.json();
@@ -171,6 +173,13 @@ export const buildUppy = ({
     // An aborted single create leaves at most a Redis ticket with a TTL: no object exists
     // until the PUT, and the unused URL expires.
     async getUploadParameters(file, { signal }) {
+      // A retry after a failed PUT: that PUT may have stored its object before the
+      // connection dropped, and nothing else will purge it.
+      const stale = tickets.get(file.id);
+      if (stale && !stale.uploadId) {
+        tickets.delete(file.id);
+        apiFetch(baseUrl, `/uploads/${stale.ticketId}`, { method: 'DELETE' }).catch(() => {});
+      }
       const r = await apiFetch(baseUrl, '/uploads/single', {
         method: 'POST', signal, body: JSON.stringify(describe(file)),
       });

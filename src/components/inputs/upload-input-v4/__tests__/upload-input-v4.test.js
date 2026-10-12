@@ -322,6 +322,29 @@ describe('UploadInputV4', () => {
       expect(screen.getByText(/Complete/)).toBeInTheDocument();
     });
 
+    test('retry calls onUploadStart again, as V3 did', async () => {
+      api.respond('PUT', /bucket\.test/, () => api.networkError(), { times: 1 });
+      const onUploadStart = jest.fn();
+      const { container } = render(<UploadInputV4 {...defaultProps} onUploadStart={onUploadStart} />);
+      const file = fileOf('video.png', 2048, 'image/png');
+      select(container, file);
+
+      await screen.findByTitle('Retry');
+      act(() => { fireEvent.click(screen.getByTitle('Retry')); });
+
+      expect(onUploadStart).toHaveBeenCalledTimes(2);
+      expect(onUploadStart).toHaveBeenLastCalledWith(file);
+    });
+
+    test('a file API error with no message shows the translated upload failure', async () => {
+      api.respond('POST', /^\/uploads\/single$/, () => api.reply(503));
+      const { container } = render(<UploadInputV4 {...defaultProps} />);
+      select(container, fileOf('video.png', 2048, 'image/png'));
+
+      expect(await screen.findByText('Upload failed. Please retry.')).toBeInTheDocument();
+      expect(screen.queryByText(/HTTP 503/)).not.toBeInTheDocument();
+    });
+
     test('retrying a file Uppy never took only clears its row', async () => {
       const { container } = render(<UploadInputV4 {...defaultProps} />);
       select(container, fileOf('tool.exe', 2048, 'application/octet-stream'));
