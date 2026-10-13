@@ -20,9 +20,13 @@ jest.mock("../../../utils/actions", () => ({
 }));
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import SnackbarNotification from "../SnackbarNotification/index";
+import {
+  NOTIFICATION_DEDUPE_WINDOW,
+  NOTIFICATION_TIMEOUT
+} from "../../../utils/constants";
 
 describe("SnackbarNotification", () => {
   test("renders children", () => {
@@ -69,5 +73,92 @@ describe("SnackbarNotification", () => {
     );
     // The snackbar should not be open
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  describe("pinned errors and replacement", () => {
+    const errorA = { html: "First error", type: "warning" };
+    const errorB = { html: "Second error", type: "error" };
+    const errorC = { html: "Third error", type: "error" };
+    let clearSnackbarMessage;
+
+    const ui = (snackbarMessage) => (
+      <SnackbarNotification
+        snackbarMessage={snackbarMessage}
+        clearSnackbarMessage={clearSnackbarMessage}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+
+    const advance = (ms) =>
+      act(() => {
+        jest.advanceTimersByTime(ms);
+      });
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      clearSnackbarMessage = jest.fn();
+    });
+    afterEach(() => jest.useRealTimers());
+
+    test("keeps an error open after the auto-hide timeout", () => {
+      render(ui(errorA));
+      advance(NOTIFICATION_TIMEOUT);
+      advance(1000);
+      expect(screen.getByText("First error")).toBeInTheDocument();
+    });
+
+    test("still auto-hides a success message", () => {
+      render(ui({ html: "Saved", type: "success" }));
+      advance(NOTIFICATION_TIMEOUT);
+      advance(1000);
+      expect(screen.queryByText("Saved")).not.toBeInTheDocument();
+    });
+
+    test("does not close an error on a click elsewhere", () => {
+      render(ui(errorA));
+      advance(0);
+      fireEvent.click(screen.getByText("App"));
+      advance(500);
+      expect(screen.getByText("First error")).toBeInTheDocument();
+    });
+
+    test("replaces the message on screen with a new one", () => {
+      const { rerender } = render(ui(errorA));
+      rerender(ui(errorB));
+      advance(1000);
+
+      expect(screen.queryByText("First error")).not.toBeInTheDocument();
+      expect(screen.getByText("Second error")).toBeInTheDocument();
+    });
+
+    test("shows only the newest when several arrive at once", () => {
+      const { rerender } = render(ui(errorA));
+      rerender(ui(errorB));
+      rerender(ui(errorC));
+      advance(1000);
+
+      expect(screen.queryByText("Second error")).not.toBeInTheDocument();
+      expect(screen.getByText("Third error")).toBeInTheDocument();
+    });
+
+    test("ignores a repeat within the dedupe window", () => {
+      const { rerender } = render(ui(errorA));
+      rerender(ui({ ...errorA }));
+      advance(1000);
+
+      expect(clearSnackbarMessage).not.toHaveBeenCalled();
+      expect(screen.getByText("First error")).toBeInTheDocument();
+    });
+
+    test("replaces with a repeat that arrives after the dedupe window", () => {
+      const { rerender } = render(ui(errorA));
+      advance(NOTIFICATION_DEDUPE_WINDOW);
+      rerender(ui({ ...errorA }));
+      advance(1000);
+
+      expect(clearSnackbarMessage).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("First error")).toBeInTheDocument();
+    });
   });
 });
