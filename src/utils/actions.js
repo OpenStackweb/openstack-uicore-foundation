@@ -158,9 +158,8 @@ export const authErrorHandler = (
             payload = buildNotifyHandlerWarningPayload(code, "Not Found", msg);
             break;
         case 412:
-            for (const [key, value] of Object.entries(err.response.body.errors)) {
-                msg += isNaN(key) ? `${key}: ` : "";
-                msg += `${value}<br>`;
+            for (const value of Object.values(err.response.body.errors)) {
+                msg += `${Array.isArray(value) ? value.join("<br>") : value}<br>`;
             }
             dispatch({
                 type: VALIDATE,

@@ -1,4 +1,4 @@
-import {authErrorHandler, snackbarErrorHandler, SET_SNACKBAR_MESSAGE} from "../actions";
+import {authErrorHandler, snackbarErrorHandler, SET_SNACKBAR_MESSAGE, VALIDATE} from "../actions";
 import { CLEAR_SESSION_STATE } from "../../components/security/actions";
 import configureMockStore from 'redux-mock-store';
 import request from 'superagent/lib/client';
@@ -84,6 +84,31 @@ describe('Utils Actions', () => {
 
             store.dispatch(authErrorHandler({ status:403 }));
             expect(Swal.fire).toBeCalled();
+        });
+
+        test('412 with field-keyed errors shows messages without keys, one per line', () => {
+            const errors = {
+                start_date: ["The start date field is required."],
+                end_date: ["The end date does not match the format U.", "The end date field must be a date after or equal to start date."]
+            };
+            const notify = jest.fn(() => ({ type: "NOTIFY" }));
+
+            store.dispatch(authErrorHandler({ status: 412, response: { body: { errors } } }, null, notify));
+
+            expect(notify.mock.calls[0][0].html).toBe(
+                "The start date field is required.<br>" +
+                "The end date does not match the format U.<br>The end date field must be a date after or equal to start date.<br>"
+            );
+            expect(store.getActions()).toContainEqual({ type: VALIDATE, payload: { errors } });
+        });
+
+        test('412 with an array of errors shows one message per line', () => {
+            const errors = ["cart id is null", "file param not set!"];
+            const notify = jest.fn(() => ({ type: "NOTIFY" }));
+
+            store.dispatch(authErrorHandler({ status: 412, response: { body: { errors } } }, null, notify));
+
+            expect(notify.mock.calls[0][0].html).toBe("cart id is null<br>file param not set!<br>");
         });
     });
 
