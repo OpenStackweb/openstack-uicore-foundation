@@ -19,7 +19,10 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import SnackbarNotificationContext from "./Context";
 export { useSnackbarMessage } from "./Context";
-import { NOTIFICATION_TIMEOUT } from "../../../utils/constants";
+import {
+  NOTIFICATION_DEDUPE_WINDOW,
+  NOTIFICATION_TIMEOUT
+} from "../../../utils/constants";
 import { empty } from "../../../utils/methods";
 import { clearSnackbarMessage } from "../../../utils/actions";
 
@@ -35,18 +38,38 @@ const SnackbarNotification = ({
   clearSnackbarMessage
 }) => {
   const [open, setOpen] = useState(false);
-  const [msgData, setMsgData] = useState({});
+  // the message on screen, then the newest one waiting to replace it
+  const [messages, setMessages] = useState([]);
+  const [current] = messages;
+  const msgData = current || {};
+  const isSuccess = msgData.type === "success";
+  const addMessage = (msg) =>
+    setMessages((prev) => {
+      const now = Date.now();
+      // skip a repeat that arrived within the dedupe window
+      const isRepeat = prev.some(
+        (m) =>
+          m.html === msg.html &&
+          m.type === msg.type &&
+          now - m.receivedAt < NOTIFICATION_DEDUPE_WINDOW
+      );
+      if (isRepeat) return prev;
+      const next = { ...msg, receivedAt: now };
+      return prev.length ? [prev[0], next] : [next];
+    });
   // this two methods are for on-demand messaging
-  const successMessage = (msg) => setMsgData({ html: msg, type: "success" });
-  const errorMessage = (msg) => setMsgData({ html: msg, type: "warning" });
+  const successMessage = (msg) => addMessage({ html: msg, type: "success" });
+  const errorMessage = (msg) => addMessage({ html: msg, type: "warning" });
   const messageContext = useMemo(() => ({ successMessage, errorMessage }), []);
 
   const clearMessage = () => {
     clearSnackbarMessage();
-    setMsgData({});
+    setMessages(([, ...rest]) => rest);
   };
 
-  const onClose = () => {
+  const onClose = (event, reason) => {
+    // errors stay until dismissed
+    if (reason === "clickaway" && !isSuccess) return;
     setOpen(false);
   };
 
@@ -58,12 +81,17 @@ const SnackbarNotification = ({
     if (!empty(msgData.html)) {
       setOpen(true);
     }
-  }, [msgData]);
+  }, [current]);
+
+  // a newer message closes the one on screen
+  useEffect(() => {
+    if (messages.length > 1) setOpen(false);
+  }, [messages]);
 
   // when snackbarMessage changes in base-reducer, we trigger the snackbar
   useEffect(() => {
     if (!empty(snackbarMessage?.html)) {
-      setMsgData(snackbarMessage);
+      addMessage(snackbarMessage);
     }
   }, [snackbarMessage]);
 
@@ -74,7 +102,7 @@ const SnackbarNotification = ({
         onClose={onClose}
         slotProps={{ transition: { onExited: handleExited } }}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        autoHideDuration={NOTIFICATION_TIMEOUT}
+        autoHideDuration={isSuccess ? NOTIFICATION_TIMEOUT : null}
       >
         <Alert
           onClose={onClose}
