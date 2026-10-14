@@ -20,7 +20,7 @@ jest.mock("../../../utils/actions", () => ({
 }));
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import SnackbarNotification from "../SnackbarNotification/index";
 
@@ -69,5 +69,42 @@ describe("SnackbarNotification", () => {
     );
     // The snackbar should not be open
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  test("copies an error as plain text with its details", () => {
+    const writeText = jest.fn();
+    Object.assign(navigator, { clipboard: { writeText } });
+    render(
+      <SnackbarNotification
+        snackbarMessage={{
+          html: "Start date is required.<br>End date is invalid.<br>",
+          type: "warning",
+          details: "Request: PUT /api/v1/summits/1 (412)"
+        }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+
+    expect(writeText).toHaveBeenCalledWith(
+      "Start date is required.\nEnd date is invalid.\n\nRequest: PUT /api/v1/summits/1 (412)"
+    );
+  });
+
+  test("keeps only the close button on a success message", () => {
+    render(
+      <SnackbarNotification
+        snackbarMessage={{ html: "Saved", type: "success" }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+
+    expect(screen.queryByLabelText("general.copy_error")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Close")).toBeInTheDocument();
   });
 });
