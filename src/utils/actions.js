@@ -18,10 +18,10 @@ URI.escapeQuerySpace = false;
 let http = request;
 import Swal from 'sweetalert2';
 import T from "i18n-react/dist/i18n-react";
-import { isClearingSessionState, setSessionClearingState, getCurrentPathName } from './methods';
+import { isClearingSessionState, setSessionClearingState, getCurrentPathName, formatEpoch } from './methods';
 import { CLEAR_SESSION_STATE } from '../components/security/actions';
 import { doLogin, initLogOut } from '../components/security/methods';
-import {CODE_200} from "./constants";
+import {CODE_200, MILLISECONDS_IN_SECOND} from "./constants";
 
 export const GENERIC_ERROR  = "Yikes. Something seems to be broken. Our web team has been notified, and we apologize for the inconvenience.";
 export const RESET_LOADING  = 'RESET_LOADING';
@@ -56,8 +56,26 @@ const notifySnackbarError = (message, callback) => (dispatch) => {
     if (typeof callback === "function") callback();
 };
 
+// copyable context for bug reports; query strings are dropped since they carry the access_token
+const buildErrorDetails = (err) => {
+    const req = err.response?.req || err;
+    const url = req.url ? req.url.split("?")[0] : "";
+    const status = err.status || (navigator.onLine ? "no response" : "no response, offline");
+    // field names only; the response body can hold debug output
+    const fields = err.status === 412 ? Object.keys(err.response?.body?.errors || {}).filter((key) => isNaN(key)) : [];
+    const now = new Date();
+    return [
+        `Request: ${[req.method, url].filter(Boolean).join(" ")} (${status})`,
+        fields.length ? `Fields: ${fields.join(", ")}` : "",
+        `Page: ${window.location.pathname}`,
+        `Time: ${now.toISOString()} (${formatEpoch(now.getTime() / MILLISECONDS_IN_SECOND, "M/D/YYYY h:mm:ss a [UTC]Z")})`
+    ].filter(Boolean).join("\n");
+};
+
 export const snackbarErrorHandler = (err, res) => (dispatch, state) => {
-    authErrorHandler(err, res, notifySnackbarError)(dispatch, state);
+    const details = buildErrorDetails(err);
+    const notifyWithDetails = (message, callback) => notifySnackbarError({ ...message, details }, callback);
+    authErrorHandler(err, res, notifyWithDetails)(dispatch, state);
 };
 
 export const snackbarSuccessHandler = (message) => (dispatch, state) =>

@@ -14,12 +14,19 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import { Alert, Snackbar, Typography } from "@mui/material";
+import T from "i18n-react/dist/i18n-react";
+import { Alert, IconButton, Snackbar, Tooltip, Typography } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ErrorIcon from "@mui/icons-material/Error";
 import SnackbarNotificationContext from "./Context";
 export { useSnackbarMessage } from "./Context";
-import { NOTIFICATION_TIMEOUT } from "../../../utils/constants";
+import {
+  MILLISECONDS_IN_SECOND,
+  NOTIFICATION_TIMEOUT
+} from "../../../utils/constants";
 import { empty } from "../../../utils/methods";
 import { clearSnackbarMessage } from "../../../utils/actions";
 
@@ -54,6 +61,18 @@ const SnackbarNotification = ({
     clearMessage();
   };
 
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    const html = String(msgData.html).replace(/<br\s*\/?>/gi, "\n");
+    const text = new DOMParser().parseFromString(html, "text/html").body
+      .textContent;
+    navigator.clipboard.writeText(
+      [text.trim(), msgData.details].filter(Boolean).join("\n\n")
+    );
+    setCopied(true);
+    setTimeout(() => setCopied(false), MILLISECONDS_IN_SECOND);
+  };
+
   useEffect(() => {
     if (!empty(msgData.html)) {
       setOpen(true);
@@ -78,6 +97,39 @@ const SnackbarNotification = ({
       >
         <Alert
           onClose={onClose}
+          // a custom action replaces Alert's close button, so errors re-add it
+          action={
+            msgData.type === "success" ? undefined : (
+              <>
+                <Tooltip
+                  title={T.translate(
+                    copied ? "general.copied" : "general.copy_error"
+                  )}
+                >
+                  <IconButton
+                    size="small"
+                    color="inherit"
+                    aria-label={T.translate("general.copy_error")}
+                    onClick={handleCopy}
+                  >
+                    {copied ? (
+                      <CheckIcon fontSize="small" />
+                    ) : (
+                      <ContentCopyIcon fontSize="small" />
+                    )}
+                  </IconButton>
+                </Tooltip>
+                <IconButton
+                  size="small"
+                  color="inherit"
+                  aria-label="Close"
+                  onClick={onClose}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </>
+            )
+          }
           severity={msgData.type}
           variant="filled"
           sx={{ width: "100%", backgroundColor: `${msgData.type}.light` }}

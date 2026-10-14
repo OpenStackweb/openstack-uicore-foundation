@@ -105,5 +105,41 @@ describe('Utils Actions', () => {
             // CLEAR_SESSION_STATE is only dispatched by initLogin
             expect(types).toContain(CLEAR_SESSION_STATE);
         });
+
+        test('adds request details without the query string', () => {
+            const err = {
+                status: 404,
+                response: {
+                    body: { message: "Entity Not Found" },
+                    req: { method: "PUT", url: "https://api.example.com/api/v1/summits/1?access_token=secret&expand=x" }
+                }
+            };
+
+            store.dispatch(snackbarErrorHandler(err));
+
+            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
+            expect(payload.details).toContain("Request: PUT https://api.example.com/api/v1/summits/1 (404)");
+            expect(payload.details).not.toContain("secret");
+        });
+
+        test('lists 412 field names without their values', () => {
+            const errors = { start_date: ["The start date field is required."], end_date: ["The end date is invalid."] };
+
+            store.dispatch(snackbarErrorHandler({ status: 412, response: { body: { errors }, req: {} } }));
+
+            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
+            expect(payload.details).toContain("Fields: start_date, end_date");
+            expect(payload.details).not.toContain("required");
+        });
+
+        test('flags a missing response when the browser is offline', () => {
+            const onLineSpy = jest.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+
+            store.dispatch(snackbarErrorHandler({ method: "GET", url: "https://api.example.com/api/v1/summits" }));
+
+            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
+            expect(payload.details).toContain("Request: GET https://api.example.com/api/v1/summits (no response, offline)");
+            onLineSpy.mockRestore();
+        });
     });
 });
