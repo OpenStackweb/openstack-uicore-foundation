@@ -10,6 +10,8 @@
     "active": "Active",
     "archived": "Archived",
     "select_summit": "Select a Summit...",
+    "copy_error": "Copy error details",
+    "copied": "Copied",
     "add": "Add",
     "add_new": "Add New",
     "clear": "Clear",

@@ -19,11 +19,16 @@ import {
   Alert,
   Box,
   Collapse,
+  IconButton,
   Link,
   Snackbar,
+  Tooltip,
   Typography
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ErrorIcon from "@mui/icons-material/Error";
 import SnackbarNotificationContext from "./Context";
 export { useSnackbarMessage } from "./Context";
@@ -120,6 +125,18 @@ const NotificationSnackbar = ({ queue, vertical }) => {
     queue.onExited();
   };
 
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    const html = String(msgData.html).replace(/<br\s*\/?>/gi, "\n");
+    const text = new DOMParser().parseFromString(html, "text/html").body
+      .textContent;
+    navigator.clipboard.writeText(
+      [text.trim(), msgData.details].filter(Boolean).join("\n\n")
+    );
+    setCopied(true);
+    setTimeout(() => setCopied(false), MILLISECONDS_IN_SECOND);
+  };
+
   return (
     <Snackbar
       open={queue.open}
@@ -130,6 +147,39 @@ const NotificationSnackbar = ({ queue, vertical }) => {
     >
       <Alert
         onClose={onClose}
+        // a custom action replaces Alert's close button, so errors re-add it
+        action={
+          isSuccess ? undefined : (
+            <>
+              <Tooltip
+                title={T.translate(
+                  copied ? "general.copied" : "general.copy_error"
+                )}
+              >
+                <IconButton
+                  size="small"
+                  color="inherit"
+                  aria-label={T.translate("general.copy_error")}
+                  onClick={handleCopy}
+                >
+                  {copied ? (
+                    <CheckIcon fontSize="small" />
+                  ) : (
+                    <ContentCopyIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </Tooltip>
+              <IconButton
+                size="small"
+                color="inherit"
+                aria-label="Close"
+                onClick={onClose}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </>
+          )
+        }
         severity={msgData.type}
         variant="filled"
         sx={{ width: "100%", backgroundColor: `${msgData.type}.light` }}

@@ -78,6 +78,43 @@ describe("SnackbarNotification", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  test("copies an error as plain text with its details", () => {
+    const writeText = jest.fn();
+    Object.assign(navigator, { clipboard: { writeText } });
+    render(
+      <SnackbarNotification
+        snackbarMessage={{
+          html: "Start date is required.<br>End date is invalid.<br>",
+          type: "warning",
+          details: "Request: PUT /api/v1/summits/1 (412)"
+        }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+
+    expect(writeText).toHaveBeenCalledWith(
+      "Start date is required.\nEnd date is invalid.\n\nRequest: PUT /api/v1/summits/1 (412)"
+    );
+  });
+
+  test("keeps only the close button on a success message", () => {
+    render(
+      <SnackbarNotification
+        snackbarMessage={{ html: "Saved", type: "success" }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+
+    expect(screen.queryByLabelText("general.copy_error")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Close")).toBeInTheDocument();
+  });
+
   describe("pinned and grouped errors", () => {
     const errorA = { html: "First error", type: "warning" };
     const errorB = { html: "Second error", type: "error" };
