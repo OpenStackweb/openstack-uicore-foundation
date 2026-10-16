@@ -1,9 +1,18 @@
 import {
     AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR,
     AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR,
+    AUTH_ERROR_MISSING_AUTH_INFO,
+    AUTH_ERROR_MISSING_REFRESH_TOKEN,
 } from '../constants';
 
-import { refreshAccessToken, retryWithBackoff, getAccessToken, setAccessTokenResolver } from '../methods';
+import {
+    refreshAccessToken,
+    retryWithBackoff,
+    getAccessToken,
+    setAccessTokenResolver,
+    storeAuthInfo,
+    getAuthInfo,
+} from '../methods';
 
 // Mock utils/methods imports used by security/methods
 jest.mock('../../../utils/methods', () => ({
@@ -53,7 +62,22 @@ jest.mock('../actions', () => ({
     SET_LOGGED_USER: 'SET_LOGGED_USER',
 }));
 
-const { setSessionClearingState } = require('../../../utils/methods');
+const {
+    setSessionClearingState,
+    getFromLocalStorage,
+    putOnLocalStorage,
+    removeFromLocalStorage,
+    retryPromise,
+} = require('../../../utils/methods');
+
+// backs the mocked localStorage helpers with an in-memory store
+const useMemoryStorage = () => {
+    const storage = {};
+    getFromLocalStorage.mockImplementation((key) => storage[key] ?? null);
+    putOnLocalStorage.mockImplementation((key, value) => { storage[key] = value; });
+    removeFromLocalStorage.mockImplementation((key) => { delete storage[key]; });
+    return storage;
+};
 
 // Helper to set window globals needed by methods.js
 const setupWindowGlobals = () => {
@@ -112,8 +136,6 @@ describe('refreshAccessToken', () => {
         await expect(refreshAccessToken('revoked-token'))
             .rejects
             .toThrow(AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR);
-
-        expect(setSessionClearingState).toHaveBeenCalledWith(true);
     });
 
     it('should throw AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR on HTTP 500', async () => {
@@ -217,7 +239,7 @@ describe('refreshAccessToken', () => {
         expect(setSessionClearingState).not.toHaveBeenCalled();
     });
 
-    it('should call setSessionClearingState(true) only on HTTP 400', async () => {
+    it('should not call setSessionClearingState on HTTP 400', async () => {
         const mockResponse = {
             ok: false,
             status: 400,
@@ -231,8 +253,21 @@ describe('refreshAccessToken', () => {
             // expected
         }
 
-        expect(setSessionClearingState).toHaveBeenCalledWith(true);
-        expect(setSessionClearingState).toHaveBeenCalledTimes(1);
+        expect(setSessionClearingState).not.toHaveBeenCalled();
+    });
+
+    it('should not call setSessionClearingState when the response has no access_token', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            json: jest.fn().mockResolvedValue({ refresh_token: 'rt' }),
+        });
+
+        await expect(refreshAccessToken('some-token'))
+            .rejects
+            .toThrow(AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR);
+
+        expect(setSessionClearingState).not.toHaveBeenCalled();
     });
 
     it('should include status in error message for 5xx', async () => {
@@ -410,5 +445,118 @@ describe('setAccessTokenResolver / getAccessToken', () => {
         expect(secondCopy.getAccessToken).not.toBe(getAccessToken);
         await expect(secondCopy.getAccessToken()).resolves.toBe('tok-shared');
         expect(resolver).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('getAccessToken with a rejected refresh token', () => {
+    // moment().unix() is mocked to 1000, so a token updated at 0 with a 100s lifetime is expired
+    const EXPIRED_AUTH_INFO = { accessToken: 'old-at', expiresIn: 100, accessTokenUpdatedAt: 0 };
+
+    let storage;
+
+    const storeExpired = (refreshToken) => {
+        storage.authInfo = JSON.stringify({ ...EXPIRED_AUTH_INFO, refreshToken });
+    };
+
+    const rejectRefresh = () => {
+        global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 400, statusText: 'Bad Request' });
+    };
+
+    beforeEach(() => {
+        storage = useMemoryStorage();
+        retryPromise.mockResolvedValue(true);
+    });
+
+    afterEach(() => {
+        [getFromLocalStorage, putOnLocalStorage, removeFromLocalStorage, retryPromise]
+            .forEach((mock) => mock.mockReset());
+    });
+
+    it('sends the rejected token once, clears auth info and fails the next call without a request', async () => {
+        storeExpired('dead-rt');
+        rejectRefresh();
+
+        await expect(getAccessToken()).rejects.toThrow(AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR);
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+        expect(getAuthInfo()).toBeNull();
+
+        await expect(getAccessToken()).rejects.toThrow(AUTH_ERROR_MISSING_AUTH_INFO);
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('clears auth info when the refresh response has no access_token', async () => {
+        storeExpired('dead-rt');
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            json: jest.fn().mockResolvedValue({}),
+        });
+
+        await expect(getAccessToken()).rejects.toThrow(AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR);
+        expect(getAuthInfo()).toBeNull();
+    });
+
+    it('keeps auth info when a newer refresh token was stored during the request', async () => {
+        storeExpired('dead-rt');
+        global.fetch = jest.fn().mockImplementation(async () => {
+            storeExpired('new-rt');
+            return { ok: false, status: 400, statusText: 'Bad Request' };
+        });
+
+        await expect(getAccessToken()).rejects.toThrow(AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR);
+        expect(getAuthInfo().refreshToken).toBe('new-rt');
+    });
+
+    it('keeps auth info when the refresh keeps failing with a retryable error', async () => {
+        storeExpired('valid-rt');
+        global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500, statusText: 'Server Error' });
+        // skip the backoff waits, runAllTimersAsync needs jest >= 29.5
+        jest.useRealTimers();
+        const setTimeoutSpy = jest.spyOn(global, 'setTimeout').mockImplementation((cb) => { cb(); return 0; });
+
+        try {
+            await expect(getAccessToken()).rejects.toThrow(AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR);
+        } finally {
+            setTimeoutSpy.mockRestore();
+        }
+
+        expect(global.fetch.mock.calls.length).toBeGreaterThan(1);
+        expect(getAuthInfo().refreshToken).toBe('valid-rt');
+    });
+
+    it.each(['null', 'undefined'])('never sends a "%s" refresh token to the IDP', async (refreshToken) => {
+        storeExpired(refreshToken);
+        global.fetch = jest.fn();
+
+        await expect(getAccessToken()).rejects.toThrow(AUTH_ERROR_MISSING_REFRESH_TOKEN);
+        expect(global.fetch).not.toHaveBeenCalled();
+        expect(getAuthInfo()).toBeNull();
+    });
+});
+
+describe('storeAuthInfo', () => {
+    let storage;
+
+    beforeEach(() => {
+        storage = useMemoryStorage();
+    });
+
+    afterEach(() => {
+        [getFromLocalStorage, putOnLocalStorage, removeFromLocalStorage].forEach((mock) => mock.mockReset());
+    });
+
+    it.each(['null', 'undefined'])('keeps the previous refresh token when given "%s"', (refreshToken) => {
+        storeAuthInfo('at-1', 3600, 'good-rt');
+        storeAuthInfo('at-2', 3600, refreshToken);
+
+        expect(getAuthInfo().refreshToken).toBe('good-rt');
+    });
+
+    it('does not store a "null" refresh token left by an older version', () => {
+        storage.authInfo = JSON.stringify({ accessToken: 'at-1', refreshToken: 'null' });
+
+        storeAuthInfo('at-2', 3600, null);
+
+        expect(getAuthInfo()).not.toHaveProperty('refreshToken');
     });
 });
