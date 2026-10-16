@@ -7,8 +7,8 @@ const SortableTableRow = ({ text, even, id, index, moveCard, dropItem, children,
 
     const style = {
         border: '1px dashed gray',
-        padding: '0.5rem 1rem',
-        marginBottom: '.5rem',
+        padding: '0.25rem 0.625rem',
+        marginBottom: '0.25rem',
         backgroundColor: 'white',
         cursor: 'move',
     };

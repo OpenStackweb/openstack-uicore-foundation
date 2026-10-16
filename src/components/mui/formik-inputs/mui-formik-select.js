@@ -68,7 +68,7 @@ const MuiFormikSelect = ({
           isClearable && field.value ? (
             <InputAdornment position="end" sx={{ mr: 2 }}>
               <IconButton size="small" onClick={handleClear}>
-                <ClearIcon fontSize="small" />
+                <ClearIcon />
               </IconButton>
             </InputAdornment>
           ) : null

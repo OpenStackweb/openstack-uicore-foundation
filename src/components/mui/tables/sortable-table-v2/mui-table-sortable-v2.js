@@ -218,7 +218,7 @@ const MuiTableSortableV2 = ({
                                 onClick={() => onEdit(row)}
                                 sx={{ padding: 0 }}
                               >
-                                <EditIcon fontSize="large" />
+                                <EditIcon />
                               </IconButton>
                             </TableCell>
                           )}
@@ -234,7 +234,7 @@ const MuiTableSortableV2 = ({
                                 onClick={() => handleDelete(row)}
                                 sx={{ padding: 0 }}
                               >
-                                <DeleteIcon fontSize="large" />
+                                <DeleteIcon />
                               </IconButton>
                             </TableCell>
                           )}
@@ -246,7 +246,7 @@ const MuiTableSortableV2 = ({
                               className={styles.dottedBorderLeft}
                             >
                               <IconButton size="large" {...dragHandleProps}>
-                                <UnfoldMoreIcon fontSize="large" />
+                                <UnfoldMoreIcon />
                               </IconButton>
                             </TableCell>
                           )}

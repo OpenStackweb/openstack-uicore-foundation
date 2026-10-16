@@ -14,6 +14,10 @@
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 export const MuiBaseCustomTheme = {
+  // must match the apps' html font-size so MUI's rem values render at their designed px
+  typography: {
+    htmlFontSize: 16
+  },
   components: {
     MuiOutlinedInput: {
       styleOverrides: {
@@ -48,6 +52,16 @@ export const MuiBaseCustomTheme = {
     MuiTooltip: {
       styleOverrides: {
         tooltip: { fontSize: "1em", fontWeight: "400" }
+      }
+    },
+    // icon scale with medium at 22px, keeping MUI's small/large proportions (18 / 22 / 32px)
+    MuiSvgIcon: {
+      styleOverrides: {
+        root: ({ ownerState }) => ({
+          ...(ownerState.fontSize === "small" && { fontSize: "1.125rem" }),
+          ...(ownerState.fontSize === "medium" && { fontSize: "1.375rem" }),
+          ...(ownerState.fontSize === "large" && { fontSize: "2rem" })
+        })
       }
     },
   }

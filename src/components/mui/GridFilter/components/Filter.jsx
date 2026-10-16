@@ -123,7 +123,7 @@ const Filter = ({ id, value, criterias, onChange, onAdd, onDelete }) => {
             onClick={() => onDelete(value)}
             size="large"
           >
-            <DeleteIcon fontSize="large" />
+            <DeleteIcon />
           </IconButton>
         ) : (
           <RoundButton
@@ -133,7 +133,7 @@ const Filter = ({ id, value, criterias, onChange, onAdd, onDelete }) => {
             disabled={isAddDisabled}
             sx={{ ml: "4px" }}
           >
-            <AddIcon fontSize="large" />
+            <AddIcon />
           </RoundButton>
         )}
       </Grid2>
