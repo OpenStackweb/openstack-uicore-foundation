@@ -577,11 +577,16 @@ describe('getAccessToken with a rejected refresh token', () => {
     it('keeps auth info when the refresh keeps failing with a retryable error', async () => {
         storeExpired('valid-rt');
         global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500, statusText: 'Server Error' });
+        // skip the backoff waits, runAllTimersAsync needs jest >= 29.5
+        jest.useRealTimers();
+        const setTimeoutSpy = jest.spyOn(global, 'setTimeout').mockImplementation((cb) => { cb(); return 0; });
 
-        const result = getAccessToken().catch((e) => e);
-        await jest.runAllTimersAsync();
+        try {
+            await expect(getAccessToken()).rejects.toThrow(AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR);
+        } finally {
+            setTimeoutSpy.mockRestore();
+        }
 
-        expect((await result).message).toContain(AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR);
         expect(global.fetch.mock.calls.length).toBeGreaterThan(1);
         expect(getAuthInfo().refreshToken).toBe('valid-rt');
     });
