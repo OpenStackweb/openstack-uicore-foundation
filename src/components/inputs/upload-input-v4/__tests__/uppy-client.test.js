@@ -43,7 +43,7 @@ const start = (options = {}) => {
   onTicket = jest.fn();
   errors = [];
   uppy = buildUppy({ baseUrl: BASE, onTicket, retryDelays: [0, 0, 0, 0], ...options });
-  uppy.on('upload-error', (file, err) => errors.push({ id: file.id, message: err.message }));
+  uppy.on('upload-error', (file, err) => errors.push({ id: file.id, message: err.message, code: err.code }));
   return uppy;
 };
 
@@ -335,7 +335,7 @@ describe('buildUppy, single uploads', () => {
     await waitUntil(() => errors.length === 1 && onTicket.mock.calls.length === 1, 'one failure and one delivery');
 
     expect(onTicket.mock.calls[0][0].id).toBe(good);
-    expect(errors[0]).toEqual({ id: bad, message: 'Could not hash file: Error reading the file' });
+    expect(errors[0]).toEqual({ id: bad, message: 'Error reading the file', code: 'hash_failed' });
 
     getMD5.mockImplementation(async (file) => `md5-${file.name}`);
     await uppy.retryAll();

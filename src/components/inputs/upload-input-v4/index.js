@@ -71,6 +71,7 @@ const resolveErrorMessage = (err) => {
     return T.translate('upload_input_v3.network_error');
   }
   if (message.startsWith('AUTH_ERROR')) return T.translate('upload_input_v3.auth_error');
+  if (err?.code === 'hash_failed') return T.translate('upload_input_v3.hash_failed');
   // @uppy/aws-s3's message for a non-2xx PUT response, or a file API error with no
   // message of its own
   if (!message || message === 'Non 2xx' || (err?.status && !err.fromServer)) {

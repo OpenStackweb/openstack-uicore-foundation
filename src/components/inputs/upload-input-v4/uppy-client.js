@@ -118,12 +118,11 @@ export const buildUppy = ({
 
   // Per-file failure. Core sets no file error when a processor rejects, and retry selects
   // on file.error, so processors must set it themselves.
-  const failFile = (fileID, err, prefix = '') => {
+  // `code` names a failure the component shows as its own translated message.
+  const failFile = (fileID, err, code) => {
     if (!uppy.getFile(fileID)) return;             // setFileState throws for a removed file
-    const cause = toError(err);
-    const error = prefix
-      ? Object.assign(new Error(`${prefix}${cause.message}`), { status: cause.status })
-      : cause;
+    const error = toError(err);
+    if (code) error.code = code;
     uppy.setFileState(fileID, { error: error.message });
     uppy.emit('upload-error', uppy.getFile(fileID), error);
   };
@@ -166,7 +165,7 @@ export const buildUppy = ({
         // Per file: a rejection here would fail the batch with no file error set, and
         // retry would find nothing. An errored file is skipped by the uploader and
         // re-hashed on retry.
-        if (hashing.get(fileID) === attempt) failFile(fileID, err, 'Could not hash file: ');
+        if (hashing.get(fileID) === attempt) failFile(fileID, err, 'hash_failed');
       } finally {
         if (hashing.get(fileID) === attempt) hashing.delete(fileID);
       }

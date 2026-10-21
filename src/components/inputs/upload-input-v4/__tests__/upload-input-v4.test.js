@@ -17,6 +17,7 @@ import { render, screen, act, fireEvent, waitFor, cleanup } from '@testing-libra
 import '@testing-library/jest-dom';
 import { createFakeFileApi, deferred } from '../__fixtures__/fake-file-api';
 import UploadInputV4 from '../index';
+import { getMD5 } from '../../../../utils/crypto';
 
 jest.mock('../../../security/methods', () => ({
   getAccessToken: jest.fn(() => Promise.resolve('token')),
@@ -358,6 +359,17 @@ describe('UploadInputV4', () => {
 
       expect(await screen.findByText('Upload failed. Please retry.')).toBeInTheDocument();
       expect(screen.queryByText(/HTTP 503/)).not.toBeInTheDocument();
+    });
+
+    test('a file that cannot be read shows the translated message and sends nothing', async () => {
+      // getMD5 rejects with a bare string when FileReader fails (src/utils/crypto.js).
+      getMD5.mockImplementationOnce(() => Promise.reject('Error reading the file'));  // eslint-disable-line prefer-promise-reject-errors
+      const { container } = render(<UploadInputV4 {...defaultProps} />);
+      select(container, fileOf('video.png', 2048, 'image/png'));
+
+      expect(await screen.findByText('Could not read the file. Please retry.')).toBeInTheDocument();
+      expect(screen.queryByText(/Error reading the file/)).not.toBeInTheDocument();
+      expect(api.puts()).toHaveLength(0);
     });
 
     test('retrying a file Uppy never took only clears its row', async () => {
