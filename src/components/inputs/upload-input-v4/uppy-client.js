@@ -121,8 +121,12 @@ export const buildUppy = ({
   // `code` names a failure the component shows as its own translated message.
   const failFile = (fileID, err, code) => {
     if (!uppy.getFile(fileID)) return;             // setFileState throws for a removed file
-    const error = toError(err);
-    if (code) error.code = code;
+    const cause = toError(err);
+    // An owned error: a caught one may not take a new property (a DOMException's code is
+    // read-only).
+    const error = code
+      ? Object.assign(new Error(cause.message), { code, status: cause.status })
+      : cause;
     uppy.setFileState(fileID, { error: error.message });
     uppy.emit('upload-error', uppy.getFile(fileID), error);
   };

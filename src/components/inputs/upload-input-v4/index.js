@@ -65,13 +65,14 @@ let djsConfigWarned = false;
  */
 const resolveErrorMessage = (err) => {
   const message = err?.message || '';
+  // First: the hash's own error may be a TypeError or carry a message matched below.
+  if (err?.code === 'hash_failed') return T.translate('upload_input_v3.hash_failed');
   // fetch rejects with a TypeError when a request never reached the server, and
   // @uppy/aws-s3 reports a failed PUT connection as 'Unknown error'.
   if (err instanceof TypeError || message === 'Unknown error' || message.startsWith(AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR)) {
     return T.translate('upload_input_v3.network_error');
   }
   if (message.startsWith('AUTH_ERROR')) return T.translate('upload_input_v3.auth_error');
-  if (err?.code === 'hash_failed') return T.translate('upload_input_v3.hash_failed');
   // @uppy/aws-s3's message for a non-2xx PUT response, or a file API error with no
   // message of its own
   if (!message || message === 'Non 2xx' || (err?.status && !err.fromServer)) {
