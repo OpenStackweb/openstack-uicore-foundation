@@ -30,11 +30,12 @@ jest.mock("@mui/material/IconButton", () => {
   const React = require("react");
   return {
     __esModule: true,
-    default: ({ children, onClick, ...rest }) => (
-      <button type="button" onClick={onClick} {...rest}>
+    // forwardRef so the menu trigger's Tooltip can attach
+    default: React.forwardRef(({ children, onClick, ...rest }, ref) => (
+      <button type="button" ref={ref} onClick={onClick} {...rest}>
         {children}
       </button>
-    )
+    ))
   };
 });
 jest.mock("@mui/material/ButtonBase/TouchRipple", () => ({
@@ -211,8 +212,8 @@ describe("MuiTableEditable", () => {
     const user = userEvent.setup();
     const { onDelete } = setup();
     showConfirmDialog.mockResolvedValueOnce(true); // ✅ use the exported mock
-    const [btn] = screen.getAllByLabelText("general.delete");
-    await user.click(btn);
+    await user.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    await user.click(screen.getByRole("menuitem", { name: "general.delete" }));
     expect(showConfirmDialog).toHaveBeenCalled();
     expect(onDelete).toHaveBeenCalledWith(1);
   });
@@ -221,8 +222,8 @@ describe("MuiTableEditable", () => {
     const user = userEvent.setup();
     const { onDelete } = setup();
     showConfirmDialog.mockResolvedValueOnce(false);
-    const [btn] = screen.getAllByLabelText("general.delete");
-    await user.click(btn);
+    await user.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    await user.click(screen.getByRole("menuitem", { name: "general.delete" }));
     expect(showConfirmDialog).toHaveBeenCalled();
     expect(onDelete).not.toHaveBeenCalled();
   });

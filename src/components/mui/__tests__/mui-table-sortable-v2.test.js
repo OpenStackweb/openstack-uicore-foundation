@@ -132,9 +132,8 @@ describe("MuiTableSortableV2", () => {
     const onDelete = jest.fn();
     showConfirmDialog.mockResolvedValueOnce(true);
     setup({ onDelete });
-    const buttons = within(screen.getByRole("table")).getAllByRole("button");
-    // buttons[0] is the sort label button; buttons[1] is the first delete button (row 1)
-    await userEvent.click(buttons[1]);
+    await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    await userEvent.click(screen.getByRole("menuitem", { name: "general.delete" }));
     await new Promise((r) => setTimeout(r, 0));
     expect(showConfirmDialog).toHaveBeenCalled();
     expect(onDelete).toHaveBeenCalledWith(1);
@@ -239,9 +238,8 @@ describe("MuiTableSortableV2", () => {
         2
       );
 
-      const buttons = within(screen.getByRole("table")).getAllByRole("button");
-      // buttons[0] is the sort label button; buttons[1] is the first delete button (row 1)
-      await userEvent.click(buttons[1]);
+      await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+      await userEvent.click(screen.getByRole("menuitem", { name: "general.delete" }));
       await new Promise((r) => setTimeout(r, 0));
       expect(onDelete).toHaveBeenCalledWith("a-1");
     });
