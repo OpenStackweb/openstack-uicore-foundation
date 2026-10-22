@@ -33,7 +33,7 @@ import parsePaginationPosition from "../tables/components/pagination-position";
 import showConfirmDialog from "../showConfirmDialog";
 import {
   RESPONSIVE_TABLE_SX,
-  getActionsMenuBreakpoint
+  ACTION_CELL_SX
 } from "../tables/components/table-styles";
 
 const BulkEditTable = ({
@@ -70,9 +70,6 @@ const BulkEditTable = ({
     cancel,
     reset
   } = useRowSelection(idKey);
-
-  const collapseActions = (onEdit ? 1 : 0) + (onDelete ? 1 : 0) >= 2;
-  const actionsBreakpoint = getActionsMenuBreakpoint(columns.length);
 
   const dataIds = data.map((row) => row[idKey]).join(",");
 
@@ -178,6 +175,7 @@ const BulkEditTable = ({
                     slotProps={{ input: { "aria-label": "select all" } }}
                   />
                 </TableCell>
+                {onDelete && <TableCell sx={ACTION_CELL_SX} />}
                 {columns.map((col, i) => {
                   const sortable = !!col.sortable;
 
@@ -196,7 +194,7 @@ const BulkEditTable = ({
                     </Heading>
                   );
                 })}
-                {(onEdit || onDelete) && (
+                {onEdit && (
                   <TableCell
                     align="center"
                     className={styles.actionColumn}
@@ -224,8 +222,6 @@ const BulkEditTable = ({
                     columns={columns}
                     onEdit={onEdit}
                     onDelete={onDelete ? handleDelete : null}
-                    collapseActions={collapseActions}
-                    actionsBreakpoint={actionsBreakpoint}
                   />
                 ))}
             </TableBody>
