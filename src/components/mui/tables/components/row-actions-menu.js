@@ -13,9 +13,11 @@
 
 import * as React from "react";
 import PropTypes from "prop-types";
+import T from "i18n-react/dist/i18n-react";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Tooltip from "@mui/material/Tooltip";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 const RowActionsMenu = ({ actions }) => {
@@ -25,13 +27,15 @@ const RowActionsMenu = ({ actions }) => {
 
   return (
     <>
-      <IconButton
-        size="medium"
-        onClick={(e) => setAnchorEl(e.currentTarget)}
-        data-testid="row-actions-menu-trigger"
-      >
-        <MoreVertIcon />
-      </IconButton>
+      <Tooltip title={T.translate("general.more_actions")}>
+        <IconButton
+          size="medium"
+          onClick={(e) => setAnchorEl(e.currentTarget)}
+          data-testid="row-actions-menu-trigger"
+        >
+          <MoreVertIcon />
+        </IconButton>
+      </Tooltip>
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
