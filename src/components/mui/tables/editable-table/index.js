@@ -23,13 +23,13 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import { IconButton, TextField } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import styles from "../components/styles.module.less";
 
 import TableCellContent from "../components/table-cell-content";
 import TableShell from "../components/table-shell";
 import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
+import RowActionsMenu from "../components/row-actions-menu";
 import {
   RESPONSIVE_TABLE_SX,
   getColumnWidthSx,
@@ -210,6 +210,9 @@ const MuiTableEditable = ({
         {/* TABLE HEADER */}
         <TableHead sx={{ backgroundColor: "#EAEAEA" }}>
           <TableRow>
+            {onDelete && (
+              <TableCell sx={{ ...ACTION_CELL_SX, fontWeight: "normal" }} />
+            )}
             {columns.map((col) => (
               <TableCell
                 key={col.columnKey}
@@ -243,15 +246,28 @@ const MuiTableEditable = ({
                 }}
               />
             )}
-            {onDelete && (
-              <TableCell sx={{ ...ACTION_CELL_SX, fontWeight: "normal" }} />
-            )}
           </TableRow>
         </TableHead>
         {/* TABLE BODY */}
         <TableBody>
           {data.map((row) => (
             <TableRow key={row.id}>
+              {onDelete && (
+                <TableCell
+                  align="center"
+                  sx={{
+                    ...getActionCellSx(row, options.disableProp),
+                    fontWeight: "normal"
+                  }}
+                >
+                  <RowActionsMenu
+                    actions={[{
+                      label: T.translate("general.delete"),
+                      onClick: () => handleDelete(row)
+                    }]}
+                  />
+                </TableCell>
+              )}
               {columns.map((col) => (
                 <TableCell
                   key={`${row.id}-${col.columnKey}`}
@@ -331,23 +347,6 @@ const MuiTableEditable = ({
                       ? T.translate("general.unarchive")
                       : T.translate("general.archive")}
                   </Button>
-                </TableCell>
-              )}
-              {onDelete && (
-                <TableCell
-                  sx={{
-                    ...getActionCellSx(row, options.disableProp),
-                    fontWeight: "normal"
-                  }}
-                  className={styles.dottedBorderLeft}
-                >
-                  <IconButton
-                    onClick={() => handleDelete(row)}
-                    size="small"
-                    aria-label={T.translate("general.delete")}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
                 </TableCell>
               )}
             </TableRow>
