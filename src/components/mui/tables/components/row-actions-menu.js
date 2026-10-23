@@ -20,6 +20,14 @@ import MenuItem from "@mui/material/MenuItem";
 import Tooltip from "@mui/material/Tooltip";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
+// shared Delete entry so every table's menu labels and styles it the same
+export const getDeleteAction = (onClick, disabled = false) => ({
+  label: T.translate("general.delete"),
+  onClick,
+  disabled,
+  destructive: true
+});
+
 const RowActionsMenu = ({ actions }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -28,13 +36,17 @@ const RowActionsMenu = ({ actions }) => {
   return (
     <>
       <Tooltip title={T.translate("general.more_actions")}>
-        <IconButton
-          size="medium"
-          onClick={(e) => setAnchorEl(e.currentTarget)}
-          data-testid="row-actions-menu-trigger"
-        >
-          <MoreVertIcon />
-        </IconButton>
+        <span>
+          <IconButton
+            size="medium"
+            onClick={(e) => setAnchorEl(e.currentTarget)}
+            data-testid="row-actions-menu-trigger"
+            aria-label={T.translate("general.more_actions")}
+            disabled={actions.every((action) => action.disabled)}
+          >
+            <MoreVertIcon />
+          </IconButton>
+        </span>
       </Tooltip>
       <Menu
         anchorEl={anchorEl}
@@ -49,6 +61,7 @@ const RowActionsMenu = ({ actions }) => {
               setAnchorEl(null);
               action.onClick();
             }}
+            sx={action.destructive ? { color: "error.main" } : undefined}
           >
             {action.label}
           </MenuItem>
@@ -63,7 +76,8 @@ RowActionsMenu.propTypes = {
     PropTypes.shape({
       label: PropTypes.string.isRequired,
       onClick: PropTypes.func.isRequired,
-      disabled: PropTypes.bool
+      disabled: PropTypes.bool,
+      destructive: PropTypes.bool
     })
   ).isRequired
 };

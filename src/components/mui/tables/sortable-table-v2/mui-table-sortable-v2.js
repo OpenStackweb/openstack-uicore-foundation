@@ -34,7 +34,7 @@ import styles from "./styles.module.less";
 import showConfirmDialog from "../../showConfirmDialog";
 import SortableRow from "./sortable-row";
 import TableCellContent from "../components/table-cell-content";
-import RowActionsMenu from "../components/row-actions-menu";
+import RowActionsMenu, { getDeleteAction } from "../components/row-actions-menu";
 import CustomTablePagination from "../components/CustomTablePagination";
 import parsePaginationPosition from "../components/pagination-position";
 import useDndKitReorder from "../../DragNDropList/hooks/useDndKitReorder";
@@ -199,10 +199,7 @@ const MuiTableSortableV2 = ({
                           {onDelete && (
                             <TableCell align="center" sx={{ width: 40 }}>
                               <RowActionsMenu
-                                actions={[{
-                                  label: T.translate("general.delete"),
-                                  onClick: () => handleDelete(row)
-                                }]}
+                                actions={[getDeleteAction(() => handleDelete(row))]}
                               />
                             </TableCell>
                           )}

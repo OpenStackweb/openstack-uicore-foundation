@@ -19,9 +19,10 @@ import TableCell from "@mui/material/TableCell";
 import Checkbox from "@mui/material/Checkbox";
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
-import T from "i18n-react/dist/i18n-react";
 import Cell from "./Cell";
-import RowActionsMenu from "../../tables/components/row-actions-menu";
+import RowActionsMenu, {
+  getDeleteAction
+} from "../../tables/components/row-actions-menu";
 import {
   getColumnWidthSx,
   ACTION_CELL_SX
@@ -61,12 +62,7 @@ const Row = (props) => {
     <TableRow role="row">
       {onDelete && (
         <TableCell align="center" sx={ACTION_CELL_SX}>
-          <RowActionsMenu
-            actions={[{
-              label: T.translate("general.delete"),
-              onClick: () => onDelete(row)
-            }]}
-          />
+          <RowActionsMenu actions={[getDeleteAction(() => onDelete(row))]} />
         </TableCell>
       )}
       <TableCell

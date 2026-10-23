@@ -21,10 +21,16 @@ import {
   waitFor
 } from "@testing-library/react";
 import BulkEditTable from "../BulkEditTable";
+import showConfirmDialog from "../../showConfirmDialog";
 
 jest.mock("i18n-react/dist/i18n-react", () => ({
   __esModule: true,
   default: { translate: (key) => key }
+}));
+
+jest.mock("../../showConfirmDialog", () => ({
+  __esModule: true,
+  default: jest.fn()
 }));
 
 describe("BulkEditTable", () => {
@@ -46,6 +52,33 @@ describe("BulkEditTable", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  test("delete from the row menu confirms, then passes the row's idKey value", async () => {
+    const user = userEvent.setup();
+    const onDelete = jest.fn();
+    showConfirmDialog.mockResolvedValueOnce(true);
+
+    render(
+      <BulkEditTable
+        {...baseProps}
+        idKey="uuid"
+        data={[
+          { uuid: "a-1", title: "Event 1", name: "Event 1" },
+          { uuid: "a-2", title: "Event 2", name: "Event 2" }
+        ]}
+        onUpdate={jest.fn()}
+        onDelete={onDelete}
+      />
+    );
+
+    await user.click(screen.getAllByTestId("row-actions-menu-trigger")[1]);
+    await user.click(screen.getByRole("menuitem", { name: "general.delete" }));
+
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith("a-2"));
+    expect(showConfirmDialog).toHaveBeenCalledWith(
+      expect.objectContaining({ text: "general.row_remove_warning Event 2" })
+    );
   });
 
   test("applies bulk updates to selected rows", async () => {

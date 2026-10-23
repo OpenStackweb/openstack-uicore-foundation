@@ -32,7 +32,7 @@ import TableCellContent from "../components/table-cell-content";
 import TableShell from "../components/table-shell";
 import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
-import RowActionsMenu from "../components/row-actions-menu";
+import RowActionsMenu, { getDeleteAction } from "../components/row-actions-menu";
 import {
   RESPONSIVE_TABLE_SX,
   getColumnWidthSx,
@@ -104,7 +104,11 @@ const MuiTable = ({
           onKeyDown: (ev) => {
             if (ev.key === "Enter" && ev.target === ev.currentTarget) onEdit(row);
           },
-          sx: { cursor: "pointer" }
+          // browsers don't draw focus outlines on rows, so shade it instead
+          sx: {
+            cursor: "pointer",
+            "&:focus-visible": { backgroundColor: "action.selected" }
+          }
         }
       : {};
 
@@ -167,11 +171,12 @@ const MuiTable = ({
                 >
                   {canDelete(row) && (
                     <RowActionsMenu
-                      actions={[{
-                        label: T.translate("general.delete"),
-                        onClick: () => handleDelete(row),
-                        disabled: !!(options.disableProp && row[options.disableProp])
-                      }]}
+                      actions={[
+                        getDeleteAction(
+                          () => handleDelete(row),
+                          !!(options.disableProp && row[options.disableProp])
+                        )
+                      ]}
                     />
                   )}
                 </TableCell>

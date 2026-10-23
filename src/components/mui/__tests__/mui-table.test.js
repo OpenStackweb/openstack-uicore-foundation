@@ -199,12 +199,11 @@ describe("MuiTable", () => {
       expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 2 }));
     });
 
-    test("disables delete menu item for rows where disableProp is truthy", async () => {
+    test("disables the row menu for rows where disableProp is truthy", () => {
       setup({ data: disabledData, onDelete: jest.fn(), options: disabledOptions });
-      await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
-      expect(
-        screen.getByRole("menuitem", { name: "general.delete" })
-      ).toHaveAttribute("aria-disabled", "true");
+      const triggers = screen.getAllByTestId("row-actions-menu-trigger");
+      expect(triggers[0]).toBeDisabled();
+      expect(triggers[1]).not.toBeDisabled();
     });
 
     test("disables select button for rows where disableProp is truthy", () => {
