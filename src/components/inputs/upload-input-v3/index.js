@@ -429,7 +429,7 @@ const UploadInputV3 = ({
                   />
                 ) : (
                   <Box sx={{ color: 'primary.main', display: 'flex', alignItems: 'center' }}>
-                    <UploadFileIcon />
+                    <UploadFileIcon fontSize="small" />
                   </Box>
                 )}
               </Box>
@@ -479,7 +479,7 @@ const UploadInputV3 = ({
               sx={fileRowSx}
             >
               <Box sx={{ color: 'error.main', display: 'flex', alignItems: 'center', mr: 2, minWidth: 32 }}>
-                <ErrorOutlineIcon />
+                <ErrorOutlineIcon fontSize="small" />
               </Box>
 
               <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -501,14 +501,14 @@ const UploadInputV3 = ({
                 title={T.translate("upload_input_v3.retry")}
                 sx={{ color: 'primary.main' }}
               >
-                <ReplayIcon />
+                <ReplayIcon fontSize="small" />
               </IconButton>
               <IconButton
                 size="small"
                 onClick={() => handleDismissError(file)}
                 sx={{ color: 'error.main' }}
               >
-                <CloseIcon />
+                <CloseIcon fontSize="small" />
               </IconButton>
             </Box>
           ))}

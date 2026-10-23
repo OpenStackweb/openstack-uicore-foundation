@@ -123,6 +123,7 @@ const EditableCell = ({ value, isEditing, onBlur, validation }) => {
       <span style={{ flex: 1, fontWeight: "normal" }}>{value}</span>
       {isHovering && (
         <EditIcon
+          fontSize="small"
           sx={{
             opacity: 0.5,
             position: "absolute",

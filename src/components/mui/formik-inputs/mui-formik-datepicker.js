@@ -40,13 +40,6 @@ const MuiFormikDatepicker = ({
               fontWeight: 600
             }
           },
-          layout: {
-            sx: {
-              "& .MuiDayCalendar-weekDayLabel": {
-                fontSize: "0.625rem"
-              }
-            }
-          },
           ...externalSlotProps,
           textField: {
             name,
