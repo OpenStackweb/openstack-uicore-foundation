@@ -93,7 +93,14 @@ const MuiTable = ({
   // whole row edits on click; disabled rows stay inert
   const getRowEditProps = (row) =>
     onEdit && !(options.disableProp && row[options.disableProp])
-      ? { hover: true, onClick: () => onEdit(row), sx: { cursor: "pointer" } }
+      ? {
+          hover: true,
+          onClick: (ev) => {
+            // ignore clicks on controls rendered inside cells
+            if (!ev.target.closest("button, a, input, [role=button]")) onEdit(row);
+          },
+          sx: { cursor: "pointer" }
+        }
       : {};
 
   const handleDelete = createDeleteHandler({

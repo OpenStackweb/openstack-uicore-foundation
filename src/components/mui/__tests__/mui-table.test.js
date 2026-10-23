@@ -296,4 +296,30 @@ describe("MuiTable", () => {
       expect(screen.queryByTestId("row-actions-menu-trigger")).not.toBeInTheDocument();
     });
   });
+
+  test("clicking a button inside a cell runs its handler, not onEdit", async () => {
+    const onEdit = jest.fn();
+    const onManage = jest.fn();
+    setup({
+      onEdit,
+      columns: [
+        ...columns,
+        {
+          columnKey: "manage",
+          header: "",
+          render: (row) => (
+            <button type="button" onClick={() => onManage(row)}>
+              Manage
+            </button>
+          )
+        }
+      ]
+    });
+
+    await userEvent.click(screen.getAllByRole("button", { name: "Manage" })[0]);
+
+    expect(onManage).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
+    expect(onEdit).not.toHaveBeenCalled();
+  });
+
 });
