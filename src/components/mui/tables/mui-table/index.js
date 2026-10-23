@@ -72,10 +72,10 @@ const MuiTable = ({
     disableProp: null, // disableProp is the prop that will disable the row
     ...userOptions
   };
-  const activeActionsCount =
+  const actionColumnsCount =
     (onDelete ? 1 : 0) + (onArchive ? 1 : 0) + (onSelect ? 1 : 0);
 
-  const totalColumnsCount = columns.length + activeActionsCount;
+  const totalColumnsCount = columns.length + actionColumnsCount;
 
   const {sortCol, sortDir} = options;
 
@@ -196,8 +196,8 @@ const MuiTable = ({
                 <TableCell
                   align="center"
                   sx={getActionCellSx(row, options.disableProp)}
-                  onClick={(ev) => ev.stopPropagation()}
                   className={styles.dottedBorderLeft}
+                  onClick={(ev) => ev.stopPropagation()}
                 >
                   <Tooltip
                     title={

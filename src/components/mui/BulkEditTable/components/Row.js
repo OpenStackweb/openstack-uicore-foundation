@@ -13,7 +13,6 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import Box from "@mui/material/Box";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Checkbox from "@mui/material/Checkbox";
@@ -100,16 +99,14 @@ const Row = (props) => {
           className={`${styles.actionColumn} ${styles.dottedBorderLeft}`}
           sx={{ backgroundColor: "#fff" }}
         >
-          <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
-            <IconButton
-              size="medium"
-              onClick={() => onEdit(row)}
-              sx={{ padding: 0 }}
-              aria-label={`Edit row ${row[idKey]}`}
-            >
-              <EditIcon />
-            </IconButton>
-          </Box>
+        <IconButton
+          size="medium"
+          onClick={() => onEdit(row)}
+          sx={{ padding: 0 }}
+          aria-label={`Edit row ${row[idKey]}`}
+        >
+          <EditIcon />
+        </IconButton>
         </TableCell>
       )}
     </TableRow>
