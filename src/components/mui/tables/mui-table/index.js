@@ -95,9 +95,14 @@ const MuiTable = ({
     onEdit && !(options.disableProp && row[options.disableProp])
       ? {
           hover: true,
+          tabIndex: 0,
           onClick: (ev) => {
             // ignore clicks on controls rendered inside cells
             if (!ev.target.closest("button, a, input, [role=button]")) onEdit(row);
+          },
+          // Enter on the focused row itself edits, for keyboard users
+          onKeyDown: (ev) => {
+            if (ev.key === "Enter" && ev.target === ev.currentTarget) onEdit(row);
           },
           sx: { cursor: "pointer" }
         }

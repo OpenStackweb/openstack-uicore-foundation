@@ -82,6 +82,15 @@ describe("MuiTable", () => {
     expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 2 }));
   });
 
+  test("calls onEdit when Enter is pressed on a focused row", async () => {
+    const onEdit = jest.fn();
+    setup({ onEdit });
+    screen.getByText("Bob").closest("tr").focus();
+    await userEvent.keyboard("{Enter}");
+    expect(onEdit).toHaveBeenCalledTimes(1);
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 2 }));
+  });
+
   test("action clicks do not trigger the row's onEdit", async () => {
     const onEdit = jest.fn();
     const onSelect = jest.fn();
