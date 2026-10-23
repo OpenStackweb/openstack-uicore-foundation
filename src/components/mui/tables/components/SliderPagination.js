@@ -93,7 +93,7 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
             border: "none",
             background: "none",
             px: 1.5,
-            height: 34,
+            height: 40,
             borderRadius: "17px",
             cursor: "pointer",
             whiteSpace: "nowrap",
