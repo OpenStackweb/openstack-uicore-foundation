@@ -320,9 +320,9 @@ const MuiTableEditable = ({
                     size="small"
                     onClick={() => onArchive(row)}
                     sx={{
-                      fontSize: "1.3rem",
+                      fontSize: "0.875rem",
                       fontWeight: "normal",
-                      lineHeight: "2.2rem",
+                      lineHeight: "1.375rem",
                       padding: "4px 5px",
                       color: "rgba(0,0,0,0.56)"
                     }}

@@ -429,7 +429,7 @@ const UploadInputV3 = ({
                   />
                 ) : (
                   <Box sx={{ color: 'primary.main', display: 'flex', alignItems: 'center' }}>
-                    <UploadFileIcon fontSize="medium" />
+                    <UploadFileIcon fontSize="small" />
                   </Box>
                 )}
               </Box>
@@ -479,7 +479,7 @@ const UploadInputV3 = ({
               sx={fileRowSx}
             >
               <Box sx={{ color: 'error.main', display: 'flex', alignItems: 'center', mr: 2, minWidth: 32 }}>
-                <ErrorOutlineIcon fontSize="medium" />
+                <ErrorOutlineIcon fontSize="small" />
               </Box>
 
               <Box sx={{ flex: 1, minWidth: 0 }}>
