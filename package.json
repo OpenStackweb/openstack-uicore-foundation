@@ -44,6 +44,8 @@
         "@testing-library/jest-dom": "5.17.0",
         "@testing-library/react": "12.1.5",
         "@testing-library/user-event": "14.5.2",
+        "@uppy/aws-s3": "5.1.0",
+        "@uppy/core": "5.2.0",
         "awesome-bootstrap-checkbox": "^1.0.1",
         "babel-jest": "^29.7.0",
         "babel-loader": "^8.2.4",
@@ -135,6 +137,8 @@
         "@sentry/react": "^8.54.0",
         "@stripe/react-stripe-js": "^5.4.1",
         "@stripe/stripe-js": "^8.5.3",
+        "@uppy/aws-s3": "^5.1.0",
+        "@uppy/core": "^5.2.0",
         "awesome-bootstrap-checkbox": "^1.0.1",
         "browser-tabs-lock": "^1.2.15",
         "crypto-js": "^4.1.1",
@@ -217,6 +221,9 @@
             "window": {},
             "console": {}
         },
-        "testEnvironment": "jsdom"
+        "testEnvironment": "jsdom",
+        "transformIgnorePatterns": [
+            "/node_modules/(?!(@uppy|nanoid|preact|p-retry|is-network-error)/)"
+        ]
     }
 }

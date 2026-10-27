@@ -198,10 +198,13 @@
       "network_error": "Upload interrupted by a connection error. Please retry.",
       "upload_timed_out": "Upload timed out. Please retry.",
       "upload_failed": "Upload failed. Please retry.",
+    "hash_failed": "Could not read the file. Please retry.",
       "auth_error": "Authentication error. Please sign in again.",
       "max_files_reached": "Maximum number of files reached.",
       "loading": "Uploading",
-      "retry": "Retry"
+      "retry": "Retry",
+      "remove_file": "Remove {filename}",
+      "dismiss_file": "Dismiss {filename}"
   },
   "grid_filter": {
     "filter_by": "Filter by ",
