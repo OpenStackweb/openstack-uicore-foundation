@@ -109,6 +109,7 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
           })}
         </Typography>
         <Box
+          aria-hidden={!expanded}
           sx={{
             width: expanded ? 220 : 0,
             overflow: "hidden",
@@ -127,6 +128,8 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
             onChange={onSliderChange}
             onChangeCommitted={onSliderCommit}
             valueLabelDisplay="auto"
+            // out of the Tab order while collapsed
+            slotProps={{ input: { tabIndex: expanded ? 0 : -1 } }}
             sx={{ width: 180 }}
           />
         </Box>
