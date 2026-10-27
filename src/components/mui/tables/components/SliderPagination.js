@@ -12,7 +12,7 @@
  * */
 
 import * as React from "react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import T from "i18n-react/dist/i18n-react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -29,6 +29,11 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
   const [expanded, setExpanded] = useState(initialExpanded);
   const [dragValue, setDragValue] = useState(currentPage);
   const timeoutRef = useRef(null);
+  const pageButtonRef = useRef(null);
+  const sliderBoxRef = useRef(null);
+
+  // cancel a pending collapse if the component unmounts first
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
   const togglePill = () => {
     if (expanded) {
@@ -44,7 +49,11 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
   const onSliderCommit = useCallback(
     (_ev, value) => {
       onPageChange(value);
-      timeoutRef.current = setTimeout(() => setExpanded(false), 150);
+      timeoutRef.current = setTimeout(() => {
+        // don't leave keyboard focus on the slider once it's hidden
+        if (sliderBoxRef.current?.contains(document.activeElement)) pageButtonRef.current?.focus();
+        setExpanded(false);
+      }, 150);
     },
     [onPageChange]
   );
@@ -88,6 +97,7 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
         </IconButton>
         <Typography
           component="button"
+          ref={pageButtonRef}
           type="button"
           onClick={togglePill}
           variant="body1"
@@ -109,6 +119,7 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
           })}
         </Typography>
         <Box
+          ref={sliderBoxRef}
           aria-hidden={!expanded}
           sx={{
             width: expanded ? 220 : 0,
