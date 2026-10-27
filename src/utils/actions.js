@@ -73,7 +73,13 @@ const buildErrorDetails = (err) => {
 };
 
 export const snackbarErrorHandler = (err, res) => (dispatch, state) => {
-    const details = buildErrorDetails(err);
+    let details = "";
+    // details are optional; a failure here must not stop the snackbar or the 401 re-login
+    try {
+        details = buildErrorDetails(err);
+    } catch (e) {
+        details = "";
+    }
     const notifyWithDetails = (message, callback) => notifySnackbarError({ ...message, details }, callback);
     authErrorHandler(err, res, notifyWithDetails)(dispatch, state);
 };

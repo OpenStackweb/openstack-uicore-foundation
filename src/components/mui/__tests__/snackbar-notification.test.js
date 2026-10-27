@@ -94,6 +94,41 @@ describe("SnackbarNotification", () => {
     );
   });
 
+  test("shows the check mark only after the clipboard accepts the text", async () => {
+    Object.assign(navigator, { clipboard: { writeText: jest.fn().mockResolvedValue() } });
+    render(
+      <SnackbarNotification
+        snackbarMessage={{ html: "Not found", type: "warning" }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+
+    expect(await screen.findByTestId("CheckIcon")).toBeInTheDocument();
+  });
+
+  test("says the copy failed when the clipboard rejects it", async () => {
+    Object.assign(navigator, { clipboard: { writeText: jest.fn().mockRejectedValue(new Error("blocked")) } });
+    render(
+      <SnackbarNotification
+        snackbarMessage={{ html: "Not found", type: "warning" }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+
+    const button = screen.getByLabelText("general.copy_error");
+    fireEvent.click(button);
+    fireEvent.mouseOver(button);
+
+    expect(await screen.findByText("general.copy_failed")).toBeInTheDocument();
+    expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
+  });
+
   test("keeps only the close button on a success message", () => {
     render(
       <SnackbarNotification

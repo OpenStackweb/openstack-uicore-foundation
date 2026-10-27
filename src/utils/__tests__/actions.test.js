@@ -132,6 +132,25 @@ describe('Utils Actions', () => {
             expect(payload.details).not.toContain("required");
         });
 
+        test('still notifies and re-logs in when the details cannot be built', () => {
+            windowSpy.mockImplementation(() => ({
+                location: {
+                    href: 'https://example.com',
+                    pathname:'/',
+                    replace: () => {}
+                },
+                localStorage: localStorageMock
+            }));
+            const err = { status: 401, get response() { throw new Error("unreadable"); } };
+
+            store.dispatch(snackbarErrorHandler(err));
+
+            const actions = store.getActions();
+            const { payload } = actions.find((a) => a.type === SET_SNACKBAR_MESSAGE);
+            expect(payload.details).toBe("");
+            expect(actions.map((a) => a.type)).toContain(CLEAR_SESSION_STATE);
+        });
+
         test('flags a missing response when the browser is offline', () => {
             const onLineSpy = jest.spyOn(navigator, "onLine", "get").mockReturnValue(false);
 

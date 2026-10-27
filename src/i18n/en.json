@@ -10,6 +10,7 @@
     "select_summit": "Select a Summit...",
     "copy_error": "Copy error details",
     "copied": "Copied",
+    "copy_failed": "Couldn't copy",
     "add": "Add",
     "clear": "Clear",
     "remove": "Remove",
