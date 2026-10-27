@@ -12,6 +12,7 @@
  **/
 
 import React, { useState, useRef, useMemo, useCallback, useLayoutEffect, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import T from "i18n-react/dist/i18n-react";
 import {
   Box,
@@ -427,7 +428,7 @@ const UploadInputV4 = ({
                   />
                 ) : (
                   <Box sx={{ color: 'primary.main', display: 'flex', alignItems: 'center' }}>
-                    <UploadFileIcon fontSize="medium" />
+                    <UploadFileIcon fontSize="small" />
                   </Box>
                 )}
               </Box>
@@ -478,7 +479,7 @@ const UploadInputV4 = ({
               sx={fileRowSx}
             >
               <Box sx={{ color: 'error.main', display: 'flex', alignItems: 'center', mr: 2, minWidth: 32 }}>
-                <ErrorOutlineIcon fontSize="medium" />
+                <ErrorOutlineIcon fontSize="small" />
               </Box>
 
               <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -581,6 +582,39 @@ const UploadInputV4 = ({
 
     </Box>
   );
+};
+
+UploadInputV4.propTypes = {
+  id: PropTypes.string,
+  name: PropTypes.string,
+  /** Already-uploaded files. */
+  value: PropTypes.array,
+  /** File API base URL that Uppy builds its upload requests from. */
+  postUrl: PropTypes.string,
+  /** Drives allowed extensions and max size unless the getters below override them. */
+  mediaType: PropTypes.shape({
+    max_size: PropTypes.number,
+    type: PropTypes.shape({ allowed_extensions: PropTypes.array })
+  }),
+  /** Upload is blocked once value reaches this count. */
+  maxFiles: PropTypes.number,
+  canAdd: PropTypes.bool,
+  onRemove: PropTypes.func,
+  onUploadComplete: PropTypes.func,
+  onError: PropTypes.func,
+  /** Accepted so a V3 call site can switch by changing its import; ignored, with a one-time console warning. */
+  djsConfig: PropTypes.object,
+  /** Returns a comma-separated extension list, overriding mediaType. */
+  getAllowedExtensions: PropTypes.func,
+  /** Returns max size in MB, overriding mediaType. */
+  getMaxSize: PropTypes.func,
+  canDelete: PropTypes.bool,
+  /** Fired when an upload begins. */
+  onUploadStart: PropTypes.func,
+  label: PropTypes.node,
+  helpText: PropTypes.node,
+  /** Non-empty renders an MUI Alert (severity="error"), not an .error-label. */
+  error: PropTypes.string
 };
 
 export default UploadInputV4;
