@@ -95,7 +95,7 @@ Dropdown.propTypes = {
     })).isRequired,
     /** An array of option values when isMulti, otherwise a single value or option object. */
     value: PropTypes.oneOfType([
-        PropTypes.array, PropTypes.object, PropTypes.string, PropTypes.number
+        PropTypes.array, PropTypes.object, PropTypes.string, PropTypes.number, PropTypes.bool
     ]),
     /** Receives a synthetic { target: { id, value, type: 'dropdown' } }. */
     onChange: PropTypes.func.isRequired,
