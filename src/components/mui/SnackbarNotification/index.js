@@ -125,16 +125,29 @@ const NotificationSnackbar = ({ queue, vertical }) => {
     queue.onExited();
   };
 
-  const [copied, setCopied] = useState(false);
+  // null, "copied" or "failed"
+  const [copyStatus, setCopyStatus] = useState(null);
   const handleCopy = () => {
     const html = String(msgData.html).replace(/<br\s*\/?>/gi, "\n");
     const text = new DOMParser().parseFromString(html, "text/html").body
       .textContent;
-    navigator.clipboard.writeText(
-      [text.trim(), msgData.details].filter(Boolean).join("\n\n")
-    );
-    setCopied(true);
-    setTimeout(() => setCopied(false), MILLISECONDS_IN_SECOND);
+    const finish = (status) => {
+      setCopyStatus(status);
+      setTimeout(() => setCopyStatus(null), MILLISECONDS_IN_SECOND);
+    };
+    // the clipboard can be missing (non-https page) or blocked by the browser
+    try {
+      Promise.resolve(
+        navigator.clipboard.writeText(
+          [text.trim(), msgData.details].filter(Boolean).join("\n\n")
+        )
+      ).then(
+        () => finish("copied"),
+        () => finish("failed")
+      );
+    } catch (e) {
+      finish("failed");
+    }
   };
 
   return (
@@ -153,7 +166,10 @@ const NotificationSnackbar = ({ queue, vertical }) => {
             <>
               <Tooltip
                 title={T.translate(
-                  copied ? "general.copied" : "general.copy_error"
+                  {
+                    copied: "general.copied",
+                    failed: "general.copy_failed"
+                  }[copyStatus] || "general.copy_error"
                 )}
               >
                 <IconButton
@@ -162,7 +178,7 @@ const NotificationSnackbar = ({ queue, vertical }) => {
                   aria-label={T.translate("general.copy_error")}
                   onClick={handleCopy}
                 >
-                  {copied ? (
+                  {copyStatus === "copied" ? (
                     <CheckIcon fontSize="small" />
                   ) : (
                     <ContentCopyIcon fontSize="small" />
