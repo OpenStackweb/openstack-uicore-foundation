@@ -31,8 +31,8 @@ const _fetchPublic = async (endpoint, callback, options = {}) => {
                 callback(json.data);
         })
         .catch(response => {
-            const code = response.status;
-            if (code === 404) callback([]);
+            const code = response && response.status;
+            if (code === 404 && typeof callback === 'function') callback([]);
             return response;
         })
         .catch(fetchErrorHandler);
@@ -68,9 +68,12 @@ const _fetch = async (endpoint, callback, options = {}) => {
     try {
         accessToken = await getAccessToken();
     } catch (e) {
+        // The caller is told through its callback; the query* functions do not
+        // await this promise, so rejecting here would only surface as an
+        // unhandled rejection.
         if(typeof callback === 'function')
             callback(e);
-        return Promise.reject();
+        return;
     }
 
     endpoint.addQuery('access_token', accessToken);
