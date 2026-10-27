@@ -22,6 +22,7 @@ import ClickAwayListener from "@mui/material/ClickAwayListener";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import PropTypes from "prop-types";
+import { PAGINATION_BUTTON_SX } from "./table-styles";
 
 const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initialExpanded }) => {
   const totalPages = Math.max(1, Math.ceil((totalRows ?? 0) / perPage));
@@ -79,6 +80,8 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
           onClick={prev}
           disabled={currentPage <= 1}
           aria-label={T.translate("mui_table.previous_page")}
+          disableFocusRipple
+          sx={PAGINATION_BUTTON_SX}
         >
           {/* explicit px so a host page's root font-size reset can't shrink this */}
           <ChevronLeftIcon sx={{ fontSize: "24px" }} />
@@ -97,12 +100,7 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
             borderRadius: "17px",
             cursor: "pointer",
             whiteSpace: "nowrap",
-            transition: (theme) =>
-              theme.transitions.create("background-color", {
-                duration: theme.transitions.duration.shortest
-              }),
-            "&:hover": { bgcolor: "action.hover" },
-            "@media (hover: none)": { "&:hover": { bgcolor: "transparent" } }
+            ...PAGINATION_BUTTON_SX
           }}
         >
           {T.translate("mui_table.page_of", {
@@ -137,6 +135,8 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
           onClick={next}
           disabled={currentPage >= totalPages}
           aria-label={T.translate("mui_table.next_page")}
+          disableFocusRipple
+          sx={PAGINATION_BUTTON_SX}
         >
           <ChevronRightIcon sx={{ fontSize: "24px" }} />
         </IconButton>

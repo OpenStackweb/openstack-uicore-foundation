@@ -19,6 +19,17 @@ export const RESPONSIVE_TABLE_SX = {
   tableLayout: "auto"
 };
 
+// grey on hover, darker grey on keyboard focus; shared by the pagination arrows, page button and per-page select
+export const PAGINATION_BUTTON_SX = {
+  transition: (theme) =>
+    theme.transitions.create("background-color", {
+      duration: theme.transitions.duration.shortest
+    }),
+  "&:hover": { bgcolor: "action.hover" },
+  "@media (hover: none)": { "&:hover": { bgcolor: "transparent" } },
+  "&:focus-visible, &:has(:focus-visible)": { bgcolor: "action.focus", outline: "none" }
+};
+
 export const getActionsMenuBreakpoint = (dataColumnCount) =>
   dataColumnCount <= SMALL_TABLE_MAX_COLUMNS ? "md" : "lg";
 
