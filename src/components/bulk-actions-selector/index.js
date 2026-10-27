@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import T from "i18n-react/dist/i18n-react";
 import './styles.less';
 class ScheduleAdminsBulkActionsSelector extends React.Component {
@@ -50,5 +51,19 @@ class ScheduleAdminsBulkActionsSelector extends React.Component {
         )
     }
 }
+
+ScheduleAdminsBulkActionsSelector.propTypes = {
+    /** Renders nothing when false; the container element is always present. */
+    show: PropTypes.bool,
+    /** Actions offered alongside the built-in default option. */
+    bulkOptions: PropTypes.arrayOf(PropTypes.shape({
+        value: PropTypes.string.isRequired,
+        label: PropTypes.string.isRequired
+    })).isRequired,
+    /** Click handler for the select-all checkbox; the component tracks no selection itself. */
+    onSelectAll: PropTypes.func,
+    /** Receives the chosen action value on Go. Not called while the default option is selected. */
+    onSelectedBulkAction: PropTypes.func.isRequired
+};
 
 export default ScheduleAdminsBulkActionsSelector;

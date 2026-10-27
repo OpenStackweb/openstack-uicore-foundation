@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import Select from 'react-select';
 
 const SummitVenuesSelect = ({venues, currentValue, placeholder, onVenueChanged, ...rest}) => {
@@ -40,5 +41,25 @@ const SummitVenuesSelect = ({venues, currentValue, placeholder, onVenueChanged, 
         />
     );
 }
+
+SummitVenuesSelect.propTypes = {
+    /** Flat list of venues and their rooms; rooms are indented in the option list. */
+    venues: PropTypes.arrayOf(PropTypes.shape({
+        label: PropTypes.string.isRequired,
+        value: PropTypes.shape({
+            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+            name: PropTypes.string,
+            /** 'SummitVenue' renders as a venue; anything else renders as a room. */
+            class_name: PropTypes.string
+        }).isRequired
+    })).isRequired,
+    /** Matched by id against venues[].value.id, not by identity. */
+    currentValue: PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    }),
+    placeholder: PropTypes.string,
+    /** Receives the selected location object, or null when cleared. */
+    onVenueChanged: PropTypes.func.isRequired
+};
 
 export default SummitVenuesSelect;

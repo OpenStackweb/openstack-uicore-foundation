@@ -1,4 +1,5 @@
 import React, {useEffect, useMemo} from 'react';
+import PropTypes from 'prop-types';
 import SummitDaysSelect from "../inputs/summit-days-select";
 import SummitVenuesSelect from "../inputs/summit-venues-select";
 import SteppedSelect from "../inputs/stepped-select/index.jsx";
@@ -176,4 +177,49 @@ const ScheduleBuilderView = ({
     );
 }
 
+ScheduleBuilderView.propTypes = {
+    /** Provides the day range, locations and timezone for the grid. */
+    summit: PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        start_date: PropTypes.number.isRequired,
+        end_date: PropTypes.number.isRequired,
+        /** Dereferenced with no guard at getDaysOptions/getTimeframe; effectively required. */
+        time_zone_id: PropTypes.string,
+        /** Effectively required: schedule-event-list reads time_zone.name. */
+        time_zone: PropTypes.shape({ name: PropTypes.string }),
+        locations: PropTypes.array.isRequired
+    }).isRequired,
+    /** Restricts selectable days and venues per track. Null allows everything. */
+    trackSpaceTime: PropTypes.array,
+    /** Events placed on the grid. */
+    scheduleEvents: PropTypes.array.isRequired,
+    selectedEvents: PropTypes.array,
+    /** YYYY-MM-DD. Reset via onDayChanged when the venue no longer allows it. */
+    currentDay: PropTypes.string,
+    /** The location object, matched by id. */
+    currentVenue: PropTypes.object,
+    /** Slot height in minutes. */
+    slotSize: PropTypes.number,
+    hideBulkSelect: PropTypes.bool,
+    allowResize: PropTypes.bool,
+    allowDrag: PropTypes.bool,
+    /** Renders the print button when provided. */
+    showPrint: PropTypes.bool,
+    /** Called unconditionally (no guard) when the venue change invalidates currentDay. SummitDaysSelect is always rendered and declares it required, so an omission warns from there too. */
+    onDayChanged: PropTypes.func.isRequired,
+    onVenueChanged: PropTypes.func,
+    onSlotSizeChange: PropTypes.func,
+    onScheduleEvent: PropTypes.func,
+    onUnPublishEvent: PropTypes.func,
+    onEditEvent: PropTypes.func,
+    onClickSelected: PropTypes.func,
+    onMoveSingleEvent: PropTypes.func,
+    onSelectAll: PropTypes.func,
+    /** Receives the chosen bulk action. BulkActionsSelector declares it required and calls it with no guard, and is always rendered: hideBulkSelect only drives its show prop, so an omission is validated even when the control is hidden. */
+    onSelectedBulkAction: PropTypes.func.isRequired,
+    /** Overrides the default bulkOptions passed to BulkActionsSelector. */
+    customBulkOptions: PropTypes.array,
+    /** Passed through to ScheduleEventList to gate drop targets. */
+    canDropEvent: PropTypes.func
+};
 export default ScheduleBuilderView;
