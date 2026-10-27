@@ -12,6 +12,7 @@
     "select_summit": "Select a Summit...",
     "copy_error": "Copy error details",
     "copied": "Copied",
+    "copy_failed": "Couldn't copy",
     "add": "Add",
     "add_new": "Add New",
     "clear": "Clear",
