@@ -17,12 +17,12 @@ import URI from "urijs";
 import {
     doLogin,
     emitAccessToken,
-    getOAuth2Flow,
     RESPONSE_TYPE_IMPLICIT,
     RESPONSE_TYPE_CODE,
     validateIdToken, getAuthInfo
 } from "./methods";
 import {getCurrentPathName, getCurrentHref} from '../../utils/methods';
+import {getOAuth2Flow} from '../../utils/config';
 
 const AbstractAuthorizationCallbackRouteV2 = ({issuer, audience, location, callback, redirectToError, onUserAuth}) => {
     // we only use this for the redirectToError, so its initial state should be true

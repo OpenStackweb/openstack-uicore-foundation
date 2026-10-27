@@ -116,19 +116,7 @@ export const getCurrentHref = () => {
     return null;
 };
 
-export const getAllowedUserGroups = () => {
-    if(typeof window !== 'undefined') {
-        return window.ALLOWED_USER_GROUPS || '';
-    }
-    return null;
-};
-
-export const buildAPIBaseUrl = (relativeUrl) => {
-    if(typeof window !== 'undefined'){
-        return `${window.API_BASE_URL}${relativeUrl}`;
-    }
-    return null``;
-};
+export { buildAPIBaseUrl, getAllowedUserGroups, getTimeServiceUrl } from './config';
 
 export const putOnLocalStorage = (key, value) => {
     if(typeof window !== 'undefined') {
@@ -235,13 +223,6 @@ export const retryPromise = async (
 
     return false;
 }
-
-export const getTimeServiceUrl = () => {
-    if(typeof window !== 'undefined') {
-        return window.TIMEINTERVALSINCE1970_API_URL || process.env.TIMEINTERVALSINCE1970_API_URL;
-    }
-    return null;
-};
 
 export const getEventLocation = (event, summitVenueCount, summitShowLocDate = null, nowUtc = null) => {
     const shouldShowVenues = (summitShowLocDate && nowUtc) ? summitShowLocDate * 1000 < nowUtc : true;
