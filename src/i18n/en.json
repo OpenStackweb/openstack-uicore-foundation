@@ -9,6 +9,7 @@
   "general": {
     "select_summit": "Select a Summit...",
     "add": "Add",
+    "add_new": "Add New",
     "clear": "Clear",
     "remove": "Remove",
     "drop_files": "Drop images or click to select files to upload.",

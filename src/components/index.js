@@ -107,6 +107,7 @@ export {default as MuiItemPriceTiers} from './mui/formik-inputs/item-price-tiers
 export {default as MuiSponsorInput} from './mui/formik-inputs/mui-sponsor-input'
 export {default as MuiSponsorshipInput} from './mui/formik-inputs/sponsorship-input-mui'
 export {default as MuiSponsorshipSummitSelect} from './mui/formik-inputs/sponsorship-summit-select-mui'
+export {default as MuiAddNewButton} from './mui/AddNewButton'
 export {default as MuiAlertButton} from './mui/AlertButton'
 export {default as MuiAlertModal} from './mui/AlertModal'
 export {default as MuiAuthButton} from './mui/AuthButton'
