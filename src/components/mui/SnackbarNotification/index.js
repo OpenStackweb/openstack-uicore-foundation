@@ -125,30 +125,28 @@ const NotificationSnackbar = ({ queue, vertical }) => {
     queue.onExited();
   };
 
-  // null, "copied" or "failed"
+  // null, "copied" or "failed"; reset when a new message shows
   const [copyStatus, setCopyStatus] = useState(null);
   const handleCopy = () => {
     const html = String(msgData.html).replace(/<br\s*\/?>/gi, "\n");
     const text = new DOMParser().parseFromString(html, "text/html").body
       .textContent;
-    const finish = (status) => {
-      setCopyStatus(status);
-      setTimeout(() => setCopyStatus(null), MILLISECONDS_IN_SECOND);
-    };
     // the clipboard can be missing (non-https page) or blocked by the browser
     try {
-      Promise.resolve(
-        navigator.clipboard.writeText(
-          [text.trim(), msgData.details].filter(Boolean).join("\n\n")
-        )
-      ).then(
-        () => finish("copied"),
-        () => finish("failed")
-      );
+      navigator.clipboard
+        .writeText([text.trim(), msgData.details].filter(Boolean).join("\n\n"))
+        .then(
+          () => setCopyStatus("copied"),
+          () => setCopyStatus("failed")
+        );
     } catch (e) {
-      finish("failed");
+      setCopyStatus("failed");
     }
   };
+
+  useEffect(() => {
+    setCopyStatus(null);
+  }, [queue.current]);
 
   return (
     <Snackbar
@@ -175,7 +173,6 @@ const NotificationSnackbar = ({ queue, vertical }) => {
                 <IconButton
                   size="small"
                   color="inherit"
-                  aria-label={T.translate("general.copy_error")}
                   onClick={handleCopy}
                 >
                   {copyStatus === "copied" ? (
