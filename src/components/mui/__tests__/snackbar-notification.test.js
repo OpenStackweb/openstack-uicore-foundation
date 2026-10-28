@@ -22,7 +22,9 @@ jest.mock("../../../utils/actions", () => ({
 import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import SnackbarNotification from "../SnackbarNotification/index";
+import SnackbarNotification, {
+  useSnackbarMessage
+} from "../SnackbarNotification/index";
 import {
   NOTIFICATION_DEDUPE_WINDOW,
   NOTIFICATION_TIMEOUT
@@ -140,6 +142,37 @@ describe("SnackbarNotification", () => {
 
       expect(screen.queryByText("Second error")).not.toBeInTheDocument();
       expect(screen.getByText("Third error")).toBeInTheDocument();
+    });
+
+    test("shows the newest when two arrive in the same render", () => {
+      const TwoErrors = () => {
+        const { errorMessage } = useSnackbarMessage();
+        return (
+          <button
+            type="button"
+            onClick={() => {
+              errorMessage("First error");
+              errorMessage("Second error");
+            }}
+          >
+            send
+          </button>
+        );
+      };
+      render(
+        <SnackbarNotification
+          snackbarMessage={null}
+          clearSnackbarMessage={clearSnackbarMessage}
+        >
+          <TwoErrors />
+        </SnackbarNotification>
+      );
+
+      fireEvent.click(screen.getByText("send"));
+      advance(1000);
+
+      expect(screen.queryByText("First error")).not.toBeInTheDocument();
+      expect(screen.getByText("Second error")).toBeInTheDocument();
     });
 
     test("ignores a repeat within the dedupe window", () => {
