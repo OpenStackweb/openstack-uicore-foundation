@@ -39,4 +39,12 @@ describe('downloadBlob', () => {
     downloadBlob(new Blob(['%PDF']), 'file.pdf');
     expect(document.body.contains(anchor)).toBe(true);
   });
+
+  it('rethrows when the browser cannot start the download', () => {
+    global.URL.createObjectURL = jest.fn(() => {
+      throw new Error('no blob url');
+    });
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() => downloadBlob(new Blob(['%PDF']), 'file.pdf')).toThrow('no blob url');
+  });
 });
