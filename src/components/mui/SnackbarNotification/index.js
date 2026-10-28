@@ -11,7 +11,7 @@
  * limitations under the License.
  * */
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { Alert, Snackbar, Typography } from "@mui/material";
@@ -43,12 +43,15 @@ const SnackbarNotification = ({
   const [current] = messages;
   const msgData = current || {};
   const isSuccess = msgData.type === "success";
+  // the message fading out, so a repeat of it still shows
+  const closingRef = useRef(null);
   const addMessage = (msg) =>
     setMessages((prev) => {
       const now = Date.now();
       // skip a repeat that arrived within the dedupe window
       const isRepeat = prev.some(
         (m) =>
+          m !== closingRef.current &&
           m.html === msg.html &&
           m.type === msg.type &&
           now - m.receivedAt < NOTIFICATION_DEDUPE_WINDOW
@@ -70,6 +73,7 @@ const SnackbarNotification = ({
   const onClose = (event, reason) => {
     // errors stay until dismissed
     if (reason === "clickaway" && !isSuccess) return;
+    closingRef.current = current;
     setOpen(false);
   };
 
@@ -86,8 +90,10 @@ const SnackbarNotification = ({
   // a newer message closes the one on screen; one that never opened is dropped, since no close will follow
   useEffect(() => {
     if (messages.length < 2) return;
-    if (open) setOpen(false);
-    else setMessages(([, ...rest]) => rest);
+    if (open) {
+      closingRef.current = current;
+      setOpen(false);
+    } else setMessages(([, ...rest]) => rest);
   }, [messages]);
 
   // when snackbarMessage changes in base-reducer, we trigger the snackbar
