@@ -71,8 +71,8 @@ describe("SnackbarNotification", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  test("copies an error as plain text with its details", () => {
-    const writeText = jest.fn();
+  test("copies an error as plain text with its details", async () => {
+    const writeText = jest.fn().mockResolvedValue();
     Object.assign(navigator, { clipboard: { writeText } });
     render(
       <SnackbarNotification
@@ -92,6 +92,8 @@ describe("SnackbarNotification", () => {
     expect(writeText).toHaveBeenCalledWith(
       "Start date is required.\nEnd date is invalid.\n\nRequest: PUT /api/v1/summits/1 (412)"
     );
+    // let the copied state settle inside the test
+    await screen.findByTestId("CheckIcon");
   });
 
   test("shows the check mark only after the clipboard accepts the text", async () => {
@@ -126,6 +128,32 @@ describe("SnackbarNotification", () => {
     fireEvent.mouseOver(button);
 
     expect(await screen.findByText("general.copy_failed")).toBeInTheDocument();
+    expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
+  });
+
+  test("clears the copied state when a new message with the same text shows", async () => {
+    Object.assign(navigator, { clipboard: { writeText: jest.fn().mockResolvedValue() } });
+    const { rerender } = render(
+      <SnackbarNotification
+        snackbarMessage={{ html: "Not found", type: "warning" }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+    await screen.findByTestId("CheckIcon");
+
+    rerender(
+      <SnackbarNotification
+        snackbarMessage={{ html: "Not found", type: "warning" }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+
+    expect(screen.getByLabelText("general.copy_error")).toBeInTheDocument();
     expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
   });
 
