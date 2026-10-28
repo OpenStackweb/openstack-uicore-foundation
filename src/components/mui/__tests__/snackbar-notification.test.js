@@ -184,6 +184,15 @@ describe("SnackbarNotification", () => {
       expect(screen.getByText("First error")).toBeInTheDocument();
     });
 
+    test("shows a repeat that arrives after the error is closed", () => {
+      const { rerender } = render(ui(errorA));
+      fireEvent.click(screen.getByRole("button", { name: /close/i }));
+      rerender(ui({ ...errorA }));
+      advance(1000);
+
+      expect(screen.getByText("First error")).toBeInTheDocument();
+    });
+
     test("replaces with a repeat that arrives after the dedupe window", () => {
       const { rerender } = render(ui(errorA));
       advance(NOTIFICATION_DEDUPE_WINDOW);
