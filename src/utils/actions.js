@@ -21,7 +21,7 @@ import T from "i18n-react/dist/i18n-react";
 import { isClearingSessionState, setSessionClearingState, getCurrentPathName, formatEpoch } from './methods';
 import { CLEAR_SESSION_STATE } from '../components/security/actions';
 import { doLogin, initLogOut } from '../components/security/methods';
-import {CODE_200, MILLISECONDS_IN_SECOND} from "./constants";
+import {CODE_200, ERROR_DETAILS_MAX_LENGTH, MILLISECONDS_IN_SECOND} from "./constants";
 
 export const GENERIC_ERROR  = "Yikes. Something seems to be broken. Our web team has been notified, and we apologize for the inconvenience.";
 export const RESET_LOADING  = 'RESET_LOADING';
@@ -56,17 +56,27 @@ const notifySnackbarError = (message, callback) => (dispatch) => {
     if (typeof callback === "function") callback();
 };
 
+// secrets, payment details and personal information are never copied
+const SENSITIVE_KEYS = /^(.*_key|.*(token|secret|password).*|hash|.*emails?|.*phone.*|.*(first|last)_name|.*full_?names?|surname|(.*_)?owner_name|requestor_name|(.*_)?address(\d|_.*)?|zip_code|gender|ip|payment_info_details|payment_gateway_result)$/i;
+
+const formatPayload = (label, data) => {
+    if (data == null || (typeof data === "object" && !Object.keys(data).length)) return "";
+    const json = JSON.stringify(data, (key, value) => (typeof value !== "boolean" && SENSITIVE_KEYS.test(key) ? "[REDACTED]" : value), 2);
+    return `${label}: ${json.length > ERROR_DETAILS_MAX_LENGTH ? `${json.slice(0, ERROR_DETAILS_MAX_LENGTH)}… (truncated)` : json}`;
+};
+
 // copyable context for bug reports; query strings are dropped since they carry the access_token
 const buildErrorDetails = (err) => {
     const req = err.response?.req || err;
     const url = req.url ? req.url.split("?")[0] : "";
     const status = err.status || (navigator.onLine ? "no response" : "no response, offline");
-    // field names only; the response body can hold debug output
-    const fields = err.status === 412 ? Object.keys(err.response?.body?.errors || {}).filter((key) => isNaN(key)) : [];
+    // 5xx bodies can hold debug output, so only 4xx responses are copied
+    const isClientError = err.status >= 400 && err.status < 500;
     const now = new Date();
     return [
         `Request: ${[req.method, url].filter(Boolean).join(" ")} (${status})`,
-        fields.length ? `Fields: ${fields.join(", ")}` : "",
+        formatPayload("Request body", req.toJSON?.().data),
+        isClientError ? formatPayload("Response body", err.response?.body) : "",
         `Page: ${window.location.pathname}`,
         `Time: ${now.toISOString()} (${formatEpoch(now.getTime() / MILLISECONDS_IN_SECOND, "M/D/YYYY h:mm:ss a [UTC]Z")})`
     ].filter(Boolean).join("\n");

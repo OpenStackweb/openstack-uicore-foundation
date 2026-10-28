@@ -122,14 +122,35 @@ describe('Utils Actions', () => {
             expect(payload.details).not.toContain("secret");
         });
 
-        test('lists 412 field names without their values', () => {
-            const errors = { start_date: ["The start date field is required."], end_date: ["The end date is invalid."] };
+        test('copies the request and 4xx response bodies with sensitive fields redacted', () => {
+            const req = request.put("https://api.example.com/api/v1/summits/1/attendees/2").send({
+                ticket_type_id: 7,
+                send_speaker_email: true,
+                owner: { email: "jane@example.com", first_name: "Jane", phone_number: "555-0100", billing_address_1: "1 Main St" },
+                payment: { payment_info_details: { brand: "visa", last4: "4242" }, live_secret_key: "sk_live_123" },
+                access_token: "abc"
+            });
+            const body = { message: "Validation Failed", errors: { start_date: ["The start date field is required."] }, user_password: "password2" };
 
-            store.dispatch(snackbarErrorHandler({ status: 412, response: { body: { errors }, req: {} } }));
+            store.dispatch(snackbarErrorHandler({ status: 412, response: { body, req } }));
 
             const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
-            expect(payload.details).toContain("Fields: start_date, end_date");
-            expect(payload.details).not.toContain("required");
+            expect(payload.details).toContain('"ticket_type_id": 7');
+            expect(payload.details).toContain('"send_speaker_email": true');
+            expect(payload.details).toContain("The start date field is required.");
+            ["jane@example.com", "Jane", "555-0100", "1 Main St", "visa", "4242", "sk_live_123", '"abc"', "password2"]
+                .forEach((value) => expect(payload.details).not.toContain(value));
+        });
+
+        test('skips 5xx response bodies and truncates long payloads', () => {
+            const req = request.post("https://api.example.com/api/v1/summits").send({ notes: "x".repeat(5000) });
+
+            store.dispatch(snackbarErrorHandler({ status: 500, response: { body: { trace: "debug output" }, req } }));
+
+            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
+            expect(payload.details).toContain("… (truncated)");
+            expect(payload.details).not.toContain("x".repeat(2001));
+            expect(payload.details).not.toContain("debug output");
         });
 
         test('still notifies and re-logs in when the details cannot be built', () => {
