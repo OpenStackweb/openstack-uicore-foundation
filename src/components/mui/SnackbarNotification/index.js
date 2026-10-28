@@ -83,9 +83,11 @@ const SnackbarNotification = ({
     }
   }, [current]);
 
-  // a newer message closes the one on screen
+  // a newer message closes the one on screen; one that never opened is dropped, since no close will follow
   useEffect(() => {
-    if (messages.length > 1) setOpen(false);
+    if (messages.length < 2) return;
+    if (open) setOpen(false);
+    else setMessages(([, ...rest]) => rest);
   }, [messages]);
 
   // when snackbarMessage changes in base-reducer, we trigger the snackbar
