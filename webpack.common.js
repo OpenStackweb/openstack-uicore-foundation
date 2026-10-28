@@ -91,6 +91,7 @@ module.exports = {
         'components/mui/dnd-list': './src/components/mui/dnd-list.js',
         'components/mui/drag-n-drop-list': './src/components/mui/DragNDropList/index.js',
         'components/mui/dropdown-checkbox': './src/components/mui/dropdown-checkbox.js',
+        'components/mui/grid-toolbar': './src/components/mui/grid-toolbar.js',
         'components/mui/dropdown': './src/components/mui/Dropdown',
         'components/mui/toggle-buttons': './src/components/mui/ToggleButtons',
         'components/mui/round-button': './src/components/mui/RoundButton',
