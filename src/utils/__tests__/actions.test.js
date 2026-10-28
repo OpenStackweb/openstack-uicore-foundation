@@ -2,6 +2,7 @@ import {authErrorHandler, snackbarErrorHandler, SET_SNACKBAR_MESSAGE} from "../a
 import { CLEAR_SESSION_STATE } from "../../components/security/actions";
 import configureMockStore from 'redux-mock-store';
 import request from 'superagent/lib/client';
+import URI from "urijs";
 import Swal from 'sweetalert2';
 import thunk from 'redux-thunk'
 
@@ -180,6 +181,27 @@ describe('Utils Actions', () => {
             const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
             expect(payload.details).toContain("Request: GET https://api.example.com/api/v1/summits (no response, offline)");
             onLineSpy.mockRestore();
+        });
+
+        test('builds details for a post request made with a URI object', () => {
+            // postRequest, deleteRequest, postFile and putFile hand superagent a URI, not a string
+            const req = request.post(URI("https://api.example.com/api/v1/summits").query({ access_token: "secret" })).send({ name: "Summit" });
+
+            store.dispatch(snackbarErrorHandler({ status: 412, response: { body: { errors: ["Name taken."] }, req } }));
+
+            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
+            expect(payload.details).toContain("Request: POST https://api.example.com/api/v1/summits (412)");
+            expect(payload.details).toContain('"name": "Summit"');
+            expect(payload.details).not.toContain("secret");
+        });
+
+        test('says the request timed out', () => {
+            const err = Object.assign(new Error("Timeout of 60000ms exceeded"), { timeout: 60000, code: "ECONNABORTED" });
+
+            store.dispatch(snackbarErrorHandler(err));
+
+            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
+            expect(payload.details).toContain("Request: (timed out)");
         });
     });
 });

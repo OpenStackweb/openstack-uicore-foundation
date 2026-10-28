@@ -68,13 +68,15 @@ const formatPayload = (label, data) => {
 // copyable context for bug reports; query strings are dropped since they carry the access_token
 const buildErrorDetails = (err) => {
     const req = err.response?.req || err;
-    const url = req.url ? req.url.split("?")[0] : "";
-    const status = err.status || (navigator.onLine ? "no response" : "no response, offline");
+    // post, delete and file requests keep the URI object superagent was given
+    const url = req.url ? String(req.url).split("?")[0] : "";
+    // timeouts carry no method or url, only the timeout
+    const status = err.status || (err.timeout && "timed out") || (navigator.onLine ? "no response" : "no response, offline");
     // 5xx bodies can hold debug output, so only 4xx responses are copied
     const isClientError = err.status >= 400 && err.status < 500;
     const now = new Date();
     return [
-        `Request: ${[req.method, url].filter(Boolean).join(" ")} (${status})`,
+        `Request: ${[req.method, url, `(${status})`].filter(Boolean).join(" ")}`,
         formatPayload("Request body", req.toJSON?.().data),
         isClientError ? formatPayload("Response body", err.response?.body) : "",
         `Page: ${window.location.pathname}`,
