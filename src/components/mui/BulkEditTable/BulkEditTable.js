@@ -161,7 +161,6 @@ const BulkEditTable = ({
           <Table sx={RESPONSIVE_TABLE_SX}>
             <TableHead sx={{ backgroundColor: "#EAEDF4" }}>
               <TableRow>
-                {onDelete && <TableCell sx={ACTION_CELL_SX} />}
                 <TableCell
                   align="center"
                   className={styles.checkColumn}
@@ -176,6 +175,7 @@ const BulkEditTable = ({
                     slotProps={{ input: { "aria-label": "select all" } }}
                   />
                 </TableCell>
+                {onDelete && <TableCell sx={ACTION_CELL_SX} />}
                 {columns.map((col, i) => {
                   const sortable = !!col.sortable;
 

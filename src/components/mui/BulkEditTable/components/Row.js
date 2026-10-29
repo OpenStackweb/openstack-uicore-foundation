@@ -59,11 +59,6 @@ const Row = (props) => {
 
   return (
     <TableRow role="row">
-      {onDelete && (
-        <TableCell align="center" sx={ACTION_CELL_SX}>
-          <RowActionsMenu actions={[getDeleteAction(() => onDelete(row))]} />
-        </TableCell>
-      )}
       <TableCell
         align="center"
         className={styles.checkColumn}
@@ -78,6 +73,11 @@ const Row = (props) => {
           slotProps={{ input: { "aria-label": `Select row ${row[idKey]}` } }}
         />
       </TableCell>
+      {onDelete && (
+        <TableCell align="center" sx={ACTION_CELL_SX}>
+          <RowActionsMenu actions={[getDeleteAction(() => onDelete(row))]} />
+        </TableCell>
+      )}
       {columns.map((col) => (
         <TableCell
           key={`${row[idKey]}_${col.columnKey}`}
