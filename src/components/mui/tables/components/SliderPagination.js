@@ -22,7 +22,7 @@ import ClickAwayListener from "@mui/material/ClickAwayListener";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import PropTypes from "prop-types";
-import { PAGINATION_BUTTON_SX } from "./table-styles";
+import { PAGINATION_BUTTON_CLASS } from "../../MuiBaseCustomTheme";
 
 const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initialExpanded }) => {
   const totalPages = Math.max(1, Math.ceil((totalRows ?? 0) / perPage));
@@ -90,7 +90,7 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
           disabled={currentPage <= 1}
           aria-label={T.translate("mui_table.previous_page")}
           disableFocusRipple
-          sx={PAGINATION_BUTTON_SX}
+          className={PAGINATION_BUTTON_CLASS}
         >
           {/* explicit px so a host page's root font-size reset can't shrink this */}
           <ChevronLeftIcon sx={{ fontSize: "24px" }} />
@@ -102,6 +102,7 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
           onClick={togglePill}
           variant="body1"
           color="text.secondary"
+          className={PAGINATION_BUTTON_CLASS}
           sx={{
             border: "none",
             background: "none",
@@ -109,8 +110,7 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
             height: 40,
             borderRadius: "17px",
             cursor: "pointer",
-            whiteSpace: "nowrap",
-            ...PAGINATION_BUTTON_SX
+            whiteSpace: "nowrap"
           }}
         >
           {T.translate("mui_table.page_of", {
@@ -150,7 +150,7 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
           disabled={currentPage >= totalPages}
           aria-label={T.translate("mui_table.next_page")}
           disableFocusRipple
-          sx={PAGINATION_BUTTON_SX}
+          className={PAGINATION_BUTTON_CLASS}
         >
           <ChevronRightIcon sx={{ fontSize: "24px" }} />
         </IconButton>

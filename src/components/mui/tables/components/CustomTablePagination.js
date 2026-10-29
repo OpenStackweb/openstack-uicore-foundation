@@ -20,7 +20,7 @@ import MenuItem from "@mui/material/MenuItem";
 import PropTypes from "prop-types";
 import { DEFAULT_PER_PAGE, FIFTY_PER_PAGE, TWENTY_PER_PAGE } from "../../../../utils/constants";
 import SliderPagination from "./SliderPagination";
-import { PAGINATION_BUTTON_SX } from "./table-styles";
+import { PAGINATION_BUTTON_CLASS } from "../../MuiBaseCustomTheme";
 
 const BASE_PER_PAGE_OPTIONS = [DEFAULT_PER_PAGE, TWENTY_PER_PAGE, FIFTY_PER_PAGE];
 
@@ -87,17 +87,12 @@ const CustomTablePagination = ({
               size="small"
               value={perPage}
               onChange={handleRowsPerPageChange}
+              className={PAGINATION_BUTTON_CLASS}
               sx={{
                 height: 40,
                 borderRadius: "20px",
                 minWidth: 80,
                 bgcolor: "background.paper",
-                ...PAGINATION_BUTTON_SX,
-                // keep the border grey on hover and focus (the base theme turns it black)
-                "--TextField-brandBorderHoverColor": (theme) => theme.palette.divider,
-                "--TextField-brandBorderFocusedColor": (theme) => theme.palette.divider,
-                "& .MuiOutlinedInput-notchedOutline": { borderColor: "divider" },
-                "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderWidth: 1 },
                 "& .MuiSelect-select": { color: "text.secondary" }
               }}
               inputProps={{ "aria-label": T.translate("mui_table.rows_per_page") }}
