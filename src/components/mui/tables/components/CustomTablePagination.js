@@ -20,7 +20,6 @@ import MenuItem from "@mui/material/MenuItem";
 import PropTypes from "prop-types";
 import { DEFAULT_PER_PAGE, FIFTY_PER_PAGE, TWENTY_PER_PAGE } from "../../../../utils/constants";
 import SliderPagination from "./SliderPagination";
-import { PAGINATION_BUTTON_CLASS } from "../../MuiBaseCustomTheme";
 
 const BASE_PER_PAGE_OPTIONS = [DEFAULT_PER_PAGE, TWENTY_PER_PAGE, FIFTY_PER_PAGE];
 
@@ -87,7 +86,7 @@ const CustomTablePagination = ({
               size="small"
               value={perPage}
               onChange={handleRowsPerPageChange}
-              className={PAGINATION_BUTTON_CLASS}
+              className="pagination-button"
               sx={{
                 height: 40,
                 borderRadius: "20px",

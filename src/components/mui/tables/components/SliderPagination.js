@@ -22,7 +22,6 @@ import ClickAwayListener from "@mui/material/ClickAwayListener";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import PropTypes from "prop-types";
-import { PAGINATION_BUTTON_CLASS } from "../../MuiBaseCustomTheme";
 
 const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initialExpanded }) => {
   const totalPages = Math.max(1, Math.ceil((totalRows ?? 0) / perPage));
@@ -90,7 +89,7 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
           disabled={currentPage <= 1}
           aria-label={T.translate("mui_table.previous_page")}
           disableFocusRipple
-          className={PAGINATION_BUTTON_CLASS}
+          className="pagination-button"
         >
           {/* explicit px so a host page's root font-size reset can't shrink this */}
           <ChevronLeftIcon sx={{ fontSize: "24px" }} />
@@ -102,13 +101,13 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
           onClick={togglePill}
           variant="body1"
           color="text.secondary"
-          className={PAGINATION_BUTTON_CLASS}
+          className="pagination-button"
           sx={{
             border: "none",
             background: "none",
             px: 1.5,
             height: 40,
-            borderRadius: "17px",
+            borderRadius: "20px",
             cursor: "pointer",
             whiteSpace: "nowrap"
           }}
@@ -150,7 +149,7 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
           disabled={currentPage >= totalPages}
           aria-label={T.translate("mui_table.next_page")}
           disableFocusRipple
-          className={PAGINATION_BUTTON_CLASS}
+          className="pagination-button"
         >
           <ChevronRightIcon sx={{ fontSize: "24px" }} />
         </IconButton>

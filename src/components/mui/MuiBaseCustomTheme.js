@@ -13,10 +13,7 @@
 
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
-// opt-in class for the pagination hover/focus overrides below
-export const PAGINATION_BUTTON_CLASS = "pagination-button";
-
-// grey on hover, darker grey on keyboard focus; shared by the pagination arrows, page button and per-page select
+// pagination controls: grey on hover, darker grey on keyboard focus
 const paginationButtonStyles = (theme) => ({
   transition: theme.transitions.create("background-color", {
     duration: theme.transitions.duration.shortest
@@ -27,10 +24,6 @@ const paginationButtonStyles = (theme) => ({
     backgroundColor: theme.palette.action.focus,
     outline: "none"
   }
-});
-
-const paginationButtonOverride = ({ theme }) => ({
-  [`&.${PAGINATION_BUTTON_CLASS}`]: paginationButtonStyles(theme)
 });
 
 export const MuiBaseCustomTheme = {
@@ -55,7 +48,7 @@ export const MuiBaseCustomTheme = {
             borderColor: "var(--TextField-brandBorderFocusedColor)"
           },
           // per-page select: keep the border grey on rest, hover and focus
-          [`&.${PAGINATION_BUTTON_CLASS}`]: {
+          "&.pagination-button": {
             ...paginationButtonStyles(theme),
             "--TextField-brandBorderColor": theme.palette.divider,
             "--TextField-brandBorderHoverColor": theme.palette.divider,
@@ -67,12 +60,12 @@ export const MuiBaseCustomTheme = {
     },
     MuiIconButton: {
       styleOverrides: {
-        root: paginationButtonOverride
+        root: ({ theme }) => ({ "&.pagination-button": paginationButtonStyles(theme) })
       }
     },
     MuiTypography: {
       styleOverrides: {
-        root: paginationButtonOverride
+        root: ({ theme }) => ({ "&.pagination-button": paginationButtonStyles(theme) })
       }
     },
     MuiSelect: {
