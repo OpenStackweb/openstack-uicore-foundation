@@ -70,7 +70,7 @@ const SnackbarNotification = ({
     setMessages(([, ...rest]) => rest);
   };
 
-  const onClose = (event, reason) => {
+  const onClose = (_, reason) => {
     // errors stay until dismissed
     if (reason === "clickaway" && !isSuccess) return;
     closingRef.current = current;

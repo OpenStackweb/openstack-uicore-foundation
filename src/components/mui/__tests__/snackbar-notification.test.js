@@ -134,7 +134,7 @@ describe("SnackbarNotification", () => {
       expect(screen.getByText("Second error")).toBeInTheDocument();
     });
 
-    test("shows only the newest when several arrive at once", () => {
+    test("a message arriving mid-close replaces the pending one", () => {
       const { rerender } = render(ui(errorA));
       rerender(ui(errorB));
       rerender(ui(errorC));
