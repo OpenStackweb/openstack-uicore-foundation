@@ -25,6 +25,8 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import MuiTable from "../tables/mui-table";
 import showConfirmDialog from "../showConfirmDialog";
 
@@ -327,6 +329,29 @@ describe("MuiTable", () => {
     await userEvent.click(screen.getAllByRole("button", { name: "Manage" })[0]);
 
     expect(onManage).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
+    expect(onEdit).not.toHaveBeenCalled();
+  });
+
+  test("clicks inside a popup opened from a cell do not trigger onEdit", async () => {
+    const onEdit = jest.fn();
+    setup({
+      onEdit,
+      columns: [
+        ...columns,
+        {
+          columnKey: "pick",
+          header: "",
+          render: () => (
+            <Menu open anchorEl={document.body}>
+              <MenuItem>Option A</MenuItem>
+            </Menu>
+          )
+        }
+      ]
+    });
+
+    await userEvent.click(screen.getAllByRole("menuitem", { name: "Option A" })[0]);
+
     expect(onEdit).not.toHaveBeenCalled();
   });
 

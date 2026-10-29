@@ -97,6 +97,8 @@ const MuiTable = ({
           hover: true,
           tabIndex: 0,
           onClick: (ev) => {
+            // ignore clicks from popups (menus, dialogs) opened by a cell
+            if (!ev.currentTarget.contains(ev.target)) return;
             // ignore clicks on controls rendered inside cells
             if (!ev.target.closest("button, a, input, [role=button]")) onEdit(row);
           },
