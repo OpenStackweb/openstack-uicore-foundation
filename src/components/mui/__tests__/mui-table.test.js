@@ -22,11 +22,12 @@ jest.mock("../showConfirmDialog", () => ({
 }));
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 import MuiTable from "../tables/mui-table";
 import showConfirmDialog from "../showConfirmDialog";
 
@@ -329,6 +330,48 @@ describe("MuiTable", () => {
     await userEvent.click(screen.getAllByRole("button", { name: "Manage" })[0]);
 
     expect(onManage).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
+    expect(onEdit).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ["a textarea", () => <textarea aria-label="Notes" />, () => screen.getAllByLabelText("Notes")[0]],
+    [
+      "a native select",
+      () => (
+        <select aria-label="Pick">
+          <option>One</option>
+        </select>
+      ),
+      () => screen.getAllByLabelText("Pick")[0]
+    ],
+    [
+      "a control label",
+      () => (
+        <label>
+          <input type="checkbox" /> Agree
+        </label>
+      ),
+      () => screen.getAllByText("Agree")[0]
+    ],
+    [
+      "an MUI Select",
+      () => (
+        <Select value="" displayEmpty>
+          <MenuItem value="">None</MenuItem>
+        </Select>
+      ),
+      // scoped to the row so the pagination's per-page select isn't picked
+      () => within(screen.getByText("Alice").closest("tr")).getByRole("combobox")
+    ]
+  ])("clicking %s inside a cell does not trigger onEdit", async (_, renderControl, getTarget) => {
+    const onEdit = jest.fn();
+    setup({
+      onEdit,
+      columns: [...columns, { columnKey: "control", header: "", render: renderControl }]
+    });
+
+    await userEvent.click(getTarget());
+
     expect(onEdit).not.toHaveBeenCalled();
   });
 
