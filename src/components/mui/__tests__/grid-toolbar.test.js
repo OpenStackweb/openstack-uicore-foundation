@@ -18,6 +18,11 @@ import "@testing-library/jest-dom";
 import { Button } from "@mui/material";
 import GridToolbar from "../grid-toolbar";
 
+jest.mock("i18n-react/dist/i18n-react", () => ({
+  __esModule: true,
+  default: { translate: (key) => key }
+}));
+
 // grid items (excluding the outer container) in render order
 const getItems = (container) =>
   Array.from(container.querySelectorAll(".MuiGrid2-root:not(.MuiGrid2-container)"));
@@ -32,7 +37,7 @@ describe("GridToolbar", () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  test("renders only a full-width actions cell without search or checkbox", () => {
+  test("renders only a full-width actions cell without search or filter", () => {
     const { container } = render(
       <GridToolbar>
         <Button>Add</Button>
@@ -42,27 +47,31 @@ describe("GridToolbar", () => {
     expect(items).toHaveLength(1);
     expect(sizeClasses(items[0])).toEqual(["MuiGrid2-grid-xs-12"]);
     expect(screen.queryByPlaceholderText("Find")).not.toBeInTheDocument();
-    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "general.archived" })
+    ).not.toBeInTheDocument();
   });
 
-  test("uses the fixed md layout when both search and checkbox are present", () => {
+  test("uses the fixed md/lg layout when both search and filter are present", () => {
     const { container } = render(
       <GridToolbar
         searchProps={searchProps}
-        checkboxProps={{ checked: false, onChange: jest.fn(), label: "Show all" }}
+        archiveToggleProps={{ showArchived: false, onChange: jest.fn() }}
         splitAt="lg"
       >
         <Button>Add</Button>
       </GridToolbar>
     );
-    const [search, checkbox, actions] = getItems(container);
+    const [search, filter, actions] = getItems(container);
     expect(sizeClasses(search)).toEqual([
-      "MuiGrid2-grid-md-4",
+      "MuiGrid2-grid-lg-4",
+      "MuiGrid2-grid-md-3",
       "MuiGrid2-grid-sm-6",
       "MuiGrid2-grid-xs-12"
     ]);
-    expect(sizeClasses(checkbox)).toEqual([
-      "MuiGrid2-grid-md-2",
+    expect(sizeClasses(filter)).toEqual([
+      "MuiGrid2-grid-lg-2",
+      "MuiGrid2-grid-md-3",
       "MuiGrid2-grid-sm-6",
       "MuiGrid2-grid-xs-12"
     ]);
@@ -80,17 +89,14 @@ describe("GridToolbar", () => {
     expect(sizeClasses(actions)).toEqual(["MuiGrid2-grid-sm-8", "MuiGrid2-grid-xs-12"]);
   });
 
-  test("splits checkbox and actions at the splitAt breakpoint", () => {
+  test("splits filter and actions at the splitAt breakpoint", () => {
     const { container } = render(
-      <GridToolbar
-        checkboxProps={{ checked: false, onChange: jest.fn(), label: "Show all" }}
-        splitAt="lg"
-      >
+      <GridToolbar filter={<span>Hide past events</span>} splitAt="lg">
         <Button>Add</Button>
       </GridToolbar>
     );
-    const [checkbox, actions] = getItems(container);
-    expect(sizeClasses(checkbox)).toEqual(["MuiGrid2-grid-lg-4", "MuiGrid2-grid-xs-12"]);
+    const [filter, actions] = getItems(container);
+    expect(sizeClasses(filter)).toEqual(["MuiGrid2-grid-lg-4", "MuiGrid2-grid-xs-12"]);
     expect(sizeClasses(actions)).toEqual(["MuiGrid2-grid-lg-8", "MuiGrid2-grid-xs-12"]);
   });
 
@@ -99,30 +105,37 @@ describe("GridToolbar", () => {
     expect(screen.getByPlaceholderText("Find")).toHaveValue("abc");
   });
 
-  test("renders a controlled checkbox labelled by label", async () => {
+  test("renders the archive toggle when archiveToggleProps is set, and forwards its changes", async () => {
     const onChange = jest.fn();
     render(
-      <GridToolbar checkboxProps={{ checked: true, onChange, label: "Show all" }} />
+      <GridToolbar archiveToggleProps={{ showArchived: false, onChange }} />
     );
-    const checkbox = screen.getByRole("checkbox", { name: "Show all" });
-    expect(checkbox).toBeChecked();
-    expect(screen.getByText("Show all")).toBeInTheDocument();
-    await userEvent.click(checkbox);
-    expect(onChange).toHaveBeenCalledTimes(1);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "general.archived" })
+    );
+    expect(onChange).toHaveBeenCalledWith(true);
   });
 
-  test("uses ariaLabel over label for the checkbox aria-label", () => {
+  test("renders a page's own filter in the filter slot", () => {
+    render(<GridToolbar filter={<span>Hide past events</span>} />);
+    expect(screen.getByText("Hide past events")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "general.archived" })
+    ).not.toBeInTheDocument();
+  });
+
+  test("shows the archive toggle instead of the filter when both are given", () => {
     render(
       <GridToolbar
-        checkboxProps={{
-          checked: false,
-          onChange: jest.fn(),
-          label: <span>Show all</span>,
-          ariaLabel: "Show all items"
-        }}
+        archiveToggleProps={{ showArchived: false, onChange: jest.fn() }}
+        filter={<span>Hide past events</span>}
       />
     );
-    expect(screen.getByRole("checkbox")).toHaveAttribute("aria-label", "Show all items");
+    expect(
+      screen.getByRole("button", { name: "general.archived" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Hide past events")).not.toBeInTheDocument();
   });
 
   // jsdom ignores media queries, so assert the sx handed to each child instead
@@ -141,11 +154,11 @@ describe("GridToolbar", () => {
     expect(sxOf("export")).toEqual({ width: { xs: "100%", sm: "auto" } });
   });
 
-  test("adds the fill tier between sm and md when search and checkbox share the row", () => {
+  test("adds the fill tier between sm and md when search and filter share the row", () => {
     render(
       <GridToolbar
         searchProps={searchProps}
-        checkboxProps={{ checked: false, onChange: jest.fn(), label: "Show all" }}
+        archiveToggleProps={{ showArchived: false, onChange: jest.fn() }}
       >
         <SxProbe name="add" />
       </GridToolbar>
