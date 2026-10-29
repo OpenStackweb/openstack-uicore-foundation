@@ -13,6 +13,19 @@
 
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
+// pagination controls: grey on hover, darker grey on keyboard focus
+const paginationButtonStyles = (theme) => ({
+  transition: theme.transitions.create("background-color", {
+    duration: theme.transitions.duration.shortest
+  }),
+  "&:hover": { backgroundColor: theme.palette.action.hover },
+  "@media (hover: none)": { "&:hover": { backgroundColor: "transparent" } },
+  "&:focus-visible, &:has(:focus-visible)": {
+    backgroundColor: theme.palette.action.focus,
+    outline: "none"
+  }
+});
+
 export const MuiBaseCustomTheme = {
   // must match the apps' html font-size so MUI's rem values render at their designed px
   typography: {
@@ -21,7 +34,7 @@ export const MuiBaseCustomTheme = {
   components: {
     MuiOutlinedInput: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           "--TextField-brandBorderColor": "#000",
           "--TextField-brandBorderHoverColor": "#000",
           "--TextField-brandBorderFocusedColor": "#000",
@@ -33,8 +46,26 @@ export const MuiBaseCustomTheme = {
           },
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
             borderColor: "var(--TextField-brandBorderFocusedColor)"
+          },
+          // per-page select: keep the border grey on rest, hover and focus
+          "&.pagination-button": {
+            ...paginationButtonStyles(theme),
+            "--TextField-brandBorderColor": theme.palette.divider,
+            "--TextField-brandBorderHoverColor": theme.palette.divider,
+            "--TextField-brandBorderFocusedColor": theme.palette.divider,
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderWidth: 1 }
           }
-        }
+        })
+      }
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: ({ theme }) => ({ "&.pagination-button": paginationButtonStyles(theme) })
+      }
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: ({ theme }) => ({ "&.pagination-button": paginationButtonStyles(theme) })
       }
     },
     MuiSelect: {

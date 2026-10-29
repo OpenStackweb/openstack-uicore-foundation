@@ -17,7 +17,7 @@ jest.mock("i18n-react/dist/i18n-react", () => ({
 }));
 
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import CustomTablePagination from "../tables/components/CustomTablePagination";
@@ -83,5 +83,17 @@ describe("CustomTablePagination", () => {
     fireEvent.keyDown(slider, { key: "ArrowRight" });
 
     expect(onPageChange).toHaveBeenCalledWith(4);
+  });
+
+  test("returns keyboard focus to the page button when the slider collapses", async () => {
+    setup({ currentPage: 3, totalRows: 100, perPage: 10 });
+    const pageButton = screen.getByRole("button", { name: "mui_table.page_of" });
+    await userEvent.click(pageButton);
+
+    await userEvent.tab();
+    expect(screen.getByRole("slider")).toHaveFocus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    await waitFor(() => expect(pageButton).toHaveFocus());
   });
 });

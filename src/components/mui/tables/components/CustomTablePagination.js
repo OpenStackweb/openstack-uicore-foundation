@@ -86,12 +86,12 @@ const CustomTablePagination = ({
               size="small"
               value={perPage}
               onChange={handleRowsPerPageChange}
+              className="pagination-button"
               sx={{
                 height: 40,
                 borderRadius: "20px",
                 minWidth: 80,
                 bgcolor: "background.paper",
-                "& .MuiOutlinedInput-notchedOutline": { borderColor: "divider" },
                 "& .MuiSelect-select": { color: "text.secondary" }
               }}
               inputProps={{ "aria-label": T.translate("mui_table.rows_per_page") }}
