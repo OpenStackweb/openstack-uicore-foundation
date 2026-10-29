@@ -85,11 +85,11 @@ describe("MuiTable", () => {
     expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 2 }));
   });
 
-  test("calls onEdit when Enter is pressed on a focused row", async () => {
+  test("calls onEdit once from the row menu's Edit item", async () => {
     const onEdit = jest.fn();
     setup({ onEdit });
-    screen.getByText("Bob").closest("tr").focus();
-    await userEvent.keyboard("{Enter}");
+    await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[1]);
+    await userEvent.click(screen.getByRole("menuitem", { name: "general.edit" }));
     expect(onEdit).toHaveBeenCalledTimes(1);
     expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 2 }));
   });
@@ -158,6 +158,13 @@ describe("MuiTable", () => {
     expect(screen.getAllByTestId("row-actions-menu-trigger")).toHaveLength(1);
   });
 
+  test("keeps Edit in the menu when canDelete returns false", async () => {
+    setup({ onEdit: jest.fn(), onDelete: jest.fn(), canDelete: (row) => row.id !== 1 });
+    await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    expect(screen.getByRole("menuitem", { name: "general.edit" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "general.delete" })).not.toBeInTheDocument();
+  });
+
   test("renders pagination (top and bottom) when perPage and currentPage are set", () => {
     setup();
     expect(screen.getAllByText("mui_table.page_of")).toHaveLength(2);
@@ -203,7 +210,7 @@ describe("MuiTable", () => {
     });
 
     test("disables the row menu for rows where disableProp is truthy", () => {
-      setup({ data: disabledData, onDelete: jest.fn(), options: disabledOptions });
+      setup({ data: disabledData, onEdit: jest.fn(), onDelete: jest.fn(), options: disabledOptions });
       const triggers = screen.getAllByTestId("row-actions-menu-trigger");
       expect(triggers[0]).toBeDisabled();
       expect(triggers[1]).not.toBeDisabled();

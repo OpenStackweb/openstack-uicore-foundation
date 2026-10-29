@@ -72,8 +72,9 @@ const MuiTable = ({
     disableProp: null, // disableProp is the prop that will disable the row
     ...userOptions
   };
+  const hasRowMenu = !!(onEdit || onDelete);
   const actionColumnsCount =
-    (onDelete ? 1 : 0) + (onArchive ? 1 : 0) + (onSelect ? 1 : 0);
+    (hasRowMenu ? 1 : 0) + (onArchive ? 1 : 0) + (onSelect ? 1 : 0);
 
   const totalColumnsCount = columns.length + actionColumnsCount;
 
@@ -95,7 +96,6 @@ const MuiTable = ({
     onEdit && !(options.disableProp && row[options.disableProp])
       ? {
           hover: true,
-          tabIndex: 0,
           onClick: (ev) => {
             // ignore clicks from popups (menus, dialogs) opened by a cell
             if (!ev.currentTarget.contains(ev.target)) return;
@@ -107,17 +107,22 @@ const MuiTable = ({
             )
               onEdit(row);
           },
-          // Enter on the focused row itself edits, for keyboard users
-          onKeyDown: (ev) => {
-            if (ev.key === "Enter" && ev.target === ev.currentTarget) onEdit(row);
-          },
-          // browsers don't draw focus outlines on rows, so shade it instead
-          sx: {
-            cursor: "pointer",
-            "&:focus-visible": { backgroundColor: "action.selected" }
-          }
+          sx: { cursor: "pointer" }
         }
       : {};
+
+  // menu Edit mirrors the row click so keyboard and screen reader users can find it
+  const getRowActions = (row) => {
+    const disabled = !!(options.disableProp && row[options.disableProp]);
+    return [
+      onEdit && {
+        label: T.translate("general.edit"),
+        onClick: () => onEdit(row),
+        disabled
+      },
+      onDelete && canDelete(row) && getDeleteAction(() => handleDelete(row), disabled)
+    ].filter(Boolean);
+  };
 
   const handleDelete = createDeleteHandler({
     onDelete,
@@ -142,7 +147,7 @@ const MuiTable = ({
         {/* TABLE HEADER */}
         <TableHead sx={{ backgroundColor: "#EAEDF4" }}>
           <TableRow>
-            {onDelete && <TableCell sx={ACTION_CELL_SX} />}
+            {hasRowMenu && <TableCell sx={ACTION_CELL_SX} />}
             {columns.map((col) => (
               <TableCell
                 key={col.columnKey}
@@ -169,22 +174,15 @@ const MuiTable = ({
             <React.Fragment key={row.id}>{row.renderRow(totalColumnsCount)}</React.Fragment>
           ) : (
             <TableRow key={row.id} {...getRowEditProps(row)}>
-              {/* Delete column */}
-              {onDelete && (
+              {/* Row actions menu column */}
+              {hasRowMenu && (
                 <TableCell
                   align="center"
                   sx={getActionCellSx(row, options.disableProp)}
                   onClick={(ev) => ev.stopPropagation()}
                 >
-                  {canDelete(row) && (
-                    <RowActionsMenu
-                      actions={[
-                        getDeleteAction(
-                          () => handleDelete(row),
-                          !!(options.disableProp && row[options.disableProp])
-                        )
-                      ]}
-                    />
+                  {(onEdit || canDelete(row)) && (
+                    <RowActionsMenu actions={getRowActions(row)} />
                   )}
                 </TableCell>
               )}
