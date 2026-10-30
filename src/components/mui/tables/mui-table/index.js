@@ -134,7 +134,6 @@ const MuiTable = ({
         {/* TABLE HEADER */}
         <TableHead sx={{ backgroundColor: "#EAEDF4" }}>
           <TableRow>
-            {hasRowMenu && <TableCell sx={ACTION_CELL_SX} />}
             {columns.map((col) => (
               <TableCell
                 key={col.columnKey}
@@ -150,6 +149,7 @@ const MuiTable = ({
               </TableCell>
             ))}
             {onArchive && <TableCell sx={ACTION_CELL_SX} />}
+            {hasRowMenu && <TableCell sx={ACTION_CELL_SX} />}
             {onSelect && <TableCell sx={ACTION_CELL_SX} />}
           </TableRow>
         </TableHead>
@@ -161,20 +161,6 @@ const MuiTable = ({
             <React.Fragment key={row.id}>{row.renderRow(totalColumnsCount)}</React.Fragment>
           ) : (
             <TableRow key={row.id} {...getRowEditProps(row)}>
-              {/* Row actions menu column */}
-              {hasRowMenu && (
-                <TableCell
-                  align="center"
-                  sx={getActionCellSx(row, options.disableProp)}
-                  onClick={(ev) => ev.stopPropagation()}
-                >
-                  <RowActionsMenu
-                    onEdit={onEdit && (() => onEdit(row))}
-                    onDelete={onDelete && canDelete(row) ? () => handleDelete(row) : undefined}
-                    disabled={!!(options.disableProp && row[options.disableProp])}
-                  />
-                </TableCell>
-              )}
               {/* Main content columns */}
               {columns.map((col) => (
                 <TableCell
@@ -221,6 +207,21 @@ const MuiTable = ({
                       </IconButton>
                     </span>
                   </Tooltip>
+                </TableCell>
+              )}
+              {/* Row actions menu column */}
+              {hasRowMenu && (
+                <TableCell
+                  align="center"
+                  sx={getActionCellSx(row, options.disableProp)}
+                  className={styles.dottedBorderLeft}
+                  onClick={(ev) => ev.stopPropagation()}
+                >
+                  <RowActionsMenu
+                    onEdit={onEdit && (() => onEdit(row))}
+                    onDelete={onDelete && canDelete(row) ? () => handleDelete(row) : undefined}
+                    disabled={!!(options.disableProp && row[options.disableProp])}
+                  />
                 </TableCell>
               )}
               {onSelect && (

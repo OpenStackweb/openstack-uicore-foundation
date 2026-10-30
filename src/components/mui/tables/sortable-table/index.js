@@ -105,7 +105,6 @@ const MuiTableSortable = ({
         {/* TABLE HEADER */}
         <TableHead sx={{ backgroundColor: "#EAEAEA" }}>
           <TableRow>
-            {(onEdit || onDelete) && <TableCell sx={ACTION_CELL_SX} />}
             {columns.map((col) => (
               <TableCell
                 key={col.columnKey}
@@ -120,6 +119,7 @@ const MuiTableSortable = ({
                 />
               </TableCell>
             ))}
+            {(onEdit || onDelete) && <TableCell sx={ACTION_CELL_SX} />}
             {onReorder && <TableCell sx={ACTION_CELL_SX} />}
           </TableRow>
         </TableHead>
@@ -161,15 +161,6 @@ const MuiTableSortable = ({
                               })
                         }}
                       >
-                        {/* Row actions menu column */}
-                        {(onEdit || onDelete) && (
-                          <TableCell align="center" sx={getActionCellSx(row)}>
-                            <RowActionsMenu
-                              onEdit={onEdit && (() => onEdit(row))}
-                              onDelete={onDelete && (() => handleDelete(row))}
-                            />
-                          </TableCell>
-                        )}
                         {/* Main content columns */}
                         {columns.map((col) => (
                           <TableCell
@@ -183,6 +174,19 @@ const MuiTableSortable = ({
                             <TableCellContent row={row} col={col} />
                           </TableCell>
                         ))}
+                        {/* Row actions menu column */}
+                        {(onEdit || onDelete) && (
+                          <TableCell
+                            align="center"
+                            sx={getActionCellSx(row)}
+                            className={styles.dottedBorderLeft}
+                          >
+                            <RowActionsMenu
+                              onEdit={onEdit && (() => onEdit(row))}
+                              onDelete={onDelete && (() => handleDelete(row))}
+                            />
+                          </TableCell>
+                        )}
                         {/* Re order column */}
                         {onReorder && (
                           <TableCell

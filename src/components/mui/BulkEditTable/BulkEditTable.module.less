@@ -21,8 +21,8 @@
     vertical-align: middle;
   }
 
-  // shared by header (th) and body (td) cells so the checkbox column
-  // stays pinned and aligned in both rows while the data columns scroll
+  // shared by header (th) and body (td) cells so the checkbox/action columns
+  // stay pinned and aligned in both rows while the data columns scroll
   // horizontally. Background color is intentionally NOT set here: header
   // cells need the header's grey, body cells need white, set via sx where
   // each is rendered (an explicit color is required, `inherit` resolves to
@@ -34,7 +34,32 @@
     left: 0;
   }
 
+  .actionColumn {
+    text-align: center;
+    position: sticky;
+    z-index: 5;
+    right: 0;
+    width: 60px;
+    min-width: 60px;
+    max-width: 60px;
+  }
+
   .bulkEditCol {
     min-width: 250px;
+  }
+}
+
+.dottedBorderLeft {
+  position: relative;
+  border-left: none;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    border-left: 1px dashed #e0e0e0;
+    height: 60%;
+    align-self: center;
   }
 }

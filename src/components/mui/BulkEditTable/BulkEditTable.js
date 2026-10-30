@@ -31,10 +31,7 @@ import styles from "./BulkEditTable.module.less";
 import CustomTablePagination from "../tables/components/CustomTablePagination";
 import parsePaginationPosition from "../tables/components/pagination-position";
 import showConfirmDialog from "../showConfirmDialog";
-import {
-  RESPONSIVE_TABLE_SX,
-  ACTION_CELL_SX
-} from "../tables/components/table-styles";
+import { RESPONSIVE_TABLE_SX } from "../tables/components/table-styles";
 
 const BulkEditTable = ({
   options,
@@ -175,7 +172,6 @@ const BulkEditTable = ({
                     slotProps={{ input: { "aria-label": "select all" } }}
                   />
                 </TableCell>
-                {(onEdit || onDelete) && <TableCell sx={ACTION_CELL_SX} />}
                 {columns.map((col, i) => {
                   const sortable = !!col.sortable;
 
@@ -194,6 +190,15 @@ const BulkEditTable = ({
                     </Heading>
                   );
                 })}
+                {(onEdit || onDelete) && (
+                  <TableCell
+                    align="center"
+                    className={styles.actionColumn}
+                    sx={{ backgroundColor: "#EAEDF4" }}
+                  >
+                    {options.actionsHeader || " "}
+                  </TableCell>
+                )}
               </TableRow>
             </TableHead>
             <TableBody>

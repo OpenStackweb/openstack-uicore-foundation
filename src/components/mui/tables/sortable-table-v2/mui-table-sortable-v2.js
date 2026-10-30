@@ -141,7 +141,6 @@ const MuiTableSortableV2 = ({
               {/* TABLE HEADER */}
               <TableHead sx={{ backgroundColor: "#EAEAEA" }}>
                 <TableRow>
-                  {(onEdit || onDelete) && <TableCell sx={{ width: 40 }} />}
                   {columns.map((col) => (
                     <TableCell
                       key={col.columnKey}
@@ -176,6 +175,7 @@ const MuiTableSortableV2 = ({
                       )}
                     </TableCell>
                   ))}
+                  {(onEdit || onDelete) && <TableCell sx={{ width: 40 }} />}
                   {onReorder && <TableCell sx={{ width: 40 }} />}
                 </TableRow>
               </TableHead>
@@ -193,15 +193,6 @@ const MuiTableSortableV2 = ({
                     >
                       {({ dragHandleProps }) => (
                         <>
-                          {/* Row actions menu column */}
-                          {(onEdit || onDelete) && (
-                            <TableCell align="center" sx={{ width: 40 }}>
-                              <RowActionsMenu
-                                onEdit={onEdit && (() => onEdit(row))}
-                                onDelete={onDelete && (() => handleDelete(row))}
-                              />
-                            </TableCell>
-                          )}
                           {/* Main content columns */}
                           {columns.map((col) => (
                             <TableCell
@@ -213,6 +204,19 @@ const MuiTableSortableV2 = ({
                               <TableCellContent row={row} col={col} />
                             </TableCell>
                           ))}
+                          {/* Row actions menu column */}
+                          {(onEdit || onDelete) && (
+                            <TableCell
+                              align="center"
+                              sx={{ width: 40 }}
+                              className={styles.dottedBorderLeft}
+                            >
+                              <RowActionsMenu
+                                onEdit={onEdit && (() => onEdit(row))}
+                                onDelete={onDelete && (() => handleDelete(row))}
+                              />
+                            </TableCell>
+                          )}
                           {/* Re order column */}
                           {onReorder && (
                             <TableCell

@@ -18,10 +18,7 @@ import TableCell from "@mui/material/TableCell";
 import Checkbox from "@mui/material/Checkbox";
 import Cell from "./Cell";
 import RowActionsMenu from "../../tables/components/row-actions-menu";
-import {
-  getColumnWidthSx,
-  ACTION_CELL_SX
-} from "../../tables/components/table-styles";
+import { getColumnWidthSx } from "../../tables/components/table-styles";
 import styles from "../BulkEditTable.module.less";
 
 // the 250px min-width while editing comes from the .bulkEditCol class
@@ -69,14 +66,6 @@ const Row = (props) => {
           slotProps={{ input: { "aria-label": `Select row ${row[idKey]}` } }}
         />
       </TableCell>
-      {(onEdit || onDelete) && (
-        <TableCell align="center" sx={ACTION_CELL_SX}>
-          <RowActionsMenu
-            onEdit={onEdit && (() => onEdit(row))}
-            onDelete={onDelete && (() => onDelete(row))}
-          />
-        </TableCell>
-      )}
       {columns.map((col) => (
         <TableCell
           key={`${row[idKey]}_${col.columnKey}`}
@@ -92,6 +81,18 @@ const Row = (props) => {
           />
         </TableCell>
       ))}
+      {(onEdit || onDelete) && (
+        <TableCell
+          align="center"
+          className={`${styles.actionColumn} ${styles.dottedBorderLeft}`}
+          sx={{ backgroundColor: "#fff" }}
+        >
+          <RowActionsMenu
+            onEdit={onEdit && (() => onEdit(row))}
+            onDelete={onDelete && (() => onDelete(row))}
+          />
+        </TableCell>
+      )}
     </TableRow>
   );
 };
