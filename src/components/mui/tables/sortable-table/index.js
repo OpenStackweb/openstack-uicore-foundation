@@ -20,8 +20,6 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import { IconButton } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
 import styles from "../components/styles.module.less";
@@ -30,6 +28,7 @@ import TableCellContent from "../components/table-cell-content";
 import TableShell from "../components/table-shell";
 import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
+import RowActionsMenu from "../components/row-actions-menu";
 import {
   RESPONSIVE_TABLE_SX,
   getColumnWidthSx,
@@ -52,6 +51,7 @@ const MuiTableSortable = ({
   getName = (item) => item.name,
   onEdit,
   onDelete,
+  getRowActions,
   deleteDialogTitle = null,
   deleteDialogBody = null,
   onReorder,
@@ -120,8 +120,7 @@ const MuiTableSortable = ({
                 />
               </TableCell>
             ))}
-            {onEdit && <TableCell sx={ACTION_CELL_SX} />}
-            {onDelete && <TableCell sx={ACTION_CELL_SX} />}
+            {(onEdit || onDelete || getRowActions) && <TableCell sx={ACTION_CELL_SX} />}
             {onReorder && <TableCell sx={ACTION_CELL_SX} />}
           </TableRow>
         </TableHead>
@@ -176,36 +175,18 @@ const MuiTableSortable = ({
                             <TableCellContent row={row} col={col} />
                           </TableCell>
                         ))}
-                        {/* Edit column */}
-                        {onEdit && (
+                        {/* Row actions menu column */}
+                        {(onEdit || onDelete || getRowActions) && (
                           <TableCell
                             align="center"
                             sx={getActionCellSx(row)}
                             className={styles.dottedBorderLeft}
                           >
-                            <IconButton
-                              size="large"
-                              onClick={() => onEdit(row)}
-                              sx={{ padding: 0 }}
-                            >
-                              <EditIcon />
-                            </IconButton>
-                          </TableCell>
-                        )}
-                        {/* Delete column */}
-                        {onDelete && (
-                          <TableCell
-                            align="center"
-                            sx={getActionCellSx(row)}
-                            className={styles.dottedBorderLeft}
-                          >
-                            <IconButton
-                              size="large"
-                              onClick={() => handleDelete(row)}
-                              sx={{ padding: 0 }}
-                            >
-                              <DeleteIcon />
-                            </IconButton>
+                            <RowActionsMenu
+                              actions={getRowActions?.(row)}
+                              onEdit={onEdit && (() => onEdit(row))}
+                              onDelete={onDelete && (() => handleDelete(row))}
+                            />
                           </TableCell>
                         )}
                         {/* Re order column */}

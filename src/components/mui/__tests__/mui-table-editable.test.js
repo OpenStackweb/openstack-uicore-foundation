@@ -30,11 +30,12 @@ jest.mock("@mui/material/IconButton", () => {
   const React = require("react");
   return {
     __esModule: true,
-    default: ({ children, onClick, ...rest }) => (
-      <button type="button" onClick={onClick} {...rest}>
+    // forwardRef so the menu trigger's Tooltip can attach
+    default: React.forwardRef(({ children, onClick, ...rest }, ref) => (
+      <button type="button" ref={ref} onClick={onClick} {...rest}>
         {children}
       </button>
-    )
+    ))
   };
 });
 jest.mock("@mui/material/ButtonBase/TouchRipple", () => ({
@@ -197,22 +198,35 @@ describe("MuiTableEditable", () => {
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
 
-  test("edit button calls onEdit", async () => {
+  test("menu Edit calls onEdit", async () => {
     const user = userEvent.setup();
     const { onEdit } = setup();
-    const [btn] = screen.getAllByLabelText("general.edit");
-    await user.click(btn);
+    await user.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    await user.click(screen.getByRole("menuitem", { name: "general.edit" }));
     expect(onEdit).toHaveBeenCalledWith(
       expect.objectContaining({ id: 1, name: "Alice" })
     );
+  });
+
+  test("getRowActions items show in the row menu and run their onClick", async () => {
+    const user = userEvent.setup();
+    const onArchive = jest.fn();
+    setup({
+      onEdit: undefined,
+      onDelete: undefined,
+      getRowActions: (row) => [{ label: "Archive", onClick: () => onArchive(row) }]
+    });
+    await user.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    await user.click(screen.getByRole("menuitem", { name: "Archive" }));
+    expect(onArchive).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
   });
 
   test("delete confirmed calls onDelete", async () => {
     const user = userEvent.setup();
     const { onDelete } = setup();
     showConfirmDialog.mockResolvedValueOnce(true); // ✅ use the exported mock
-    const [btn] = screen.getAllByLabelText("general.delete");
-    await user.click(btn);
+    await user.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    await user.click(screen.getByRole("menuitem", { name: "general.delete" }));
     expect(showConfirmDialog).toHaveBeenCalled();
     expect(onDelete).toHaveBeenCalledWith(1);
   });
@@ -221,8 +235,8 @@ describe("MuiTableEditable", () => {
     const user = userEvent.setup();
     const { onDelete } = setup();
     showConfirmDialog.mockResolvedValueOnce(false);
-    const [btn] = screen.getAllByLabelText("general.delete");
-    await user.click(btn);
+    await user.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    await user.click(screen.getByRole("menuitem", { name: "general.delete" }));
     expect(showConfirmDialog).toHaveBeenCalled();
     expect(onDelete).not.toHaveBeenCalled();
   });
@@ -286,7 +300,7 @@ describe("MuiTableEditable", () => {
     expect(newDir).toBe(1);
   });
 
-  test("applies archived styles to content, edit and delete cells when disableProp matches", () => {
+  test("applies archived styles to content, row menu and archive cells when disableProp matches", () => {
     setup({
       options: { sortCol: "name", sortDir: -1, disableProp: "is_archived" },
       data: [
@@ -299,7 +313,7 @@ describe("MuiTableEditable", () => {
     const aliceRow = screen.getByText("Alice").closest("tr");
     const cells = within(aliceRow).getAllByTestId("mui-table-cell");
 
-    const archivedCellIndexes = [0, 1, 2, 3, 5];
+    const archivedCellIndexes = [0, 1, 2, 3, 4];
     archivedCellIndexes.forEach((index) => {
       const sx = getCellSx(cells[index]);
       expect(sx.backgroundColor).toBe("background.light");

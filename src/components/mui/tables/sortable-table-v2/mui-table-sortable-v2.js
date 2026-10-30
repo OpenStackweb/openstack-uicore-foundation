@@ -24,8 +24,6 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import { IconButton } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { DndContext } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { visuallyHidden } from "@mui/utils";
@@ -35,6 +33,7 @@ import styles from "./styles.module.less";
 import showConfirmDialog from "../../showConfirmDialog";
 import SortableRow from "./sortable-row";
 import TableCellContent from "../components/table-cell-content";
+import RowActionsMenu from "../components/row-actions-menu";
 import CustomTablePagination from "../components/CustomTablePagination";
 import parsePaginationPosition from "../components/pagination-position";
 import useDndKitReorder from "../../DragNDropList/hooks/useDndKitReorder";
@@ -59,6 +58,7 @@ const MuiTableSortableV2 = ({
   getName = (item) => item.name,
   onEdit,
   onDelete,
+  getRowActions,
   deleteDialogTitle = null,
   deleteDialogBody = null,
   onReorder,
@@ -176,8 +176,7 @@ const MuiTableSortableV2 = ({
                       )}
                     </TableCell>
                   ))}
-                  {onEdit && <TableCell sx={{ width: 40 }} />}
-                  {onDelete && <TableCell sx={{ width: 40 }} />}
+                  {(onEdit || onDelete || getRowActions) && <TableCell sx={{ width: 40 }} />}
                   {onReorder && <TableCell sx={{ width: 40 }} />}
                 </TableRow>
               </TableHead>
@@ -206,36 +205,18 @@ const MuiTableSortableV2 = ({
                               <TableCellContent row={row} col={col} />
                             </TableCell>
                           ))}
-                          {/* Edit column */}
-                          {onEdit && (
+                          {/* Row actions menu column */}
+                          {(onEdit || onDelete || getRowActions) && (
                             <TableCell
                               align="center"
                               sx={{ width: 40 }}
                               className={styles.dottedBorderLeft}
                             >
-                              <IconButton
-                                size="large"
-                                onClick={() => onEdit(row)}
-                                sx={{ padding: 0 }}
-                              >
-                                <EditIcon />
-                              </IconButton>
-                            </TableCell>
-                          )}
-                          {/* Delete column */}
-                          {onDelete && (
-                            <TableCell
-                              align="center"
-                              sx={{ width: 40 }}
-                              className={styles.dottedBorderLeft}
-                            >
-                              <IconButton
-                                size="large"
-                                onClick={() => handleDelete(row)}
-                                sx={{ padding: 0 }}
-                              >
-                                <DeleteIcon />
-                              </IconButton>
+                              <RowActionsMenu
+                                actions={getRowActions?.(row)}
+                                onEdit={onEdit && (() => onEdit(row))}
+                                onDelete={onDelete && (() => handleDelete(row))}
+                              />
                             </TableCell>
                           )}
                           {/* Re order column */}
@@ -259,8 +240,7 @@ const MuiTableSortableV2 = ({
                       <TableCell
                         colSpan={
                           columns.length +
-                          (onEdit ? 1 : 0) +
-                          (onDelete ? 1 : 0) +
+                          (onEdit || onDelete || getRowActions ? 1 : 0) +
                           (onReorder ? 1 : 0)
                         }
                         align="center"
