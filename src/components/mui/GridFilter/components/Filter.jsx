@@ -13,7 +13,7 @@
 
 import React, { useEffect } from "react";
 import T from "i18n-react/dist/i18n-react";
-import { Box, Grid2, IconButton } from "@mui/material";
+import { Box, Grid, IconButton } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import PropTypes from "prop-types";
@@ -80,8 +80,8 @@ const Filter = ({ id, value, criterias, onChange, onAdd, onDelete }) => {
   };
 
   return (
-    <Grid2 container spacing={2} sx={{ alignItems: "center", mb: 2 }}>
-      <Grid2 size={11}>
+    <Grid container spacing={2} sx={{ alignItems: "center", mb: 2 }}>
+      <Grid size={11}>
         <Box sx={{ display: "flex", alignItems: "center", gap: "14px" }}>
           <Box sx={{ flex: "0 0 220px" }}>
             <Dropdown
@@ -115,8 +115,8 @@ const Filter = ({ id, value, criterias, onChange, onAdd, onDelete }) => {
             />
           </Box>
         </Box>
-      </Grid2>
-      <Grid2 size={1}>
+      </Grid>
+      <Grid size={1}>
         {value?.id !== "new" ? (
           <IconButton
             aria-label="delete-filter"
@@ -136,8 +136,8 @@ const Filter = ({ id, value, criterias, onChange, onAdd, onDelete }) => {
             <AddIcon />
           </RoundButton>
         )}
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   );
 };
 

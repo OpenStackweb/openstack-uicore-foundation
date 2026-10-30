@@ -33,24 +33,24 @@ describe("MuiFormikSwitch", () => {
     expect(screen.getByText("Enable Feature")).toBeInTheDocument();
   });
 
-  test("renders a switch (checkbox role)", () => {
+  test("renders a switch (switch role)", () => {
     renderWithFormik({});
-    expect(screen.getByRole("checkbox")).toBeInTheDocument();
+    expect(screen.getByRole("switch")).toBeInTheDocument();
   });
 
   test("is off when initial value is false", () => {
     renderWithFormik({});
-    expect(screen.getByRole("checkbox")).not.toBeChecked();
+    expect(screen.getByRole("switch")).not.toBeChecked();
   });
 
   test("is on when initial value is true", () => {
     renderWithFormik({}, { enabled: true });
-    expect(screen.getByRole("checkbox")).toBeChecked();
+    expect(screen.getByRole("switch")).toBeChecked();
   });
 
   test("toggles on click", async () => {
     renderWithFormik({});
-    const toggle = screen.getByRole("checkbox");
+    const toggle = screen.getByRole("switch");
     await userEvent.click(toggle);
     expect(toggle).toBeChecked();
   });

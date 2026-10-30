@@ -13,7 +13,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import { Checkbox, FormControlLabel, FormGroup, Grid2 } from "@mui/material";
+import { Checkbox, FormControlLabel, FormGroup, Grid } from "@mui/material";
 import SearchInput from "./search-input";
 
 const GridToolbar = ({ searchProps, checkboxProps, children, splitAt }) => {
@@ -55,22 +55,24 @@ const GridToolbar = ({ searchProps, checkboxProps, children, splitAt }) => {
   const hasFillTier = actionsAutoBreakpoint !== "sm";
 
   return (
-    <Grid2 container spacing={2} sx={{ mb: 3 }}>
+    <Grid container spacing={2} sx={{ mb: 3 }}>
       {hasSearch && (
-        <Grid2 size={searchSize}>
+        <Grid size={searchSize}>
           <SearchInput {...searchProps} />
-        </Grid2>
+        </Grid>
       )}
       {hasCheckbox && (
-        <Grid2 size={checkboxSize}>
+        <Grid size={checkboxSize}>
           <FormGroup sx={{ flexShrink: 0 }}>
             <FormControlLabel
               control={
                 <Checkbox
                   checked={checkboxProps.checked}
                   onChange={checkboxProps.onChange}
-                  inputProps={{
-                    "aria-label": checkboxProps.ariaLabel ?? checkboxProps.label
+                  slotProps={{
+                    input: {
+                      "aria-label": checkboxProps.ariaLabel ?? checkboxProps.label
+                    }
                   }}
                 />
               }
@@ -78,9 +80,9 @@ const GridToolbar = ({ searchProps, checkboxProps, children, splitAt }) => {
               sx={{ whiteSpace: "nowrap" }}
             />
           </FormGroup>
-        </Grid2>
+        </Grid>
       )}
-      <Grid2
+      <Grid
         size={actionsSize}
         sx={{
           display: "flex",
@@ -106,8 +108,8 @@ const GridToolbar = ({ searchProps, checkboxProps, children, splitAt }) => {
               })
             : child
         )}
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   );
 };
 

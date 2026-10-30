@@ -46,7 +46,7 @@ const DiscountRow = ({ discount, discountCents, balance, colGap = 0, trailing = 
       </TableCell>
       {[...Array(colGap)].map((_, i) => (
         // eslint-disable-next-line react/no-array-index-key
-        <TableCell key={`pay-col-gap-${i}`} />
+        (<TableCell key={`pay-col-gap-${i}`} />)
       ))}
       <TableCell align="right">
         <Typography
@@ -61,7 +61,7 @@ const DiscountRow = ({ discount, discountCents, balance, colGap = 0, trailing = 
       </TableCell>
       {[...Array(trailing)].map((_, i) => (
         // eslint-disable-next-line react/no-array-index-key
-        <TableCell key={`pay-trailing-col-${i}`} sx={{ width: 40 }} />
+        (<TableCell key={`pay-trailing-col-${i}`} sx={{ width: 40 }} />)
       ))}
     </TableRow>
   );

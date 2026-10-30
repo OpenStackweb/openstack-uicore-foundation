@@ -35,7 +35,7 @@ const InlineCard = ({ title, rows }) => (
       <List sx={{ display: "flex", marginTop: "20px" }}>
         {(rows ?? []).map((row, i) => (
           // eslint-disable-next-line react/no-array-index-key
-          <React.Fragment key={`row-${row.label}-${i}`}>
+          (<React.Fragment key={`row-${row.label}-${i}`}>
             <ListItem
               sx={{ display: "flex", flexDirection: "column", height: 50 }}
             >
@@ -43,7 +43,7 @@ const InlineCard = ({ title, rows }) => (
               <Value>{row.value}</Value>
             </ListItem>
             {i < rows.length - 1 && <Divider orientation="vertical" flexItem />}
-          </React.Fragment>
+          </React.Fragment>)
         ))}
       </List>
     </CardContent>

@@ -17,7 +17,7 @@ import {
   Button,
   Divider,
   FormHelperText,
-  Grid2,
+  Grid,
   InputLabel,
   MenuItem
 } from "@mui/material";
@@ -66,8 +66,8 @@ const AdditionalInputCore = ({
     typeof fieldErrors.values === "string";
 
   return (
-    <Grid2 container spacing={2} sx={{ alignItems: "center" }}>
-      <Grid2 size={11}>
+    <Grid container spacing={2} sx={{ alignItems: "center" }}>
+      <Grid size={11}>
         <Box
           sx={{
             border: "1px solid #0000001F",
@@ -76,8 +76,8 @@ const AdditionalInputCore = ({
             my: 2
           }}
         >
-          <Grid2 container spacing={2} sx={{ alignItems: "start" }}>
-            <Grid2 size={4}>
+          <Grid container spacing={2} sx={{ alignItems: "start" }}>
+            <Grid size={4}>
               <InputLabel htmlFor={buildFieldName("name")}>
                 {T.translate("additional_inputs.title")}
               </InputLabel>
@@ -89,8 +89,8 @@ const AdditionalInputCore = ({
                 )}
                 fullWidth
               />
-            </Grid2>
-            <Grid2 size={4}>
+            </Grid>
+            <Grid size={4}>
               <InputLabel htmlFor={buildFieldName("type")}>
                 {T.translate("additional_inputs.type")}
               </InputLabel>
@@ -107,14 +107,14 @@ const AdditionalInputCore = ({
                   </MenuItem>
                 ))}
               </MuiFormikSelect>
-            </Grid2>
-            <Grid2 size={4} sx={{ alignSelf: "end" }}>
+            </Grid>
+            <Grid size={4} sx={{ alignSelf: "end" }}>
               <MuiFormikCheckbox
                 name={buildFieldName("is_required")}
                 label={T.translate("additional_inputs.required")}
               />
-            </Grid2>
-          </Grid2>
+            </Grid>
+          </Grid>
           {METAFIELD_TYPES_WITH_OPTIONS.includes(currentType) && (
             <>
               <Divider sx={{ mt: 2 }} />
@@ -133,8 +133,8 @@ const AdditionalInputCore = ({
             </>
           )}
           {currentType === "Quantity" && (
-            <Grid2 container spacing={2} sx={{ alignItems: "start", mt: 2 }}>
-              <Grid2 size={4}>
+            <Grid container spacing={2} sx={{ alignItems: "start", mt: 2 }}>
+              <Grid size={4}>
                 <MuiFormikTextField
                   id={buildFieldName("minimum_quantity")}
                   name={buildFieldName("minimum_quantity")}
@@ -144,8 +144,8 @@ const AdditionalInputCore = ({
                   label={T.translate("additional_inputs.minimum")}
                   placeholder={T.translate("additional_inputs.placeholders.minimum_quantity")}
                 />
-              </Grid2>
-              <Grid2 size={4}>
+              </Grid>
+              <Grid size={4}>
                 <MuiFormikTextField
                   id={buildFieldName("maximum_quantity")}
                   name={buildFieldName("maximum_quantity")}
@@ -155,12 +155,12 @@ const AdditionalInputCore = ({
                   label={T.translate("additional_inputs.maximum")}
                   placeholder={T.translate("additional_inputs.placeholders.maximum_quantity")}
                 />
-              </Grid2>
-            </Grid2>
+              </Grid>
+            </Grid>
           )}
         </Box>
-      </Grid2>
-      <Grid2 size={1}>
+      </Grid>
+      <Grid size={1}>
         <Box
           sx={{
             display: "flex",
@@ -199,8 +199,8 @@ const AdditionalInputCore = ({
             <AddIcon />
           </Button>
         </Box>
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   );
 };
 

@@ -12,7 +12,7 @@
  * */
 
 import React from "react";
-import { Box, Grid2, TextField } from "@mui/material";
+import { Box, Grid, TextField } from "@mui/material";
 import { useField } from "formik";
 import T from "i18n-react/dist/i18n-react";
 import { SPONSOR_FORMS_METAFIELD_CLASS } from "../../../../utils/constants";
@@ -44,9 +44,9 @@ const ExpandedRowContent = ({ row, extraColumns, timeZone, disabled }) => {
 
   return (
     <Box sx={{ p: 2, backgroundColor: "grey.50" }}>
-      <Grid2 container spacing={3}>
+      <Grid container spacing={3}>
         {extraColumns.map((exc) => (
-          <Grid2 key={`col-${exc.type_id}`} size={3}>
+          <Grid key={`col-${exc.type_id}`} size={3}>
             <ItemTableField
               field={exc}
               rowId={row.form_item_id}
@@ -54,10 +54,10 @@ const ExpandedRowContent = ({ row, extraColumns, timeZone, disabled }) => {
               disabled={disabled}
               label={exc.name}
             />
-          </Grid2>
+          </Grid>
         ))}
         {itemFields.map((f) => (
-          <Grid2 key={`item-${f.type_id}`} size={3}>
+          <Grid key={`item-${f.type_id}`} size={3}>
             <ItemTableField
               field={f}
               rowId={row.form_item_id}
@@ -65,12 +65,12 @@ const ExpandedRowContent = ({ row, extraColumns, timeZone, disabled }) => {
               disabled={disabled}
               label={f.name}
             />
-          </Grid2>
+          </Grid>
         ))}
-        <Grid2 size={3}>
+        <Grid size={3}>
           <InlineNotesField rowId={row.form_item_id} disabled={disabled} />
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
     </Box>
   );
 };
