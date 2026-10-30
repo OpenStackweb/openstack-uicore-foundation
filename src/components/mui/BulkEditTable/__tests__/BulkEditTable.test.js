@@ -81,6 +81,24 @@ describe("BulkEditTable", () => {
     );
   });
 
+  test("shows getRowActions items in the row menu and runs their onClick", async () => {
+    const user = userEvent.setup();
+    const onArchive = jest.fn();
+
+    render(
+      <BulkEditTable
+        {...baseProps}
+        onUpdate={jest.fn()}
+        getRowActions={(row) => [{ label: "Archive", onClick: () => onArchive(row) }]}
+      />
+    );
+
+    await user.click(screen.getAllByTestId("row-actions-menu-trigger")[1]);
+    await user.click(screen.getByRole("menuitem", { name: "Archive" }));
+
+    expect(onArchive).toHaveBeenCalledWith(expect.objectContaining({ id: 2 }));
+  });
+
   test("applies bulk updates to selected rows", async () => {
     const user = userEvent.setup();
     const onUpdate = jest.fn(() => Promise.resolve());

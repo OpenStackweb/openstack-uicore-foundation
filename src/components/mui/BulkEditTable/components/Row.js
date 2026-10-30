@@ -40,6 +40,7 @@ const Row = (props) => {
     onFieldChange,
     onEdit,
     onDelete,
+    getRowActions,
     idKey
   } = props;
 
@@ -81,13 +82,14 @@ const Row = (props) => {
           />
         </TableCell>
       ))}
-      {(onEdit || onDelete) && (
+      {(onEdit || onDelete || getRowActions) && (
         <TableCell
           align="center"
           className={`${styles.actionColumn} ${styles.dottedBorderLeft}`}
           sx={{ backgroundColor: "#fff" }}
         >
           <RowActionsMenu
+            actions={getRowActions?.(row)}
             onEdit={onEdit && (() => onEdit(row))}
             onDelete={onDelete && (() => onDelete(row))}
           />
@@ -107,13 +109,15 @@ Row.propTypes = {
   onFieldChange: PropTypes.func,
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
+  getRowActions: PropTypes.func,
   idKey: PropTypes.string
 };
 
 Row.defaultProps = {
   idKey: "id",
   onEdit: null,
-  onDelete: null
+  onDelete: null,
+  getRowActions: null
 };
 
 export default Row;

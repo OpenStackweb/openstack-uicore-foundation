@@ -125,6 +125,14 @@ describe("MuiTableSortableV2", () => {
     expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
   });
 
+  test("shows getRowActions items in the row menu and runs their onClick", async () => {
+    const onArchive = jest.fn();
+    setup({ getRowActions: (row) => [{ label: "Archive", onClick: () => onArchive(row) }] });
+    await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Archive" }));
+    expect(onArchive).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
+  });
+
   test("calls showConfirmDialog and onDelete when delete is confirmed", async () => {
     const onDelete = jest.fn();
     showConfirmDialog.mockResolvedValueOnce(true);

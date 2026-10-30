@@ -58,6 +58,7 @@ const MuiTableSortableV2 = ({
   getName = (item) => item.name,
   onEdit,
   onDelete,
+  getRowActions,
   deleteDialogTitle = null,
   deleteDialogBody = null,
   onReorder,
@@ -175,7 +176,7 @@ const MuiTableSortableV2 = ({
                       )}
                     </TableCell>
                   ))}
-                  {(onEdit || onDelete) && <TableCell sx={{ width: 40 }} />}
+                  {(onEdit || onDelete || getRowActions) && <TableCell sx={{ width: 40 }} />}
                   {onReorder && <TableCell sx={{ width: 40 }} />}
                 </TableRow>
               </TableHead>
@@ -205,13 +206,14 @@ const MuiTableSortableV2 = ({
                             </TableCell>
                           ))}
                           {/* Row actions menu column */}
-                          {(onEdit || onDelete) && (
+                          {(onEdit || onDelete || getRowActions) && (
                             <TableCell
                               align="center"
                               sx={{ width: 40 }}
                               className={styles.dottedBorderLeft}
                             >
                               <RowActionsMenu
+                                actions={getRowActions?.(row)}
                                 onEdit={onEdit && (() => onEdit(row))}
                                 onDelete={onDelete && (() => handleDelete(row))}
                               />
@@ -238,7 +240,7 @@ const MuiTableSortableV2 = ({
                       <TableCell
                         colSpan={
                           columns.length +
-                          (onEdit || onDelete ? 1 : 0) +
+                          (onEdit || onDelete || getRowActions ? 1 : 0) +
                           (onReorder ? 1 : 0)
                         }
                         align="center"

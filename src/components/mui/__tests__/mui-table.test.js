@@ -83,6 +83,14 @@ describe("MuiTable", () => {
     expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 2 }));
   });
 
+  test("shows getRowActions items in the row menu and runs their onClick", async () => {
+    const onArchive = jest.fn();
+    setup({ getRowActions: (row) => [{ label: "Archive", onClick: () => onArchive(row) }] });
+    await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Archive" }));
+    expect(onArchive).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
+  });
+
   test("calls showConfirmDialog and then onDelete when delete confirmed", async () => {
     const onDelete = jest.fn();
     showConfirmDialog.mockResolvedValueOnce(true);
@@ -182,6 +190,25 @@ describe("MuiTable", () => {
       const triggers = screen.getAllByTestId("row-actions-menu-trigger");
       expect(triggers[0]).toBeDisabled();
       expect(triggers[1]).not.toBeDisabled();
+    });
+
+    test("custom actions stay clickable on disabled rows while Edit is greyed out", async () => {
+      const onUnarchive = jest.fn();
+      setup({
+        data: disabledData,
+        onEdit: jest.fn(),
+        options: disabledOptions,
+        getRowActions: (row) => [{ label: "Unarchive", onClick: () => onUnarchive(row) }]
+      });
+      const [trigger] = screen.getAllByTestId("row-actions-menu-trigger");
+      expect(trigger).not.toBeDisabled();
+      await userEvent.click(trigger);
+      expect(screen.getByRole("menuitem", { name: "general.edit" })).toHaveAttribute(
+        "aria-disabled",
+        "true"
+      );
+      await userEvent.click(screen.getByRole("menuitem", { name: "Unarchive" }));
+      expect(onUnarchive).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
     });
 
     test("disables select button for rows where disableProp is truthy", () => {

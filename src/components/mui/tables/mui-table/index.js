@@ -59,6 +59,7 @@ const MuiTable = ({
   onEdit,
   onArchive,
   onDelete,
+  getRowActions,
   onSelect,
   onNavigate,
   canDelete = () => true,
@@ -74,7 +75,7 @@ const MuiTable = ({
     disableProp: null, // disableProp is the prop that will disable the row
     ...userOptions
   };
-  const hasRowMenu = !!(onEdit || onDelete);
+  const hasRowMenu = !!(onEdit || onDelete || getRowActions);
   const actionColumnsCount =
     (hasRowMenu ? 1 : 0) + (onArchive ? 1 : 0) + (onSelect ? 1 : 0);
 
@@ -211,6 +212,7 @@ const MuiTable = ({
                   className={styles.dottedBorderLeft}
                 >
                   <RowActionsMenu
+                    actions={getRowActions?.(row)}
                     onEdit={onEdit && (() => onEdit(row))}
                     onDelete={onDelete && canDelete(row) ? () => handleDelete(row) : undefined}
                     disabled={!!(options.disableProp && row[options.disableProp])}
@@ -272,6 +274,7 @@ MuiTable.propTypes = {
   onEdit: PropTypes.func,
   onArchive: PropTypes.func,
   onDelete: PropTypes.func,
+  getRowActions: PropTypes.func,
   onSelect: PropTypes.func,
   onNavigate: PropTypes.func,
   canDelete: PropTypes.func,

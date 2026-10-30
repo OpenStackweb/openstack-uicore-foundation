@@ -154,6 +154,7 @@ const MuiTableEditable = ({
   onEdit,
   onArchive,
   onDelete,
+  getRowActions,
   onCellChange, // New prop for handling cell value changes
   deleteDialogBody,
   tableSx = {},
@@ -240,7 +241,7 @@ const MuiTableEditable = ({
                 }}
               />
             )}
-            {(onEdit || onDelete) && (
+            {(onEdit || onDelete || getRowActions) && (
               <TableCell sx={{ ...ACTION_CELL_SX, fontWeight: "normal" }} />
             )}
           </TableRow>
@@ -313,7 +314,7 @@ const MuiTableEditable = ({
                   </Button>
                 </TableCell>
               )}
-              {(onEdit || onDelete) && (
+              {(onEdit || onDelete || getRowActions) && (
                 <TableCell
                   align="center"
                   sx={{
@@ -323,6 +324,7 @@ const MuiTableEditable = ({
                   className={styles.dottedBorderLeft}
                 >
                   <RowActionsMenu
+                    actions={getRowActions?.(row)}
                     onEdit={onEdit && (() => onEdit(row))}
                     onDelete={onDelete && (() => handleDelete(row))}
                   />
@@ -368,6 +370,7 @@ MuiTableEditable.propTypes = {
   onEdit: PropTypes.func,
   onArchive: PropTypes.func,
   onDelete: PropTypes.func,
+  getRowActions: PropTypes.func,
   onCellChange: PropTypes.func,
   deleteDialogBody: PropTypes.func,
   confirmButtonColor: PropTypes.string

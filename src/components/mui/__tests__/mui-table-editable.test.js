@@ -208,6 +208,19 @@ describe("MuiTableEditable", () => {
     );
   });
 
+  test("getRowActions items show in the row menu and run their onClick", async () => {
+    const user = userEvent.setup();
+    const onArchive = jest.fn();
+    setup({
+      onEdit: undefined,
+      onDelete: undefined,
+      getRowActions: (row) => [{ label: "Archive", onClick: () => onArchive(row) }]
+    });
+    await user.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    await user.click(screen.getByRole("menuitem", { name: "Archive" }));
+    expect(onArchive).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
+  });
+
   test("delete confirmed calls onDelete", async () => {
     const user = userEvent.setup();
     const { onDelete } = setup();

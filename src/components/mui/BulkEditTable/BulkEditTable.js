@@ -49,6 +49,7 @@ const BulkEditTable = ({
   idKey,
   onEdit,
   onDelete,
+  getRowActions,
   getName,
   deleteDialogTitle,
   deleteDialogBody,
@@ -190,7 +191,7 @@ const BulkEditTable = ({
                     </Heading>
                   );
                 })}
-                {(onEdit || onDelete) && (
+                {(onEdit || onDelete || getRowActions) && (
                   <TableCell
                     align="center"
                     className={styles.actionColumn}
@@ -218,6 +219,7 @@ const BulkEditTable = ({
                     columns={columns}
                     onEdit={onEdit}
                     onDelete={onDelete ? handleDelete : null}
+                    getRowActions={getRowActions}
                   />
                 ))}
             </TableBody>
@@ -245,6 +247,7 @@ BulkEditTable.propTypes = {
   pageSliderVisible: PropTypes.bool,
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
+  getRowActions: PropTypes.func,
   getName: PropTypes.func,
   deleteDialogTitle: PropTypes.string,
   deleteDialogBody: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
@@ -256,6 +259,7 @@ BulkEditTable.defaultProps = {
   idKey: "id",
   onEdit: null,
   onDelete: null,
+  getRowActions: null,
   getName: (item) => item.name,
   deleteDialogTitle: null,
   deleteDialogBody: null,
