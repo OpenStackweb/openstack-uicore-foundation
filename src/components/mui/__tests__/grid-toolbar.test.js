@@ -25,11 +25,11 @@ jest.mock("i18n-react/dist/i18n-react", () => ({
 
 // grid items (excluding the outer container) in render order
 const getItems = (container) =>
-  Array.from(container.querySelectorAll(".MuiGrid2-root:not(.MuiGrid2-container)"));
+  Array.from(container.querySelectorAll(".MuiGrid-root:not(.MuiGrid-container)"));
 
 const sizeClasses = (el) =>
   Array.from(el.classList)
-    .filter((c) => c.startsWith("MuiGrid2-grid-"))
+    .filter((c) => c.startsWith("MuiGrid-grid-"))
     .sort();
 
 describe("GridToolbar", () => {
@@ -45,7 +45,7 @@ describe("GridToolbar", () => {
     );
     const items = getItems(container);
     expect(items).toHaveLength(1);
-    expect(sizeClasses(items[0])).toEqual(["MuiGrid2-grid-xs-12"]);
+    expect(sizeClasses(items[0])).toEqual(["MuiGrid-grid-xs-12"]);
     expect(screen.queryByPlaceholderText("Find")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "general.archived" })
@@ -64,18 +64,18 @@ describe("GridToolbar", () => {
     );
     const [search, filter, actions] = getItems(container);
     expect(sizeClasses(search)).toEqual([
-      "MuiGrid2-grid-lg-4",
-      "MuiGrid2-grid-md-3",
-      "MuiGrid2-grid-sm-6",
-      "MuiGrid2-grid-xs-12"
+      "MuiGrid-grid-lg-4",
+      "MuiGrid-grid-md-3",
+      "MuiGrid-grid-sm-6",
+      "MuiGrid-grid-xs-12"
     ]);
     expect(sizeClasses(filter)).toEqual([
-      "MuiGrid2-grid-lg-2",
-      "MuiGrid2-grid-md-3",
-      "MuiGrid2-grid-sm-6",
-      "MuiGrid2-grid-xs-12"
+      "MuiGrid-grid-lg-2",
+      "MuiGrid-grid-md-3",
+      "MuiGrid-grid-sm-6",
+      "MuiGrid-grid-xs-12"
     ]);
-    expect(sizeClasses(actions)).toEqual(["MuiGrid2-grid-md-6", "MuiGrid2-grid-xs-12"]);
+    expect(sizeClasses(actions)).toEqual(["MuiGrid-grid-md-6", "MuiGrid-grid-xs-12"]);
   });
 
   test("splits search and actions 4/8 at sm by default", () => {
@@ -85,8 +85,8 @@ describe("GridToolbar", () => {
       </GridToolbar>
     );
     const [search, actions] = getItems(container);
-    expect(sizeClasses(search)).toEqual(["MuiGrid2-grid-sm-4", "MuiGrid2-grid-xs-12"]);
-    expect(sizeClasses(actions)).toEqual(["MuiGrid2-grid-sm-8", "MuiGrid2-grid-xs-12"]);
+    expect(sizeClasses(search)).toEqual(["MuiGrid-grid-sm-4", "MuiGrid-grid-xs-12"]);
+    expect(sizeClasses(actions)).toEqual(["MuiGrid-grid-sm-8", "MuiGrid-grid-xs-12"]);
   });
 
   test("splits filter and actions at the splitAt breakpoint", () => {
@@ -96,8 +96,8 @@ describe("GridToolbar", () => {
       </GridToolbar>
     );
     const [filter, actions] = getItems(container);
-    expect(sizeClasses(filter)).toEqual(["MuiGrid2-grid-lg-4", "MuiGrid2-grid-xs-12"]);
-    expect(sizeClasses(actions)).toEqual(["MuiGrid2-grid-lg-8", "MuiGrid2-grid-xs-12"]);
+    expect(sizeClasses(filter)).toEqual(["MuiGrid-grid-lg-4", "MuiGrid-grid-xs-12"]);
+    expect(sizeClasses(actions)).toEqual(["MuiGrid-grid-lg-8", "MuiGrid-grid-xs-12"]);
   });
 
   test("forwards searchProps to the search input", () => {
