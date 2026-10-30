@@ -175,7 +175,7 @@ const BulkEditTable = ({
                     slotProps={{ input: { "aria-label": "select all" } }}
                   />
                 </TableCell>
-                {onDelete && <TableCell sx={ACTION_CELL_SX} />}
+                {(onEdit || onDelete) && <TableCell sx={ACTION_CELL_SX} />}
                 {columns.map((col, i) => {
                   const sortable = !!col.sortable;
 
@@ -194,15 +194,6 @@ const BulkEditTable = ({
                     </Heading>
                   );
                 })}
-                {onEdit && (
-                  <TableCell
-                    align="center"
-                    className={styles.actionColumn}
-                    sx={{ backgroundColor: "#EAEDF4" }}
-                  >
-                    {options.actionsHeader || " "}
-                  </TableCell>
-                )}
               </TableRow>
             </TableHead>
             <TableBody>

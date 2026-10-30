@@ -21,7 +21,7 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import { IconButton, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import styles from "../components/styles.module.less";
 
@@ -210,7 +210,7 @@ const MuiTableEditable = ({
         {/* TABLE HEADER */}
         <TableHead sx={{ backgroundColor: "#EAEAEA" }}>
           <TableRow>
-            {onDelete && (
+            {(onEdit || onDelete) && (
               <TableCell sx={{ ...ACTION_CELL_SX, fontWeight: "normal" }} />
             )}
             {columns.map((col) => (
@@ -232,9 +232,6 @@ const MuiTableEditable = ({
                 />
               </TableCell>
             ))}
-            {onEdit && (
-              <TableCell sx={{ ...ACTION_CELL_SX, fontWeight: "normal" }} />
-            )}
             {onArchive && (
               <TableCell
                 sx={{
@@ -252,7 +249,7 @@ const MuiTableEditable = ({
         <TableBody>
           {data.map((row) => (
             <TableRow key={row.id}>
-              {onDelete && (
+              {(onEdit || onDelete) && (
                 <TableCell
                   align="center"
                   sx={{
@@ -260,7 +257,10 @@ const MuiTableEditable = ({
                     fontWeight: "normal"
                   }}
                 >
-                  <RowActionsMenu onDelete={() => handleDelete(row)} />
+                  <RowActionsMenu
+                    onEdit={onEdit && (() => onEdit(row))}
+                    onDelete={onDelete && (() => handleDelete(row))}
+                  />
                 </TableCell>
               )}
               {columns.map((col) => (
@@ -299,23 +299,6 @@ const MuiTableEditable = ({
                   )}
                 </TableCell>
               ))}
-              {onEdit && (
-                <TableCell
-                  sx={{
-                    ...getActionCellSx(row, options.disableProp),
-                    fontWeight: "normal"
-                  }}
-                  className={styles.dottedBorderLeft}
-                >
-                  <IconButton
-                    onClick={() => onEdit(row)}
-                    size="small"
-                    aria-label={T.translate("general.edit")}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                </TableCell>
-              )}
               {onArchive && (
                 <TableCell
                   align="center"

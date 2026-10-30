@@ -24,7 +24,6 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import { IconButton } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
 import { DndContext } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { visuallyHidden } from "@mui/utils";
@@ -142,7 +141,7 @@ const MuiTableSortableV2 = ({
               {/* TABLE HEADER */}
               <TableHead sx={{ backgroundColor: "#EAEAEA" }}>
                 <TableRow>
-                  {onDelete && <TableCell sx={{ width: 40 }} />}
+                  {(onEdit || onDelete) && <TableCell sx={{ width: 40 }} />}
                   {columns.map((col) => (
                     <TableCell
                       key={col.columnKey}
@@ -177,7 +176,6 @@ const MuiTableSortableV2 = ({
                       )}
                     </TableCell>
                   ))}
-                  {onEdit && <TableCell sx={{ width: 40 }} />}
                   {onReorder && <TableCell sx={{ width: 40 }} />}
                 </TableRow>
               </TableHead>
@@ -195,10 +193,13 @@ const MuiTableSortableV2 = ({
                     >
                       {({ dragHandleProps }) => (
                         <>
-                          {/* Delete column */}
-                          {onDelete && (
+                          {/* Row actions menu column */}
+                          {(onEdit || onDelete) && (
                             <TableCell align="center" sx={{ width: 40 }}>
-                              <RowActionsMenu onDelete={() => handleDelete(row)} />
+                              <RowActionsMenu
+                                onEdit={onEdit && (() => onEdit(row))}
+                                onDelete={onDelete && (() => handleDelete(row))}
+                              />
                             </TableCell>
                           )}
                           {/* Main content columns */}
@@ -212,22 +213,6 @@ const MuiTableSortableV2 = ({
                               <TableCellContent row={row} col={col} />
                             </TableCell>
                           ))}
-                          {/* Edit column */}
-                          {onEdit && (
-                            <TableCell
-                              align="center"
-                              sx={{ width: 40 }}
-                              className={styles.dottedBorderLeft}
-                            >
-                              <IconButton
-                                size="large"
-                                onClick={() => onEdit(row)}
-                                sx={{ padding: 0 }}
-                              >
-                                <EditIcon />
-                              </IconButton>
-                            </TableCell>
-                          )}
                           {/* Re order column */}
                           {onReorder && (
                             <TableCell
@@ -249,8 +234,7 @@ const MuiTableSortableV2 = ({
                       <TableCell
                         colSpan={
                           columns.length +
-                          (onEdit ? 1 : 0) +
-                          (onDelete ? 1 : 0) +
+                          (onEdit || onDelete ? 1 : 0) +
                           (onReorder ? 1 : 0)
                         }
                         align="center"

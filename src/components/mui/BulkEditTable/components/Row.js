@@ -16,8 +16,6 @@ import PropTypes from "prop-types";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Checkbox from "@mui/material/Checkbox";
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
 import Cell from "./Cell";
 import RowActionsMenu from "../../tables/components/row-actions-menu";
 import {
@@ -71,9 +69,12 @@ const Row = (props) => {
           slotProps={{ input: { "aria-label": `Select row ${row[idKey]}` } }}
         />
       </TableCell>
-      {onDelete && (
+      {(onEdit || onDelete) && (
         <TableCell align="center" sx={ACTION_CELL_SX}>
-          <RowActionsMenu onDelete={() => onDelete(row)} />
+          <RowActionsMenu
+            onEdit={onEdit && (() => onEdit(row))}
+            onDelete={onDelete && (() => onDelete(row))}
+          />
         </TableCell>
       )}
       {columns.map((col) => (
@@ -91,22 +92,6 @@ const Row = (props) => {
           />
         </TableCell>
       ))}
-      {onEdit && (
-        <TableCell
-          align="center"
-          className={`${styles.actionColumn} ${styles.dottedBorderLeft}`}
-          sx={{ backgroundColor: "#fff" }}
-        >
-        <IconButton
-          size="medium"
-          onClick={() => onEdit(row)}
-          sx={{ padding: 0 }}
-          aria-label={`Edit row ${row[idKey]}`}
-        >
-          <EditIcon />
-        </IconButton>
-        </TableCell>
-      )}
     </TableRow>
   );
 };
