@@ -17,6 +17,7 @@ import T from "i18n-react/dist/i18n-react";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Divider from "@mui/material/Divider";
 import Tooltip from "@mui/material/Tooltip";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
@@ -72,6 +73,7 @@ const RowActionsMenu = ({ actions = [], onEdit, onDelete, disabled = false }) =>
             {action.label}
           </MenuItem>
         ))}
+        {onDelete && (onEdit || actions.length > 0) && <Divider />}
         {onDelete && (
           <MenuItem
             disabled={disabled}
