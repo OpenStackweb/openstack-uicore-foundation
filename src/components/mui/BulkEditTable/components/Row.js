@@ -13,14 +13,9 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import Box from "@mui/material/Box";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Checkbox from "@mui/material/Checkbox";
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import T from "i18n-react/dist/i18n-react";
 import Cell from "./Cell";
 import RowActionsMenu from "../../tables/components/row-actions-menu";
 import { getColumnWidthSx } from "../../tables/components/table-styles";
@@ -45,23 +40,11 @@ const Row = (props) => {
     onFieldChange,
     onEdit,
     onDelete,
-    idKey,
-    collapseActions,
-    actionsBreakpoint
+    getRowActions,
+    idKey
   } = props;
 
   const isEditingRow = isSelected && editEnabled;
-
-  const rowActions = [
-    onEdit && {
-      label: T.translate("general.edit"),
-      onClick: () => onEdit(row)
-    },
-    onDelete && {
-      label: T.translate("general.delete"),
-      onClick: () => onDelete(row)
-    }
-  ].filter(Boolean);
 
   const onRowChange = (ev) => {
     const { value, id } = ev.target;
@@ -69,7 +52,7 @@ const Row = (props) => {
   };
 
   return (
-    <TableRow role="row" hover>
+    <TableRow role="row">
       <TableCell
         align="center"
         className={styles.checkColumn}
@@ -99,47 +82,17 @@ const Row = (props) => {
           />
         </TableCell>
       ))}
-      {(onEdit || onDelete) && (
+      {(onEdit || onDelete || getRowActions) && (
         <TableCell
           align="center"
           className={`${styles.actionColumn} ${styles.dottedBorderLeft}`}
           sx={{ backgroundColor: "#fff" }}
         >
-          <Box
-            sx={{
-              display: collapseActions
-                ? { xs: "none", [actionsBreakpoint]: "flex" }
-                : "flex",
-              justifyContent: "center",
-              gap: 1
-            }}
-          >
-            {onEdit && (
-              <IconButton
-                size="medium"
-                onClick={() => onEdit(row)}
-                sx={{ padding: 0 }}
-                aria-label={`Edit row ${row[idKey]}`}
-              >
-                <EditIcon />
-              </IconButton>
-            )}
-            {onDelete && (
-              <IconButton
-                size="medium"
-                onClick={() => onDelete(row)}
-                sx={{ padding: 0 }}
-                aria-label={`Delete row ${row[idKey]}`}
-              >
-                <DeleteIcon />
-              </IconButton>
-            )}
-          </Box>
-          {collapseActions && (
-            <Box sx={{ display: { xs: "flex", [actionsBreakpoint]: "none" }, justifyContent: "center" }}>
-              <RowActionsMenu actions={rowActions} />
-            </Box>
-          )}
+          <RowActionsMenu
+            actions={getRowActions?.(row)}
+            onEdit={onEdit && (() => onEdit(row))}
+            onDelete={onDelete && (() => onDelete(row))}
+          />
         </TableCell>
       )}
     </TableRow>
@@ -156,17 +109,15 @@ Row.propTypes = {
   onFieldChange: PropTypes.func,
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
-  idKey: PropTypes.string,
-  collapseActions: PropTypes.bool,
-  actionsBreakpoint: PropTypes.string
+  getRowActions: PropTypes.func,
+  idKey: PropTypes.string
 };
 
 Row.defaultProps = {
   idKey: "id",
   onEdit: null,
   onDelete: null,
-  collapseActions: false,
-  actionsBreakpoint: "md"
+  getRowActions: null
 };
 
 export default Row;

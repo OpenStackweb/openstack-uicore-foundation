@@ -23,14 +23,13 @@ import {
   TableRow,
   Tooltip
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
 import styles from "../components/styles.module.less";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PropTypes from "prop-types";
 import TableCellContent from "../components/table-cell-content";
+import TableCellLink from "../components/table-cell-link";
 import TableShell from "../components/table-shell";
 import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
@@ -40,7 +39,6 @@ import {
   getColumnWidthSx,
   getArchivedRowSx,
   getActionCellSx,
-  getActionsMenuBreakpoint,
   ACTION_CELL_SX
 } from "../components/table-styles";
 
@@ -61,7 +59,9 @@ const MuiTable = ({
   onEdit,
   onArchive,
   onDelete,
+  getRowActions,
   onSelect,
+  onNavigate,
   canDelete = () => true,
   deleteDialogTitle = null,
   deleteDialogBody = null,
@@ -75,17 +75,11 @@ const MuiTable = ({
     disableProp: null, // disableProp is the prop that will disable the row
     ...userOptions
   };
-  const activeActionsCount =
-    (onEdit ? 1 : 0) + (onDelete ? 1 : 0) + (onArchive ? 1 : 0) + (onSelect ? 1 : 0);
-  // responsive:false opts out of collapsing actions into a menu — needed when
-  // extra rows (e.g. TotalRow) are passed as children with a static column
-  // count that can't track the collapse breakpoint
-  const collapseActions =
-    options.responsive !== false && !children && activeActionsCount >= 2;
-  const collapseBreakpoint = getActionsMenuBreakpoint(columns.length);
+  const hasRowMenu = !!(onEdit || onDelete || getRowActions);
+  const actionColumnsCount =
+    (hasRowMenu ? 1 : 0) + (onArchive ? 1 : 0) + (onSelect ? 1 : 0);
 
-  const totalColumnsCount =
-    columns.length + activeActionsCount + (collapseActions ? 1 : 0);
+  const totalColumnsCount = columns.length + actionColumnsCount;
 
   const {sortCol, sortDir} = options;
 
@@ -94,48 +88,24 @@ const MuiTable = ({
     ...(col.headSx || {})
   });
 
-  // individual action cells hide below collapseBreakpoint once actions collapse into a menu
-  const getIndividualActionSx = () =>
-    collapseActions ? { display: { xs: "none", [collapseBreakpoint]: "table-cell" } } : {};
-
-  const menuCellSx = { display: { xs: "table-cell", [collapseBreakpoint]: "none" } };
-
-  const getRowActions = (row) =>
-    [
-      onEdit && {
-        label: T.translate("general.edit"),
-        onClick: () => onEdit(row),
-        disabled: !!(options.disableProp && row[options.disableProp])
-      },
-      onArchive && {
-        label: row.is_archived
-          ? T.translate("general.unarchive")
-          : T.translate("general.archive"),
-        onClick: () => onArchive(row),
-        disabled: !!(
-          options.disableProp &&
-          options.disableProp !== "is_archived" &&
-          row[options.disableProp]
-        )
-      },
-      onDelete &&
-        canDelete(row) && {
-          label: T.translate("general.delete"),
-          onClick: () => handleDelete(row),
-          disabled: !!(options.disableProp && row[options.disableProp])
-        },
-      onSelect && {
-        label: T.translate("general.view"),
-        onClick: () => onSelect(row),
-        disabled: !!(options.disableProp && row[options.disableProp])
-      }
-    ].filter(Boolean);
-
   const getCellSx = (row, col) => ({
     ...getColumnWidthSx(col),
     ...(col.cellSx || {}),
     ...getArchivedRowSx(row, options.disableProp)
   });
+
+  // columns with getHref render as a link; no href for a row falls back to plain text
+  const renderCellContent = (row, col) => {
+    const content = <TableCellContent row={row} col={col} />;
+    const href = col.getHref?.(row);
+    return href ? (
+      <TableCellLink href={href} row={row} onNavigate={onNavigate}>
+        {content}
+      </TableCellLink>
+    ) : (
+      content
+    );
+  };
 
   const handleDelete = createDeleteHandler({
     onDelete,
@@ -174,11 +144,9 @@ const MuiTable = ({
                 />
               </TableCell>
             ))}
-            {onEdit && <TableCell sx={{ ...ACTION_CELL_SX, ...getIndividualActionSx() }} />}
-            {onArchive && <TableCell sx={{ ...ACTION_CELL_SX, ...getIndividualActionSx() }} />}
-            {onDelete && <TableCell sx={{ ...ACTION_CELL_SX, ...getIndividualActionSx() }} />}
-            {onSelect && <TableCell sx={{ ...ACTION_CELL_SX, ...getIndividualActionSx() }} />}
-            {collapseActions && <TableCell sx={{ ...ACTION_CELL_SX, ...menuCellSx }} />}
+            {onArchive && <TableCell sx={ACTION_CELL_SX} />}
+            {hasRowMenu && <TableCell sx={ACTION_CELL_SX} />}
+            {onSelect && <TableCell sx={ACTION_CELL_SX} />}
           </TableRow>
         </TableHead>
 
@@ -188,7 +156,7 @@ const MuiTable = ({
           {data.map((row) => row.renderRow ? (
             <React.Fragment key={row.id}>{row.renderRow(totalColumnsCount)}</React.Fragment>
           ) : (
-            <TableRow key={row.id}>
+            <TableRow key={row.id} hover>
               {/* Main content columns */}
               {columns.map((col) => (
                 <TableCell
@@ -197,41 +165,13 @@ const MuiTable = ({
                   className={`${col.dottedBorder && styles.dottedBorderLeft} ${col.className}`}
                   sx={getCellSx(row, col)}
                 >
-                  <TableCellContent row={row} col={col} />
+                  {renderCellContent(row, col)}
                 </TableCell>
               ))}
-              {/* Edit column */}
-              {onEdit && (
-                <TableCell
-                  align="center"
-                  className={styles.dottedBorderLeft}
-                  sx={{
-                    ...getActionCellSx(row, options.disableProp),
-                    ...getIndividualActionSx()
-                  }}
-                >
-                  <Tooltip title={T.translate("general.edit")}>
-                    <span>
-                      <IconButton
-                        size="medium"
-                        onClick={() => onEdit(row)}
-                        sx={{ padding: 0 }}
-                        data-testid="action-edit"
-                        disabled={options.disableProp && row[options.disableProp]}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                </TableCell>
-              )}
               {onArchive && (
                 <TableCell
                   align="center"
-                  sx={{
-                    ...getActionCellSx(row, options.disableProp),
-                    ...getIndividualActionSx()
-                  }}
+                  sx={getActionCellSx(row, options.disableProp)}
                   className={styles.dottedBorderLeft}
                 >
                   <Tooltip
@@ -264,40 +204,25 @@ const MuiTable = ({
                   </Tooltip>
                 </TableCell>
               )}
-              {/* Delete column */}
-              {onDelete && (
+              {/* Row actions menu column */}
+              {hasRowMenu && (
                 <TableCell
                   align="center"
+                  sx={getActionCellSx(row, options.disableProp)}
                   className={styles.dottedBorderLeft}
-                  sx={{
-                    ...getActionCellSx(row, options.disableProp),
-                    ...getIndividualActionSx()
-                  }}
                 >
-                  {canDelete(row) && (
-                    <Tooltip title={T.translate("general.delete")}>
-                      <span>
-                        <IconButton
-                          size="medium"
-                          onClick={() => handleDelete(row)}
-                          data-testid="action-delete"
-                          sx={{ padding: 0 }}
-                          disabled={options.disableProp && row[options.disableProp]}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                  )}
+                  <RowActionsMenu
+                    actions={getRowActions?.(row)}
+                    onEdit={onEdit && (() => onEdit(row))}
+                    onDelete={onDelete && canDelete(row) ? () => handleDelete(row) : undefined}
+                    disabled={!!(options.disableProp && row[options.disableProp])}
+                  />
                 </TableCell>
               )}
               {onSelect && (
                 <TableCell
                   align="center"
-                  sx={{
-                    ...getActionCellSx(row, options.disableProp),
-                    ...getIndividualActionSx()
-                  }}
+                  sx={getActionCellSx(row, options.disableProp)}
                   className={styles.dottedBorderLeft}
                 >
                   <Tooltip title={T.translate("general.view")}>
@@ -313,15 +238,6 @@ const MuiTable = ({
                       </IconButton>
                     </span>
                   </Tooltip>
-                </TableCell>
-              )}
-              {collapseActions && (
-                <TableCell
-                  align="center"
-                  sx={{ ...getActionCellSx(row, options.disableProp), ...menuCellSx }}
-                  className={styles.dottedBorderLeft}
-                >
-                  <RowActionsMenu actions={getRowActions(row)} />
                 </TableCell>
               )}
             </TableRow>
@@ -358,7 +274,9 @@ MuiTable.propTypes = {
   onEdit: PropTypes.func,
   onArchive: PropTypes.func,
   onDelete: PropTypes.func,
+  getRowActions: PropTypes.func,
   onSelect: PropTypes.func,
+  onNavigate: PropTypes.func,
   canDelete: PropTypes.func,
   deleteDialogTitle: PropTypes.string,
   deleteDialogBody: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
