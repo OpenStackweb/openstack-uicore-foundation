@@ -32,7 +32,15 @@ const TableCellLink = ({ href, row, onNavigate, children }) => {
   };
 
   return (
-    <Link href={href} onClick={handleClick} draggable={false}>
+    <Link
+      href={href}
+      onClick={handleClick}
+      draggable={false}
+      color="inherit"
+      underline="hover"
+      // shrink to the content, so block content from a column's render isn't full-width clickable
+      sx={{ display: "inline-block" }}
+    >
       {children}
     </Link>
   );
