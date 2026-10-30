@@ -29,6 +29,7 @@ import styles from "../components/styles.module.less";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PropTypes from "prop-types";
 import TableCellContent from "../components/table-cell-content";
+import TableCellLink from "../components/table-cell-link";
 import TableShell from "../components/table-shell";
 import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
@@ -59,6 +60,7 @@ const MuiTable = ({
   onArchive,
   onDelete,
   onSelect,
+  onNavigate,
   canDelete = () => true,
   deleteDialogTitle = null,
   deleteDialogBody = null,
@@ -91,25 +93,18 @@ const MuiTable = ({
     ...getArchivedRowSx(row, options.disableProp)
   });
 
-  // whole row edits on click; disabled rows stay inert
-  const getRowEditProps = (row) =>
-    onEdit && !(options.disableProp && row[options.disableProp])
-      ? {
-          hover: true,
-          onClick: (ev) => {
-            // ignore clicks from popups (menus, dialogs) opened by a cell
-            if (!ev.currentTarget.contains(ev.target)) return;
-            // ignore clicks on controls rendered inside cells
-            if (
-              !ev.target.closest(
-                "button, a, input, textarea, select, label, [role=button], [role=combobox]"
-              )
-            )
-              onEdit(row);
-          },
-          sx: { cursor: "pointer" }
-        }
-      : {};
+  // columns with getHref render as a link; no href for a row falls back to plain text
+  const renderCellContent = (row, col) => {
+    const content = <TableCellContent row={row} col={col} />;
+    const href = col.getHref?.(row);
+    return href ? (
+      <TableCellLink href={href} row={row} onNavigate={onNavigate}>
+        {content}
+      </TableCellLink>
+    ) : (
+      content
+    );
+  };
 
   const handleDelete = createDeleteHandler({
     onDelete,
@@ -160,7 +155,7 @@ const MuiTable = ({
           {data.map((row) => row.renderRow ? (
             <React.Fragment key={row.id}>{row.renderRow(totalColumnsCount)}</React.Fragment>
           ) : (
-            <TableRow key={row.id} {...getRowEditProps(row)}>
+            <TableRow key={row.id} hover>
               {/* Main content columns */}
               {columns.map((col) => (
                 <TableCell
@@ -169,7 +164,7 @@ const MuiTable = ({
                   className={`${col.dottedBorder && styles.dottedBorderLeft} ${col.className}`}
                   sx={getCellSx(row, col)}
                 >
-                  <TableCellContent row={row} col={col} />
+                  {renderCellContent(row, col)}
                 </TableCell>
               ))}
               {onArchive && (
@@ -177,7 +172,6 @@ const MuiTable = ({
                   align="center"
                   sx={getActionCellSx(row, options.disableProp)}
                   className={styles.dottedBorderLeft}
-                  onClick={(ev) => ev.stopPropagation()}
                 >
                   <Tooltip
                     title={
@@ -215,7 +209,6 @@ const MuiTable = ({
                   align="center"
                   sx={getActionCellSx(row, options.disableProp)}
                   className={styles.dottedBorderLeft}
-                  onClick={(ev) => ev.stopPropagation()}
                 >
                   <RowActionsMenu
                     onEdit={onEdit && (() => onEdit(row))}
@@ -229,7 +222,6 @@ const MuiTable = ({
                   align="center"
                   sx={getActionCellSx(row, options.disableProp)}
                   className={styles.dottedBorderLeft}
-                  onClick={(ev) => ev.stopPropagation()}
                 >
                   <Tooltip title={T.translate("general.view")}>
                     <span>
@@ -281,6 +273,7 @@ MuiTable.propTypes = {
   onArchive: PropTypes.func,
   onDelete: PropTypes.func,
   onSelect: PropTypes.func,
+  onNavigate: PropTypes.func,
   canDelete: PropTypes.func,
   deleteDialogTitle: PropTypes.string,
   deleteDialogBody: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
