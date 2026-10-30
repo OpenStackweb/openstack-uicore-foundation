@@ -29,7 +29,7 @@ import TableCellContent from "../components/table-cell-content";
 import TableShell from "../components/table-shell";
 import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
-import RowActionsMenu, { getDeleteAction } from "../components/row-actions-menu";
+import RowActionsMenu from "../components/row-actions-menu";
 import {
   RESPONSIVE_TABLE_SX,
   getColumnWidthSx,
@@ -166,9 +166,7 @@ const MuiTableSortable = ({
                         {/* Delete column */}
                         {onDelete && (
                           <TableCell align="center" sx={getActionCellSx(row)}>
-                            <RowActionsMenu
-                              actions={[getDeleteAction(() => handleDelete(row))]}
-                            />
+                            <RowActionsMenu onDelete={() => handleDelete(row)} />
                           </TableCell>
                         )}
                         {/* Main content columns */}

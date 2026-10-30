@@ -19,9 +19,7 @@ import Checkbox from "@mui/material/Checkbox";
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import Cell from "./Cell";
-import RowActionsMenu, {
-  getDeleteAction
-} from "../../tables/components/row-actions-menu";
+import RowActionsMenu from "../../tables/components/row-actions-menu";
 import {
   getColumnWidthSx,
   ACTION_CELL_SX
@@ -75,7 +73,7 @@ const Row = (props) => {
       </TableCell>
       {onDelete && (
         <TableCell align="center" sx={ACTION_CELL_SX}>
-          <RowActionsMenu actions={[getDeleteAction(() => onDelete(row))]} />
+          <RowActionsMenu onDelete={() => onDelete(row)} />
         </TableCell>
       )}
       {columns.map((col) => (

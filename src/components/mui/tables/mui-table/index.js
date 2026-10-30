@@ -32,7 +32,7 @@ import TableCellContent from "../components/table-cell-content";
 import TableShell from "../components/table-shell";
 import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
-import RowActionsMenu, { getDeleteAction } from "../components/row-actions-menu";
+import RowActionsMenu from "../components/row-actions-menu";
 import {
   RESPONSIVE_TABLE_SX,
   getColumnWidthSx,
@@ -111,19 +111,6 @@ const MuiTable = ({
         }
       : {};
 
-  // menu Edit mirrors the row click so keyboard and screen reader users can find it
-  const getRowActions = (row) => {
-    const disabled = !!(options.disableProp && row[options.disableProp]);
-    return [
-      onEdit && {
-        label: T.translate("general.edit"),
-        onClick: () => onEdit(row),
-        disabled
-      },
-      onDelete && canDelete(row) && getDeleteAction(() => handleDelete(row), disabled)
-    ].filter(Boolean);
-  };
-
   const handleDelete = createDeleteHandler({
     onDelete,
     getName,
@@ -181,9 +168,11 @@ const MuiTable = ({
                   sx={getActionCellSx(row, options.disableProp)}
                   onClick={(ev) => ev.stopPropagation()}
                 >
-                  {(onEdit || canDelete(row)) && (
-                    <RowActionsMenu actions={getRowActions(row)} />
-                  )}
+                  <RowActionsMenu
+                    onEdit={onEdit && (() => onEdit(row))}
+                    onDelete={onDelete && canDelete(row) ? () => handleDelete(row) : undefined}
+                    disabled={!!(options.disableProp && row[options.disableProp])}
+                  />
                 </TableCell>
               )}
               {/* Main content columns */}

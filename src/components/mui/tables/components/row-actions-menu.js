@@ -20,18 +20,12 @@ import MenuItem from "@mui/material/MenuItem";
 import Tooltip from "@mui/material/Tooltip";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
-// shared Delete entry so every table's menu labels and styles it the same
-export const getDeleteAction = (onClick, disabled = false) => ({
-  label: T.translate("general.delete"),
-  onClick,
-  disabled,
-  destructive: true
-});
-
-const RowActionsMenu = ({ actions }) => {
+// built-in Edit/Delete keep every table's menu consistent; `actions` holds any extra items
+const RowActionsMenu = ({ actions = [], onEdit, onDelete, disabled = false }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
 
-  if (!actions.length) return null;
+  const hasBuiltIns = !!(onEdit || onDelete);
+  if (!hasBuiltIns && !actions.length) return null;
 
   return (
     <>
@@ -42,7 +36,9 @@ const RowActionsMenu = ({ actions }) => {
             onClick={(e) => setAnchorEl(e.currentTarget)}
             data-testid="row-actions-menu-trigger"
             aria-label={T.translate("general.more_actions")}
-            disabled={actions.every((action) => action.disabled)}
+            disabled={
+              (!hasBuiltIns || disabled) && actions.every((action) => action.disabled)
+            }
           >
             <MoreVertIcon />
           </IconButton>
@@ -53,6 +49,17 @@ const RowActionsMenu = ({ actions }) => {
         open={Boolean(anchorEl)}
         onClose={() => setAnchorEl(null)}
       >
+        {onEdit && (
+          <MenuItem
+            disabled={disabled}
+            onClick={() => {
+              setAnchorEl(null);
+              onEdit();
+            }}
+          >
+            {T.translate("general.edit")}
+          </MenuItem>
+        )}
         {actions.map((action) => (
           <MenuItem
             key={action.label}
@@ -61,11 +68,22 @@ const RowActionsMenu = ({ actions }) => {
               setAnchorEl(null);
               action.onClick();
             }}
-            sx={action.destructive ? { color: "error.main" } : undefined}
           >
             {action.label}
           </MenuItem>
         ))}
+        {onDelete && (
+          <MenuItem
+            disabled={disabled}
+            onClick={() => {
+              setAnchorEl(null);
+              onDelete();
+            }}
+            sx={{ color: "error.main" }}
+          >
+            {T.translate("general.delete")}
+          </MenuItem>
+        )}
       </Menu>
     </>
   );
@@ -76,10 +94,12 @@ RowActionsMenu.propTypes = {
     PropTypes.shape({
       label: PropTypes.string.isRequired,
       onClick: PropTypes.func.isRequired,
-      disabled: PropTypes.bool,
-      destructive: PropTypes.bool
+      disabled: PropTypes.bool
     })
-  ).isRequired
+  ),
+  onEdit: PropTypes.func,
+  onDelete: PropTypes.func,
+  disabled: PropTypes.bool
 };
 
 export default RowActionsMenu;
