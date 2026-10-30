@@ -12,7 +12,7 @@
  **/
 
 import React from 'react';
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import { render, screen, act, fireEvent, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import UploadInputV3 from '../index';
 
@@ -492,6 +492,8 @@ describe('UploadInputV3', () => {
     });
 
     afterEach(() => {
+      // unmount first: React 18 runs the revokeObjectURL effect cleanup synchronously
+      cleanup();
       delete URL.createObjectURL;
       delete URL.revokeObjectURL;
     });
