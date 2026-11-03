@@ -125,8 +125,9 @@ const NotificationSnackbar = ({ queue, vertical }) => {
     queue.onExited();
   };
 
-  // null, "copied" or "failed"; reset when a new message shows
-  const [copyStatus, setCopyStatus] = useState(null);
+  // Ignore clipboard results belonging to an earlier message.
+  const [copyResult, setCopyResult] = useState(null);
+  const copyStatus = copyResult?.message === msgData ? copyResult.status : null;
   const handleCopy = () => {
     const html = String(msgData.html).replace(/<br\s*\/?>/gi, "\n");
     const text = new DOMParser().parseFromString(html, "text/html").body
@@ -136,16 +137,16 @@ const NotificationSnackbar = ({ queue, vertical }) => {
       navigator.clipboard
         .writeText([text.trim(), msgData.details].filter(Boolean).join("\n\n"))
         .then(
-          () => setCopyStatus("copied"),
-          () => setCopyStatus("failed")
+          () => setCopyResult({ message: msgData, status: "copied" }),
+          () => setCopyResult({ message: msgData, status: "failed" })
         );
     } catch (e) {
-      setCopyStatus("failed");
+      setCopyResult({ message: msgData, status: "failed" });
     }
   };
 
   useEffect(() => {
-    setCopyStatus(null);
+    setCopyResult(null);
   }, [queue.current]);
 
   return (
