@@ -37,15 +37,7 @@ const MuiFormikDatepicker = ({
         slotProps={{
           day: {
             sx: {
-              fontSize: "1.2rem",
               fontWeight: 600
-            }
-          },
-          layout: {
-            sx: {
-              "& .MuiDayCalendar-weekDayLabel": {
-                fontSize: "1rem"
-              }
             }
           },
           ...externalSlotProps,

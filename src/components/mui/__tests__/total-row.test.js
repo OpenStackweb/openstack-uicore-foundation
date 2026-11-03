@@ -19,7 +19,7 @@ jest.mock("i18n-react/dist/i18n-react", () => ({
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import TotalRow from "../table/extra-rows/TotalRow";
+import TotalRow from "../tables/extra-rows/TotalRow";
 
 const columns = [
   { columnKey: "name", header: "Name" },

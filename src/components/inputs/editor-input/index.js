@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import './editor-input.less';
 
@@ -128,3 +129,16 @@ export default class TextEditor extends React.Component {
 
     }
 }
+
+TextEditor.propTypes = {
+    id: PropTypes.string,
+    /** HTML string. Loaded into the editor and re-synced when it changes externally. */
+    value: PropTypes.string,
+    /** Receives a synthetic { target: { id, value, type } } carrying an HTML string. */
+    onChange: PropTypes.func.isRequired,
+    /** Shows a remaining-characters counter. */
+    maxLength: PropTypes.number,
+    className: PropTypes.string,
+    /** Non-empty renders an .error-label. */
+    error: PropTypes.string
+};

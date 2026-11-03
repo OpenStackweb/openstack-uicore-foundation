@@ -1,0 +1,10 @@
+<!--
+  Injected into the preview iframe head (not the Storybook UI).
+
+  The legacy Core UI components emit bootstrap 3 classes (form-control,
+  btn btn-default, panel panel-default, col-md-*) but the library declares no
+  bootstrap dependency — consuming apps supply it. summit-admin, the current
+  reference consumer, links this exact file from src/index.ejs, so the preview
+  loads the same one rather than guessing a version.
+-->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">

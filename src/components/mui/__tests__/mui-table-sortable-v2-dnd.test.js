@@ -13,7 +13,7 @@ jest.mock("../showConfirmDialog", () => ({ __esModule: true, default: jest.fn() 
 import React from "react";
 import { render } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import MuiTableSortableV2 from "../sortable-table-v2/mui-table-sortable-v2";
+import MuiTableSortableV2 from "../tables/sortable-table-v2/mui-table-sortable-v2";
 
 const columns = [{ columnKey: "name", header: "Name" }];
 const data = [{ id: 1, name: "Row A", order: 1 }];

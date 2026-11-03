@@ -25,8 +25,8 @@ import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import RuleIcon from "@mui/icons-material/Rule";
-import { DiscountRow, FeeRow, NotesRow, PaymentRow, RefundRow, TotalRow } from "../table/extra-rows";
-import { SPONSOR_ORDER_GRID_ITEM_TYPES } from "../../../utils/constants";
+import {DiscountRow, FeeRow, NotesRow, PaymentRow, RefundRow, TotalRow} from "../tables/extra-rows";
+import {SPONSOR_ORDER_GRID_ITEM_TYPES} from "../../../utils/constants";
 import InfoNote from "../InfoNote";
 import { currencyAmountFromCents } from "../../../utils/money";
 import TransactionType from "./components/TransactionType";
@@ -62,7 +62,8 @@ const mapOrderData = (forms) => {
           amount,
           amountValue: it.amount,
           cancelled,
-          cancellations: it.cancellations ?? []
+          cancellations: it.cancellations ?? [],
+          notes: it.notes
         };
       })
   }));
@@ -74,7 +75,8 @@ const SponsorOrderGrid = ({
   withReconciliation = false,
   withCancelledItemsHeader = false,
   onCancelForm,
-  onUndoCancelForm
+  onUndoCancelForm,
+  hideItemNotes = false
 }) => {
 
   const {
@@ -119,12 +121,21 @@ const SponsorOrderGrid = ({
           <Typography variant="body1" sx={{ ...(row.cancelled && { textDecoration: "line-through" }) }}>
             {row.itemName} - {T.translate("sponsor_order_grid.total")}: {row.quantity - row.canceled_quantity}
           </Typography>
+          {!hideItemNotes && row.notes?.trim() && (
+            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: "normal" }}>
+              <Box component="span" sx={{ fontWeight: 500 }}>
+                {T.translate("sponsor_order_grid.note")}
+              </Box>{" "}
+              {row.notes}
+            </Typography>
+          )}
           {row.cancellations.map((cancellation) => (
             <Box key={`cancellation-${row.id}-${cancellation.id}`} sx={{ mt: 1 }}>
               <Typography variant="body1" sx={{ color: "text.disabled" }}>
                 {T.translate("sponsor_order_grid.cancelled_by", {
                   x: cancellation.quantity,
                   y: row.quantity,
+                  money: currencyAmountFromCents(cancellation.amount),
                   user: cancellation.canceled_by_full_name,
                   date: formatEpoch(cancellation.created, "M/D/YY [@] h:mm A")
                 })}
@@ -242,7 +253,7 @@ const SponsorOrderGrid = ({
                         >
                           <Tooltip title={T.translate("sponsor_order_grid.change_quantity_tooltip")}>
                             <IconButton size="large" onClick={() => setChangeQuantityRow(row)}>
-                              <RuleIcon fontSize="large" />
+                              <RuleIcon />
                             </IconButton>
                           </Tooltip>
                         </TableCell>

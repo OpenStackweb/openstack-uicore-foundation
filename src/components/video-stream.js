@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import videojs from 'video.js'
 
 import 'video.js/dist/video-js.css'
@@ -80,6 +81,11 @@ const VideoStream = ({ url }) => {
     }
 
     return layout;
+};
+
+VideoStream.propTypes = {
+    /** A .m3u8 URL plays through video.js as a live stream; anything else is embedded in an iframe. Omit to render the "No video URL Provided" placeholder. */
+    url: PropTypes.string
 };
 
 export default VideoStream;

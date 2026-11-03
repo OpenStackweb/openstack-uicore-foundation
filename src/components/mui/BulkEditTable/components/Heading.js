@@ -18,6 +18,7 @@ import Box from "@mui/material/Box";
 import TableCell from "@mui/material/TableCell";
 import TableSortLabel from "@mui/material/TableSortLabel";
 import { visuallyHidden } from "@mui/utils";
+import { getColumnWidthSx } from "../../tables/components/table-styles";
 
 const Heading = (props) => {
   const {
@@ -27,7 +28,7 @@ const Heading = (props) => {
     onSort,
     columnIndex,
     columnKey,
-    width,
+    col,
     children
   } = props;
 
@@ -37,7 +38,7 @@ const Heading = (props) => {
     onSort(columnIndex, columnKey, sortDir ? sortDir * -1 : 1);
   };
 
-  const headerSx = width ? { width, minWidth: width, maxWidth: width } : {};
+  const headerSx = getColumnWidthSx(col);
 
   if (!sortable || editEnabled) {
     return <TableCell sx={headerSx}>{children}</TableCell>;
@@ -70,7 +71,7 @@ Heading.propTypes = {
   columnIndex: PropTypes.number,
   columnKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   sortable: PropTypes.bool,
-  width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  col: PropTypes.object.isRequired,
   children: PropTypes.node
 };
 

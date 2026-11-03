@@ -26,6 +26,7 @@ const MuiFormikAddonTypeSelect = ({
   return (
     <AddonTypeSelect
       value={field.value || ""}
+      name={name}
       onChange={helpers.setValue}
       placeholder={placeholder}
       inputProps={{

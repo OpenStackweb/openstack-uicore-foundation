@@ -17,6 +17,7 @@ const FormikTextEditor = ({ name, label = "", options = {}, licence, ...props })
       )}
       <TextEditorV3
         id={name}
+        name={name}
         value={field.value}
         options={mergedOptions}
         onChange={(e) => {

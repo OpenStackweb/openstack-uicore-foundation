@@ -11,6 +11,23 @@ import 'font-awesome/css/font-awesome.css';
 import 'openstack-uicore-foundation/lib/css/components.css';
 import 'sweetalert2/dist/sweetalert2.css';
 
+## Importing Components
+
+Prefer importing components from their individual paths rather than the
+`openstack-uicore-foundation/lib/components` barrel:
+
+```js
+import UploadInputV3 from 'openstack-uicore-foundation/lib/components/inputs/upload-input-v3';
+```
+
+Components that pull in heavy 3rd-party dependencies (MUI, Stripe,
+react-beautiful-dnd, etc.) are intentionally commented out of
+`src/components/index.js` (see the `// these include 3rd party deps` block)
+so that consumers who don't use them aren't forced to install those peer
+dependencies just to import something unrelated from the barrel. These
+components are only reachable via their individual path — a barrel import
+will not resolve them.
+
 ### Enviroment Variables
 
 * TIMEINTERVALSINCE1970_API_URL                         = URL used on clock component to get server time   

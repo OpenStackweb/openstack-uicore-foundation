@@ -12,6 +12,7 @@
  **/
 
 import React from 'react'
+import PropTypes from 'prop-types';
 import 'awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css'
 import Input from '../inputs/text-input'
 import Dropdown from '../inputs/dropdown'
@@ -164,4 +165,30 @@ class RsvpForm extends React.Component {
     }
 }
 
+RsvpForm.propTypes = {
+    /** Rendered by class_name, e.g. RSVPTextBoxQuestionTemplate or RSVPCheckBoxListQuestionTemplate. */
+    questions: PropTypes.arrayOf(PropTypes.shape({
+        /** Must be a number: handleChange compares answer.question_id to parseInt(id) with strict equality, which never matches a string id. */
+        id: PropTypes.number.isRequired,
+        /** Selects the widget; unknown values render nothing. */
+        class_name: PropTypes.string.isRequired,
+        name: PropTypes.string,
+        /** Injected as raw HTML. */
+        label: PropTypes.string,
+        is_mandatory: PropTypes.bool,
+        values: PropTypes.array,
+        /** RSVPLiteralContentQuestionTemplate: raw HTML content rendered via RawHTML. */
+        value: PropTypes.string,
+        /** RSVPDropDownQuestionTemplate: when true, values are remapped to {value: id, label: value}. */
+        is_country_selector: PropTypes.bool,
+        /** RSVPDropDownQuestionTemplate: passed through to the Dropdown as isMulti. */
+        is_multiselect: PropTypes.bool,
+        /** RSVPDropDownQuestionTemplate: used as the Dropdown's placeholder. */
+        empty_string: PropTypes.string
+    })).isRequired,
+    /** Receives the collected answers array on submit. Omit to render a display-only form with no submit button. */
+    onSubmit: PropTypes.func,
+    /** Keyed by question id. Read into state at mount with no fallback; hasErrors() throws if omitted. Effectively required. */
+    errors: PropTypes.object
+};
 export default RsvpForm;

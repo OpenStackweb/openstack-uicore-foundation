@@ -51,7 +51,7 @@ const MuiFormikTextField = ({
         {...props}
       />
       {maxLength && (
-        <Typography sx={{ fontSize: "1.2rem", color: "#00000099", pl: 2 }}>
+        <Typography sx={{ fontSize: "0.75rem", color: "#00000099", pl: 2 }}>
           {`${maxLength - currentLength} characters left`}
         </Typography>
       )}

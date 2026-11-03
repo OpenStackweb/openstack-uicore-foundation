@@ -22,7 +22,8 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  Typography
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -39,7 +40,7 @@ import MuiFormikSelect from "../formik-inputs/mui-formik-select";
 import MuiFormikPriceField from "../formik-inputs/mui-formik-pricefield";
 import MuiFormikDiscountField from "../formik-inputs/mui-formik-discountfield";
 import ExpandedRowContent from "./components/ExpandedRowContent";
-import { hasDrivingQuantityField, isItemAvailable } from "./helpers";
+import { hasDrivingQuantityField, isItemAvailable, itemHasStock } from "./helpers";
 
 const FormItemTable = ({
   data,
@@ -164,13 +165,12 @@ const FormItemTable = ({
   );
 
   const calculateRowTotal = (row) => {
+    const customRate = values[`i-${row.form_item_id}-c-global-f-custom_rate`];
     const qty =
       values[`i-${row.form_item_id}-c-global-f-quantity`] ||
       calculateQuantity(row);
 
-    if (currentApplicableRate === "expired") return 0;
-
-    const customRate = values[`i-${row.form_item_id}-c-global-f-custom_rate`];
+    // if currentRate is expired or not set then we return, unless customRate is set
     const rate = customRate || row.rates[currentApplicableRate];
 
     if (rate == null || qty == null) return 0;
@@ -230,7 +230,15 @@ const FormItemTable = ({
         </TableHead>
         <TableBody>
           {data.map((row) => {
-            const disabled = !isItemAvailable(row, currentApplicableRate);
+            const customRate = values[`i-${row.form_item_id}-c-global-f-custom_rate`];
+            const currentQuantity = calculateQuantity(row);
+            const hasStock = itemHasStock(row);
+            // don't use live value, it will disable when 0
+            const savedQuantity = row.quantity ?? 0;
+            // User can always lower the quantity down to 0
+            const disabled =
+              !isItemAvailable(row, currentApplicableRate, customRate) ||
+              (!hasStock && savedQuantity === 0);
             const isOpen = !!openRows[row.form_item_id];
 
             return (
@@ -286,20 +294,29 @@ const FormItemTable = ({
                     <GlobalQuantityField
                       row={row}
                       extraColumns={extraColumns}
-                      value={calculateQuantity(row)}
+                      value={currentQuantity}
+                      disabled={disabled}
                     />
                   </TableCell>
                   <TableCell>
                     {currencyAmountFromCents(calculateRowTotal(row))}
                   </TableCell>
                   <TableCell align="center" sx={{ verticalAlign: "middle" }}>
-                    <IconButton
-                      size="small"
-                      aria-label="Toggle row details"
-                      onClick={() => toggleRow(row.form_item_id)}
-                    >
-                      <InfoOutlinedIcon color={getDetailsIconColor(row)} />
-                    </IconButton>
+                    {hasStock ? (
+                      <IconButton
+                        size="small"
+                        aria-label="Toggle row details"
+                        onClick={() => toggleRow(row.form_item_id)}
+                      >
+                        <InfoOutlinedIcon fontSize="small" color={getDetailsIconColor(row)} />
+                      </IconButton>
+                    ) : (
+                      <Typography variant="body2" noWrap sx={{ color: "error.main" }}>
+                        {row.is_sold_out
+                          ? T.translate("sponsor_edit_form.sold_out")
+                          : T.translate("sponsor_edit_form.limit_reached")}
+                      </Typography>
+                    )}
                   </TableCell>
                 </TableRow>
                 <TableRow>

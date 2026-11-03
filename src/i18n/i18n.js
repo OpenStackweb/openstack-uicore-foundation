@@ -22,11 +22,19 @@ if (language.length > 2) {
     language = language.split("_")[0];
 }
 
-try {
-    T.setTexts(resources[language]);
-} catch (e) {
-    T.setTexts(resources['en']);
-}
+/**
+ * Returns the lib translations for the given language, deep-merged on top of
+ * English. Non english bundles are partial (they only translate a subset of the
+ * keys), so without this merge any key missing from them would be rendered as
+ * the raw key (i18n-react returns the key itself when it is not found).
+ * Unsupported languages fall back to English entirely.
+ *
+ * @param {string} lang
+ * @returns {object}
+ */
+const getLibTexts = (lang) => merge({}, resources['en'], resources[lang] || {});
+
+T.setTexts(getLibTexts(language));
 
 /**
  * Call this instead of T.setTexts() in consumer apps.
@@ -37,6 +45,5 @@ try {
  * @param {object} customTexts - your app's translation object
  */
 export const setAppTexts = (customTexts = {}) => {
-    const libTexts = resources[language] || resources['en'];
-    T.setTexts(merge({}, libTexts, customTexts));
+    T.setTexts(merge({}, getLibTexts(language), customTexts));
 };

@@ -21,7 +21,7 @@ const FilterButton = ({ filterCount, onClick, onDelete, iconSx }) => {
   if (filterCount > 0) {
     return (
       <Chip
-        icon={<FilterListIcon fontSize="large" />}
+        icon={<FilterListIcon />}
         label={`${filterCount} ${T.translate("grid_filter.filters")}`}
         onClick={onClick}
         onDelete={onDelete}
@@ -46,7 +46,7 @@ const FilterButton = ({ filterCount, onClick, onDelete, iconSx }) => {
       onClick={onClick}
       sx={{ mr: 1, top: 0, position: "relative", padding: 0, ...iconSx }}
     >
-      <FilterListIcon fontSize="large" />
+      <FilterListIcon />
     </IconButton>
   );
 };

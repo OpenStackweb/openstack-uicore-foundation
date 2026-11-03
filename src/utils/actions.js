@@ -50,8 +50,14 @@ export const setSnackbarMessage = (message) => (dispatch) => {
     dispatch(createAction(SET_SNACKBAR_MESSAGE)(message));
 };
 
+// setSnackbarMessage is message-only, so run authErrorHandler's 401 re-login / 403 logout callback here
+const notifySnackbarError = (message, callback) => (dispatch) => {
+    setSnackbarMessage(message)(dispatch);
+    if (typeof callback === "function") callback();
+};
+
 export const snackbarErrorHandler = (err, res) => (dispatch, state) => {
-    authErrorHandler(err, res, setSnackbarMessage)(dispatch, state);
+    authErrorHandler(err, res, notifySnackbarError)(dispatch, state);
 };
 
 export const snackbarSuccessHandler = (message) => (dispatch, state) =>
