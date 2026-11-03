@@ -96,6 +96,7 @@ module.exports = {
         'components/mui/toggle-buttons': './src/components/mui/ToggleButtons',
         'components/mui/round-button': './src/components/mui/RoundButton',
         'components/mui/menu-button': './src/components/mui/menu-button.js',
+        'components/mui/form': './src/components/mui/mui-form.js',
         'components/mui/search-input': './src/components/mui/search-input.js',
         'components/mui/show-confirm-dialog': './src/components/mui/showConfirmDialog.js',
         'components/mui/sponsor-addon-select': './src/components/mui/sponsor-addon-select.js',
