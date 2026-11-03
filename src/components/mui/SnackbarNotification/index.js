@@ -185,7 +185,7 @@ const NotificationSnackbar = ({ queue, vertical }) => {
               <IconButton
                 size="small"
                 color="inherit"
-                aria-label="Close"
+                aria-label={T.translate("general.close")}
                 onClick={onClose}
               >
                 <CloseIcon fontSize="small" />
