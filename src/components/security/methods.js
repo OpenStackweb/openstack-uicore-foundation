@@ -7,7 +7,6 @@ import {
     getOrigin,
     putOnLocalStorage,
     retryPromise,
-    setSessionClearingState,
 } from "../../utils/methods";
 import moment from "moment-timezone";
 import request from 'superagent/lib/client';
@@ -294,15 +293,29 @@ export const retryWithBackoff = async (fn, maxRetries = MAX_RETRIES, baseDelayMs
     }
 };
 
+// a "null"/"undefined" string is a serialized missing token, the IDP would reject it anyway
+const isMissingRefreshToken = (refreshToken) =>
+    !refreshToken || refreshToken === 'null' || refreshToken === 'undefined';
+
 const processRefreshToken = async (flow, refreshToken) => {
 
     if (flow === RESPONSE_TYPE_CODE && useOAuth2RefreshToken()) {
-        if (!refreshToken) {
+        if (isMissingRefreshToken(refreshToken)) {
             clearAuthInfo();
             throw Error(AUTH_ERROR_MISSING_REFRESH_TOKEN);
         }
 
-        let response = await retryWithBackoff(() => refreshAccessToken(refreshToken));
+        let response;
+        try {
+            response = await retryWithBackoff(() => refreshAccessToken(refreshToken));
+        } catch (err) {
+            // drop a rejected refresh token so it is never sent again, unless a newer one was stored meanwhile
+            if (err.message && err.message.startsWith(AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR)
+                && getAuthInfo()?.refreshToken === refreshToken) {
+                clearAuthInfo();
+            }
+            throw err;
+        }
         let {access_token, expires_in, refresh_token, id_token} = response;
         if (typeof refresh_token === 'undefined') {
             refresh_token = null; // not using rotate policy
@@ -455,7 +468,6 @@ export const refreshAccessToken = async (refresh_token) => {
             throw Error(`${AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR}: ${response.status} - ${response.statusText}`);
         }
         // token is genuinely revoked — this is a real auth error
-        setSessionClearingState(true);
         throw Error(`${AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR}: ${response.status} - ${response.statusText}`);
     }
 
@@ -469,7 +481,6 @@ export const refreshAccessToken = async (refresh_token) => {
     let {access_token, refresh_token: new_refresh_token, expires_in, id_token} = json;
     // Defensively ensure we never propagate an undefined access token.
     if (!access_token) {
-        setSessionClearingState(true);
         throw Error(`${AUTH_ERROR_REFRESH_TOKEN_REQUEST_ERROR}: missing access_token in refresh response`);
     }
     return {access_token, refresh_token: new_refresh_token, expires_in, id_token}
@@ -485,8 +496,10 @@ export const storeAuthInfo = (accessToken, expiresIn, refreshToken = null, idTok
         accessTokenUpdatedAt: Math.floor(Date.now() / 1000),
     };
 
-    if (refreshToken == null && formerAuthInfo) {
-        refreshToken = formerAuthInfo.refreshToken;
+    if (isMissingRefreshToken(refreshToken)) {
+        refreshToken = formerAuthInfo && !isMissingRefreshToken(formerAuthInfo.refreshToken)
+            ? formerAuthInfo.refreshToken
+            : null;
     }
 
     if (idToken == null && formerAuthInfo) {
