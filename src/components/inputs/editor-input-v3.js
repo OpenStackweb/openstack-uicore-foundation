@@ -3,6 +3,7 @@ import JoditEditor from "jodit-react";
 
 const TextEditorV3 = ({
                           id,
+                          name,
                           value,
                           error,
                           className,
@@ -66,7 +67,7 @@ const TextEditorV3 = ({
     };
 
     return (
-        <div className="editor-input">
+        <div className="editor-input" id={id} name={name}>
             <JoditEditor
                 ref={editor}
                 key={value}

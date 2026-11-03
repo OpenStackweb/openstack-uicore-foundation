@@ -90,3 +90,43 @@ describe('DropzoneV3 - uploadprogress to React bridging', () => {
     expect(onUploadProgress).toHaveBeenCalledWith(file, 40);
   });
 });
+
+describe('DropzoneV3 - error status forwarding', () => {
+  beforeEach(() => {
+    capturedEventHandlers = null;
+  });
+
+  test('forwards the xhr status from the error event to onFileError', () => {
+    const onFileError = jest.fn();
+    render(
+      <DropzoneV3
+        id="test-dropzone-v3"
+        config={{ postUrl: 'https://example.com/upload' }}
+        djsConfig={{}}
+        onFileError={onFileError}
+      />
+    );
+
+    const file = { name: 'video.mp4' };
+    capturedEventHandlers.error(file, 'Server responded with 0 code.', { status: 0 });
+
+    expect(onFileError).toHaveBeenCalledWith(file, 'Server responded with 0 code.', 0);
+  });
+
+  test('passes undefined status when Dropzone emits error without an xhr (e.g. client-side validation)', () => {
+    const onFileError = jest.fn();
+    render(
+      <DropzoneV3
+        id="test-dropzone-v3"
+        config={{ postUrl: 'https://example.com/upload' }}
+        djsConfig={{}}
+        onFileError={onFileError}
+      />
+    );
+
+    const file = { name: 'huge.mp4' };
+    capturedEventHandlers.error(file, 'File is too big.');
+
+    expect(onFileError).toHaveBeenCalledWith(file, 'File is too big.', undefined);
+  });
+});

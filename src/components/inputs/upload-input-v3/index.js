@@ -12,6 +12,7 @@
  **/
 
 import React, { useState, useRef, useMemo, useCallback, useLayoutEffect, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import T from "i18n-react/dist/i18n-react";
 import {
   Box,
@@ -25,6 +26,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CloseIcon from "@mui/icons-material/Close";
+import ReplayIcon from "@mui/icons-material/Replay";
 import { DropzoneV3 } from './dropzone-v3';
 import ProgressiveImg from '../../progressive-img';
 import file_icon from '../upload-input/file.png';
@@ -43,6 +45,32 @@ const formatFileSize = (bytes) => {
   return `${Math.round(bytes / 1024)} KB`;
 };
 
+/**
+ * Maps the fixed error strings Dropzone and pollUploadStatus report onto translated messages.
+ * Anything else is a server-provided message and is passed through untouched.
+ */
+const resolveErrorMessage = (text, status) => {
+  // status 0 means the request never got a real server response (connection dropped/timed
+  // out) - Dropzone's own message for that case is "Server responded with 0 code.", which
+  // is not something a user can act on.
+  if (status === 0) return T.translate('upload_input_v3.network_error');
+
+  switch (text) {
+    case 'Network error':
+      return T.translate('upload_input_v3.network_error');
+    case 'Upload timed out':
+      return T.translate('upload_input_v3.upload_timed_out');
+    case 'Upload failed':
+      return T.translate('upload_input_v3.upload_failed');
+    case 'Auth error':
+      return T.translate('upload_input_v3.auth_error');
+    case 'Max files reached.':
+      return T.translate('upload_input_v3.max_files_reached');
+    default:
+      return text;
+  }
+};
+
 const UploadInputV3 = ({
   value = [],
   onRemove,
@@ -56,6 +84,7 @@ const UploadInputV3 = ({
   onUploadStart = null,
   djsConfig,
   id,
+  name,
   parallelChunkUploads = false,
   maxConcurrentChunks = 6,
   onError = () => { },
@@ -205,29 +234,63 @@ const UploadInputV3 = ({
     }));
   }, [value]);
 
-  const handleFileError = useCallback((file, message) => {
+  const handleFileError = useCallback((file, message, status) => {
     setUploadingFiles(prev => {
       const entry = prev.find(f => f.name === file.name && f.size === file.size);
       if (entry?.previewUrl) URL.revokeObjectURL(entry.previewUrl);
       return prev.filter(f => !(f.name === file.name && f.size === file.size));
     });
-    // Dropzone turns a cancelled upload into an error carrying dictUploadCanceled. A cancel
-    // is not a failure to report back to the user - the row just goes away. 'canceled' is the
-    // value of Dropzone.CANCELED, matched as a literal so this does not depend on the
-    // Dropzone module being loaded here; _userCanceled also covers files Dropzone never got
-    // to mark, such as one removed before its upload reached the UPLOADING state.
+    // 'canceled' is the value of Dropzone.CANCELED, matched as a literal so this does not depend on the
+    // Dropzone module being loaded here; _userCanceled is when removed before its upload reached the UPLOADING state.
     if (file._userCanceled || file.status === 'canceled') return;
-    setErrorFiles(prev => [...prev, { name: file.name, size: file.size, message }]);
+
+    // Dropzone parses any application/json error body before checking status, so a real
+    // server validation error (e.g. file-upload-api's {"message": "..."}) arrives as an
+    // object here, not a string - render it as one or React crashes on the JSX below.
+    const text = typeof message === 'string'
+      ? message
+      : (message?.message ?? T.translate('upload_input_v3.upload_failed'));
+
+    const displayMessage = resolveErrorMessage(text, status);
+
+    setErrorFiles(prev => {
+      const uuid = file.upload?.uuid;
+      const existingIndex = prev.findIndex(f => f.uuid === uuid);
+      const entry = { uuid, name: file.name, size: file.size, message: displayMessage };
+      if (existingIndex === -1) return [...prev, entry];
+      return prev.map((f, i) => (i === existingIndex ? entry : f));
+    });
   }, []);
 
   const handleDismissError = useCallback((file) => {
     if (dropzoneInstanceRef.current) {
       const dzFile = dropzoneInstanceRef.current.files?.find(
-        f => f.name === file.name && f.size === file.size
+        f => f.upload?.uuid === file.uuid
       );
       if (dzFile) dropzoneInstanceRef.current.removeFile(dzFile);
     }
-    setErrorFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
+    setErrorFiles(prev => prev.filter(f => f.uuid !== file.uuid));
+  }, []);
+
+  // An errored file is never auto-removed from dropzone's own file list, so the same
+  // uuid lookup handleDismissError uses still finds it here - re-adding it
+  // re-triggers accept(), which is where the resume ledger lookup happens.
+  const handleRetryError = useCallback((file) => {
+    const dz = dropzoneInstanceRef.current;
+    const dzFile = dz?.files?.find(f => f.upload?.uuid === file.uuid);
+    setErrorFiles(prev => prev.filter(f => f.uuid !== file.uuid));
+    if (!dz || !dzFile) return; // file object gone (e.g. full remount) - re-selecting the
+    // same file still resumes via the md5-keyed ledger the next time it hits accept()
+    dz.removeFile(dzFile);
+    // Reusing the same File object means it still carries flags from its previous pass.
+    // dropzone's OWN accept() gate runs before our custom options.accept ever does, and
+    // rejects the file as "too many files" if accepted stays true from its original
+    // successful accept. Our removedfile handler also sets _canceled, which later blocks
+    // xhr.onload from ever calling onUploadComplete/pollUploadStatus once resent chunks
+    // succeed. Neither is cleared by removeFile/addFile - must reset both here.
+    dzFile.accepted = false;
+    dzFile._canceled = false;
+    dz.addFile(dzFile);
   }, []);
 
   const handleDeleteUploading = useCallback((file) => {
@@ -326,7 +389,7 @@ const UploadInputV3 = ({
   };
 
   return (
-    <Box className="upload-input-v3">
+    <Box className="upload-input-v3" id={id} name={name}>
       {label && (
         <Typography variant="subtitle1" fontWeight={600} gutterBottom>
           {label}
@@ -367,7 +430,7 @@ const UploadInputV3 = ({
                   />
                 ) : (
                   <Box sx={{ color: 'primary.main', display: 'flex', alignItems: 'center' }}>
-                    <UploadFileIcon fontSize="medium" />
+                    <UploadFileIcon fontSize="small" />
                   </Box>
                 )}
               </Box>
@@ -381,7 +444,7 @@ const UploadInputV3 = ({
                   {file.name}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {formatFileSize(file.size)} · {file.complete ? 'Complete' : 'Loading'}
+                  {formatFileSize(file.size)} · {file.complete ? T.translate("upload_input_v3.complete") : T.translate("upload_input_v3.loading")}
                 </Typography>
                 {!file.complete && (
                   <LinearProgress
@@ -417,7 +480,7 @@ const UploadInputV3 = ({
               sx={fileRowSx}
             >
               <Box sx={{ color: 'error.main', display: 'flex', alignItems: 'center', mr: 2, minWidth: 32 }}>
-                <ErrorOutlineIcon fontSize="medium" />
+                <ErrorOutlineIcon fontSize="small" />
               </Box>
 
               <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -433,6 +496,14 @@ const UploadInputV3 = ({
                 </Typography>
               </Box>
 
+              <IconButton
+                size="small"
+                onClick={() => handleRetryError(file)}
+                title={T.translate("upload_input_v3.retry")}
+                sx={{ color: 'primary.main' }}
+              >
+                <ReplayIcon fontSize="small" />
+              </IconButton>
               <IconButton
                 size="small"
                 onClick={() => handleDismissError(file)}
@@ -512,4 +583,39 @@ const UploadInputV3 = ({
   );
 };
 
+UploadInputV3.propTypes = {
+    id: PropTypes.string,
+    name: PropTypes.string,
+    /** Already-uploaded files. */
+    value: PropTypes.array,
+    /** Endpoint the dropzone POSTs to. */
+    postUrl: PropTypes.string,
+    /** Drives allowed extensions and max size unless the getters below override them. */
+    mediaType: PropTypes.shape({
+        max_size: PropTypes.number,
+        type: PropTypes.shape({ allowed_extensions: PropTypes.array })
+    }),
+    /** Upload is blocked once value reaches this count. */
+    maxFiles: PropTypes.number,
+    canAdd: PropTypes.bool,
+    onRemove: PropTypes.func,
+    onUploadComplete: PropTypes.func,
+    onError: PropTypes.func,
+    /** Extra Dropzone config, merged last. */
+    djsConfig: PropTypes.object,
+    timeOut: PropTypes.number,
+    parallelChunkUploads: PropTypes.bool,
+    maxConcurrentChunks: PropTypes.number,
+    /** Returns a comma-separated extension list, overriding mediaType. */
+    getAllowedExtensions: PropTypes.func,
+    /** Returns max size in MB, overriding mediaType. */
+    getMaxSize: PropTypes.func,
+    canDelete: PropTypes.bool,
+    /** Fired when an upload begins. */
+    onUploadStart: PropTypes.func,
+    label: PropTypes.node,
+    helpText: PropTypes.node,
+    /** Non-empty renders an MUI Alert (severity="error"), not an .error-label. */
+    error: PropTypes.string
+};
 export default UploadInputV3;

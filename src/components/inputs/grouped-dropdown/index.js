@@ -12,6 +12,7 @@
  **/
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { OptionGroup } from './OptionGroup';
 import './optiongroup.less';
 
@@ -71,3 +72,22 @@ export default class GroupedDropdown extends React.Component {
         );
     }
 }
+
+GroupedDropdown.propTypes = {
+    id: PropTypes.string,
+    /** An entry with a nested `options` array renders as an optgroup; otherwise a plain option. */
+    options: PropTypes.arrayOf(PropTypes.shape({
+        value: PropTypes.any,
+        label: PropTypes.string,
+        options: PropTypes.array
+    })).isRequired,
+    /** Native select value. Mirrored into local state and re-synced when the prop changes. */
+    value: PropTypes.any,
+    /** Receives the raw DOM change event. */
+    onChange: PropTypes.func.isRequired,
+    /** Rendered as a disabled first option. */
+    placeholder: PropTypes.string,
+    className: PropTypes.string,
+    /** Non-empty renders an .error-label and adds the error class. */
+    error: PropTypes.string
+};

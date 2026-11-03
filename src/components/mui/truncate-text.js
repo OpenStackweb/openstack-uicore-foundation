@@ -13,7 +13,7 @@ const TruncateText = ({ children, charLimit }) => {
   const tooltipTitle = isTruncated ? children : isOverflowing ? children : "";
 
   return (
-    <Tooltip title={tooltipTitle} placement="top" componentsProps={{ tooltip: { sx: { fontSize: "1.2rem" } } }}>
+    <Tooltip title={tooltipTitle} placement="top" componentsProps={{ tooltip: { sx: { fontSize: "0.75rem" } } }}>
       <span
         ref={ref}
         onMouseEnter={() => {

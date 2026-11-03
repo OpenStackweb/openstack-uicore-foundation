@@ -185,7 +185,7 @@ describe('UploadInputV3', () => {
         dropzoneCallbacks.onAddedFile({ name: 'sample.png', size: 11264 });
       });
       expect(screen.getByText('sample.png')).toBeInTheDocument();
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
     });
 
     test('shows Complete status and hides progress bar after upload finishes', () => {
@@ -197,7 +197,7 @@ describe('UploadInputV3', () => {
         dropzoneCallbacks.onFileCompleted({ name: 'sample.png', size: 11264 });
       });
       expect(screen.getByText(/Complete/)).toBeInTheDocument();
-      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Uploading/)).not.toBeInTheDocument();
     });
 
     test('hides dropzone when max files reached', () => {
@@ -234,7 +234,7 @@ describe('UploadInputV3', () => {
       act(() => {
         dropzoneCallbacks.onAddedFile({ name: 'big-file.png', size: 9999999 });
       });
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
 
       act(() => {
         dropzoneCallbacks.onFileError(
@@ -242,8 +242,49 @@ describe('UploadInputV3', () => {
           'File is too big (9.54MiB). Max filesize: 5MiB.'
         );
       });
-      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Uploading/)).not.toBeInTheDocument();
       expect(screen.getByText(/File is too big/)).toBeInTheDocument();
+    });
+
+    test('two failed chunks for the same file collapse into a single error row', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onAddedFile({ name: 'big-file.png', size: 9999999 });
+      });
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'big-file.png', size: 9999999 }, 'Server responded with 0 code.', 0);
+      });
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'big-file.png', size: 9999999 }, 'Server responded with 0 code.', 0);
+      });
+      expect(screen.getAllByText('big-file.png')).toHaveLength(1);
+      expect(screen.queryByText('Server responded with 0 code.')).not.toBeInTheDocument();
+      expect(screen.getAllByText('Upload interrupted by a connection error. Please retry.')).toHaveLength(1);
+    });
+
+    test('a status-0 connection failure shows a readable message instead of the raw "Server responded with 0 code."', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'video.mp4', size: 9999999 }, 'Server responded with 0 code.', 0);
+      });
+      expect(screen.getByText('Upload interrupted by a connection error. Please retry.')).toBeInTheDocument();
+      expect(screen.queryByText('Server responded with 0 code.')).not.toBeInTheDocument();
+    });
+
+    test('a fetch-rejection during status polling ("Network error") shows the same readable connection message', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'video.mp4', size: 9999999 }, 'Network error');
+      });
+      expect(screen.getByText('Upload interrupted by a connection error. Please retry.')).toBeInTheDocument();
+    });
+
+    test('a real non-zero-status server error still shows the server-provided message', () => {
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'video.mp4', size: 9999999 }, 'File type not allowed', 415);
+      });
+      expect(screen.getByText('File type not allowed')).toBeInTheDocument();
     });
 
     test('dismissing an error removes it from the view and restores the dropzone', () => {
@@ -257,8 +298,10 @@ describe('UploadInputV3', () => {
       expect(screen.getByText(/File is too big/)).toBeInTheDocument();
       expect(container.querySelector('.dropzone-mock')).not.toBeVisible();
 
+      // The error row has two buttons (Retry, then dismiss) - dismiss is last.
+      const errorRowButtons = screen.getAllByRole('button');
       act(() => {
-        fireEvent.click(screen.getByRole('button'));
+        fireEvent.click(errorRowButtons[errorRowButtons.length - 1]);
       });
 
       expect(screen.queryByText(/File is too big/)).not.toBeInTheDocument();
@@ -276,7 +319,7 @@ describe('UploadInputV3', () => {
       act(() => {
         dropzoneCallbacks.onAddedFile({ name: 'sample.png', size: 11264 });
       });
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
 
       // The delete button on the uploading row is the only button on screen.
       act(() => {
@@ -321,6 +364,54 @@ describe('UploadInputV3', () => {
         );
       });
       expect(container.querySelector('.dropzone-mock')).not.toBeVisible();
+    });
+
+    test('retrying an error resumes: removeFile + addFile on the same dropzone file object, flags reset', () => {
+      const removeFile = jest.fn();
+      const addFile = jest.fn();
+      // still carrying flags from its previous pass, same as after a real interrupted upload
+      const dzFile = { name: 'video.mp4', size: 9999999, accepted: true, _canceled: true };
+
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onDropzoneReady({ files: [dzFile], removeFile, addFile });
+      });
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'video.mp4', size: 9999999 }, 'Network error');
+      });
+
+      act(() => {
+        fireEvent.click(screen.getByTitle('Retry'));
+      });
+
+      expect(removeFile).toHaveBeenCalledWith(dzFile);
+      expect(addFile).toHaveBeenCalledWith(dzFile);
+      // dropzone's own accept() gate and our xhr.onload guard both key off these -
+      // stale values from the failed attempt must not survive into the retry.
+      expect(dzFile.accepted).toBe(false);
+      expect(dzFile._canceled).toBe(false);
+      expect(screen.queryByText('video.mp4')).not.toBeInTheDocument();
+    });
+
+    test('retrying an error is a no-op when the underlying dropzone file is gone', () => {
+      const removeFile = jest.fn();
+      const addFile = jest.fn();
+
+      render(<UploadInputV3 {...defaultProps} />);
+      act(() => {
+        dropzoneCallbacks.onDropzoneReady({ files: [], removeFile, addFile });
+      });
+      act(() => {
+        dropzoneCallbacks.onFileError({ name: 'video.mp4', size: 9999999 }, 'Network error');
+      });
+
+      act(() => {
+        fireEvent.click(screen.getByTitle('Retry'));
+      });
+
+      expect(removeFile).not.toHaveBeenCalled();
+      expect(addFile).not.toHaveBeenCalled();
+      expect(screen.queryByText('video.mp4')).not.toBeInTheDocument();
     });
   });
 
@@ -549,7 +640,9 @@ describe('UploadInputV3', () => {
       });
       expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:photo-a.jpg');
 
-      act(() => { fireEvent.click(screen.getByRole('button')); });
+      // The error row now has two buttons (Retry, then dismiss) - the dismiss one is last.
+      const errorRowButtons = screen.getAllByRole('button');
+      act(() => { fireEvent.click(errorRowButtons[errorRowButtons.length - 1]); });
       act(() => {
         dropzoneCallbacks.onAddedFile({ name: 'photo-b.jpg', size: 20000, type: 'image/jpeg' });
         dropzoneCallbacks.onFileCompleted({ name: 'photo-b.jpg', size: 20000 });
@@ -621,7 +714,7 @@ describe('UploadInputV3', () => {
 
       // Assert: file should still show "Loading" (not "Complete") because async processing is in progress
       expect(screen.getByText('video.mp4')).toBeInTheDocument();
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
       expect(screen.queryByText(/Complete/)).not.toBeInTheDocument();
     });
 
@@ -644,7 +737,7 @@ describe('UploadInputV3', () => {
       });
 
       // File should still be Loading despite progress being 100
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
       expect(screen.queryByText(/Complete/)).not.toBeInTheDocument();
 
       // Polling completes - onUploadComplete fires after async processing finishes
@@ -655,7 +748,7 @@ describe('UploadInputV3', () => {
       // Assert: file should now show "Complete"
       expect(screen.getByText('video.mp4')).toBeInTheDocument();
       expect(screen.getByText(/Complete/)).toBeInTheDocument();
-      expect(screen.queryByText(/Loading/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Uploading/)).not.toBeInTheDocument();
     });
 
     test('completing one file does not mark other in-flight files as complete when maxFiles > 1', () => {
@@ -672,7 +765,7 @@ describe('UploadInputV3', () => {
       // Both should be Loading
       expect(screen.getByText('file-a.png')).toBeInTheDocument();
       expect(screen.getByText('file-b.png')).toBeInTheDocument();
-      expect(screen.getAllByText(/Loading/)).toHaveLength(2);
+      expect(screen.getAllByText(/Uploading/)).toHaveLength(2);
 
       // File A finishes uploading all chunks - progress reaches 100
       act(() => {
@@ -696,7 +789,7 @@ describe('UploadInputV3', () => {
 
       // Assert: file B should still show "Loading" - it has not finished uploading
       expect(screen.getByText('file-b.png')).toBeInTheDocument();
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
     });
 
     test('HTTP 202 parallel: onUploadComplete for one file does not prematurely mark sibling file as complete', () => {
@@ -717,7 +810,7 @@ describe('UploadInputV3', () => {
         dropzoneCallbacks.onFileCompleted({ name: 'clip-b.mp4', size: 8000000, _asyncProcessing: true });
       });
 
-      expect(screen.getAllByText(/Loading/)).toHaveLength(2);
+      expect(screen.getAllByText(/Uploading/)).toHaveLength(2);
 
       // Only clip-a.mp4 polling finishes
       act(() => {
@@ -726,9 +819,9 @@ describe('UploadInputV3', () => {
 
       // clip-b must still be Loading - it has not finished async processing
       expect(screen.getByText('clip-b.mp4')).toBeInTheDocument();
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByText(/Uploading/)).toBeInTheDocument();
       // Only one Loading entry should remain (clip-b)
-      expect(screen.getAllByText(/Loading/)).toHaveLength(1);
+      expect(screen.getAllByText(/Uploading/)).toHaveLength(1);
     });
   });
 });

@@ -7,8 +7,11 @@
     "maximum_files": "Maximum number of files has been reached"
   },
   "general": {
+    "active": "Active",
+    "archived": "Archived",
     "select_summit": "Select a Summit...",
     "add": "Add",
+    "add_new": "Add New",
     "clear": "Clear",
     "remove": "Remove",
     "drop_files": "Drop images or click to select files to upload.",
@@ -30,6 +33,7 @@
     "row_remove_warning": "Are you sure you want to delete row ",
     "edit": "Edit",
     "delete": "Delete",
+    "view": "View",
     "cancel": "Cancel",
     "apply": "Apply",
     "n_a": "N/A",
@@ -63,10 +67,14 @@
   "mui_table": {
     "no_items": "No items found.",
     "no_data": "No data found.",
-    "rows_per_page": "Rows per page",
+    "rows_per_page": "Per Page",
     "sorted_desc": "sorted descending",
     "sorted_asc": "sorted ascending",
     "total": "Total",
+    "page_of": "Page {page} of {totalPages}",
+    "showing_range": "Showing {from}–{to} of {total}",
+    "previous_page": "Previous page",
+    "next_page": "Next page",
     "pay": "PAY",
     "payment": "Payment",
     "paid_via": "Paid via",
@@ -121,7 +129,9 @@
     "notes_placeholder": "Enter your notes here...",
     "additional_info": "Additional Info",
     "discount": "Discount",
-    "total_on_caps": "TOTAL"
+    "total_on_caps": "TOTAL",
+    "sold_out": "Sold Out",
+    "limit_reached": "Max Qty Hit"
   },
   "upload_input": {
     "upload_file": "Upload file"
@@ -138,6 +148,7 @@
   },
   "sponsor_order_grid": {
     "title": "Order Items Ledger",
+    "note": "Note:",
     "code": "Code",
     "type": "Type",
     "addon": "Add-on",
@@ -157,7 +168,7 @@
       "reason": "Reason"
     },
     "cancel_info_note": "Active order items can be partially or fully canceled, or reverted to original quantity. Refund and payment rows are display-only.",
-    "cancelled_by": "Cancelled ({x} of {y}) • {date} • {user}",
+    "cancelled_by": "Cancelled ({x} of {y}) • {money} • {date} • {user}",
     "cancelled_items": "Cancelled items:",
     "reconciliation": "Reconciliation",
     "cancelled": "Cancelled",
@@ -186,7 +197,17 @@
       "drag_and_drop": "or drag and drop",
       "see_preview": "See Preview",
       "preview_file": "Preview file",
-      "complete": "Complete"
+      "complete": "Complete",
+      "network_error": "Upload interrupted by a connection error. Please retry.",
+      "upload_timed_out": "Upload timed out. Please retry.",
+      "upload_failed": "Upload failed. Please retry.",
+    "hash_failed": "Could not read the file. Please retry.",
+      "auth_error": "Authentication error. Please sign in again.",
+      "max_files_reached": "Maximum number of files reached.",
+      "loading": "Uploading",
+      "retry": "Retry",
+      "remove_file": "Remove {filename}",
+      "dismiss_file": "Dismiss {filename}"
   },
   "grid_filter": {
     "filter_by": "Filter by ",

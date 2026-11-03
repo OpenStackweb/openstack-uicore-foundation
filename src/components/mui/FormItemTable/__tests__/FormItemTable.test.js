@@ -921,6 +921,103 @@ describe("FormItemTable Component", () => {
     });
   });
 
+  // A custom rate is an explicit override that must win over the tier rate
+  // even when no tier rate applies (expired window, or null rates), both for
+  // pricing and for whether the row's fields stay editable. 0 is the
+  // "no custom rate" sentinel, matching what the API treats as unset.
+  describe("Custom Rate", () => {
+    const CUSTOM_RATE = 5000;
+    const QUANTITY = 3;
+
+    it("prices the row off the custom rate when the applicable rate is expired", () => {
+      // 3 * 5000 = 15000 cents -> $150.00, as row total and as grand total.
+      render(
+        <FormItemTableWrapper
+          data={MOCK_ITEMS_WITH_NULL_RATES}
+          currentApplicableRate="expired"
+          timeZone="America/New_York"
+          initialValues={{
+            "i-5-c-global-f-quantity": QUANTITY,
+            "i-5-c-global-f-custom_rate": CUSTOM_RATE
+          }}
+        />
+      );
+
+      const dollarValues = screen
+        .getAllByText(/\$/)
+        .map((el) => el.textContent);
+
+      expect(dollarValues).toContain("$150.00");
+      expect(dollarValues).not.toContain("$0.00");
+    });
+
+    it("keeps the row total at zero when the rate is expired and no custom rate is set", () => {
+      render(
+        <FormItemTableWrapper
+          data={MOCK_ITEMS_WITH_NULL_RATES}
+          currentApplicableRate="expired"
+          timeZone="America/New_York"
+          initialValues={{ "i-5-c-global-f-quantity": QUANTITY }}
+        />
+      );
+
+      const dollarValues = screen
+        .getAllByText(/\$/)
+        .map((el) => el.textContent);
+
+      expect(dollarValues).toContain("$0.00");
+      expect(dollarValues).not.toContain("$150.00");
+    });
+
+    it("leaves the row's fields editable when a custom rate is set but no tier rate applies", () => {
+      render(
+        <FormItemTableWrapper
+          data={MOCK_ITEMS_WITH_REQUIRED_FIELD}
+          currentApplicableRate="expired"
+          timeZone="America/New_York"
+          initialValues={{ "i-9-c-global-f-custom_rate": CUSTOM_RATE }}
+        />
+      );
+
+      expect(screen.getByTestId("textfield-i-9-c-Item-f-1")).toBeEnabled();
+    });
+
+    it("disables the row's fields when no tier rate applies and no custom rate is set", () => {
+      render(
+        <FormItemTableWrapper
+          data={MOCK_ITEMS_WITH_REQUIRED_FIELD}
+          currentApplicableRate="expired"
+          timeZone="America/New_York"
+          initialValues={{ "i-9-c-global-f-custom_rate": 0 }}
+        />
+      );
+
+      expect(screen.getByTestId("textfield-i-9-c-Item-f-1")).toBeDisabled();
+    });
+
+    it("re-disables the row's fields when the custom rate is cleared back to 0", async () => {
+      render(
+        <FormItemTableWrapper
+          data={MOCK_ITEMS_WITH_REQUIRED_FIELD}
+          currentApplicableRate="expired"
+          timeZone="America/New_York"
+          initialValues={{ "i-9-c-global-f-custom_rate": CUSTOM_RATE }}
+        />
+      );
+
+      expect(screen.getByTestId("textfield-i-9-c-Item-f-1")).toBeEnabled();
+
+      fireEvent.change(
+        screen.getByTestId("pricefield-i-9-c-global-f-custom_rate"),
+        { target: { value: "0" } }
+      );
+
+      await waitFor(() =>
+        expect(screen.getByTestId("textfield-i-9-c-Item-f-1")).toBeDisabled()
+      );
+    });
+  });
+
   describe("Rate Highlighting", () => {
     it("highlights early_bird rate when currentApplicableRate is early_bird", () => {
       render(
@@ -1189,6 +1286,238 @@ describe("FormItemTable Component", () => {
       );
       expect(input).toHaveAttribute("min", "5");
       expect(input).toHaveAttribute("max", "100");
+    });
+  });
+
+  describe("Sold Out", () => {
+    it("replaces the details icon with a Sold Out label and disables the quantity input when is_sold_out is true", () => {
+      const soldOutItem = { ...MOCK_FORM_A.items[0], is_sold_out: true };
+      const { container } = render(
+        <FormItemTableWrapper
+          data={[soldOutItem]}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+        />
+      );
+
+      expect(screen.getByText("sponsor_edit_form.sold_out")).toBeInTheDocument();
+      expect(
+        screen.queryByText("sponsor_edit_form.limit_reached")
+      ).not.toBeInTheDocument();
+      // Only the first column's collapse toggle remains - the details/info
+      // icon (also labelled "Toggle row details") is gone, replaced by the label.
+      expect(
+        screen.getAllByRole("button", { name: "Toggle row details" })
+      ).toHaveLength(1);
+      expect(
+        container.querySelector(
+          `input[name="i-${soldOutItem.form_item_id}-c-global-f-quantity"]`
+        )
+      ).toBeDisabled();
+    });
+
+    it("shows Sold Out (not Limit Reached) when both is_sold_out and remaining_quantity_sponsor === 0 are true", () => {
+      const bothExhaustedItem = {
+        ...MOCK_FORM_A.items[0],
+        is_sold_out: true,
+        remaining_quantity_sponsor: 0
+      };
+      render(
+        <FormItemTableWrapper
+          data={[bothExhaustedItem]}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+        />
+      );
+
+      expect(screen.getByText("sponsor_edit_form.sold_out")).toBeInTheDocument();
+      expect(
+        screen.queryByText("sponsor_edit_form.limit_reached")
+      ).not.toBeInTheDocument();
+    });
+
+    it("shows Limit Reached when only remaining_quantity_sponsor is 0 and is_sold_out is false", () => {
+      const sponsorLimitItem = {
+        ...MOCK_FORM_A.items[0],
+        is_sold_out: false,
+        remaining_quantity_sponsor: 0
+      };
+      render(
+        <FormItemTableWrapper
+          data={[sponsorLimitItem]}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+        />
+      );
+
+      expect(
+        screen.getByText("sponsor_edit_form.limit_reached")
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText("sponsor_edit_form.sold_out")
+      ).not.toBeInTheDocument();
+    });
+
+    it("keeps the details icon and quantity input enabled when is_sold_out is false", () => {
+      const availableItem = { ...MOCK_FORM_A.items[0], is_sold_out: false };
+      const { container } = render(
+        <FormItemTableWrapper
+          data={[availableItem]}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+        />
+      );
+
+      expect(
+        screen.queryByText("sponsor_edit_form.sold_out")
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("sponsor_edit_form.limit_reached")
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getAllByRole("button", { name: "Toggle row details" })
+      ).toHaveLength(2);
+      expect(
+        container.querySelector(
+          `input[name="i-${availableItem.form_item_id}-c-global-f-quantity"]`
+        )
+      ).not.toBeDisabled();
+    });
+  });
+
+  describe("Remaining Quantity Caps", () => {
+    // No Form-class Quantity metafields, so the global quantity field is a
+    // plain editable input rather than driven/readOnly.
+    const cappedItem = (overrides) => [
+      {
+        form_item_id: 20,
+        code: "CAP",
+        name: "Capped Item",
+        quantity: 0,
+        rates: { early_bird: 10000, standard: 12000, onsite: 15000 },
+        meta_fields: [],
+        ...overrides
+      }
+    ];
+
+    it("clamps typed value to remaining_quantity_show when it is tighter than remaining_quantity_sponsor", () => {
+      render(
+        <FormItemTableWrapper
+          data={cappedItem({
+            remaining_quantity_show: 2,
+            remaining_quantity_sponsor: 5
+          })}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+          initialValues={{ "i-20-c-global-f-quantity": 0 }}
+        />
+      );
+
+      const input = screen.getByTestId("textfield-i-20-c-global-f-quantity");
+      expect(input).toHaveAttribute("max", "2");
+      fireEvent.change(input, { target: { value: "10" } });
+      // eslint-disable-next-line
+      expect(input).toHaveValue(2);
+    });
+
+    it("clamps typed value to remaining_quantity_sponsor when it is tighter than remaining_quantity_show", () => {
+      render(
+        <FormItemTableWrapper
+          data={cappedItem({
+            remaining_quantity_show: 8,
+            remaining_quantity_sponsor: 3
+          })}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+          initialValues={{ "i-20-c-global-f-quantity": 0 }}
+        />
+      );
+
+      const input = screen.getByTestId("textfield-i-20-c-global-f-quantity");
+      expect(input).toHaveAttribute("max", "3");
+      fireEvent.change(input, { target: { value: "10" } });
+      // eslint-disable-next-line
+      expect(input).toHaveValue(3);
+    });
+
+    it("does not apply an upper bound when both remaining quantities are null", () => {
+      render(
+        <FormItemTableWrapper
+          data={cappedItem({
+            remaining_quantity_show: null,
+            remaining_quantity_sponsor: null
+          })}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+          initialValues={{ "i-20-c-global-f-quantity": 0 }}
+        />
+      );
+
+      const input = screen.getByTestId("textfield-i-20-c-global-f-quantity");
+      expect(input).not.toHaveAttribute("max");
+      fireEvent.change(input, { target: { value: "50" } });
+      // eslint-disable-next-line
+      expect(input).toHaveValue(50);
+    });
+
+    it("keeps the field enabled while retyping a sold-out item's quantity, using the saved quantity not the transient live value", () => {
+      render(
+        <FormItemTableWrapper
+          data={cappedItem({ is_sold_out: true, quantity: 5 })}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+          initialValues={{ "i-20-c-global-f-quantity": 5 }}
+        />
+      );
+
+      const input = screen.getByTestId("textfield-i-20-c-global-f-quantity");
+      expect(input).not.toBeDisabled();
+
+      fireEvent.change(input, { target: { value: "" } });
+
+      expect(input).not.toBeDisabled();
+    });
+
+    it("carries a Form-class driven quantity that exceeds remaining_quantity_show into Formik state for validation to catch", async () => {
+      // GlobalQuantityField is read-only for driven rows, so calculateQuantity's
+      // raw product (not a clamped display value) is what a consumer's Yup
+      // schema has to reject - this proves that product actually reaches the
+      // exact Formik key such a schema would validate.
+      const drivenItem = {
+        ...MOCK_FORM_A.items[0],
+        remaining_quantity_show: 2,
+        remaining_quantity_sponsor: 5
+      };
+      const quantityKey = "i-1-c-global-f-quantity";
+      const maxQty = Math.min(
+        drivenItem.remaining_quantity_show ?? Infinity,
+        drivenItem.remaining_quantity_sponsor ?? Infinity
+      );
+      const validate = jest.fn((values) => {
+        const errors = {};
+        if (values[quantityKey] > maxQty) errors[quantityKey] = "max exceeded";
+        return errors;
+      });
+
+      render(
+        <FormItemTableWrapper
+          data={[drivenItem]}
+          currentApplicableRate="early_bird"
+          timeZone="America/New_York"
+          initialValues={{
+            "i-1-c-Form-f-1": 2,
+            "i-1-c-Form-f-2": 4 // product = 8, exceeds remaining_quantity_show = 2
+          }}
+          validate={validate}
+        />
+      );
+
+      await waitFor(() => {
+        const overLimitCall = validate.mock.calls.find(
+          ([values]) => values[quantityKey] === 8
+        );
+        expect(overLimitCall).toBeDefined();
+      });
     });
   });
 });

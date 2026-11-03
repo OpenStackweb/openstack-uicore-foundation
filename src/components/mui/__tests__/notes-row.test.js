@@ -14,7 +14,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import NotesRow from "../table/extra-rows/NotesRow";
+import NotesRow from "../tables/extra-rows/NotesRow";
 
 const renderInTable = (props) =>
   render(

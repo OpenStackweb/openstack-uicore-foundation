@@ -23,7 +23,7 @@ jest.mock("../../../utils/money", () => ({
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import PaymentRow from "../table/extra-rows/PaymentRow";
+import PaymentRow from "../tables/extra-rows/PaymentRow";
 
 // 2026-01-15 00:00:00 UTC in seconds
 const PAYMENT_TIMESTAMP = 1736899200;
