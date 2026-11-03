@@ -66,7 +66,8 @@ const notifySnackbarError = (message, callback) => (dispatch) => {
 const SENSITIVE_KEYS = /^(.*_key|.*(token|secret|password).*|hash|.*emails?|.*phone.*|.*(first|last)_name|.*full_?names?|surname|(.*_)?owner_name|requestor_name|(.*_)?address(\d|_.*)?|zip_code|gender|ip|payment_info_details|payment_gateway_result)$/i;
 
 const formatPayload = (label, data) => {
-    if (data == null || (typeof data === "object" && !Object.keys(data).length)) return "";
+    // strings can't be redacted by key, so only objects are copied
+    if (data == null || typeof data !== "object" || !Object.keys(data).length) return "";
     const json = JSON.stringify(data, (key, value) => (typeof value !== "boolean" && SENSITIVE_KEYS.test(key) ? "[REDACTED]" : value), 2);
     return `${label}: ${json.length > ERROR_DETAILS_MAX_LENGTH ? `${json.slice(0, ERROR_DETAILS_MAX_LENGTH)}… (truncated)` : json}`;
 };
