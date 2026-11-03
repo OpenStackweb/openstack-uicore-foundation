@@ -18,8 +18,9 @@ import Link from "@mui/material/Link";
 // real link so new tab / copy link work; plain clicks can be routed in-app via onNavigate
 const TableCellLink = ({ href, row, onNavigate, children }) => {
   const handleClick = (ev) => {
-    // finishing a text selection shouldn't navigate
-    if (window.getSelection()?.toString()) {
+    // finishing a text selection in this link shouldn't navigate
+    const selection = window.getSelection();
+    if (selection?.toString() && ev.currentTarget.contains(selection.anchorNode)) {
       ev.preventDefault();
       return;
     }

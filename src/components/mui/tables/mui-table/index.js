@@ -93,10 +93,11 @@ const MuiTable = ({
     ...getArchivedRowSx(row, options.disableProp)
   });
 
-  // columns with getHref render as a link; no href for a row falls back to plain text
+  // columns with getHref render as a link; disabled rows or no href fall back to plain text
   const renderCellContent = (row, col) => {
     const content = <TableCellContent row={row} col={col} />;
-    const href = col.getHref?.(row);
+    const isDisabled = options.disableProp && row[options.disableProp];
+    const href = !isDisabled && col.getHref?.(row);
     return href ? (
       <TableCellLink href={href} row={row} onNavigate={onNavigate}>
         {content}
