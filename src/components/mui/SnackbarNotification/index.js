@@ -87,13 +87,13 @@ const SnackbarNotification = ({
     }
   }, [current]);
 
-  // newer message closes the current one, or drops it if it isn't showing
+  // newer message closes the current one, or drops it if it never opened
   useEffect(() => {
     if (messages.length < 2) return;
     if (open) {
       closingRef.current = current;
       setOpen(false);
-    } else {
+    } else if (current !== closingRef.current) {
       setMessages(([, ...rest]) => rest);
     }
   }, [messages]);
