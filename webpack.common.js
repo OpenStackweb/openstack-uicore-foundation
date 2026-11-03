@@ -142,6 +142,7 @@ module.exports = {
         'components/mui/formik-inputs/sponsor-input': './src/components/mui/formik-inputs/mui-sponsor-input.js',
         'components/mui/formik-inputs/sponsorship-input': './src/components/mui/formik-inputs/sponsorship-input-mui.js',
         'components/mui/formik-inputs/sponsorship-summit-select': './src/components/mui/formik-inputs/sponsorship-summit-select-mui.js',
+        'components/mui/add-new-button': './src/components/mui/AddNewButton/index.js',
         'components/mui/alert-button': './src/components/mui/AlertButton/index.js',
         'components/mui/alert-modal': './src/components/mui/AlertModal/index.js',
         'components/mui/auth-button': './src/components/mui/AuthButton/index.js',
