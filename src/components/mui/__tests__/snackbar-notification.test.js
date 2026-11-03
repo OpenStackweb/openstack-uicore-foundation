@@ -25,6 +25,10 @@ import "@testing-library/jest-dom";
 import SnackbarNotification from "../SnackbarNotification/index";
 
 describe("SnackbarNotification", () => {
+  afterEach(() => {
+    delete navigator.clipboard;
+  });
+
   test("renders children", () => {
     render(
       <SnackbarNotification clearSnackbarMessage={jest.fn()}>
@@ -97,7 +101,8 @@ describe("SnackbarNotification", () => {
   });
 
   test("shows the check mark only after the clipboard accepts the text", async () => {
-    Object.assign(navigator, { clipboard: { writeText: jest.fn().mockResolvedValue() } });
+    let accept;
+    Object.assign(navigator, { clipboard: { writeText: jest.fn(() => new Promise((resolve) => { accept = resolve; })) } });
     render(
       <SnackbarNotification
         snackbarMessage={{ html: "Not found", type: "warning" }}
@@ -108,7 +113,9 @@ describe("SnackbarNotification", () => {
     );
 
     fireEvent.click(screen.getByLabelText("general.copy_error"));
+    expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
 
+    accept();
     expect(await screen.findByTestId("CheckIcon")).toBeInTheDocument();
   });
 
