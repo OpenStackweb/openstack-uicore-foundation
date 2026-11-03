@@ -305,9 +305,33 @@ describe("MuiTable", () => {
       jest
         .spyOn(window, "getSelection")
         .mockReturnValue({ toString: () => "Ali", anchorNode: link });
-      const notCancelled = fireEvent.click(link);
+      const notCancelled = fireEvent.click(link, { detail: 1 });
       expect(notCancelled).toBe(false);
       expect(onNavigate).not.toHaveBeenCalled();
+    });
+
+    test("ctrl-click with text selected in the link keeps the browser default", () => {
+      const onNavigate = jest.fn();
+      setup({ columns: linkColumns, onNavigate });
+      const link = screen.getByRole("link", { name: "Alice" });
+      jest
+        .spyOn(window, "getSelection")
+        .mockReturnValue({ toString: () => "Ali", anchorNode: link });
+      const notCancelled = fireEvent.click(link, { ctrlKey: true, detail: 1 });
+      expect(notCancelled).toBe(true);
+      expect(onNavigate).not.toHaveBeenCalled();
+    });
+
+    test("keyboard activation with text selected in the link still navigates", () => {
+      const onNavigate = jest.fn();
+      setup({ columns: linkColumns, onNavigate });
+      const link = screen.getByRole("link", { name: "Alice" });
+      jest
+        .spyOn(window, "getSelection")
+        .mockReturnValue({ toString: () => "Ali", anchorNode: link });
+      // Enter on a link fires a click with detail 0
+      fireEvent.click(link, { detail: 0 });
+      expect(onNavigate).toHaveBeenCalledWith("#/people/1", expect.objectContaining({ id: 1 }));
     });
 
     test("a selection elsewhere on the page doesn't block navigation", () => {
@@ -316,7 +340,7 @@ describe("MuiTable", () => {
       jest
         .spyOn(window, "getSelection")
         .mockReturnValue({ toString: () => "Dev", anchorNode: screen.getByText("Dev") });
-      fireEvent.click(screen.getByRole("link", { name: "Alice" }));
+      fireEvent.click(screen.getByRole("link", { name: "Alice" }), { detail: 1 });
       expect(onNavigate).toHaveBeenCalledWith("#/people/1", expect.objectContaining({ id: 1 }));
     });
 
