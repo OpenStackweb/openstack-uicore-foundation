@@ -11,6 +11,7 @@ export const DEBOUNCE_WAIT_250 = 250;
 export const DEBOUNCE_WAIT = 500;
 
 export const NOTIFICATION_TIMEOUT = 2000;
+export const ERROR_DETAILS_MAX_LENGTH = 2000;
 export const ASYNC_SELECT_SAFETY_TIMEOUT = 15000;
 export const DEFAULT_PER_PAGE = 10;
 export const TWENTY_PER_PAGE = 20;

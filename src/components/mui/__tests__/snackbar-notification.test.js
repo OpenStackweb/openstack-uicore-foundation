@@ -20,11 +20,15 @@ jest.mock("../../../utils/actions", () => ({
 }));
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import SnackbarNotification from "../SnackbarNotification/index";
 
 describe("SnackbarNotification", () => {
+  afterEach(() => {
+    delete navigator.clipboard;
+  });
+
   test("renders children", () => {
     render(
       <SnackbarNotification clearSnackbarMessage={jest.fn()}>
@@ -69,5 +73,108 @@ describe("SnackbarNotification", () => {
     );
     // The snackbar should not be open
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  test("copies an error as plain text with its details", async () => {
+    const writeText = jest.fn().mockResolvedValue();
+    Object.assign(navigator, { clipboard: { writeText } });
+    render(
+      <SnackbarNotification
+        snackbarMessage={{
+          html: "Start date is required.<br>End date is invalid.<br>",
+          type: "warning",
+          details: "Request: PUT /api/v1/summits/1 (412)"
+        }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+
+    expect(writeText).toHaveBeenCalledWith(
+      "Start date is required.\nEnd date is invalid.\n\nRequest: PUT /api/v1/summits/1 (412)"
+    );
+    // let the copied state settle inside the test
+    await screen.findByTestId("CheckIcon");
+  });
+
+  test("shows the check mark only after the clipboard accepts the text", async () => {
+    let accept;
+    Object.assign(navigator, { clipboard: { writeText: jest.fn(() => new Promise((resolve) => { accept = resolve; })) } });
+    render(
+      <SnackbarNotification
+        snackbarMessage={{ html: "Not found", type: "warning" }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+    expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
+
+    accept();
+    expect(await screen.findByTestId("CheckIcon")).toBeInTheDocument();
+  });
+
+  test("says the copy failed when the clipboard rejects it", async () => {
+    Object.assign(navigator, { clipboard: { writeText: jest.fn().mockRejectedValue(new Error("blocked")) } });
+    render(
+      <SnackbarNotification
+        snackbarMessage={{ html: "Not found", type: "warning" }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+
+    const button = screen.getByLabelText("general.copy_error");
+    fireEvent.click(button);
+    fireEvent.mouseOver(button);
+
+    expect(await screen.findByText("general.copy_failed")).toBeInTheDocument();
+    expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
+  });
+
+  test("clears the copied state when a new message with the same text shows", async () => {
+    Object.assign(navigator, { clipboard: { writeText: jest.fn().mockResolvedValue() } });
+    const { rerender } = render(
+      <SnackbarNotification
+        snackbarMessage={{ html: "Not found", type: "warning" }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+    await screen.findByTestId("CheckIcon");
+
+    rerender(
+      <SnackbarNotification
+        snackbarMessage={{ html: "Not found", type: "warning" }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+
+    expect(screen.getByLabelText("general.copy_error")).toBeInTheDocument();
+    expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
+  });
+
+  test("keeps only the close button on a success message", () => {
+    render(
+      <SnackbarNotification
+        snackbarMessage={{ html: "Saved", type: "success" }}
+        clearSnackbarMessage={jest.fn()}
+      >
+        <div>App</div>
+      </SnackbarNotification>
+    );
+
+    expect(screen.queryByLabelText("general.copy_error")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Close")).toBeInTheDocument();
   });
 });
