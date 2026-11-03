@@ -74,6 +74,20 @@ describe("MuiTable", () => {
     expect(screen.getByText("mui_table.no_items")).toBeInTheDocument();
   });
 
+  test.each([
+    ["without action columns", {}, 2],
+    ["with the row menu column", { onEdit: jest.fn(), onDelete: jest.fn() }, 3]
+  ])("passes the column count to function children %s", (_, overrides, expected) => {
+    const children = jest.fn((colCount) => (
+      <tr>
+        <td>{`extra row spans ${colCount}`}</td>
+      </tr>
+    ));
+    setup({ ...overrides, children });
+    expect(children).toHaveBeenCalledWith(expected);
+    expect(screen.getByText(`extra row spans ${expected}`)).toBeInTheDocument();
+  });
+
   test("calls onEdit once from the row menu's Edit item", async () => {
     const onEdit = jest.fn();
     setup({ onEdit });

@@ -227,8 +227,8 @@ const MuiTable = ({
               )}
             </TableRow>
           ))}
-          {/* Here we inject extra rows passed as children */}
-          {children}
+          {/* Here we inject extra rows passed as children; a function child receives the column count */}
+          {typeof children === "function" ? children(totalColumnsCount) : children}
           {data.length === 0 && (
             <TableRow>
               <TableCell colSpan={totalColumnsCount} align="center">
@@ -245,7 +245,7 @@ const MuiTable = ({
 MuiTable.propTypes = {
   columns: PropTypes.array,
   data: PropTypes.array,
-  children: PropTypes.node,
+  children: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
   totalRows: PropTypes.number,
   perPage: PropTypes.number,
   currentPage: PropTypes.number,
