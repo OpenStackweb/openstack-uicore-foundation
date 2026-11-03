@@ -22,8 +22,10 @@ import Tooltip from "@mui/material/Tooltip";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 // built-in Edit/Delete keep every table's menu consistent; `actions` holds any extra items
-const RowActionsMenu = ({ actions = [], onEdit, onDelete, disabled = false }) => {
+const RowActionsMenu = ({ actions: actionsProp, onEdit, onDelete, disabled = false }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
+  // getRowActions may return null for rows without extra actions
+  const actions = actionsProp ?? [];
 
   const hasBuiltIns = !!(onEdit || onDelete);
   if (!hasBuiltIns && !actions.length) return null;
@@ -37,6 +39,8 @@ const RowActionsMenu = ({ actions = [], onEdit, onDelete, disabled = false }) =>
             onClick={(e) => setAnchorEl(e.currentTarget)}
             data-testid="row-actions-menu-trigger"
             aria-label={T.translate("general.more_actions")}
+            aria-haspopup="true"
+            aria-expanded={anchorEl ? "true" : undefined}
             disabled={
               (!hasBuiltIns || disabled) && actions.every((action) => action.disabled)
             }

@@ -141,7 +141,7 @@ const MuiTable = ({
           {data.map((row) => row.renderRow ? (
             <React.Fragment key={row.id}>{row.renderRow(totalColumnsCount)}</React.Fragment>
           ) : (
-            <TableRow key={row.id} hover>
+            <TableRow key={row.id}>
               {/* Main content columns */}
               {columns.map((col) => (
                 <TableCell
