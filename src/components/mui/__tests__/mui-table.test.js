@@ -22,7 +22,7 @@ jest.mock("../showConfirmDialog", () => ({
 }));
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import MuiTable from "../tables/mui-table";
@@ -265,6 +265,59 @@ describe("MuiTable", () => {
 
       await userEvent.hover(wrapper);
       expect(await screen.findByRole("tooltip")).toHaveTextContent("Alice");
+    });
+  });
+
+  describe("getHref link columns", () => {
+    // hash URLs: jsdom can't follow real page navigations
+    const linkColumns = [
+      { ...columns[0], getHref: (row) => `#/people/${row.id}` },
+      columns[1]
+    ];
+
+    test("renders the cell as a link to the row's href", () => {
+      setup({ columns: linkColumns });
+      expect(screen.getByRole("link", { name: "Alice" })).toHaveAttribute("href", "#/people/1");
+    });
+
+    test("a plain click calls onNavigate with the href and row", async () => {
+      const onNavigate = jest.fn();
+      setup({ columns: linkColumns, onNavigate });
+      await userEvent.click(screen.getByRole("link", { name: "Bob" }));
+      expect(onNavigate).toHaveBeenCalledWith("#/people/2", expect.objectContaining({ id: 2 }));
+    });
+
+    test("ctrl-click leaves the browser default so the link opens in a new tab", () => {
+      const onNavigate = jest.fn();
+      setup({ columns: linkColumns, onNavigate });
+      const notCancelled = fireEvent.click(screen.getByRole("link", { name: "Alice" }), {
+        ctrlKey: true
+      });
+      expect(notCancelled).toBe(true);
+      expect(onNavigate).not.toHaveBeenCalled();
+    });
+
+    test("a click that ends a text selection doesn't navigate", () => {
+      const onNavigate = jest.fn();
+      const selection = jest
+        .spyOn(window, "getSelection")
+        .mockReturnValue({ toString: () => "Ali" });
+      setup({ columns: linkColumns, onNavigate });
+      const notCancelled = fireEvent.click(screen.getByRole("link", { name: "Alice" }));
+      expect(notCancelled).toBe(false);
+      expect(onNavigate).not.toHaveBeenCalled();
+      selection.mockRestore();
+    });
+
+    test("renders plain text when getHref returns nothing for a row", () => {
+      setup({
+        columns: [
+          { ...columns[0], getHref: (row) => (row.id === 2 ? "#/people/2" : null) },
+          columns[1]
+        ]
+      });
+      expect(screen.queryByRole("link", { name: "Alice" })).not.toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Bob" })).toBeInTheDocument();
     });
   });
 

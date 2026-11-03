@@ -29,6 +29,7 @@ import styles from "../components/styles.module.less";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PropTypes from "prop-types";
 import TableCellContent from "../components/table-cell-content";
+import TableCellLink from "../components/table-cell-link";
 import TableShell from "../components/table-shell";
 import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
@@ -59,6 +60,7 @@ const MuiTable = ({
   onArchive,
   onDelete,
   onSelect,
+  onNavigate,
   canDelete = () => true,
   deleteDialogTitle = null,
   deleteDialogBody = null,
@@ -90,6 +92,19 @@ const MuiTable = ({
     ...(col.cellSx || {}),
     ...getArchivedRowSx(row, options.disableProp)
   });
+
+  // columns with getHref render as a link; no href for a row falls back to plain text
+  const renderCellContent = (row, col) => {
+    const content = <TableCellContent row={row} col={col} />;
+    const href = col.getHref?.(row);
+    return href ? (
+      <TableCellLink href={href} row={row} onNavigate={onNavigate}>
+        {content}
+      </TableCellLink>
+    ) : (
+      content
+    );
+  };
 
   const handleDelete = createDeleteHandler({
     onDelete,
@@ -149,7 +164,7 @@ const MuiTable = ({
                   className={`${col.dottedBorder && styles.dottedBorderLeft} ${col.className}`}
                   sx={getCellSx(row, col)}
                 >
-                  <TableCellContent row={row} col={col} />
+                  {renderCellContent(row, col)}
                 </TableCell>
               ))}
               {onArchive && (
@@ -258,6 +273,7 @@ MuiTable.propTypes = {
   onArchive: PropTypes.func,
   onDelete: PropTypes.func,
   onSelect: PropTypes.func,
+  onNavigate: PropTypes.func,
   canDelete: PropTypes.func,
   deleteDialogTitle: PropTypes.string,
   deleteDialogBody: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
