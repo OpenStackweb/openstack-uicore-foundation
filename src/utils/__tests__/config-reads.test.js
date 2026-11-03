@@ -4,8 +4,7 @@
  * global is unset.
  */
 import React from "react";
-import Enzyme, { mount } from "enzyme";
-import Adapter from "enzyme-adapter-react-16";
+import { render } from "@testing-library/react";
 import {
   buildAPIBaseUrl,
   getTimeServiceUrl,
@@ -19,8 +18,6 @@ import {
 import * as utilsMethods from "../methods";
 import * as securityMethods from "../../components/security/methods";
 import Exclusive from "../../components/exclusive-wrapper";
-
-Enzyme.configure({ adapter: new Adapter() });
 
 const GLOBALS = [
   "API_BASE_URL", "TIMEINTERVALSINCE1970_API_URL", "ALLOWED_USER_GROUPS",
@@ -90,10 +87,10 @@ describe("config reads from window globals", () => {
   });
 
   test("Exclusive renders its children only when window.EXCLUSIVE_SECTIONS lists the name", () => {
-    const tree = () => mount(<Exclusive name="sponsors"><span>x</span></Exclusive>);
-    expect(tree().find("span")).toHaveLength(0);
+    const tree = () => render(<Exclusive name="sponsors"><span>x</span></Exclusive>).container;
+    expect(tree().querySelectorAll("span")).toHaveLength(0);
     window.EXCLUSIVE_SECTIONS = ["sponsors"];
-    expect(tree().find("span")).toHaveLength(1);
+    expect(tree().querySelectorAll("span")).toHaveLength(1);
   });
 
   test("the getters stay exported from utils/methods and security/methods", () => {

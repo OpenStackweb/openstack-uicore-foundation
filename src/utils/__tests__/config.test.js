@@ -4,8 +4,7 @@
  * reading the global, so consumers that only plant globals are unaffected.
  */
 import React from "react";
-import Enzyme, { mount } from "enzyme";
-import Adapter from "enzyme-adapter-react-16";
+import { render } from "@testing-library/react";
 import {
   setConfig,
   getConfig,
@@ -21,8 +20,6 @@ import {
   getExclusiveSections,
 } from "../config";
 import Exclusive from "../../components/exclusive-wrapper";
-
-Enzyme.configure({ adapter: new Adapter() });
 
 const WINDOW_GLOBALS = {
   API_BASE_URL: "https://window.test",
@@ -98,8 +95,8 @@ describe("setConfig", () => {
     expect(getOAuth2IDPBaseUrl()).toBe("https://idp.cfg");
     expect(getOAuth2Scopes()).toBe("cfg-scopes");
     expect(getExclusiveSections()).toEqual(["sponsors"]);
-    const tree = mount(<Exclusive name="sponsors"><span>x</span></Exclusive>);
-    expect(tree.find("span")).toHaveLength(1);
+    const { container } = render(<Exclusive name="sponsors"><span>x</span></Exclusive>);
+    expect(container.querySelectorAll("span")).toHaveLength(1);
   });
 
   test("falsy configured values (0, false, null) win over a truthy global", () => {
