@@ -300,6 +300,19 @@ describe("MuiTableEditable", () => {
     expect(newDir).toBe(1);
   });
 
+  test("disables the row menu for rows where disableProp is truthy", () => {
+    setup({
+      options: { sortCol: "name", sortDir: -1, disableProp: "is_disabled" },
+      data: [
+        { id: 1, name: "Alice", role: "Dev", age: 35, is_disabled: true },
+        { id: 2, name: "Bob", role: "PM", age: 41, is_disabled: false }
+      ]
+    });
+    const triggers = screen.getAllByTestId("row-actions-menu-trigger");
+    expect(triggers[0]).toBeDisabled();
+    expect(triggers[1]).not.toBeDisabled();
+  });
+
   test("applies archived styles to content, row menu and archive cells when disableProp matches", () => {
     setup({
       options: { sortCol: "name", sortDir: -1, disableProp: "is_archived" },

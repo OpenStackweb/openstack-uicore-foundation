@@ -327,6 +327,7 @@ const MuiTableEditable = ({
                     actions={getRowActions?.(row)}
                     onEdit={onEdit && (() => onEdit(row))}
                     onDelete={onDelete && (() => handleDelete(row))}
+                    disabled={!!(options.disableProp && row[options.disableProp])}
                   />
                 </TableCell>
               )}
