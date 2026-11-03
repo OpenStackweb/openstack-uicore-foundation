@@ -261,6 +261,7 @@ describe("MuiTable", () => {
       { ...columns[0], getHref: (row) => `#/people/${row.id}` },
       columns[1]
     ];
+    afterEach(() => jest.restoreAllMocks());
 
     test("renders the cell as a link to the row's href", () => {
       setup({ columns: linkColumns });
@@ -288,24 +289,22 @@ describe("MuiTable", () => {
       const onNavigate = jest.fn();
       setup({ columns: linkColumns, onNavigate });
       const link = screen.getByRole("link", { name: "Alice" });
-      const selection = jest
+      jest
         .spyOn(window, "getSelection")
         .mockReturnValue({ toString: () => "Ali", anchorNode: link });
       const notCancelled = fireEvent.click(link);
       expect(notCancelled).toBe(false);
       expect(onNavigate).not.toHaveBeenCalled();
-      selection.mockRestore();
     });
 
     test("a selection elsewhere on the page doesn't block navigation", () => {
       const onNavigate = jest.fn();
       setup({ columns: linkColumns, onNavigate });
-      const selection = jest
+      jest
         .spyOn(window, "getSelection")
         .mockReturnValue({ toString: () => "Dev", anchorNode: screen.getByText("Dev") });
       fireEvent.click(screen.getByRole("link", { name: "Alice" }));
       expect(onNavigate).toHaveBeenCalledWith("#/people/1", expect.objectContaining({ id: 1 }));
-      selection.mockRestore();
     });
 
     test("renders plain text on rows disabled by disableProp", () => {
