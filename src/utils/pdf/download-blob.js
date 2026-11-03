@@ -30,6 +30,7 @@ export const downloadBlob = (blob, filename) => {
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[pdf] download failed', err);
+    throw err;
   }
 };
 

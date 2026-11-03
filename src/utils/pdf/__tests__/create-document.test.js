@@ -52,4 +52,16 @@ describe('createDocument', () => {
     ).rejects.toThrow('boom');
     expect(onError).toHaveBeenCalled();
   });
+
+  it('calls onError and rejects when the browser download fails', async () => {
+    const { pdfMake } = createFakePdfMake();
+    const onError = jest.fn();
+    global.URL.createObjectURL = jest.fn(() => {
+      throw new Error('no blob url');
+    });
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    const api = await createDocument({ pdfMake, template: () => ({ content: [] }), data: {}, onError });
+    await expect(api.download('receipt.pdf')).rejects.toThrow('no blob url');
+    expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'no blob url' }));
+  });
 });

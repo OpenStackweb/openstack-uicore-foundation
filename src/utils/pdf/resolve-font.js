@@ -57,6 +57,11 @@ export const resolveFont = async (pdfMake, font) => {
 
   // Imported / pre-baked container — no fetch.
   if (font.family && font.vfs && font.fonts) {
+    if (!font.fonts[font.family]) {
+      // eslint-disable-next-line no-console
+      console.warn('[pdf] font container lacks family, using Helvetica:', font.family);
+      return HELVETICA;
+    }
     pdfMake.addFontContainer({ vfs: font.vfs, fonts: font.fonts });
     return font.family;
   }

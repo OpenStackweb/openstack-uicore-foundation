@@ -25,6 +25,14 @@ describe('resolveFont', () => {
     expect(pdfMake.addFontContainer).toHaveBeenCalledWith({ vfs: font.vfs, fonts: font.fonts });
   });
 
+  it('falls back to Helvetica when a pre-baked container does not define its family', async () => {
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const pdfMake = fakePdfMake();
+    const font = { family: 'Brand', vfs: { 'BrandSans-normal.ttf': 'QUFB' }, fonts: { BrandSans: { normal: 'BrandSans-normal.ttf' } } };
+    await expect(resolveFont(pdfMake, font)).resolves.toBe('Helvetica');
+    expect(pdfMake.addFontContainer).not.toHaveBeenCalled();
+  });
+
   it('fetches + base64s a URL font and registers a container', async () => {
     global.fetch = jest.fn(() => Promise.resolve({ ok: true, arrayBuffer: () => Promise.resolve(new Uint8Array([65, 66, 67]).buffer) }));
     const pdfMake = fakePdfMake();
