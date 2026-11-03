@@ -286,14 +286,36 @@ describe("MuiTable", () => {
 
     test("a click that ends a text selection doesn't navigate", () => {
       const onNavigate = jest.fn();
+      setup({ columns: linkColumns, onNavigate });
+      const link = screen.getByRole("link", { name: "Alice" });
       const selection = jest
         .spyOn(window, "getSelection")
-        .mockReturnValue({ toString: () => "Ali" });
-      setup({ columns: linkColumns, onNavigate });
-      const notCancelled = fireEvent.click(screen.getByRole("link", { name: "Alice" }));
+        .mockReturnValue({ toString: () => "Ali", anchorNode: link });
+      const notCancelled = fireEvent.click(link);
       expect(notCancelled).toBe(false);
       expect(onNavigate).not.toHaveBeenCalled();
       selection.mockRestore();
+    });
+
+    test("a selection elsewhere on the page doesn't block navigation", () => {
+      const onNavigate = jest.fn();
+      setup({ columns: linkColumns, onNavigate });
+      const selection = jest
+        .spyOn(window, "getSelection")
+        .mockReturnValue({ toString: () => "Dev", anchorNode: screen.getByText("Dev") });
+      fireEvent.click(screen.getByRole("link", { name: "Alice" }));
+      expect(onNavigate).toHaveBeenCalledWith("#/people/1", expect.objectContaining({ id: 1 }));
+      selection.mockRestore();
+    });
+
+    test("renders plain text on rows disabled by disableProp", () => {
+      setup({
+        columns: linkColumns,
+        data: [data[0], { ...data[1], is_disabled: true }],
+        options: { sortCol: "", sortDir: 1, disableProp: "is_disabled" }
+      });
+      expect(screen.getByRole("link", { name: "Alice" })).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: "Bob" })).not.toBeInTheDocument();
     });
 
     test("renders plain text when getHref returns nothing for a row", () => {
