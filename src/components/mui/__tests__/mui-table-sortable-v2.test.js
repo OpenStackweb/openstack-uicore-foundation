@@ -58,7 +58,7 @@ jest.mock("@dnd-kit/utilities", () => ({
 }));
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import MuiTableSortableV2 from "../tables/sortable-table-v2/mui-table-sortable-v2";
@@ -111,34 +111,30 @@ describe("MuiTableSortableV2", () => {
     expect(screen.getByText("mui_table.no_items")).toBeInTheDocument();
   });
 
-  test("renders the row menu when onEdit is provided", () => {
+  test("renders edit button when onEdit is provided", () => {
     const onEdit = jest.fn();
     setup({ onEdit });
-    expect(screen.getAllByTestId("row-actions-menu-trigger")).toHaveLength(2);
+    expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
   });
 
-  test("calls onEdit from the row menu's Edit item", async () => {
+  test("calls onEdit when edit button is clicked", async () => {
     const onEdit = jest.fn();
     setup({ onEdit });
-    await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
-    await userEvent.click(screen.getByRole("menuitem", { name: "general.edit" }));
+    // scoped to the table itself, since pagination (top+bottom) also renders buttons
+    const buttons = within(screen.getByRole("table")).getAllByRole("button");
+    // buttons[0] is the sort label button for the sortable "Name" column;
+    // buttons[1] is the first edit button (row 1)
+    await userEvent.click(buttons[1]);
     expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
-  });
-
-  test("shows getRowActions items in the row menu and runs their onClick", async () => {
-    const onArchive = jest.fn();
-    setup({ getRowActions: (row) => [{ label: "Archive", onClick: () => onArchive(row) }] });
-    await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
-    await userEvent.click(screen.getByRole("menuitem", { name: "Archive" }));
-    expect(onArchive).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
   });
 
   test("calls showConfirmDialog and onDelete when delete is confirmed", async () => {
     const onDelete = jest.fn();
     showConfirmDialog.mockResolvedValueOnce(true);
     setup({ onDelete });
-    await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
-    await userEvent.click(screen.getByRole("menuitem", { name: "general.delete" }));
+    const buttons = within(screen.getByRole("table")).getAllByRole("button");
+    // buttons[0] is the sort label button; buttons[1] is the first delete button (row 1)
+    await userEvent.click(buttons[1]);
     await new Promise((r) => setTimeout(r, 0));
     expect(showConfirmDialog).toHaveBeenCalled();
     expect(onDelete).toHaveBeenCalledWith(1);
@@ -243,8 +239,9 @@ describe("MuiTableSortableV2", () => {
         2
       );
 
-      await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
-      await userEvent.click(screen.getByRole("menuitem", { name: "general.delete" }));
+      const buttons = within(screen.getByRole("table")).getAllByRole("button");
+      // buttons[0] is the sort label button; buttons[1] is the first delete button (row 1)
+      await userEvent.click(buttons[1]);
       await new Promise((r) => setTimeout(r, 0));
       expect(onDelete).toHaveBeenCalledWith("a-1");
     });

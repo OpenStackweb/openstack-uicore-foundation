@@ -1,3 +1,4 @@
+export const SMALL_TABLE_MAX_COLUMNS = 3; // fewer than 4 data columns = small
 export const DEFAULT_COLUMN_MIN_WIDTH = 40; // floor for columns with no explicit width
 
 export const ARCHIVED_CELL_SX = {
@@ -17,6 +18,9 @@ export const ACTION_CELL_SX = {
 export const RESPONSIVE_TABLE_SX = {
   tableLayout: "auto"
 };
+
+export const getActionsMenuBreakpoint = (dataColumnCount) =>
+  dataColumnCount <= SMALL_TABLE_MAX_COLUMNS ? "md" : "lg";
 
 export const getColumnWidthSx = (col) => ({
   minWidth: col.width ?? DEFAULT_COLUMN_MIN_WIDTH,

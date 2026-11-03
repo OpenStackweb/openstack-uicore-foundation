@@ -31,7 +31,10 @@ import styles from "./BulkEditTable.module.less";
 import CustomTablePagination from "../tables/components/CustomTablePagination";
 import parsePaginationPosition from "../tables/components/pagination-position";
 import showConfirmDialog from "../showConfirmDialog";
-import { RESPONSIVE_TABLE_SX } from "../tables/components/table-styles";
+import {
+  RESPONSIVE_TABLE_SX,
+  getActionsMenuBreakpoint
+} from "../tables/components/table-styles";
 
 const BulkEditTable = ({
   options,
@@ -49,7 +52,6 @@ const BulkEditTable = ({
   idKey,
   onEdit,
   onDelete,
-  getRowActions,
   getName,
   deleteDialogTitle,
   deleteDialogBody,
@@ -68,6 +70,9 @@ const BulkEditTable = ({
     cancel,
     reset
   } = useRowSelection(idKey);
+
+  const collapseActions = (onEdit ? 1 : 0) + (onDelete ? 1 : 0) >= 2;
+  const actionsBreakpoint = getActionsMenuBreakpoint(columns.length);
 
   const dataIds = data.map((row) => row[idKey]).join(",");
 
@@ -191,7 +196,7 @@ const BulkEditTable = ({
                     </Heading>
                   );
                 })}
-                {(onEdit || onDelete || getRowActions) && (
+                {(onEdit || onDelete) && (
                   <TableCell
                     align="center"
                     className={styles.actionColumn}
@@ -219,7 +224,8 @@ const BulkEditTable = ({
                     columns={columns}
                     onEdit={onEdit}
                     onDelete={onDelete ? handleDelete : null}
-                    getRowActions={getRowActions}
+                    collapseActions={collapseActions}
+                    actionsBreakpoint={actionsBreakpoint}
                   />
                 ))}
             </TableBody>
@@ -247,7 +253,6 @@ BulkEditTable.propTypes = {
   pageSliderVisible: PropTypes.bool,
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
-  getRowActions: PropTypes.func,
   getName: PropTypes.func,
   deleteDialogTitle: PropTypes.string,
   deleteDialogBody: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
@@ -259,7 +264,6 @@ BulkEditTable.defaultProps = {
   idKey: "id",
   onEdit: null,
   onDelete: null,
-  getRowActions: null,
   getName: (item) => item.name,
   deleteDialogTitle: null,
   deleteDialogBody: null,
