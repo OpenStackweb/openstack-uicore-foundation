@@ -76,7 +76,6 @@ const CustomDialog = ({
       onClose={handleClose}
       maxWidth={maxWidth}
       fullWidth={fullWidth}
-      disableEscapeKeyDown={isSubmitting}
     >
       <DialogTitle>{title}</DialogTitle>
       <IconButton
