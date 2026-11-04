@@ -134,6 +134,20 @@ describe("SnackbarNotification", () => {
       expect(screen.getByText("Second error")).toBeInTheDocument();
     });
 
+    test("gives a replacement success its own full timeout", () => {
+      const { rerender } = render(ui({ html: "Saved", type: "success" }));
+      advance(NOTIFICATION_TIMEOUT - 100);
+      rerender(ui({ html: "Saved again", type: "success" }));
+      advance(500);
+      advance(NOTIFICATION_TIMEOUT - 500);
+      expect(screen.getByText("Saved again")).toBeInTheDocument();
+
+      // one tick for the auto-hide, one for the exit transition
+      advance(1000);
+      advance(1000);
+      expect(screen.queryByText("Saved again")).not.toBeInTheDocument();
+    });
+
     test("a message arriving mid-close replaces the pending one", () => {
       const { rerender } = render(ui(errorA));
       rerender(ui(errorB));
