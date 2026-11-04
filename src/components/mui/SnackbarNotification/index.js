@@ -38,7 +38,7 @@ const SnackbarNotification = ({
   clearSnackbarMessage
 }) => {
   const [open, setOpen] = useState(false);
-  // the message on screen, then the newest one waiting to replace it
+  // the message on screen, then the ones waiting their turn
   const [messages, setMessages] = useState([]);
   const [current] = messages;
   const msgData = current || {};
@@ -58,7 +58,7 @@ const SnackbarNotification = ({
       );
       if (isRepeat) return prev;
       const next = { ...msg, receivedAt: now };
-      return prev.length ? [prev[0], next] : [next];
+      return [...prev, next];
     });
   // this two methods are for on-demand messaging
   const successMessage = (msg) => addMessage({ html: msg, type: "success" });
@@ -87,16 +87,12 @@ const SnackbarNotification = ({
     }
   }, [current]);
 
-  // newer message closes the current one, or drops it if it never opened
+  // newer message closes the current one once it's open
   useEffect(() => {
-    if (messages.length < 2) return;
-    if (open) {
-      closingRef.current = current;
-      setOpen(false);
-    } else if (current !== closingRef.current) {
-      setMessages(([, ...rest]) => rest);
-    }
-  }, [messages]);
+    if (messages.length < 2 || !open) return;
+    closingRef.current = current;
+    setOpen(false);
+  }, [messages, open]);
 
   // when snackbarMessage changes in base-reducer, we trigger the snackbar
   useEffect(() => {
