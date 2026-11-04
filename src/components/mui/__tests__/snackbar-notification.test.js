@@ -148,17 +148,19 @@ describe("SnackbarNotification", () => {
       expect(screen.queryByText("Saved again")).not.toBeInTheDocument();
     });
 
-    test("a message arriving mid-close replaces the pending one", () => {
+    test("shows a message that arrives mid-close before the next one", () => {
       const { rerender } = render(ui(errorA));
       rerender(ui(errorB));
       rerender(ui(errorC));
       advance(1000);
+      expect(screen.getByText("Second error")).toBeInTheDocument();
 
+      advance(1000);
       expect(screen.queryByText("Second error")).not.toBeInTheDocument();
       expect(screen.getByText("Third error")).toBeInTheDocument();
     });
 
-    test("shows the newest when two arrive in the same render", () => {
+    test("shows both in order when two arrive in the same render", () => {
       const TwoErrors = () => {
         const { errorMessage } = useSnackbarMessage();
         return (
@@ -183,8 +185,9 @@ describe("SnackbarNotification", () => {
       );
 
       fireEvent.click(screen.getByText("send"));
-      advance(1000);
+      expect(screen.getByText("First error")).toBeInTheDocument();
 
+      advance(1000);
       expect(screen.queryByText("First error")).not.toBeInTheDocument();
       expect(screen.getByText("Second error")).toBeInTheDocument();
     });
