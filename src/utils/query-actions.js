@@ -13,7 +13,7 @@
 
 import { fetchErrorHandler, fetchResponseHandler, escapeFilterValue } from "./actions";
 import { getAccessToken } from '../components/security/methods';
-import { buildAPIBaseUrl } from "./methods";
+import { buildAPIBaseUrl } from "./config";
 import debounce from 'lodash/debounce';
 import moment from 'moment-timezone'
 
