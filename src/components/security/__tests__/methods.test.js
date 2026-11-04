@@ -3,7 +3,7 @@ import {
     AUTH_ERROR_REFRESH_TOKEN_NETWORK_ERROR,
 } from '../constants';
 
-import { refreshAccessToken, retryWithBackoff } from '../methods';
+import { refreshAccessToken, retryWithBackoff, getAccessToken, setAccessTokenResolver, setAuthHandlers, getAuthHandlers, initLogOut } from '../methods';
 
 // Mock utils/methods imports used by security/methods
 jest.mock('../../../utils/methods', () => ({
@@ -368,5 +368,111 @@ describe('retryWithBackoff', () => {
         expect(retryDelays).toEqual([100, 200]);
 
         setTimeoutSpy.mockRestore();
+    });
+});
+
+describe('setAccessTokenResolver / getAccessToken', () => {
+    afterEach(() => setAccessTokenResolver(null));
+
+    it('delegates to a registered resolver', async () => {
+        const resolver = jest.fn().mockResolvedValue('tok-A');
+        setAccessTokenResolver(resolver);
+        await expect(getAccessToken()).resolves.toBe('tok-A');
+        expect(resolver).toHaveBeenCalledTimes(1);
+    });
+
+    it('a later resolver replaces the previous one', async () => {
+        setAccessTokenResolver(jest.fn().mockResolvedValue('tok-A'));
+        const next = jest.fn().mockResolvedValue('tok-B');
+        setAccessTokenResolver(next);
+        await expect(getAccessToken()).resolves.toBe('tok-B');
+        expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    it('a non-function argument clears the resolver (built-in flow runs)', async () => {
+        const resolver = jest.fn().mockResolvedValue('tok-A');
+        setAccessTokenResolver(resolver);
+        setAccessTokenResolver(undefined);
+        await getAccessToken().catch(() => {});
+        expect(resolver).not.toHaveBeenCalled();
+    });
+
+    it('a resolver registered on one module copy is visible to a second copy', async () => {
+        // The slot rides a global under Symbol.for, so duplicate installs of
+        // the package (nested node_modules, symlinked dev installs) share it.
+        const resolver = jest.fn().mockResolvedValue('tok-shared');
+        setAccessTokenResolver(resolver);
+
+        let secondCopy;
+        jest.isolateModules(() => {
+            secondCopy = require('../methods');
+        });
+        expect(secondCopy.getAccessToken).not.toBe(getAccessToken);
+        await expect(secondCopy.getAccessToken()).resolves.toBe('tok-shared');
+        expect(resolver).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('setAuthHandlers / initLogOut', () => {
+    afterEach(() => setAuthHandlers());
+
+    it('initLogOut calls the injected initLogOut and does not redirect', () => {
+        const injected = jest.fn();
+        const { getCurrentLocation } = require('../../../utils/methods');
+        const replace = jest.fn();
+        getCurrentLocation.mockReturnValue({ replace });
+        setAuthHandlers({ initLogOut: injected });
+
+        initLogOut();
+
+        expect(injected).toHaveBeenCalledTimes(1);
+        expect(replace).not.toHaveBeenCalled();
+    });
+
+    it('without an injected initLogOut the built-in redirect runs', () => {
+        const { getCurrentLocation } = require('../../../utils/methods');
+        const replace = jest.fn();
+        getCurrentLocation.mockReturnValue({ replace });
+
+        initLogOut();
+
+        expect(replace).toHaveBeenCalledTimes(1);
+    });
+
+    it('injecting only authErrorHandler leaves initLogOut on the built-in redirect', () => {
+        const { getCurrentLocation } = require('../../../utils/methods');
+        const replace = jest.fn();
+        getCurrentLocation.mockReturnValue({ replace });
+        setAuthHandlers({ authErrorHandler: jest.fn() });
+
+        initLogOut();
+
+        expect(replace).toHaveBeenCalledTimes(1);
+    });
+
+    it('getAuthHandlers returns a copy', () => {
+        setAuthHandlers({ initLogOut: jest.fn() });
+        getAuthHandlers().initLogOut = 'mutated';
+        expect(typeof getAuthHandlers().initLogOut).toBe('function');
+    });
+
+    it('handlers registered on one module copy are visible to a second copy', () => {
+        // The handlers ride globalThis under Symbol.for, so duplicate installs
+        // of the package share them.
+        setAuthHandlers({ initLogOut: jest.fn() });
+        let secondCopy;
+        jest.isolateModules(() => {
+            secondCopy = require('../methods');
+        });
+        expect(typeof secondCopy.getAuthHandlers().initLogOut).toBe('function');
+        expect(secondCopy.getAuthHandlers().authErrorHandler).toBe(null);
+    });
+
+    it('non-function values are ignored and setAuthHandlers() clears both', () => {
+        setAuthHandlers({ initLogOut: 'nope', authErrorHandler: jest.fn() });
+        expect(getAuthHandlers().initLogOut).toBe(null);
+        expect(typeof getAuthHandlers().authErrorHandler).toBe('function');
+        setAuthHandlers();
+        expect(getAuthHandlers()).toEqual({ initLogOut: null, authErrorHandler: null });
     });
 });
