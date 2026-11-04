@@ -61,7 +61,7 @@ const ItemTableField = ({
           required={required}
           disabled={disabled}
           timeZone={timeZone}
-          slotProps={{ textField: { InputLabelProps: { shrink: true } } }}
+          slotProps={{ textField: { slotProps: { inputLabel: { shrink: true } } } }}
         />
       );
     case "Time":
@@ -72,7 +72,7 @@ const ItemTableField = ({
           required={required}
           disabled={disabled}
           timeZone={timeZone}
-          slotProps={{ textField: { InputLabelProps: { shrink: true } } }}
+          slotProps={{ textField: { slotProps: { inputLabel: { shrink: true } } } }}
         />
       );
     case "Quantity":
