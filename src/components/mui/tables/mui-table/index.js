@@ -29,7 +29,6 @@ import styles from "../components/styles.module.less";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PropTypes from "prop-types";
 import TableCellContent from "../components/table-cell-content";
-import TableCellLink from "../components/table-cell-link";
 import TableShell from "../components/table-shell";
 import createDeleteHandler from "../components/create-delete-handler";
 import SortableHeaderContent from "../components/sortable-header-content";
@@ -93,20 +92,6 @@ const MuiTable = ({
     ...getArchivedRowSx(row, options.disableProp)
   });
 
-  // columns with getHref render as a link; disabled rows or no href fall back to plain text
-  const renderCellContent = (row, col) => {
-    const content = <TableCellContent row={row} col={col} />;
-    const isDisabled = options.disableProp && row[options.disableProp];
-    const href = !isDisabled && col.getHref?.(row);
-    return href ? (
-      <TableCellLink href={href} row={row} onNavigate={onNavigate}>
-        {content}
-      </TableCellLink>
-    ) : (
-      content
-    );
-  };
-
   const handleDelete = createDeleteHandler({
     onDelete,
     getName,
@@ -165,7 +150,12 @@ const MuiTable = ({
                   className={`${col.dottedBorder && styles.dottedBorderLeft} ${col.className}`}
                   sx={getCellSx(row, col)}
                 >
-                  {renderCellContent(row, col)}
+                  <TableCellContent
+                    row={row}
+                    col={col}
+                    onNavigate={onNavigate}
+                    disabled={options.disableProp && row[options.disableProp]}
+                  />
                 </TableCell>
               ))}
               {onArchive && (
