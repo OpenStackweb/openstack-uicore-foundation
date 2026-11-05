@@ -46,6 +46,8 @@ const SnackbarNotification = ({
   const hasNewerError = messages.slice(1).some((m) => m.type !== "success");
   // the message fading out, so a repeat of it still shows
   const closingRef = useRef(null);
+  // bumped when the page path changes
+  const [pageChanges, setPageChanges] = useState(0);
   const addMessage = (msg) =>
     setMessages((prev) => {
       const now = Date.now();
@@ -94,6 +96,32 @@ const SnackbarNotification = ({
     closingRef.current = current;
     setOpen(false);
   }, [messages, open]);
+
+  // outside the router, so watch the browser for page changes
+  useEffect(() => {
+    const nav = window.navigation;
+    if (!nav) return;
+    let path = window.location.pathname;
+    const onChange = () => {
+      if (window.location.pathname === path) return;
+      path = window.location.pathname;
+      setPageChanges((n) => n + 1);
+    };
+    nav.addEventListener("currententrychange", onChange);
+    return () => nav.removeEventListener("currententrychange", onChange);
+  }, []);
+
+  // leaving a page closes its errors, successes keep their timer
+  useEffect(() => {
+    if (!pageChanges) return;
+    setMessages(([head, ...rest]) =>
+      head ? [head, ...rest.filter((m) => m.type === "success")] : []
+    );
+    if (open && !isSuccess) {
+      closingRef.current = current;
+      setOpen(false);
+    }
+  }, [pageChanges]);
 
   // when snackbarMessage changes in base-reducer, we trigger the snackbar
   useEffect(() => {

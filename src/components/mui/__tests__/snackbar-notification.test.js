@@ -268,5 +268,36 @@ describe("SnackbarNotification", () => {
       expect(clearSnackbarMessage).toHaveBeenCalledTimes(1);
       expect(screen.getByText("First error")).toBeInTheDocument();
     });
+
+    describe("on a page change", () => {
+      // jsdom has no Navigation API, so fake its event
+      const changePage = (path) =>
+        act(() => {
+          window.history.pushState({}, "", path);
+          window.navigation.dispatchEvent(new Event("currententrychange"));
+        });
+
+      beforeEach(() => {
+        window.navigation = new EventTarget();
+      });
+      afterEach(() => {
+        delete window.navigation;
+        window.history.pushState({}, "", "/");
+      });
+
+      test("closes an error", () => {
+        render(ui(errorA));
+        changePage("/other");
+        advance(1000);
+        expect(screen.queryByText("First error")).not.toBeInTheDocument();
+      });
+
+      test("keeps a success", () => {
+        render(ui({ html: "Saved", type: "success" }));
+        changePage("/other");
+        advance(1000);
+        expect(screen.getByText("Saved")).toBeInTheDocument();
+      });
+    });
   });
 });
