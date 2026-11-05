@@ -326,6 +326,14 @@ describe("SnackbarNotification", () => {
         advance(1000);
         expect(screen.getByText("Saved")).toBeInTheDocument();
       });
+
+      test("drops an error waiting behind the message on screen", () => {
+        const { rerender } = render(ui({ html: "Saved", type: "success" }));
+        rerender(ui(errorA));
+        changePage("/other");
+        advance(1000);
+        expect(screen.queryByText("First error")).not.toBeInTheDocument();
+      });
     });
   });
 });
