@@ -97,6 +97,9 @@ describe("SnackbarNotification", () => {
         jest.advanceTimersByTime(ms);
       });
 
+    const close = () =>
+      fireEvent.click(screen.getByRole("button", { name: /close/i }));
+
     beforeEach(() => {
       jest.useFakeTimers();
       clearSnackbarMessage = jest.fn();
@@ -134,6 +137,18 @@ describe("SnackbarNotification", () => {
       expect(screen.getByText("Second error")).toBeInTheDocument();
     });
 
+    test("keeps an error on screen when a success arrives", () => {
+      const { rerender } = render(ui(errorA));
+      rerender(ui({ html: "Saved", type: "success" }));
+      advance(NOTIFICATION_TIMEOUT);
+      expect(screen.getByText("First error")).toBeInTheDocument();
+      expect(screen.queryByText("Saved")).not.toBeInTheDocument();
+
+      close();
+      advance(1000);
+      expect(screen.getByText("Saved")).toBeInTheDocument();
+    });
+
     test("gives a replacement success its own full timeout", () => {
       const { rerender } = render(ui({ html: "Saved", type: "success" }));
       advance(NOTIFICATION_TIMEOUT - 100);
@@ -158,6 +173,40 @@ describe("SnackbarNotification", () => {
       advance(1000);
       expect(screen.queryByText("Second error")).not.toBeInTheDocument();
       expect(screen.getByText("Third error")).toBeInTheDocument();
+    });
+
+    test("replaces an error with a newer error queued before a success", () => {
+      const ErrorsThenSuccess = () => {
+        const { successMessage, errorMessage } = useSnackbarMessage();
+        return (
+          <button
+            type="button"
+            onClick={() => {
+              errorMessage("First error");
+              errorMessage("Second error");
+              successMessage("Saved");
+            }}
+          >
+            send
+          </button>
+        );
+      };
+      render(
+        <SnackbarNotification
+          snackbarMessage={null}
+          clearSnackbarMessage={clearSnackbarMessage}
+        >
+          <ErrorsThenSuccess />
+        </SnackbarNotification>
+      );
+
+      fireEvent.click(screen.getByText("send"));
+      advance(1000);
+      advance(NOTIFICATION_TIMEOUT);
+
+      expect(screen.queryByText("First error")).not.toBeInTheDocument();
+      expect(screen.getByText("Second error")).toBeInTheDocument();
+      expect(screen.queryByText("Saved")).not.toBeInTheDocument();
     });
 
     test("shows both in order when two arrive in the same render", () => {

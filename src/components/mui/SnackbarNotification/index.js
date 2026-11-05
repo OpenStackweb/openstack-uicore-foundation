@@ -43,6 +43,7 @@ const SnackbarNotification = ({
   const [current] = messages;
   const msgData = current || {};
   const isSuccess = msgData.type === "success";
+  const hasNewerError = messages.slice(1).some((m) => m.type !== "success");
   // the message fading out, so a repeat of it still shows
   const closingRef = useRef(null);
   const addMessage = (msg) =>
@@ -87,9 +88,9 @@ const SnackbarNotification = ({
     }
   }, [current]);
 
-  // newer message closes the current one once it's open
+  // newer message closes the current one, but a success never closes an error
   useEffect(() => {
-    if (messages.length < 2 || !open) return;
+    if (messages.length < 2 || !open || (!isSuccess && !hasNewerError)) return;
     closingRef.current = current;
     setOpen(false);
   }, [messages, open]);
