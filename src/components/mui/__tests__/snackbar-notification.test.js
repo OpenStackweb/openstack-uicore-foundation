@@ -269,6 +269,34 @@ describe("SnackbarNotification", () => {
       expect(screen.getByText("First error")).toBeInTheDocument();
     });
 
+    test("ignores a blank message so the next one still shows", () => {
+      const BlankThenSuccess = () => {
+        const { successMessage, errorMessage } = useSnackbarMessage();
+        return (
+          <button
+            type="button"
+            onClick={() => {
+              errorMessage("");
+              successMessage("Saved");
+            }}
+          >
+            send
+          </button>
+        );
+      };
+      render(
+        <SnackbarNotification
+          snackbarMessage={null}
+          clearSnackbarMessage={clearSnackbarMessage}
+        >
+          <BlankThenSuccess />
+        </SnackbarNotification>
+      );
+
+      fireEvent.click(screen.getByText("send"));
+      expect(screen.getByText("Saved")).toBeInTheDocument();
+    });
+
     describe("on a page change", () => {
       // jsdom has no Navigation API, so fake its event
       const changePage = (path) =>

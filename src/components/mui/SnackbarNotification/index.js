@@ -50,6 +50,8 @@ const SnackbarNotification = ({
   const [pageChanges, setPageChanges] = useState(0);
   const addMessage = (msg) =>
     setMessages((prev) => {
+      // a blank message never opens, since it would block the queue
+      if (empty(msg.html)) return prev;
       const now = Date.now();
       // skip a repeat that arrived within the dedupe window
       const isRepeat = prev.some(
