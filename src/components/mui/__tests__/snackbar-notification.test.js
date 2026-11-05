@@ -22,6 +22,7 @@ jest.mock("../../../utils/actions", () => ({
 import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
+import { createMemoryHistory } from "history";
 import SnackbarNotification, {
   useSnackbarMessage
 } from "../SnackbarNotification/index";
@@ -258,6 +259,71 @@ describe("SnackbarNotification", () => {
 
       fireEvent.click(screen.getByText("send"));
       expect(screen.getByText("Saved")).toBeInTheDocument();
+    });
+
+    describe("on a page change", () => {
+      let history;
+
+      const page = (snackbarMessage, children = <div>App</div>) => (
+        <SnackbarNotification
+          snackbarMessage={snackbarMessage}
+          clearSnackbarMessage={clearSnackbarMessage}
+          history={history}
+        >
+          {children}
+        </SnackbarNotification>
+      );
+
+      const changePage = (path) =>
+        act(() => {
+          history.push(path);
+        });
+
+      beforeEach(() => {
+        history = createMemoryHistory();
+      });
+
+      test("closes an error", () => {
+        render(page(errorA));
+        changePage("/other");
+        advance(1000);
+        expect(screen.queryByText("First error")).not.toBeInTheDocument();
+      });
+
+      test("keeps a success", () => {
+        render(page({ html: "Saved", type: "success" }));
+        changePage("/other");
+        advance(1000);
+        expect(screen.getByText("Saved")).toBeInTheDocument();
+      });
+
+      test("drops an error waiting behind the message on screen", () => {
+        const { rerender } = render(page({ html: "Saved", type: "success" }));
+        rerender(page(errorA));
+        changePage("/other");
+        advance(NOTIFICATION_TIMEOUT);
+        advance(1000);
+        expect(screen.queryByText("First error")).not.toBeInTheDocument();
+      });
+
+      test("keeps an error the new page adds on mount", () => {
+        const saved = { html: "Saved", type: "success" };
+        const NewPage = () => {
+          const { errorMessage } = useSnackbarMessage();
+          React.useEffect(() => {
+            errorMessage("Page error");
+          }, []);
+          return null;
+        };
+        const { rerender } = render(page(saved));
+        act(() => {
+          history.push("/other");
+          rerender(page(saved, <NewPage />));
+        });
+        advance(NOTIFICATION_TIMEOUT);
+        advance(1000);
+        expect(screen.getByText("Page error")).toBeInTheDocument();
+      });
     });
   });
 });
