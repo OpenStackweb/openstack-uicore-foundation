@@ -35,7 +35,8 @@ import { clearSnackbarMessage } from "../../../utils/actions";
 const SnackbarNotification = ({
   children,
   snackbarMessage,
-  clearSnackbarMessage
+  clearSnackbarMessage,
+  history
 }) => {
   const [open, setOpen] = useState(false);
   // the message on screen, then the ones waiting their turn
@@ -45,6 +46,8 @@ const SnackbarNotification = ({
   const isSuccess = msgData.type === "success";
   // the message fading out, so a repeat of it still shows
   const closingRef = useRef(null);
+  // bumped when the page path changes
+  const [pageChanges, setPageChanges] = useState(0);
   const addMessage = (msg) =>
     setMessages((prev) => {
       // a blank message never opens, since it would block the queue
@@ -89,6 +92,29 @@ const SnackbarNotification = ({
     }
   }, [current]);
 
+  // drop waiting errors on a path change, before the new page adds its own
+  useEffect(() => {
+    if (!history) return;
+    let path = history.location.pathname;
+    return history.listen(() => {
+      if (history.location.pathname === path) return;
+      path = history.location.pathname;
+      setMessages(([head, ...rest]) =>
+        head ? [head, ...rest.filter((m) => m.type === "success")] : []
+      );
+      setPageChanges((n) => n + 1);
+    });
+  }, [history]);
+
+  // leaving a page closes its error, successes keep their timer
+  useEffect(() => {
+    if (!pageChanges) return;
+    if (open && !isSuccess) {
+      closingRef.current = current;
+      setOpen(false);
+    }
+  }, [pageChanges]);
+
   // when snackbarMessage changes in base-reducer, we trigger the snackbar
   useEffect(() => {
     if (!empty(snackbarMessage?.html)) {
@@ -129,7 +155,11 @@ const SnackbarNotification = ({
 
 SnackbarNotification.propTypes = {
   children: PropTypes.node,
-  snackbarMessage: PropTypes.object
+  snackbarMessage: PropTypes.object,
+  history: PropTypes.shape({
+    listen: PropTypes.func,
+    location: PropTypes.object
+  })
 };
 
 const mapStateToProps = ({ baseState }) => ({
