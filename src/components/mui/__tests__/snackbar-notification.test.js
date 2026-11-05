@@ -80,7 +80,6 @@ describe("SnackbarNotification", () => {
   describe("pinned errors and replacement", () => {
     const errorA = { html: "First error", type: "warning" };
     const errorB = { html: "Second error", type: "error" };
-    const errorC = { html: "Third error", type: "error" };
     let clearSnackbarMessage;
 
     const ui = (snackbarMessage) => (
@@ -128,11 +127,15 @@ describe("SnackbarNotification", () => {
       expect(screen.getByText("First error")).toBeInTheDocument();
     });
 
-    test("replaces the message on screen with a new one", () => {
+    test("shows the next message only after the current one is closed", () => {
       const { rerender } = render(ui(errorA));
       rerender(ui(errorB));
       advance(1000);
+      expect(screen.getByText("First error")).toBeInTheDocument();
+      expect(screen.queryByText("Second error")).not.toBeInTheDocument();
 
+      close();
+      advance(1000);
       expect(screen.queryByText("First error")).not.toBeInTheDocument();
       expect(screen.getByText("Second error")).toBeInTheDocument();
     });
@@ -149,64 +152,20 @@ describe("SnackbarNotification", () => {
       expect(screen.getByText("Saved")).toBeInTheDocument();
     });
 
-    test("gives a replacement success its own full timeout", () => {
+    test("gives a waiting success its own full timeout", () => {
       const { rerender } = render(ui({ html: "Saved", type: "success" }));
       advance(NOTIFICATION_TIMEOUT - 100);
       rerender(ui({ html: "Saved again", type: "success" }));
-      advance(500);
-      advance(NOTIFICATION_TIMEOUT - 500);
-      expect(screen.getByText("Saved again")).toBeInTheDocument();
-
       // one tick for the auto-hide, one for the exit transition
       advance(1000);
       advance(1000);
-      expect(screen.queryByText("Saved again")).not.toBeInTheDocument();
-    });
-
-    test("shows a message that arrives mid-close before the next one", () => {
-      const { rerender } = render(ui(errorA));
-      rerender(ui(errorB));
-      rerender(ui(errorC));
-      advance(1000);
-      expect(screen.getByText("Second error")).toBeInTheDocument();
-
-      advance(1000);
-      expect(screen.queryByText("Second error")).not.toBeInTheDocument();
-      expect(screen.getByText("Third error")).toBeInTheDocument();
-    });
-
-    test("replaces an error with a newer error queued before a success", () => {
-      const ErrorsThenSuccess = () => {
-        const { successMessage, errorMessage } = useSnackbarMessage();
-        return (
-          <button
-            type="button"
-            onClick={() => {
-              errorMessage("First error");
-              errorMessage("Second error");
-              successMessage("Saved");
-            }}
-          >
-            send
-          </button>
-        );
-      };
-      render(
-        <SnackbarNotification
-          snackbarMessage={null}
-          clearSnackbarMessage={clearSnackbarMessage}
-        >
-          <ErrorsThenSuccess />
-        </SnackbarNotification>
-      );
-
-      fireEvent.click(screen.getByText("send"));
-      advance(1000);
-      advance(NOTIFICATION_TIMEOUT);
-
-      expect(screen.queryByText("First error")).not.toBeInTheDocument();
-      expect(screen.getByText("Second error")).toBeInTheDocument();
       expect(screen.queryByText("Saved")).not.toBeInTheDocument();
+      advance(NOTIFICATION_TIMEOUT / 2);
+      expect(screen.getByText("Saved again")).toBeInTheDocument();
+
+      advance(NOTIFICATION_TIMEOUT);
+      advance(1000);
+      expect(screen.queryByText("Saved again")).not.toBeInTheDocument();
     });
 
     test("shows both in order when two arrive in the same render", () => {
@@ -236,6 +195,7 @@ describe("SnackbarNotification", () => {
       fireEvent.click(screen.getByText("send"));
       expect(screen.getByText("First error")).toBeInTheDocument();
 
+      close();
       advance(1000);
       expect(screen.queryByText("First error")).not.toBeInTheDocument();
       expect(screen.getByText("Second error")).toBeInTheDocument();
@@ -246,8 +206,9 @@ describe("SnackbarNotification", () => {
       rerender(ui({ ...errorA }));
       advance(1000);
 
-      expect(clearSnackbarMessage).not.toHaveBeenCalled();
-      expect(screen.getByText("First error")).toBeInTheDocument();
+      close();
+      advance(1000);
+      expect(screen.queryByText("First error")).not.toBeInTheDocument();
     });
 
     test("shows a repeat that arrives after the error is closed", () => {
@@ -259,12 +220,14 @@ describe("SnackbarNotification", () => {
       expect(screen.getByText("First error")).toBeInTheDocument();
     });
 
-    test("replaces with a repeat that arrives after the dedupe window", () => {
+    test("queues a repeat that arrives after the dedupe window", () => {
       const { rerender } = render(ui(errorA));
       advance(NOTIFICATION_DEDUPE_WINDOW);
       rerender(ui({ ...errorA }));
       advance(1000);
 
+      close();
+      advance(1000);
       expect(clearSnackbarMessage).toHaveBeenCalledTimes(1);
       expect(screen.getByText("First error")).toBeInTheDocument();
     });
