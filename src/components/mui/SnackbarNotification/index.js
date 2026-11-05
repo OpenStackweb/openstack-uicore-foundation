@@ -43,7 +43,6 @@ const SnackbarNotification = ({
   const [current] = messages;
   const msgData = current || {};
   const isSuccess = msgData.type === "success";
-  const hasNewerError = messages.slice(1).some((m) => m.type !== "success");
   // the message fading out, so a repeat of it still shows
   const closingRef = useRef(null);
   // bumped when the page path changes
@@ -91,13 +90,6 @@ const SnackbarNotification = ({
       setOpen(true);
     }
   }, [current]);
-
-  // newer message closes the current one, but a success never closes an error
-  useEffect(() => {
-    if (messages.length < 2 || !open || (!isSuccess && !hasNewerError)) return;
-    closingRef.current = current;
-    setOpen(false);
-  }, [messages, open]);
 
   // outside the router, so watch the browser for page changes
   useEffect(() => {
