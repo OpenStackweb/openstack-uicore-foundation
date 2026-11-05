@@ -11,7 +11,7 @@
  * limitations under the License.
  * */
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { Alert, Snackbar, Typography } from "@mui/material";
@@ -19,7 +19,10 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import SnackbarNotificationContext from "./Context";
 export { useSnackbarMessage } from "./Context";
-import { NOTIFICATION_TIMEOUT } from "../../../utils/constants";
+import {
+  NOTIFICATION_DEDUPE_WINDOW,
+  NOTIFICATION_TIMEOUT
+} from "../../../utils/constants";
 import { empty } from "../../../utils/methods";
 import { clearSnackbarMessage } from "../../../utils/actions";
 
@@ -32,21 +35,50 @@ import { clearSnackbarMessage } from "../../../utils/actions";
 const SnackbarNotification = ({
   children,
   snackbarMessage,
-  clearSnackbarMessage
+  clearSnackbarMessage,
+  history
 }) => {
   const [open, setOpen] = useState(false);
-  const [msgData, setMsgData] = useState({});
+  // the message on screen, then the ones waiting their turn
+  const [messages, setMessages] = useState([]);
+  const [current] = messages;
+  const msgData = current || {};
+  const isSuccess = msgData.type === "success";
+  // the message fading out, so a repeat of it still shows
+  const closingRef = useRef(null);
+  // bumped when the page path changes
+  const [pageChanges, setPageChanges] = useState(0);
+  const addMessage = (msg) =>
+    setMessages((prev) => {
+      // a blank message never opens, since it would block the queue
+      if (empty(msg.html)) return prev;
+      const now = Date.now();
+      // skip a repeat that arrived within the dedupe window
+      const isRepeat = prev.some(
+        (m) =>
+          m !== closingRef.current &&
+          m.html === msg.html &&
+          m.type === msg.type &&
+          now - m.receivedAt < NOTIFICATION_DEDUPE_WINDOW
+      );
+      if (isRepeat) return prev;
+      const next = { ...msg, receivedAt: now };
+      return [...prev, next];
+    });
   // this two methods are for on-demand messaging
-  const successMessage = (msg) => setMsgData({ html: msg, type: "success" });
-  const errorMessage = (msg) => setMsgData({ html: msg, type: "warning" });
+  const successMessage = (msg) => addMessage({ html: msg, type: "success" });
+  const errorMessage = (msg) => addMessage({ html: msg, type: "warning" });
   const messageContext = useMemo(() => ({ successMessage, errorMessage }), []);
 
   const clearMessage = () => {
     clearSnackbarMessage();
-    setMsgData({});
+    setMessages(([, ...rest]) => rest);
   };
 
-  const onClose = () => {
+  const onClose = (_, reason) => {
+    // errors stay until dismissed
+    if (reason === "clickaway" && !isSuccess) return;
+    closingRef.current = current;
     setOpen(false);
   };
 
@@ -58,12 +90,35 @@ const SnackbarNotification = ({
     if (!empty(msgData.html)) {
       setOpen(true);
     }
-  }, [msgData]);
+  }, [current]);
+
+  // drop waiting errors on a path change, before the new page adds its own
+  useEffect(() => {
+    if (!history) return;
+    let path = history.location.pathname;
+    return history.listen(() => {
+      if (history.location.pathname === path) return;
+      path = history.location.pathname;
+      setMessages(([head, ...rest]) =>
+        head ? [head, ...rest.filter((m) => m.type === "success")] : []
+      );
+      setPageChanges((n) => n + 1);
+    });
+  }, [history]);
+
+  // leaving a page closes its error, successes keep their timer
+  useEffect(() => {
+    if (!pageChanges) return;
+    if (open && !isSuccess) {
+      closingRef.current = current;
+      setOpen(false);
+    }
+  }, [pageChanges]);
 
   // when snackbarMessage changes in base-reducer, we trigger the snackbar
   useEffect(() => {
     if (!empty(snackbarMessage?.html)) {
-      setMsgData(snackbarMessage);
+      addMessage(snackbarMessage);
     }
   }, [snackbarMessage]);
 
@@ -74,7 +129,7 @@ const SnackbarNotification = ({
         onClose={onClose}
         slotProps={{ transition: { onExited: handleExited } }}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        autoHideDuration={NOTIFICATION_TIMEOUT}
+        autoHideDuration={isSuccess ? NOTIFICATION_TIMEOUT : null}
       >
         <Alert
           onClose={onClose}
@@ -100,7 +155,11 @@ const SnackbarNotification = ({
 
 SnackbarNotification.propTypes = {
   children: PropTypes.node,
-  snackbarMessage: PropTypes.object
+  snackbarMessage: PropTypes.object,
+  history: PropTypes.shape({
+    listen: PropTypes.func,
+    location: PropTypes.object
+  })
 };
 
 const mapStateToProps = ({ baseState }) => ({
