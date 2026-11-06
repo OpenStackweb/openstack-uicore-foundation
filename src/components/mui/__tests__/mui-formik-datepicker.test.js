@@ -16,6 +16,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Formik, Form } from "formik";
 import "@testing-library/jest-dom";
+import moment from "moment-timezone";
 import MuiFormikDatepicker from "../formik-inputs/mui-formik-datepicker";
 
 const renderWithFormik = (props, initialValues = { test_date: null }) =>
@@ -73,5 +74,23 @@ describe("MuiFormikDatepicker", () => {
     const input = screen.getByLabelText("Test Date *");
     expect(input).not.toHaveValue("");
     expect(input).not.toHaveValue("MM/DD/YYYY");
+  });
+
+  describe("timeZone", () => {
+    // 3am UTC on Nov 6 is still Nov 5 in Los Angeles
+    const value = moment.utc("2026-11-06T03:00:00Z");
+
+    test("shows the value in the given time zone", () => {
+      renderWithFormik(
+        { timeZone: "America/Los_Angeles" },
+        { test_date: value }
+      );
+      expect(screen.getByLabelText("Test Date")).toHaveValue("11/05/2026");
+    });
+
+    test("keeps the value's own time zone without it", () => {
+      renderWithFormik({}, { test_date: value });
+      expect(screen.getByLabelText("Test Date")).toHaveValue("11/06/2026");
+    });
   });
 });

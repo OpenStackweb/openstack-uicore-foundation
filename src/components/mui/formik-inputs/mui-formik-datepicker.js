@@ -22,6 +22,7 @@ const MuiFormikDatepicker = ({
   name,
   label,
   required,
+  timeZone,
   disabled = false,
   slotProps: externalSlotProps,
   ...props
@@ -34,6 +35,7 @@ const MuiFormikDatepicker = ({
       <DatePicker
         value={field.value}
         onChange={helpers.setValue}
+        timezone={timeZone}
         slotProps={{
           day: {
             sx: {
@@ -64,6 +66,7 @@ MuiFormikDatepicker.propTypes = {
   name: PropTypes.string.isRequired,
   label: PropTypes.string,
   required: PropTypes.bool,
+  timeZone: PropTypes.string,
   disabled: PropTypes.bool
 };
 

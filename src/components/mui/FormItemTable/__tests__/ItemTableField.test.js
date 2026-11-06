@@ -43,7 +43,14 @@ jest.mock("../../formik-inputs/mui-formik-datepicker", () => {
   const React = require("react");
   return {
     __esModule: true,
-    default: ({ name }) => <div data-testid="datepicker" data-name={name} />
+    default: ({ name, label, timeZone }) => (
+      <div
+        data-testid="datepicker"
+        data-name={name}
+        data-label={label}
+        data-timezone={timeZone}
+      />
+    )
   };
 });
 
@@ -51,7 +58,14 @@ jest.mock("../../formik-inputs/mui-formik-timepicker", () => {
   const React = require("react");
   return {
     __esModule: true,
-    default: ({ name }) => <div data-testid="timepicker" data-name={name} />
+    default: ({ name, label, timeZone }) => (
+      <div
+        data-testid="timepicker"
+        data-name={name}
+        data-label={label}
+        data-timezone={timeZone}
+      />
+    )
   };
 });
 
@@ -96,11 +110,12 @@ import ItemTableField from "../components/ItemTableField";
 const rowId = 1;
 const baseField = { class_field: "Item", type_id: 10, values: [] };
 
-const renderField = (fieldOverrides = {}) =>
+const renderField = (fieldOverrides = {}, props = {}) =>
   render(
     <ItemTableField
       rowId={rowId}
       field={{ ...baseField, ...fieldOverrides }}
+      {...props}
     />
   );
 
@@ -128,6 +143,27 @@ describe("ItemTableField", () => {
   test("renders MuiFormikTimepicker for Time type", () => {
     renderField({ type: "Time" });
     expect(screen.getByTestId("timepicker")).toBeInTheDocument();
+  });
+
+  test.each([
+    ["DateTime", "datepicker"],
+    ["Time", "timepicker"]
+  ])("%s passes the time zone and appends its label", (type, testId) => {
+    renderField(
+      { type },
+      { label: "Arrival", timeZone: "America/Los_Angeles", timeZoneLabel: "show local time" }
+    );
+    const picker = screen.getByTestId(testId);
+    expect(picker).toHaveAttribute("data-timezone", "America/Los_Angeles");
+    expect(picker).toHaveAttribute("data-label", "Arrival (show local time)");
+  });
+
+  test.each([
+    ["DateTime", "datepicker"],
+    ["Time", "timepicker"]
+  ])("%s keeps the plain label without a time zone label", (type, testId) => {
+    renderField({ type }, { label: "Arrival", timeZone: "America/Los_Angeles" });
+    expect(screen.getByTestId(testId)).toHaveAttribute("data-label", "Arrival");
   });
 
   test("renders MuiFormikTextField for Quantity type", () => {

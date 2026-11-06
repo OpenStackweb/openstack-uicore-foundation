@@ -46,6 +46,7 @@ const FormItemTable = ({
   data,
   currentApplicableRate,
   timeZone,
+  timeZoneLabel,
   values,
   touched,
   errors
@@ -326,6 +327,7 @@ const FormItemTable = ({
                         row={row}
                         extraColumns={extraColumns}
                         timeZone={timeZone}
+                        timeZoneLabel={timeZoneLabel}
                         disabled={disabled}
                       />
                     </Collapse>
