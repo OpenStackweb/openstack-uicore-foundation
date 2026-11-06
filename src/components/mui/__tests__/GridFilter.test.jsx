@@ -134,12 +134,12 @@ describe("GridFilter", () => {
 describe("GridFilter - showLabel", () => {
   test("shows only the icon by default", () => {
     renderGridFilter();
-    expect(screen.queryByText("grid_filter.filters")).not.toBeInTheDocument();
+    expect(screen.queryByText("grid_filter.filter")).not.toBeInTheDocument();
   });
 
   test("shows the label next to the icon when showLabel is true", () => {
     renderGridFilter({ showLabel: true });
-    fireEvent.click(screen.getByRole("button", { name: "grid_filter.filters" }));
+    fireEvent.click(screen.getByRole("button", { name: "grid_filter.filter" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });

@@ -14,7 +14,7 @@ Mount `<GridFilter>` with a unique `id` and a `criterias` array. Each criteria d
 | `id`               | `string`  | —       | Unique identifier; scopes filter state in the Redux store     |
 | `criterias`        | `array`   | —       | Criteria definitions (see below)                              |
 | `hideJoinOperators`| `bool`    | `false` | Hides the All / Any toggle so the join operator is fixed      |
-| `showLabel`        | `bool`    | `false` | Shows "Filters" text next to the icon when no filters are set |
+| `showLabel`        | `bool`    | `false` | Shows "Filter" text next to the icon when no filters are set  |
 | `onApply`          | `func`    | `()=>{}`| Called with `(filters, joinOperator)` when the user applies   |
 
 ```jsx

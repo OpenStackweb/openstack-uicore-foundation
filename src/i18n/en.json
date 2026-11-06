@@ -214,6 +214,7 @@
     "following": " one of the following: ",
     "select_criteria": "Select criteria",
     "select_operator": "Select operator",
+    "filter": "Filter",
     "filters": "Filters",
     "clear_filters": "Clear Filters",
     "cancel": "Cancel",

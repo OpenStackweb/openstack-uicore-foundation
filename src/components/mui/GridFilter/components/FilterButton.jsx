@@ -53,7 +53,7 @@ const FilterButton = ({
         onClick={onClick}
         sx={iconSx}
       >
-        {T.translate("grid_filter.filters")}
+        {T.translate("grid_filter.filter")}
       </Button>
     );
   }
