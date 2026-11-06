@@ -15,6 +15,8 @@ import React from "react";
 import PropTypes from "prop-types";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
+// loads moment.tz, which AdapterMoment needs for the timezone prop
+import "moment-timezone";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 
 import { useField } from "formik";

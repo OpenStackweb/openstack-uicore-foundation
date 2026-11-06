@@ -16,7 +16,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Formik, Form } from "formik";
 import "@testing-library/jest-dom";
-import moment from "moment-timezone";
+// plain moment, so the test fails if the picker stops loading moment-timezone itself
+import moment from "moment";
 import MuiFormikDatepicker from "../formik-inputs/mui-formik-datepicker";
 
 const renderWithFormik = (props, initialValues = { test_date: null }) =>
