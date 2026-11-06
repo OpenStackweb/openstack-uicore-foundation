@@ -24,11 +24,14 @@ const ItemTableField = ({
   rowId,
   field,
   timeZone,
+  timeZoneLabel,
   label = "",
   disabled = false
 }) => {
   const name = `i-${rowId}-c-${field.class_field}-f-${field.type_id}`;
   const required = field.is_required ?? false;
+  // date/time values are in timeZone, so their label says which zone that is
+  const pickerLabel = timeZoneLabel ? `${label} (${timeZoneLabel})`.trim() : label;
   const commonProps = { name, label, disabled, required, slotProps: { inputLabel: { shrink: true } }, margin: "none" };
 
   switch (field.type) {
@@ -54,9 +57,10 @@ const ItemTableField = ({
       return (
         <MuiFormikDatepicker
           name={name}
-          label={label}
+          label={pickerLabel}
           required={required}
           disabled={disabled}
+          timeZone={timeZone}
           slotProps={{ textField: { InputLabelProps: { shrink: true } } }}
         />
       );
@@ -64,7 +68,7 @@ const ItemTableField = ({
       return (
         <MuiFormikTimepicker
           name={name}
-          label={label}
+          label={pickerLabel}
           required={required}
           disabled={disabled}
           timeZone={timeZone}

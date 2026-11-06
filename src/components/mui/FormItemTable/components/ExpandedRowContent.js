@@ -37,7 +37,13 @@ const InlineNotesField = ({ rowId, disabled }) => {
   );
 };
 
-const ExpandedRowContent = ({ row, extraColumns, timeZone, disabled }) => {
+const ExpandedRowContent = ({
+  row,
+  extraColumns,
+  timeZone,
+  timeZoneLabel,
+  disabled
+}) => {
   const itemFields = (row.meta_fields ?? []).filter(
     (f) => f.class_field === SPONSOR_FORMS_METAFIELD_CLASS.ITEM
   );
@@ -51,6 +57,7 @@ const ExpandedRowContent = ({ row, extraColumns, timeZone, disabled }) => {
               field={exc}
               rowId={row.form_item_id}
               timeZone={timeZone}
+              timeZoneLabel={timeZoneLabel}
               disabled={disabled}
               label={exc.name}
             />
@@ -62,6 +69,7 @@ const ExpandedRowContent = ({ row, extraColumns, timeZone, disabled }) => {
               field={f}
               rowId={row.form_item_id}
               timeZone={timeZone}
+              timeZoneLabel={timeZoneLabel}
               disabled={disabled}
               label={f.name}
             />
