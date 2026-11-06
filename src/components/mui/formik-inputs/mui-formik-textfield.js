@@ -21,6 +21,7 @@ const MuiFormikTextField = ({
   label,
   maxLength,
   required = false,
+  slotProps: externalSlotProps,
   ...props
 }) => {
   const [field, meta] = useField(name);
@@ -43,9 +44,8 @@ const MuiFormikTextField = ({
         error={meta.touched && Boolean(meta.error)}
         helperText={meta.touched && meta.error}
         slotProps={{
-          htmlInput: {
-            maxLength
-          }
+          ...externalSlotProps,
+          htmlInput: { maxLength, ...externalSlotProps?.htmlInput }
         }}
         // eslint-disable-next-line react/jsx-props-no-spreading
         {...props}

@@ -24,7 +24,7 @@ import {
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import ReplayIcon from "@mui/icons-material/Replay";
 import ProgressiveImg from '../../progressive-img';
@@ -389,13 +389,13 @@ const UploadInputV4 = ({
   return (
     <Box className="upload-input-v4" id={id} name={name}>
       {label && (
-        <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
           {label}
         </Typography>
       )}
 
       {helpText && (
-        <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mb: 2 }}>
+        <Typography variant="body2" gutterBottom sx={{ mb: 2, color: "text.secondary" }}>
           {helpText}
         </Typography>
       )}
@@ -436,12 +436,11 @@ const UploadInputV4 = ({
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography
                   variant="body2"
-                  fontWeight={500}
-                  sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                  sx={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                 >
                   {file.name}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
                   {formatFileSize(file.size)} · {file.complete ? T.translate("upload_input_v3.complete") : T.translate("upload_input_v3.loading")}
                 </Typography>
                 {!file.complete && (
@@ -485,8 +484,7 @@ const UploadInputV4 = ({
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography
                   variant="body2"
-                  fontWeight={500}
-                  sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                  sx={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                 >
                   {file.name}
                 </Typography>
@@ -551,12 +549,11 @@ const UploadInputV4 = ({
                     title={T.translate("upload_input_v3.preview_file")}
                     download
                     variant="body2"
-                    fontWeight={500}
-                    sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                    sx={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                   >
                     {filename}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
                     {file?.size ? `${fileSize} ·` : ''} {T.translate("upload_input_v3.complete")}
                   </Typography>
                 </Box>

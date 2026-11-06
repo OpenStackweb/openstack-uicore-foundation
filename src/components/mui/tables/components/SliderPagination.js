@@ -100,9 +100,9 @@ const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initi
           type="button"
           onClick={togglePill}
           variant="body1"
-          color="text.secondary"
           className="pagination-button"
           sx={{
+            color: "text.secondary",
             border: "none",
             background: "none",
             px: 1.5,

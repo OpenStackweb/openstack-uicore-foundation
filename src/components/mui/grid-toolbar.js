@@ -13,7 +13,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import { Grid2 } from "@mui/material";
+import { Grid } from "@mui/material";
 import SearchInput from "./search-input";
 import ArchiveToggle from "./archive-toggle";
 
@@ -64,22 +64,22 @@ const GridToolbar = ({
   const hasFillTier = actionsAutoBreakpoint !== "sm";
 
   return (
-    <Grid2 container spacing={2} sx={{ mb: 3 }}>
+    <Grid container spacing={2} sx={{ mb: 3 }}>
       {hasSearch && (
-        <Grid2 size={searchSize}>
+        <Grid size={searchSize}>
           <SearchInput {...searchProps} />
-        </Grid2>
+        </Grid>
       )}
       {hasFilter && (
-        <Grid2 size={filterSize}>
+        <Grid size={filterSize}>
           {archiveToggleProps ? (
             <ArchiveToggle {...archiveToggleProps} />
           ) : (
             filter
           )}
-        </Grid2>
+        </Grid>
       )}
-      <Grid2
+      <Grid
         size={actionsSize}
         sx={{
           display: "flex",
@@ -105,8 +105,8 @@ const GridToolbar = ({
               })
             : child
         )}
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   );
 };
 

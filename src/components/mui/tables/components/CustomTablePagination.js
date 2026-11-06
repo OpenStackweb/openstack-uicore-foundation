@@ -61,7 +61,7 @@ const CustomTablePagination = ({
     >
       <Box sx={{ display: { xs: "none", md: "block" } }}>
         {showRange && (
-          <Typography variant="body1" color="text.secondary">
+          <Typography variant="body1" sx={{ color: "text.secondary" }}>
             {T.translate("mui_table.showing_range", { from, to, total })}
           </Typography>
         )}
@@ -79,7 +79,7 @@ const CustomTablePagination = ({
       >
         {onPerPageChange && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+            <Typography variant="body1" sx={{ color: "text.secondary", whiteSpace: "nowrap" }}>
               {T.translate("mui_table.rows_per_page")}
             </Typography>
             <Select

@@ -208,7 +208,7 @@ export const base64URLEncode = (str) => {
         .toString('base64')
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
-        .replace(/=/g, '')
+        .replace(/=/g, '');
 }
 
 export const retryPromise = async (
