@@ -40,6 +40,7 @@ const GridFilter = ({
   id,
   criterias,
   hideJoinOperators = false,
+  showLabel,
   onApply,
   saveFilters,
   iconSx
@@ -145,6 +146,7 @@ const GridFilter = ({
         onClick={() => setOpenModal(true)}
         onDelete={handleRemoveAndApply}
         iconSx={iconSx}
+        showLabel={showLabel}
       />
       <Dialog
         open={openModal}
@@ -230,6 +232,7 @@ GridFilter.propTypes = {
     })
   ).isRequired,
   hideJoinOperators: PropTypes.bool,
+  showLabel: PropTypes.bool,
   onApply: PropTypes.func,
   saveFilters: PropTypes.func.isRequired,
   iconSx: PropTypes.object
@@ -237,6 +240,7 @@ GridFilter.propTypes = {
 
 GridFilter.defaultProps = {
   hideJoinOperators: false,
+  showLabel: false,
   onApply: () => {},
   iconSx: {}
 };

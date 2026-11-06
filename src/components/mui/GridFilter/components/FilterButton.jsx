@@ -13,11 +13,17 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import { Chip, IconButton } from "@mui/material";
+import { Button, Chip, IconButton } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import T from "i18n-react/dist/i18n-react";
 
-const FilterButton = ({ filterCount, onClick, onDelete, iconSx }) => {
+const FilterButton = ({
+  filterCount,
+  onClick,
+  onDelete,
+  iconSx,
+  showLabel
+}) => {
   if (filterCount > 0) {
     return (
       <Chip
@@ -39,6 +45,19 @@ const FilterButton = ({ filterCount, onClick, onDelete, iconSx }) => {
     );
   }
 
+  if (showLabel) {
+    return (
+      <Button
+        size="small"
+        startIcon={<FilterListIcon />}
+        onClick={onClick}
+        sx={iconSx}
+      >
+        {T.translate("grid_filter.filters")}
+      </Button>
+    );
+  }
+
   return (
     <IconButton
       size="large"
@@ -55,11 +74,13 @@ FilterButton.propTypes = {
   filterCount: PropTypes.number.isRequired,
   onClick: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
-  iconSx: PropTypes.object
+  iconSx: PropTypes.object,
+  showLabel: PropTypes.bool
 };
 
 FilterButton.defaultProps = {
-  iconSx: {}
+  iconSx: {},
+  showLabel: false
 };
 
 export default FilterButton;
