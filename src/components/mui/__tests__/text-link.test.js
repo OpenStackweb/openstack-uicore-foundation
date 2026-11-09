@@ -94,4 +94,10 @@ describe("TextLink", () => {
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.getByText("Alice")).toBeInTheDocument();
   });
+
+  test("renders plain text that doesn't navigate when there is no href", async () => {
+    const { onNavigate } = setup({ href: undefined });
+    await userEvent.click(screen.getByText("Alice"));
+    expect(onNavigate).not.toHaveBeenCalled();
+  });
 });

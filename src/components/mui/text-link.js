@@ -32,8 +32,8 @@ const TextLink = ({ href, onNavigate, disabled, children }) => {
     }
   };
 
-  // disabled shows the content without a link
-  if (disabled) return <>{children}</>;
+  // disabled or no href shows the content without a link
+  if (disabled || !href) return <>{children}</>;
 
   return (
     <Link
@@ -51,7 +51,7 @@ const TextLink = ({ href, onNavigate, disabled, children }) => {
 };
 
 TextLink.propTypes = {
-  href: PropTypes.string.isRequired,
+  href: PropTypes.string,
   onNavigate: PropTypes.func,
   disabled: PropTypes.bool,
   children: PropTypes.node
