@@ -59,7 +59,6 @@ const MuiTable = ({
   onArchive,
   onDelete,
   onSelect,
-  onNavigate,
   canDelete = () => true,
   deleteDialogTitle = null,
   deleteDialogBody = null,
@@ -150,12 +149,7 @@ const MuiTable = ({
                   className={`${col.dottedBorder && styles.dottedBorderLeft} ${col.className}`}
                   sx={getCellSx(row, col)}
                 >
-                  <TableCellContent
-                    row={row}
-                    col={col}
-                    onNavigate={onNavigate}
-                    disabled={options.disableProp && row[options.disableProp]}
-                  />
+                  <TableCellContent row={row} col={col} />
                 </TableCell>
               ))}
               {onArchive && (
@@ -264,7 +258,6 @@ MuiTable.propTypes = {
   onArchive: PropTypes.func,
   onDelete: PropTypes.func,
   onSelect: PropTypes.func,
-  onNavigate: PropTypes.func,
   canDelete: PropTypes.func,
   deleteDialogTitle: PropTypes.string,
   deleteDialogBody: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),

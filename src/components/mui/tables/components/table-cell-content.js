@@ -3,15 +3,14 @@ import isBoolean from "lodash/isBoolean";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import TruncateText from "../../truncate-text";
-import TableCellLink from "./table-cell-link";
 
 const contentStyle = {
   fontWeight: "normal",
   overflowWrap: "break-word",
 };
 
-const TableCellContent = ({ row, col, onNavigate, disabled }) => {
-  const content = (
+const TableCellContent = ({ row, col }) => {
+  return (
     <span style={contentStyle}>
       {col.render ? (
         col.render(row)
@@ -29,16 +28,6 @@ const TableCellContent = ({ row, col, onNavigate, disabled }) => {
         row[col.columnKey]
       )}
     </span>
-  );
-
-  // columns with getHref render as a link; disabled rows or no href fall back to plain text
-  const href = !disabled && col.getHref?.(row);
-  return href ? (
-    <TableCellLink href={href} row={row} onNavigate={onNavigate}>
-      {content}
-    </TableCellLink>
-  ) : (
-    content
   );
 };
 
