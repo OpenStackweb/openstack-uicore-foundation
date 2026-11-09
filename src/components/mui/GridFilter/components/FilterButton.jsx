@@ -13,7 +13,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import { Chip, IconButton } from "@mui/material";
+import { Chip, IconButton, Tooltip } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import T from "i18n-react/dist/i18n-react";
 
@@ -40,14 +40,16 @@ const FilterButton = ({ filterCount, onClick, onDelete, iconSx }) => {
   }
 
   return (
-    <IconButton
-      size="large"
-      aria-label={T.translate("grid_filter.open_filters")}
-      onClick={onClick}
-      sx={{ mr: 1, top: 0, position: "relative", padding: 0, ...iconSx }}
-    >
-      <FilterListIcon />
-    </IconButton>
+    <Tooltip title={T.translate("grid_filter.open_filters")}>
+      <IconButton
+        size="large"
+        aria-label={T.translate("grid_filter.open_filters")}
+        onClick={onClick}
+        sx={{ mr: 1, top: 0, position: "relative", padding: 0, ...iconSx }}
+      >
+        <FilterListIcon />
+      </IconButton>
+    </Tooltip>
   );
 };
 
