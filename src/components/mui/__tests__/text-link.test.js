@@ -15,14 +15,14 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import TableCellLink from "../tables/components/table-cell-link";
+import TextLink from "../text-link";
 
 // hash URLs: jsdom can't follow real page navigations
 const setup = (overrides = {}) => {
   const props = { href: "#/people/1", onNavigate: jest.fn(), ...overrides };
   render(
     <div>
-      <TableCellLink {...props}>Alice</TableCellLink>
+      <TextLink {...props}>Alice</TextLink>
       <span>Dev</span>
     </div>
   );
@@ -32,7 +32,7 @@ const setup = (overrides = {}) => {
 const selectText = (text, anchorNode) =>
   jest.spyOn(window, "getSelection").mockReturnValue({ toString: () => text, anchorNode });
 
-describe("TableCellLink", () => {
+describe("TextLink", () => {
   afterEach(() => jest.restoreAllMocks());
 
   test("renders a link to href", () => {

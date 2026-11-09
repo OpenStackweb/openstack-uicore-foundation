@@ -16,7 +16,7 @@ import PropTypes from "prop-types";
 import Link from "@mui/material/Link";
 
 // real link so new tab / copy link work; plain clicks can be routed in-app via onNavigate
-const TableCellLink = ({ href, onNavigate, disabled, children }) => {
+const TextLink = ({ href, onNavigate, disabled, children }) => {
   const handleClick = (ev) => {
     // new-tab / new-window clicks keep the browser's default
     if (ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
@@ -32,7 +32,7 @@ const TableCellLink = ({ href, onNavigate, disabled, children }) => {
     }
   };
 
-  // disabled rows show the content without a link
+  // disabled shows the content without a link
   if (disabled) return <>{children}</>;
 
   return (
@@ -42,7 +42,7 @@ const TableCellLink = ({ href, onNavigate, disabled, children }) => {
       draggable={false}
       color="inherit"
       underline="hover"
-      // shrink to the content, so block content from a column's render isn't full-width clickable
+      // shrink to the content, so block children aren't full-width clickable
       sx={{ display: "inline-block" }}
     >
       {children}
@@ -50,11 +50,11 @@ const TableCellLink = ({ href, onNavigate, disabled, children }) => {
   );
 };
 
-TableCellLink.propTypes = {
+TextLink.propTypes = {
   href: PropTypes.string.isRequired,
   onNavigate: PropTypes.func,
   disabled: PropTypes.bool,
   children: PropTypes.node
 };
 
-export default TableCellLink;
+export default TextLink;
