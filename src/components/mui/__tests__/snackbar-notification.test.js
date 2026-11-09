@@ -240,14 +240,14 @@ describe("SnackbarNotification", () => {
     });
 
     test("ignores a blank message so the next one still shows", () => {
-      const BlankThenSuccess = () => {
-        const { successMessage, errorMessage } = useSnackbarMessage();
+      const BlankThenError = () => {
+        const { errorMessage } = useSnackbarMessage();
         return (
           <button
             type="button"
             onClick={() => {
               errorMessage("");
-              successMessage("Saved");
+              errorMessage("First error");
             }}
           >
             send
@@ -259,12 +259,12 @@ describe("SnackbarNotification", () => {
           snackbarMessage={null}
           clearSnackbarMessage={clearSnackbarMessage}
         >
-          <BlankThenSuccess />
+          <BlankThenError />
         </SnackbarNotification>
       );
 
       fireEvent.click(screen.getByText("send"));
-      expect(screen.getByText("Saved")).toBeInTheDocument();
+      expect(screen.getByText("First error")).toBeInTheDocument();
     });
 
     describe("on a page change", () => {
@@ -313,7 +313,6 @@ describe("SnackbarNotification", () => {
       });
 
       test("keeps an error the new page adds on mount", () => {
-        const saved = { html: "Saved", type: "success" };
         const NewPage = () => {
           const { errorMessage } = useSnackbarMessage();
           React.useEffect(() => {
@@ -321,12 +320,13 @@ describe("SnackbarNotification", () => {
           }, []);
           return null;
         };
-        const { rerender } = render(page(saved));
+        const { rerender } = render(page(errorA));
         act(() => {
           history.push("/other");
-          rerender(page(saved, <NewPage />));
+          rerender(page(errorA, <NewPage />));
         });
-        advance(NOTIFICATION_TIMEOUT);
+        // one for the old error to exit, one for the new one to open
+        advance(1000);
         advance(1000);
         expect(screen.getByText("Page error")).toBeInTheDocument();
       });
