@@ -141,16 +141,22 @@ describe("SnackbarNotification", () => {
       expect(screen.getByText("Second error")).toBeInTheDocument();
     });
 
-    test("keeps an error on screen when a success arrives", () => {
+    test("shows a success next to an error without waiting", () => {
       const { rerender } = render(ui(errorA));
       rerender(ui({ html: "Saved", type: "success" }));
+      advance(1000);
+      expect(screen.getByText("First error")).toBeInTheDocument();
+      expect(screen.getByText("Saved")).toBeInTheDocument();
+
       advance(NOTIFICATION_TIMEOUT);
+      advance(1000);
       expect(screen.getByText("First error")).toBeInTheDocument();
       expect(screen.queryByText("Saved")).not.toBeInTheDocument();
 
+      // closing the error doesn't bring back the old success
       close();
       advance(1000);
-      expect(screen.getByText("Saved")).toBeInTheDocument();
+      expect(screen.queryByText("Saved")).not.toBeInTheDocument();
     });
 
     test("gives a waiting success its own full timeout", () => {
@@ -298,12 +304,12 @@ describe("SnackbarNotification", () => {
       });
 
       test("drops an error waiting behind the message on screen", () => {
-        const { rerender } = render(page({ html: "Saved", type: "success" }));
-        rerender(page(errorA));
+        const { rerender } = render(page(errorA));
+        rerender(page(errorB));
         changePage("/other");
-        advance(NOTIFICATION_TIMEOUT);
         advance(1000);
-        expect(screen.queryByText("First error")).not.toBeInTheDocument();
+        advance(1000);
+        expect(screen.queryByText("Second error")).not.toBeInTheDocument();
       });
 
       test("keeps an error the new page adds on mount", () => {

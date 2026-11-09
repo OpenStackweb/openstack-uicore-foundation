@@ -32,23 +32,14 @@ import { clearSnackbarMessage } from "../../../utils/actions";
  - snackbarErrorHandler and snackbarSuccessHandler actions from base-actions that change the base reducer
  */
 
-const SnackbarNotification = ({
-  children,
-  snackbarMessage,
-  clearSnackbarMessage,
-  history
-}) => {
+// one queue: the message on screen, then the ones waiting their turn
+const useMessageQueue = (clearSnackbarMessage) => {
   const [open, setOpen] = useState(false);
-  // the message on screen, then the ones waiting their turn
   const [messages, setMessages] = useState([]);
   const [current] = messages;
-  const msgData = current || {};
-  const isSuccess = msgData.type === "success";
   // the message fading out, so a repeat of it still shows
   const closingRef = useRef(null);
-  // bumped when the page path changes
-  const [pageChanges, setPageChanges] = useState(0);
-  const addMessage = (msg) =>
+  const add = (msg) =>
     setMessages((prev) => {
       // a blank message never opens, since it would block the queue
       if (empty(msg.html)) return prev;
@@ -65,32 +56,81 @@ const SnackbarNotification = ({
       const next = { ...msg, receivedAt: now };
       return [...prev, next];
     });
-  // this two methods are for on-demand messaging
-  const successMessage = (msg) => addMessage({ html: msg, type: "success" });
-  const errorMessage = (msg) => addMessage({ html: msg, type: "warning" });
-  const messageContext = useMemo(() => ({ successMessage, errorMessage }), []);
 
-  const clearMessage = () => {
-    clearSnackbarMessage();
-    setMessages(([, ...rest]) => rest);
-  };
-
-  const onClose = (_, reason) => {
-    // errors stay until dismissed
-    if (reason === "clickaway" && !isSuccess) return;
+  const close = () => {
     closingRef.current = current;
     setOpen(false);
   };
 
-  const handleExited = () => {
-    clearMessage();
+  const onExited = () => {
+    clearSnackbarMessage();
+    setMessages(([, ...rest]) => rest);
   };
 
   useEffect(() => {
-    if (!empty(msgData.html)) {
+    if (!empty(current?.html)) {
       setOpen(true);
     }
   }, [current]);
+
+  return { open, current, add, close, onExited, setMessages };
+};
+
+const NotificationSnackbar = ({ queue, vertical }) => {
+  const msgData = queue.current || {};
+  const isSuccess = msgData.type === "success";
+
+  const onClose = (_, reason) => {
+    // errors stay until dismissed
+    if (reason === "clickaway" && !isSuccess) return;
+    queue.close();
+  };
+
+  return (
+    <Snackbar
+      open={queue.open}
+      onClose={onClose}
+      slotProps={{ transition: { onExited: queue.onExited } }}
+      anchorOrigin={{ vertical, horizontal: "center" }}
+      autoHideDuration={isSuccess ? NOTIFICATION_TIMEOUT : null}
+    >
+      <Alert
+        onClose={onClose}
+        severity={msgData.type}
+        variant="filled"
+        sx={{ width: "100%", backgroundColor: `${msgData.type}.light` }}
+        iconMapping={{
+          success: <CheckCircleIcon fontSize="inherit" />,
+          error: <ErrorIcon fontSize="inherit" />
+        }}
+      >
+        <Typography
+          variant="body1"
+          component="div"
+          dangerouslySetInnerHTML={{ __html: msgData.html }}
+        />
+      </Alert>
+    </Snackbar>
+  );
+};
+
+const SnackbarNotification = ({
+  children,
+  snackbarMessage,
+  clearSnackbarMessage,
+  history
+}) => {
+  // separate queues, so a success never waits behind an error
+  const errors = useMessageQueue(clearSnackbarMessage);
+  const successes = useMessageQueue(clearSnackbarMessage);
+  // bumped when the page path changes
+  const [pageChanges, setPageChanges] = useState(0);
+  const addMessage = (msg) =>
+    (msg.type === "success" ? successes : errors).add(msg);
+  // this two methods are for on-demand messaging
+  const successMessage = (msg) => addMessage({ html: msg, type: "success" });
+  const errorMessage = (msg) => addMessage({ html: msg, type: "warning" });
+  const messageContext = useMemo(() => ({ successMessage, errorMessage }), []);
 
   // drop waiting errors on a path change, before the new page adds its own
   useEffect(() => {
@@ -99,9 +139,7 @@ const SnackbarNotification = ({
     return history.listen(() => {
       if (history.location.pathname === path) return;
       path = history.location.pathname;
-      setMessages(([head, ...rest]) =>
-        head ? [head, ...rest.filter((m) => m.type === "success")] : []
-      );
+      errors.setMessages(([head]) => (head ? [head] : []));
       setPageChanges((n) => n + 1);
     });
   }, [history]);
@@ -109,9 +147,8 @@ const SnackbarNotification = ({
   // leaving a page closes its error, successes keep their timer
   useEffect(() => {
     if (!pageChanges) return;
-    if (open && !isSuccess) {
-      closingRef.current = current;
-      setOpen(false);
+    if (errors.open) {
+      errors.close();
     }
   }, [pageChanges]);
 
@@ -124,30 +161,8 @@ const SnackbarNotification = ({
 
   return (
     <SnackbarNotificationContext.Provider value={messageContext}>
-      <Snackbar
-        open={open}
-        onClose={onClose}
-        slotProps={{ transition: { onExited: handleExited } }}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        autoHideDuration={isSuccess ? NOTIFICATION_TIMEOUT : null}
-      >
-        <Alert
-          onClose={onClose}
-          severity={msgData.type}
-          variant="filled"
-          sx={{ width: "100%", backgroundColor: `${msgData.type}.light` }}
-          iconMapping={{
-            success: <CheckCircleIcon fontSize="inherit" />,
-            error: <ErrorIcon fontSize="inherit" />
-          }}
-        >
-          <Typography
-            variant="body1"
-            component="div"
-            dangerouslySetInnerHTML={{ __html: msgData.html }}
-          />
-        </Alert>
-      </Snackbar>
+      <NotificationSnackbar queue={successes} vertical="top" />
+      <NotificationSnackbar queue={errors} vertical="bottom" />
       {children}
     </SnackbarNotificationContext.Provider>
   );
