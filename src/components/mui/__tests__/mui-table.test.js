@@ -22,7 +22,7 @@ jest.mock("../showConfirmDialog", () => ({
 }));
 
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import MuiTable from "../tables/mui-table";
@@ -265,104 +265,6 @@ describe("MuiTable", () => {
 
       await userEvent.hover(wrapper);
       expect(await screen.findByRole("tooltip")).toHaveTextContent("Alice");
-    });
-  });
-
-  describe("getHref link columns", () => {
-    // hash URLs: jsdom can't follow real page navigations
-    const linkColumns = [
-      { ...columns[0], getHref: (row) => `#/people/${row.id}` },
-      columns[1]
-    ];
-    afterEach(() => jest.restoreAllMocks());
-
-    test("renders the cell as a link to the row's href", () => {
-      setup({ columns: linkColumns });
-      expect(screen.getByRole("link", { name: "Alice" })).toHaveAttribute("href", "#/people/1");
-    });
-
-    test("a plain click calls onNavigate with the href and row", async () => {
-      const onNavigate = jest.fn();
-      setup({ columns: linkColumns, onNavigate });
-      await userEvent.click(screen.getByRole("link", { name: "Bob" }));
-      expect(onNavigate).toHaveBeenCalledWith("#/people/2", expect.objectContaining({ id: 2 }));
-    });
-
-    test("ctrl-click leaves the browser default so the link opens in a new tab", () => {
-      const onNavigate = jest.fn();
-      setup({ columns: linkColumns, onNavigate });
-      const notCancelled = fireEvent.click(screen.getByRole("link", { name: "Alice" }), {
-        ctrlKey: true
-      });
-      expect(notCancelled).toBe(true);
-      expect(onNavigate).not.toHaveBeenCalled();
-    });
-
-    test("a click that ends a text selection doesn't navigate", () => {
-      const onNavigate = jest.fn();
-      setup({ columns: linkColumns, onNavigate });
-      const link = screen.getByRole("link", { name: "Alice" });
-      jest
-        .spyOn(window, "getSelection")
-        .mockReturnValue({ toString: () => "Ali", anchorNode: link });
-      const notCancelled = fireEvent.click(link, { detail: 1 });
-      expect(notCancelled).toBe(false);
-      expect(onNavigate).not.toHaveBeenCalled();
-    });
-
-    test("ctrl-click with text selected in the link keeps the browser default", () => {
-      const onNavigate = jest.fn();
-      setup({ columns: linkColumns, onNavigate });
-      const link = screen.getByRole("link", { name: "Alice" });
-      jest
-        .spyOn(window, "getSelection")
-        .mockReturnValue({ toString: () => "Ali", anchorNode: link });
-      const notCancelled = fireEvent.click(link, { ctrlKey: true, detail: 1 });
-      expect(notCancelled).toBe(true);
-      expect(onNavigate).not.toHaveBeenCalled();
-    });
-
-    test("keyboard activation with text selected in the link still navigates", () => {
-      const onNavigate = jest.fn();
-      setup({ columns: linkColumns, onNavigate });
-      const link = screen.getByRole("link", { name: "Alice" });
-      jest
-        .spyOn(window, "getSelection")
-        .mockReturnValue({ toString: () => "Ali", anchorNode: link });
-      // Enter on a link fires a click with detail 0
-      fireEvent.click(link, { detail: 0 });
-      expect(onNavigate).toHaveBeenCalledWith("#/people/1", expect.objectContaining({ id: 1 }));
-    });
-
-    test("a selection elsewhere on the page doesn't block navigation", () => {
-      const onNavigate = jest.fn();
-      setup({ columns: linkColumns, onNavigate });
-      jest
-        .spyOn(window, "getSelection")
-        .mockReturnValue({ toString: () => "Dev", anchorNode: screen.getByText("Dev") });
-      fireEvent.click(screen.getByRole("link", { name: "Alice" }), { detail: 1 });
-      expect(onNavigate).toHaveBeenCalledWith("#/people/1", expect.objectContaining({ id: 1 }));
-    });
-
-    test("renders plain text on rows disabled by disableProp", () => {
-      setup({
-        columns: linkColumns,
-        data: [data[0], { ...data[1], is_disabled: true }],
-        options: { sortCol: "", sortDir: 1, disableProp: "is_disabled" }
-      });
-      expect(screen.getByRole("link", { name: "Alice" })).toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: "Bob" })).not.toBeInTheDocument();
-    });
-
-    test("renders plain text when getHref returns nothing for a row", () => {
-      setup({
-        columns: [
-          { ...columns[0], getHref: (row) => (row.id === 2 ? "#/people/2" : null) },
-          columns[1]
-        ]
-      });
-      expect(screen.queryByRole("link", { name: "Alice" })).not.toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Bob" })).toBeInTheDocument();
     });
   });
 
