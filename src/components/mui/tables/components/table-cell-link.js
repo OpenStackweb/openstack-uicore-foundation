@@ -16,7 +16,7 @@ import PropTypes from "prop-types";
 import Link from "@mui/material/Link";
 
 // real link so new tab / copy link work; plain clicks can be routed in-app via onNavigate
-const TableCellLink = ({ href, row, onNavigate, children }) => {
+const TableCellLink = ({ href, onNavigate, disabled, children }) => {
   const handleClick = (ev) => {
     // new-tab / new-window clicks keep the browser's default
     if (ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
@@ -28,9 +28,12 @@ const TableCellLink = ({ href, row, onNavigate, children }) => {
     }
     if (onNavigate) {
       ev.preventDefault();
-      onNavigate(href, row);
+      onNavigate(href);
     }
   };
+
+  // disabled rows show the content without a link
+  if (disabled) return <>{children}</>;
 
   return (
     <Link
@@ -49,8 +52,8 @@ const TableCellLink = ({ href, row, onNavigate, children }) => {
 
 TableCellLink.propTypes = {
   href: PropTypes.string.isRequired,
-  row: PropTypes.object.isRequired,
   onNavigate: PropTypes.func,
+  disabled: PropTypes.bool,
   children: PropTypes.node
 };
 
