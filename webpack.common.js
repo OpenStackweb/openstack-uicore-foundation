@@ -112,6 +112,7 @@ module.exports = {
       'components/mui/bulk-edit-table': './src/components/mui/BulkEditTable/index.js',
         'components/mui/table': './src/components/mui/tables/mui-table/index.js',
         'components/mui/table/custom-table-pagination': './src/components/mui/tables/components/CustomTablePagination.js',
+        'components/mui/table/cell-link': './src/components/mui/tables/components/table-cell-link.js',
         'components/mui/table/extra-rows': './src/components/mui/tables/extra-rows/index.js',
         'components/mui/formik-inputs/additional-input': './src/components/mui/formik-inputs/additional-input/additional-input.js',
         'components/mui/formik-inputs/additional-input-v2': './src/components/mui/formik-inputs/additional-input/additional-input-v2.js',
