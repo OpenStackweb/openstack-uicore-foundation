@@ -81,7 +81,7 @@ const NotificationSnackbar = ({ queue, vertical }) => {
   const isSuccess = msgData.type === "success";
 
   const onClose = (_, reason) => {
-    // errors stay until dismissed
+    // messages ignore clickaways
     if (reason === "clickaway") return;
     queue.close();
   };
