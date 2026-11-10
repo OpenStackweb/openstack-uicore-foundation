@@ -86,7 +86,6 @@
         "path": "^0.12.7",
         "postcss-loader": "^6.2.1",
         "react": "^19.0.0",
-        "react-bootstrap": "^0.31.5",
         "react-datetime": "^3.3.1",
         "react-dnd": "^16.0.0",
         "react-dnd-html5-backend": "^16.0.0",
@@ -161,7 +160,6 @@
         "pdfmake": "^0.3.11",
         "prop-types": "^15.8.1",
         "react": "^18.0.0 || ^19.0.0",
-        "react-bootstrap": "^0.31.5",
         "react-datetime": "^3.3.1",
         "react-dnd": "^16.0.0",
         "react-dnd-html5-backend": "^16.0.0",
@@ -224,7 +222,7 @@
         },
         "testEnvironment": "jsdom",
         "transformIgnorePatterns": [
-            "/node_modules/(?!(@uppy|nanoid|preact|p-retry|is-network-error)/)"
+            "/node_modules/(?!(@uppy|nanoid|preact|p-retry|is-network-error|react-dnd|react-dnd-html5-backend|dnd-core|@react-dnd)/)"
         ]
     }
 }

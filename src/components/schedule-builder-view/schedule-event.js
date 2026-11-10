@@ -14,8 +14,25 @@
 import React, {useState, useEffect} from 'react';
 import {DraggableItemTypes} from './constants';
 import {useDrag} from 'react-dnd';
-import {Popover, OverlayTrigger} from 'react-bootstrap';
+import {Box, Tooltip} from '@mui/material';
 import RawHTML from '../raw-html';
+
+// keeps the look of the bootstrap 3 popover this tooltip replaced
+const POPOVER_SLOT_PROPS = {
+  tooltip: {
+    sx: {
+      bgcolor: '#fff',
+      color: 'text.primary',
+      border: '1px solid rgba(0, 0, 0, 0.2)',
+      borderRadius: '6px',
+      boxShadow: '0 5px 10px rgba(0, 0, 0, 0.2)',
+      maxWidth: 276,
+      fontSize: 14,
+      fontWeight: 'normal',
+      p: 0
+    }
+  }
+};
 
 const RESIZING_DIR_NORTH = 'N';
 const RESIZING_DIR_SOUTH = 'S';
@@ -51,10 +68,15 @@ const ScheduleEvent = ({
   const canEdit = !event.static;
   const isResizable = allowResize && canEdit && size.height > 15;
 
-  const popoverHoverFocus = () =>
-    <Popover id="popover-trigger-focus" title={event.title}>
-      <RawHTML>{event.description}</RawHTML>
-    </Popover>
+  const popoverContent = () =>
+    <Box>
+      <Box sx={{px: '14px', py: '8px', bgcolor: '#f7f7f7', borderBottom: '1px solid #ebebeb', borderRadius: '5px 5px 0 0'}}>
+        {event.title}
+      </Box>
+      <Box sx={{px: '14px', py: '9px'}}>
+        <RawHTML>{event.description}</RawHTML>
+      </Box>
+    </Box>
 
   // resize behavior
 
@@ -156,11 +178,17 @@ const ScheduleEvent = ({
     let block = null;
     
     if (event.description) {
-      block = (<OverlayTrigger trigger={['hover']} placement="bottom" overlay={popoverHoverFocus()}>
+      block = (<Tooltip
+          title={popoverContent()}
+          placement="bottom"
+          disableFocusListener
+          disableTouchListener
+          slotProps={POPOVER_SLOT_PROPS}
+      >
         <div className="event-content">
           <span className="event-title withTooltip">{`${event.id} - ${event.title}${event.duration ? ` - ${event.duration/60} minutes` : ''}`}</span>
         </div>
-      </OverlayTrigger>);
+      </Tooltip>);
     } else {
       block = (<div className="event-content">
         <span className="event-title">{`${event.id} - ${event.title}${event.duration ? ` - ${event.duration/60} minutes` : ''}`}</span>
