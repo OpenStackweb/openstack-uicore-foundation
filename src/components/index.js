@@ -11,7 +11,6 @@ export {default as SponsorInput} from './inputs/sponsor-input'
 export {default as OrganizationInput} from './inputs/organization-input'
 export {default as CountryDropdown} from './inputs/country-dropdown'
 export {default as Dropdown} from './inputs/dropdown'
-export {default as TextEditor} from './inputs/editor-input'
 export {default as TextArea} from './inputs/textarea-input'
 export {default as EventInput} from './inputs/event-input'
 export {default as GroupInput} from './inputs/group-input'
@@ -136,7 +135,6 @@ export {MuiBaseCustomTheme} from './mui/MuiBaseCustomTheme'
 // these include 3rd party deps
 // export {default as ExtraQuestionsForm } from './extra-questions/index.js';
 // export {default as GMap} from './google-map';
-// export {default as TextEditorV2} from './inputs/editor-input-v2'
 // export {default as TextEditorV3} from './inputs/editor-input-v3'
 // export {default as CompanyInputV2} from './inputs/company-input-v2.js'
 // export {default as UploadInputV3} from './inputs/upload-input-v3'                 // @mui/material, @mui/icons-material, @mui/x-date-pickers, spark-md5, dropzone, react-dropzone

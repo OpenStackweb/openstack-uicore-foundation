@@ -50,7 +50,6 @@ module.exports = {
         'components/inputs/country-dropdown': './src/components/inputs/country-dropdown.js',
         'components/inputs/country-input': './src/components/inputs/country-input.js',
         'components/inputs/dropdown': './src/components/inputs/dropdown.js',
-        'components/inputs/editor-input': './src/components/inputs/editor-input/index.js',
         'components/inputs/event-input': './src/components/inputs/event-input.js',
         'components/inputs/free-multi-text-input': './src/components/inputs/free-multi-text-input.js',
         'components/inputs/group-input': './src/components/inputs/group-input.js',
@@ -78,7 +77,6 @@ module.exports = {
         'components/inputs/stepped-select' : './src/components/inputs/stepped-select/index.jsx',
         'components/bulk-actions-selector' : './src/components/bulk-actions-selector/index.js',
         'components/progressive-img': './src/components/progressive-img/index.js',
-        'components/inputs/editor-input-v2' : './src/components/inputs/editor-input-v2.js',
         'components/inputs/editor-input-v3' : './src/components/inputs/editor-input-v3.js',
 
         // mui components
