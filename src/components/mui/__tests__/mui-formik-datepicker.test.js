@@ -79,17 +79,21 @@ describe("MuiFormikDatepicker", () => {
     // 3am UTC on Nov 6 is still Nov 5 in Los Angeles
     const value = moment.utc("2026-11-06T03:00:00Z");
 
+    // v9 fields render spinbuttons; the formatted value lives on the hidden named input
+    const hiddenInput = (container) =>
+      container.querySelector('input[name="test_date"]');
+
     test("shows the value in the given time zone", () => {
-      renderWithFormik(
+      const { container } = renderWithFormik(
         { timeZone: "America/Los_Angeles" },
         { test_date: value }
       );
-      expect(screen.getByLabelText("Test Date")).toHaveValue("11/05/2026");
+      expect(hiddenInput(container)).toHaveValue("11/05/2026");
     });
 
     test("keeps the value's own time zone without it", () => {
-      renderWithFormik({}, { test_date: value });
-      expect(screen.getByLabelText("Test Date")).toHaveValue("11/06/2026");
+      const { container } = renderWithFormik({}, { test_date: value });
+      expect(hiddenInput(container)).toHaveValue("11/06/2026");
     });
   });
 });
