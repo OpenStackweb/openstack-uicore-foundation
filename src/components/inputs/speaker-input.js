@@ -13,8 +13,8 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import AsyncSelect from 'react-select/lib/Async';
-import { components } from 'react-select/lib/components'
+import AsyncSelect from 'react-select/async';
+import { components } from 'react-select'
 import { querySpeakers } from '../../utils/query-actions';
 
 export default class SpeakerInput extends React.Component {

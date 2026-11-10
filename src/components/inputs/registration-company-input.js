@@ -13,7 +13,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types'
-import AsyncCreatableSelect from "react-select/lib/AsyncCreatable";
+import AsyncCreatableSelect from "react-select/async-creatable";
 import { queryRegistrationCompanies } from '../../utils/query-actions';
 import isEqual from 'lodash/isEqual';
 const NullValue = { value: null, label: '' };

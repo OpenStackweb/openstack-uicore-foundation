@@ -43,7 +43,7 @@ describe('SummitDropdown summitValue state', () => {
         const user = userEvent.setup();
         renderComponent();
 
-        await user.click(screen.getByRole('textbox'));
+        await user.click(screen.getByRole('combobox'));
         await user.click(screen.getByText('Summit A'));
 
         expect(screen.getByRole('button', { name: 'Go' })).toBeEnabled();
@@ -96,7 +96,7 @@ describe('SummitDropdown summitValue state', () => {
         const user = userEvent.setup();
         renderComponent();
 
-        await user.click(screen.getByRole('textbox'));
+        await user.click(screen.getByRole('combobox'));
         await user.click(screen.getByText('Summit A'));
         await user.click(screen.getByRole('button', { name: 'Go' }));
 
@@ -112,7 +112,7 @@ describe('SummitDropdown summitValue state', () => {
         const user = userEvent.setup();
         renderComponent();
 
-        await user.click(screen.getByRole('textbox'));
+        await user.click(screen.getByRole('combobox'));
         await user.click(screen.getByText('Summit A'));
 
         expect(screen.getByRole('button', { name: 'Go' })).toBeEnabled();

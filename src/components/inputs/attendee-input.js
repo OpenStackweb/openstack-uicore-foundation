@@ -13,7 +13,7 @@
 
 import React, {useState} from 'react';
 import PropTypes from 'prop-types';
-import AsyncSelect from 'react-select/lib/Async';
+import AsyncSelect from 'react-select/async';
 import {queryAttendees} from '../../utils/query-actions';
 
 const AttendeeInput = ({id, value, summitId, error, multi, onChange, getOptionValue, getOptionLabel, queryFunction, ...rest}) => {

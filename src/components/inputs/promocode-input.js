@@ -13,7 +13,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import AsyncSelect from 'react-select/lib/Async';
+import AsyncSelect from 'react-select/async';
 import {queryPromocodes} from '../../utils/query-actions';
 import {DEFAULT_PER_PAGE} from '../../utils/constants';
 

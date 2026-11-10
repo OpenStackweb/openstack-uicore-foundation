@@ -12,7 +12,7 @@
  **/
 
 import React from 'react';
-import AsyncSelect from 'react-select/lib/Async';
+import AsyncSelect from 'react-select/async';
 import { queryTicketTypes } from '../../utils/query-actions';
 import PropTypes from 'prop-types';
 
