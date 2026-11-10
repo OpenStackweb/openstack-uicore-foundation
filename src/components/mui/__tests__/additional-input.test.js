@@ -28,7 +28,7 @@ jest.mock("../formik-inputs/additional-input/additional-input-core", () =>
 );
 
 describe("AdditionalInput (v1 entry point)", () => {
-  test("wires the react-beautiful-dnd based MetaFieldValues into the core component", () => {
+  test("wires the @hello-pangea/dnd based MetaFieldValues into the core component", () => {
     render(<AdditionalInput />);
 
     expect(screen.getByTestId("values-component-name")).toHaveTextContent(

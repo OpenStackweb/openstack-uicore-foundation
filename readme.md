@@ -21,7 +21,7 @@ import UploadInputV3 from 'openstack-uicore-foundation/lib/components/inputs/upl
 ```
 
 Components that pull in heavy 3rd-party dependencies (MUI, Stripe,
-react-beautiful-dnd, etc.) are intentionally commented out of
+@hello-pangea/dnd, etc.) are intentionally commented out of
 `src/components/index.js` (see the `// these include 3rd party deps` block)
 so that consumers who don't use them aren't forced to install those peer
 dependencies just to import something unrelated from the barrel. These

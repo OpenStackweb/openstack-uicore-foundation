@@ -141,12 +141,12 @@ export {MuiBaseCustomTheme} from './mui/MuiBaseCustomTheme'
 // export {default as CompanyInputV2} from './inputs/company-input-v2.js'
 // export {default as UploadInputV3} from './inputs/upload-input-v3'                 // @mui/material, @mui/icons-material, @mui/x-date-pickers, spark-md5, dropzone, react-dropzone
 // export {default as UploadInputV4} from './inputs/upload-input-v4'                 // @mui/material, @mui/icons-material, spark-md5, @uppy/core, @uppy/aws-s3
-// export {default as MuiDndList} from './mui/dnd-list'                              // react-beautiful-dnd
-// export {default as MuiSortableTable} from './mui/tables/sortable-table' // react-beautiful-dnd
+// export {default as MuiDndList} from './mui/dnd-list'                              // @hello-pangea/dnd
+// export {default as MuiSortableTable} from './mui/tables/sortable-table' // @hello-pangea/dnd
 // export {default as MuiStripePayment} from './mui/StripePayment'                   // @stripe/react-stripe-js, @stripe/stripe-js
-// export {default as MuiAdditionalInput} from './mui/formik-inputs/additional-input/additional-input' // react-beautiful-dnd (via dnd-list)
+// export {default as MuiAdditionalInput} from './mui/formik-inputs/additional-input/additional-input' // @hello-pangea/dnd (via dnd-list)
 // export {default as MuiAdditionalInputV2} from './mui/formik-inputs/additional-input/additional-input-v2' // @dnd-kit (via DragNDropList)
-// export {default as MuiAdditionalInputList} from './mui/formik-inputs/additional-input/additional-input-list' // react-beautiful-dnd (via dnd-list)
+// export {default as MuiAdditionalInputList} from './mui/formik-inputs/additional-input/additional-input-list' // @hello-pangea/dnd (via dnd-list)
 // export {default as MuiAdditionalInputListV2} from './mui/formik-inputs/additional-input/additional-input-list-v2' // @dnd-kit (via DragNDropList)
 // export {default as MuiDragNDropList} from './mui/DragNDropList'               // @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 // export {OrderPdf, buildRows as buildOrderPdfRows, generateInvoicePDF, previewPDF} from './order-invoice-pdf' // @react-pdf/renderer

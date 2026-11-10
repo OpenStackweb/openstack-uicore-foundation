@@ -28,7 +28,7 @@ jest.mock("../formik-inputs/additional-input/additional-input-list-core", () =>
 );
 
 describe("AdditionalInputList (v1 entry point)", () => {
-  test("wires the react-beautiful-dnd based AdditionalInput into the core list", () => {
+  test("wires the @hello-pangea/dnd based AdditionalInput into the core list", () => {
     render(<AdditionalInputList />);
 
     expect(screen.getByTestId("input-component-name")).toHaveTextContent(

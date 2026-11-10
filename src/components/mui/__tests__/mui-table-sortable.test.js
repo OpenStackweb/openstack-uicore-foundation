@@ -21,7 +21,7 @@ jest.mock("../showConfirmDialog", () => ({
   default: jest.fn()
 }));
 
-jest.mock("react-beautiful-dnd", () => {
+jest.mock("@hello-pangea/dnd", () => {
   const React = require("react");
   return {
     DragDropContext: ({ children }) => <>{children}</>,
