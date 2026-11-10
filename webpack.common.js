@@ -206,7 +206,6 @@ module.exports = {
         fallback: {
             "fs" : false,
             "crypto" : false,
-            "react-google-maps" : false,
             "react-final-form" : false,
         }
     },

@@ -11,145 +11,182 @@
  * limitations under the License.
  **/
 
-import React from 'react';
-import { withGoogleMap, GoogleMap, Marker, InfoWindow } from "react-google-maps";
-import MarkerClusterer from "react-google-maps/lib/components/addons/MarkerClusterer";
-import {arraysEqual} from "../../utils/methods";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import PropTypes from 'prop-types';
+import { APIProvider, InfoWindow, Map, Marker, useMap } from '@vis.gl/react-google-maps';
+import { GridAlgorithm, MarkerClusterer } from '@googlemaps/markerclusterer';
+import { arraysEqual } from '../../utils/methods';
 
 const MAP = {
     defaultZoom: 2,
     defaultCenter: { lat: 30.270166, lng: -97.731271 },
-    options: {
-        minZoom: 1,
-        maxZoom: 19
-    }
+    clusterGridSize: 60,
+    readyPollMs: 100
 };
 
-const GoogleMapWrapper = withGoogleMap((props) => {
-        return  <GoogleMap
-            ref={props.onMapLoad}
-            zoom={ props.zoom }
-            center={ props.center }
-            onBoundsChanged={props.onMapChange}
-            onClick={props.onMapClick}
-        >
-            {props.showMarkers &&
-            <MarkerClusterer
-                averageCenter
-                enableRetinaIcons
-                gridSize={60}
-            >
-                {props.markers.map(marker => (
-                    <Marker
-                        key={marker.id}
-                        position={{ lat: marker.lat, lng: marker.lng }}
-                        onClick={() => props.onToggleInfoWindow(marker.id)}
-                        onDragEnd={props.onMarkerDrag}
-                        draggable={props.draggable}
-                    >
-                        {marker.isInfoWindowOpen &&
-                        <InfoWindow onCloseClick={() => props.onToggleInfoWindow(marker.id)}>
-                            <div>{marker.name}</div>
-                        </InfoWindow>
-                        }
-                    </Marker>
-                ))}
-            </MarkerClusterer>
-            }
-        </GoogleMap>
-    }
-);
+// the app loads the Maps script globally; vis.gl's loader reuses it once importLibrary exists
+const isGoogleMapsReady = () => Boolean(window.google?.maps?.importLibrary);
 
-export class GMap extends React.Component {
+const markerIdsKey = (markers) => markers.map(m => m.id).sort().join();
 
-    constructor(props) {
-        super(props);
+const MapContent = ({ markers: markersProp, center, zoom, draggable, onMarkerDragged, onMapClick, onChangeCallback }) => {
+    const map = useMap();
+    const [markers, setMarkers] = useState(markersProp);
+    const [markerInstances, setMarkerInstances] = useState({});
+    const prevMarkersProp = useRef(markersProp);
+    const clusterer = useRef(null);
 
-        this.state = {
-            markers: props.markers
-        };
+    // keep local markers (with their info-window state) until the consumer sends different ones
+    useEffect(() => {
+        const prevMarkers = prevMarkersProp.current;
+        prevMarkersProp.current = markersProp;
+        if (!arraysEqual(markersProp, prevMarkers)) setMarkers(markersProp);
 
-        this.handleMapLoad = this.handleMapLoad.bind(this);
-        this.handleMapChange = this.handleMapChange.bind(this);
-        this.handleMarkerDrag = this.handleMarkerDrag.bind(this);
-        this.handleMapClick = this.handleMapClick.bind(this);
-    }
-
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        const new_markers = this.props.markers;
-
-        if (!arraysEqual(new_markers, prevProps.markers)) {
-            this.setState({ markers: new_markers });
+        if (map && markersProp.length > 1 && markerIdsKey(markersProp) !== markerIdsKey(prevMarkers)) {
+            const bounds = new google.maps.LatLngBounds();
+            markersProp.forEach(m => bounds.extend(new google.maps.LatLng(m.lat, m.lng)));
+            map.fitBounds(bounds);
         }
+    }, [markersProp, map]);
 
-        let old_markers_str = prevProps.markers.map( m => m.id ).sort().join();
-        let new_markers_str = new_markers.map( m => m.id ).sort().join();
+    useEffect(() => {
+        if (map) map.setZoom(zoom);
+    }, [map, zoom]);
 
-        if (new_markers.length > 1 && old_markers_str !== new_markers_str) {
-            const markerBounds = new google.maps.LatLngBounds();
-            for (let marker of new_markers) {
-                let marker_loc = new google.maps.LatLng(marker.lat, marker.lng);
-                markerBounds.extend(marker_loc);
-            }
-            this._mapComponent.fitBounds(markerBounds);
-        }
+    useEffect(() => {
+        if (map) map.setCenter(center);
+    }, [map, center.lat, center.lng]);
 
-
-    }
-
-    handleMapLoad(map) {
-        this._mapComponent = map;
-    }
-
-    handleMapChange() {
-        let visible_markers = this.props.markers.filter(m => {
-            let marker_loc = new google.maps.LatLng(m.lat, m.lng);
-            return (this._mapComponent.getBounds().contains(marker_loc)) ;
+    useEffect(() => {
+        if (!map) return undefined;
+        clusterer.current = new MarkerClusterer({
+            map,
+            algorithm: new GridAlgorithm({ gridSize: MAP.clusterGridSize })
         });
+        return () => {
+            clusterer.current.clearMarkers();
+            clusterer.current = null;
+        };
+    }, [map]);
 
-        if (this.props.hasOwnProperty('onChangeCallback'))
-            this.props.onChangeCallback(visible_markers);
+    useEffect(() => {
+        if (!clusterer.current) return;
+        clusterer.current.clearMarkers();
+        clusterer.current.addMarkers(Object.values(markerInstances));
+    }, [markerInstances, map]);
+
+    const setMarkerInstance = useCallback((id, instance) => {
+        setMarkerInstances(prev => {
+            if (instance && prev[id] === instance) return prev;
+            if (!instance && !(id in prev)) return prev;
+            const next = { ...prev };
+            if (instance) next[id] = instance;
+            else delete next[id];
+            return next;
+        });
+    }, []);
+
+    // one stable ref callback per marker, so React doesn't detach/reattach (and re-set state) every render
+    const refCallbacks = useRef({});
+    const markerRef = (id) => {
+        if (!refCallbacks.current[id]) {
+            refCallbacks.current[id] = instance => setMarkerInstance(id, instance);
+        }
+        return refCallbacks.current[id];
     };
 
-    handleMarkerClick(marker_id) {
-        let markers = this.state.markers;
-        let is_open = markers.find(m => m.id == marker_id).isInfoWindowOpen;
-        markers.find(m => m.id == marker_id).isInfoWindowOpen = !is_open;
-
-        this.setState({ markers: markers });
+    const toggleInfoWindow = (id) => {
+        setMarkers(prev => prev.map(m => (m.id === id ? { ...m, isInfoWindowOpen: !m.isInfoWindowOpen } : m)));
     };
 
-    handleMarkerDrag(ev) {
-        this.props.onMarkerDragged(ev.latLng.lat(), ev.latLng.lng());
+    const handleBoundsChanged = (ev) => {
+        if (!onChangeCallback) return;
+        const bounds = ev.map.getBounds();
+        onChangeCallback(markersProp.filter(m => bounds.contains(new google.maps.LatLng(m.lat, m.lng))));
     };
 
-    handleMapClick(ev) {
-        this.props.onMapClick(ev.latLng.lat(), ev.latLng.lng());
+    const handleMapClick = (ev) => {
+        if (onMapClick && ev.detail.latLng) onMapClick(ev.detail.latLng.lat, ev.detail.latLng.lng);
     };
 
-    render() {
-        let {markers} = this.state;
-        let {zoom, center} = this.props;
-        let draggable = this.props.hasOwnProperty('draggable');
+    return (
+        <Map
+            defaultZoom={zoom}
+            defaultCenter={center}
+            onBoundsChanged={handleBoundsChanged}
+            onClick={handleMapClick}
+            style={{ height: '100%' }}
+        >
+            {markers.map(marker => (
+                <React.Fragment key={marker.id}>
+                    <Marker
+                        ref={markerRef(marker.id)}
+                        position={{ lat: marker.lat, lng: marker.lng }}
+                        draggable={draggable}
+                        onClick={() => toggleInfoWindow(marker.id)}
+                        onDragEnd={ev => onMarkerDragged && onMarkerDragged(ev.latLng.lat(), ev.latLng.lng())}
+                    />
+                    {marker.isInfoWindowOpen && markerInstances[marker.id] &&
+                    <InfoWindow anchor={markerInstances[marker.id]} onCloseClick={() => toggleInfoWindow(marker.id)}>
+                        <div>{marker.name}</div>
+                    </InfoWindow>
+                    }
+                </React.Fragment>
+            ))}
+        </Map>
+    );
+};
 
-        return (
-            <GoogleMapWrapper
-                showMarkers={markers.length > 0}
-                markers={markers}
-                zoom={ zoom ? zoom : MAP.defaultZoom }
-                center={ center.lat ? center : MAP.defaultCenter }
-                loadingElement={<div style={{ height: `100%` }} />}
-                containerElement={<div style={{ height: `400px` }} />}
-                mapElement={<div style={{ height: `100%` }} />}
-                onMapLoad={this.handleMapLoad}
-                onMapChange={this.handleMapChange}
-                onToggleInfoWindow={this.handleMarkerClick}
-                onMarkerDrag={this.handleMarkerDrag}
-                draggable={draggable}
-                onMapClick={this.handleMapClick}
-            />
-        );
-    }
-}
+export const GMap = (props) => {
+    const [ready, setReady] = useState(isGoogleMapsReady);
+    const { markers, zoom, center } = props;
+
+    // wait for the app's own script so the loader never injects a second one
+    useEffect(() => {
+        if (ready) return undefined;
+        const timer = setInterval(() => {
+            if (isGoogleMapsReady()) {
+                clearInterval(timer);
+                setReady(true);
+            }
+        }, MAP.readyPollMs);
+        return () => clearInterval(timer);
+    }, [ready]);
+
+    return (
+        <div style={{ height: '400px' }}>
+            {ready ? (
+                <APIProvider apiKey="">
+                    <MapContent
+                        markers={markers}
+                        zoom={zoom || MAP.defaultZoom}
+                        center={center?.lat ? center : MAP.defaultCenter}
+                        draggable={Object.prototype.hasOwnProperty.call(props, 'draggable')}
+                        onMarkerDragged={props.onMarkerDragged}
+                        onMapClick={props.onMapClick}
+                        onChangeCallback={props.onChangeCallback}
+                    />
+                </APIProvider>
+            ) : (
+                <div style={{ height: '100%' }} />
+            )}
+        </div>
+    );
+};
+
+GMap.propTypes = {
+    /** [{ id, lat, lng, name, isInfoWindowOpen? }] */
+    markers: PropTypes.array.isRequired,
+    center: PropTypes.shape({ lat: PropTypes.number, lng: PropTypes.number }),
+    zoom: PropTypes.number,
+    /** Presence makes markers draggable, as before (the value is not read). */
+    draggable: PropTypes.bool,
+    /** Receives (lat, lng) when a marker is dropped. */
+    onMarkerDragged: PropTypes.func,
+    /** Receives (lat, lng) when the map is clicked. */
+    onMapClick: PropTypes.func,
+    /** Receives the markers inside the visible bounds whenever they change. */
+    onChangeCallback: PropTypes.func
+};
 
 export default GMap;
