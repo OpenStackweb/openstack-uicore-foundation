@@ -11,7 +11,7 @@
  * limitations under the License.
  * */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import { FormControl, FormHelperText, MenuItem, Select } from "@mui/material";
 import PropTypes from "prop-types";
 import { querySummitAddons } from "../../utils/query-actions";
@@ -25,6 +25,7 @@ const AddonTypeSelect = ({
   helperText = ""
 }) => {
   const [options, setOptions] = useState([]);
+  const helperTextId = useId();
 
   useEffect(() => {
     querySummitAddons((results) => {
@@ -47,6 +48,7 @@ const AddonTypeSelect = ({
         name={name}
         value={value}
         onChange={handleChange}
+        aria-describedby={helperText ? helperTextId : undefined}
         displayEmpty
         renderValue={(selected) => {
           if (!selected) {
@@ -62,7 +64,7 @@ const AddonTypeSelect = ({
           </MenuItem>
         ))}
       </Select>
-      {helperText && <FormHelperText>{helperText}</FormHelperText>}
+      {helperText && <FormHelperText id={helperTextId}>{helperText}</FormHelperText>}
     </FormControl>
   );
 };

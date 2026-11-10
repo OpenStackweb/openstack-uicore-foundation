@@ -267,7 +267,6 @@ const FormItemTable = ({
                       label=""
                       size="small"
                       inCents
-                      slotProps={{ htmlInput: { step: 0.01 } }}
                     />
                   </TableCell>
                   <TableCell
