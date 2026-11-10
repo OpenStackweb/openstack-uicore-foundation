@@ -32,7 +32,31 @@ will not resolve them.
 
 * TIMEINTERVALSINCE1970_API_URL                         = URL used on clock component to get server time   
 
-1 - yarn build && yarn publish
+## How to publish new version
+
+Publishing is manual; CI only builds and tests, it never publishes.
+
+Stable release, from an up-to-date `main`:
+
+```bash
+yarn build
+yarn publish --new-version X.Y.Z   # bumps package.json, commits "vX.Y.Z", creates tag vX.Y.Z, publishes as `latest`
+git push origin main               # the version-bump commit (open a PR instead if main is protected)
+git push origin vX.Y.Z             # push only this tag
+```
+
+Beta release, from the feature branch:
+
+```bash
+yarn build
+yarn publish --new-version X.Y.Z-beta.N --tag beta   # `--tag beta` keeps `latest` pointing at the stable version
+git push origin vX.Y.Z-beta.N
+```
+
+Notes:
+- Tags always carry the `v` prefix (`v5.0.73`, not `5.0.73`).
+- `yarn publish --new-version` already creates the tag, so don't run `git tag` afterwards; it fails with "already exists".
+- Avoid `git push origin --tags`: it pushes every local tag, including betas that were never meant to be on origin.
 
 
 ## React compatibility
