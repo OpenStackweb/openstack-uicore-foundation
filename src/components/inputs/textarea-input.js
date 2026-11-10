@@ -14,7 +14,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const TextArea = ({ onChange, value, className, error, maxLength, ...rest }) => {
+const TextArea = ({ onChange, value = "", className, error, maxLength, ...rest }) => {
     const has_error = error && error !== '';
     const class_name = className ? className : 'form-control';
     const charCountLeft = Math.max(maxLength - value.length, 0);
@@ -61,8 +61,5 @@ TextArea.propTypes = {
     maxLength: PropTypes.number
 };
 
-TextArea.defaultProps = {
-    value: ""
-};
 
 export default TextArea;

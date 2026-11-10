@@ -15,7 +15,16 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
 
-const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, className, isDisabled, isClearable, options, selectStyles, customStyle, ...rest }) => {
+const DEFAULT_OPTIONS = [
+    { value: '>', label: 'Greater than' },
+    { value: '<', label: 'Less than' },
+    { value: '>=', label: 'Greater or Equal' },
+    { value: '<=', label: 'Less or Equal' },
+    { value: '==', label: 'Equal' },
+    { value: 'between', label: 'Between' },
+];
+
+const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, className, isDisabled, isClearable, options = DEFAULT_OPTIONS, selectStyles, customStyle, ...rest }) => {
 
     // Set intial valus from value property, if is an array operator as between, and extract the operator and digits is the value is a string
     const [operatorValue, setOperatorValue] = useState(value ? Array.isArray(value) ? { value: 'between', label: 'Between' } : options.find(e => e.value === value.replace(/\d/g, '')) : ({ value: null, label: '' }));
@@ -130,16 +139,6 @@ const OperatorInput = ({ error, label, value, onChange, id, multi, isMulti, clas
 
 export default OperatorInput;
 
-OperatorInput.defaultProps = {
-    options: [
-        { value: '>', label: 'Greater than' },
-        { value: '<', label: 'Less than' },
-        { value: '>=', label: 'Greater or Equal' },
-        { value: '<=', label: 'Less or Equal' },
-        { value: '==', label: 'Equal' },
-        { value: 'between', label: 'Between' },
-    ],
-};
 
 OperatorInput.propTypes = {
     /** Either a scalar like '>10', or a two-element array for the 'between' operator. */

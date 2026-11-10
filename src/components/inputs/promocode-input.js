@@ -17,7 +17,9 @@ import AsyncSelect from 'react-select/lib/Async';
 import {queryPromocodes} from '../../utils/query-actions';
 import {DEFAULT_PER_PAGE} from '../../utils/constants';
 
-const PromocodeInput = ({summitId, error, value, onChange, id, multi, perPage, extraFilters, ...rest}) => {
+const NO_EXTRA_FILTERS = [];
+
+const PromocodeInput = ({summitId, error, value, onChange, id, multi, perPage = DEFAULT_PER_PAGE, extraFilters = NO_EXTRA_FILTERS, ...rest}) => {
 
     const handleChange = (value) => {
         let theValue = null;
@@ -87,9 +89,5 @@ PromocodeInput.propTypes = {
     extraFilters: PropTypes.array
 };
 
-PromocodeInput.defaultProps = {
-    perPage: DEFAULT_PER_PAGE,
-    extraFilters: []
-};
 
 export default PromocodeInput;

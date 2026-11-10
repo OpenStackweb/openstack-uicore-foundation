@@ -18,11 +18,11 @@ import SearchInput from "./search-input";
 import ArchiveToggle from "./archive-toggle";
 
 const GridToolbar = ({
-  searchProps,
-  archiveToggleProps,
-  filter,
+  searchProps = null,
+  archiveToggleProps = null,
+  filter = null,
   children,
-  splitAt
+  splitAt = "sm"
 }) => {
   const hasSearch = !!searchProps;
   // the archive toggle and a page's own filter share the same cell
@@ -129,11 +129,5 @@ GridToolbar.propTypes = {
   splitAt: PropTypes.oneOf(["xs", "sm", "md", "lg", "xl"])
 };
 
-GridToolbar.defaultProps = {
-  searchProps: null,
-  archiveToggleProps: null,
-  filter: null,
-  splitAt: "sm"
-};
 
 export default GridToolbar;

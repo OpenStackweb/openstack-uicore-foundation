@@ -16,7 +16,7 @@ import PropTypes from "prop-types";
 import {Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from "@mui/material";
 import T from "i18n-react";
 
-const ConfirmDeleteDialog = ({ open, onClose, onConfirm, message }) => {
+const ConfirmDeleteDialog = ({ open, onClose, onConfirm, message = "" }) => {
   return (
     <Dialog
       open={open}
@@ -51,8 +51,5 @@ ConfirmDeleteDialog.propTypes = {
   message: PropTypes.string
 };
 
-ConfirmDeleteDialog.defaultProps = {
-  message: ""
-};
 
 export default ConfirmDeleteDialog;

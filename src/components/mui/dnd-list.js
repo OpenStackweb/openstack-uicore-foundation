@@ -30,9 +30,9 @@ const DragAndDropList = ({
   items,
   onReorder,
   renderItem,
-  idKey,
-  updateOrderKey,
-  droppableId
+  idKey = "id",
+  updateOrderKey = "order",
+  droppableId = "droppable"
 }) => {
   const handleDragEnd = (result) => {
     if (!result.destination) return;
@@ -93,10 +93,5 @@ DragAndDropList.propTypes = {
   droppableId: PropTypes.string
 };
 
-DragAndDropList.defaultProps = {
-  idKey: "id",
-  updateOrderKey: "order",
-  droppableId: "droppable"
-};
 
 export default DragAndDropList;

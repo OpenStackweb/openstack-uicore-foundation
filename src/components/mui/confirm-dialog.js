@@ -35,16 +35,16 @@ const iconMap = {
 };
 
 const ConfirmDialog = ({
-  open,
+  open = false,
   title,
   text,
-  iconType = "",
+  iconType = "warning",
   onConfirm,
   onCancel,
   confirmButtonText = "Confirm",
   confirmButtonColor = "primary",
   cancelButtonText = "Cancel",
-  cancelButtonColor = "primary"
+  cancelButtonColor = "default"
 }) => (
   <Dialog open={open} onClose={onCancel}>
     <DialogTitle sx={{ p: 2 }} component="div">
@@ -96,13 +96,5 @@ ConfirmDialog.propTypes = {
   cancelButtonColor: PropTypes.string
 };
 
-ConfirmDialog.defaultProps = {
-  open: false,
-  iconType: "warning",
-  confirmButtonText: "Confirm",
-  confirmButtonColor: "primary",
-  cancelButtonText: "Cancel",
-  cancelButtonColor: "default"
-};
 
 export default ConfirmDialog;

@@ -22,7 +22,7 @@ const isLive = (event, nowUtc) => {
     return hasStarted && !hasEnded;
 };
 
-const CircleButton = ({event, isScheduled, nowUtc, addToSchedule, removeFromSchedule, enterClick, alwaysShowEnter}) => {
+const CircleButton = ({event, isScheduled, nowUtc, addToSchedule = null, removeFromSchedule = null, enterClick, alwaysShowEnter = false}) => {
 
     const isLiveNow = isLive(event, nowUtc);
     let buttonClass = null;
@@ -69,10 +69,5 @@ CircleButton.propTypes = {
     alwaysShowEnter: PropTypes.bool,
 };
 
-CircleButton.defaultProps = {
-    addToSchedule: null,
-    removeFromSchedule: null,
-    alwaysShowEnter: false
-};
 
 export default CircleButton;

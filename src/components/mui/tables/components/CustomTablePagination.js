@@ -29,8 +29,8 @@ const CustomTablePagination = ({
   currentPage,
   onPageChange,
   onPerPageChange,
-  showRange,
-  pageSliderVisible
+  showRange = false,
+  pageSliderVisible = false
 }) => {
   const perPageOptions = React.useMemo(
     () =>
@@ -126,9 +126,5 @@ CustomTablePagination.propTypes = {
   pageSliderVisible: PropTypes.bool
 };
 
-CustomTablePagination.defaultProps = {
-  showRange: false,
-  pageSliderVisible: false
-};
 
 export default CustomTablePagination;

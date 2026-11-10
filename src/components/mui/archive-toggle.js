@@ -20,7 +20,7 @@ const ACTIVE = "active";
 const ARCHIVED = "archived";
 
 // segmented control: a grid shows either its active or its archived rows, never both
-const ArchiveToggle = ({ showArchived, onChange }) => (
+const ArchiveToggle = ({ showArchived = false, onChange }) => (
   <ToggleButtonGroup
     exclusive
     color="primary"
@@ -41,8 +41,5 @@ ArchiveToggle.propTypes = {
   onChange: PropTypes.func.isRequired
 };
 
-ArchiveToggle.defaultProps = {
-  showArchived: false
-};
 
 export default ArchiveToggle;

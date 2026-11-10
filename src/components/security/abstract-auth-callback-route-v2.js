@@ -24,7 +24,9 @@ import {
 import {getCurrentPathName, getCurrentHref} from '../../utils/methods';
 import {getOAuth2Flow} from '../../utils/config';
 
-const AbstractAuthorizationCallbackRouteV2 = ({issuer, audience, location, callback, redirectToError, onUserAuth}) => {
+const noop = () => {};
+
+const AbstractAuthorizationCallbackRouteV2 = ({issuer, audience, location, callback = noop, redirectToError = noop, onUserAuth}) => {
     // we only use this for the redirectToError, so its initial state should be true
     const [isTokenValid, setTokenValid] = useState(true);
     const [errorRes, setErrorRes] = useState({error:null, description:null});
@@ -201,10 +203,6 @@ AbstractAuthorizationCallbackRouteV2.propTypes = {
     onUserAuth: PropTypes.func.isRequired
 };
 
-AbstractAuthorizationCallbackRouteV2.defaultProps = {
-    callback: () => {},
-    redirectToError: () => {}
-}
 
 export default memo(AbstractAuthorizationCallbackRouteV2);
 

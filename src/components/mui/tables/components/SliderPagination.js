@@ -23,7 +23,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import PropTypes from "prop-types";
 
-const SliderPagination = ({ currentPage, totalRows, perPage, onPageChange, initialExpanded }) => {
+const SliderPagination = ({ currentPage, totalRows = 0, perPage, onPageChange, initialExpanded = false }) => {
   const totalPages = Math.max(1, Math.ceil((totalRows ?? 0) / perPage));
   const [expanded, setExpanded] = useState(initialExpanded);
   const [dragValue, setDragValue] = useState(currentPage);
@@ -166,9 +166,5 @@ SliderPagination.propTypes = {
   initialExpanded: PropTypes.bool
 };
 
-SliderPagination.defaultProps = {
-  totalRows: 0,
-  initialExpanded: false
-};
 
 export default SliderPagination;
