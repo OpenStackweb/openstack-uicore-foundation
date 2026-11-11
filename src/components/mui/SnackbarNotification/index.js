@@ -14,16 +14,25 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import { Alert, Snackbar, Typography } from "@mui/material";
+import T from "i18n-react/dist/i18n-react";
+import {
+  Alert,
+  Box,
+  Collapse,
+  Link,
+  Snackbar,
+  Typography
+} from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import SnackbarNotificationContext from "./Context";
 export { useSnackbarMessage } from "./Context";
 import {
+  MILLISECONDS_IN_SECOND,
   NOTIFICATION_DEDUPE_WINDOW,
   NOTIFICATION_TIMEOUT
 } from "../../../utils/constants";
-import { empty } from "../../../utils/methods";
+import { empty, formatEpoch } from "../../../utils/methods";
 import { clearSnackbarMessage } from "../../../utils/actions";
 
 /*
@@ -32,22 +41,33 @@ import { clearSnackbarMessage } from "../../../utils/actions";
  - snackbarErrorHandler and snackbarSuccessHandler actions from base-actions that change the base reducer
  */
 
-// one queue: the message on screen, then the ones waiting their turn
-const useMessageQueue = (clearSnackbarMessage) => {
-  const [open, setOpen] = useState(false);
+const formatSentAt = (msg) =>
+  formatEpoch(msg.receivedAt / MILLISECONDS_IN_SECOND, "h:mm:ss a");
+
+// a queue shows its first message, a group shows all of them at once
+const useMessages = (clearSnackbarMessage, { grouped = false } = {}) => {
   const [messages, setMessages] = useState([]);
-  const [current] = messages;
-  // the message fading out, so a repeat of it still shows
-  const closingRef = useRef(null);
+  // the messages fading out stay on screen until they are gone
+  const [closing, setClosing] = useState(null);
+  const shown = closing || (grouped ? messages : messages.slice(0, 1));
+  const current = shown[shown.length - 1];
+  const open = !closing && shown.length > 0;
+  // the history listener only sees the first render, so it reads refs
+  const shownRef = useRef(shown);
+  useEffect(() => {
+    shownRef.current = shown;
+  });
+  // a copy of closing for callbacks that only see the first render
+  const closingRef = useRef([]);
   const add = (msg) =>
     setMessages((prev) => {
       // a blank message never opens, since it would block the queue
       if (empty(msg.html)) return prev;
       const now = Date.now();
-      // skip a repeat that arrived within the dedupe window
+      // skip a repeat within the dedupe window, unless the first is fading out
       const isRepeat = prev.some(
         (m) =>
-          m !== closingRef.current &&
+          !closingRef.current.includes(m) &&
           m.html === msg.html &&
           m.type === msg.type &&
           now - m.receivedAt < NOTIFICATION_DEDUPE_WINDOW
@@ -57,40 +77,55 @@ const useMessageQueue = (clearSnackbarMessage) => {
       return [...prev, next];
     });
 
+  // closes what is on screen; anything newer shows once it has faded out
   const close = () => {
-    closingRef.current = current;
-    setOpen(false);
+    if (!shownRef.current.length) return;
+    closingRef.current = shownRef.current;
+    setClosing(shownRef.current);
   };
 
   const onExited = () => {
+    const closed = closingRef.current;
+    closingRef.current = [];
     clearSnackbarMessage();
-    setMessages(([, ...rest]) => rest);
+    setMessages((prev) => prev.filter((m) => !closed.includes(m)));
+    setClosing(null);
   };
 
-  useEffect(() => {
-    if (!empty(current?.html)) {
-      setOpen(true);
-    }
-  }, [current]);
-
-  return { open, current, add, close, onExited, setMessages };
+  return { open, current, shown, add, close, onExited };
 };
 
 const NotificationSnackbar = ({ queue, vertical }) => {
   const msgData = queue.current || {};
   const isSuccess = msgData.type === "success";
+  const count = queue.shown.length;
+  const newestFirst = [...queue.shown].reverse();
+  const [expanded, setExpanded] = useState(false);
+  const detailsLabel = T.translate(
+    expanded
+      ? "snackbar_notification.hide_details"
+      : "snackbar_notification.view_details",
+    { count }
+  );
 
-  const onClose = (_, reason) => {
+  const onClose = (event, reason) => {
     // messages ignore clickaways
     if (reason === "clickaway") return;
+    // one Escape press closes one snackbar
+    if (reason === "escapeKeyDown") event.preventDefault();
     queue.close();
+  };
+
+  const onExited = () => {
+    setExpanded(false);
+    queue.onExited();
   };
 
   return (
     <Snackbar
       open={queue.open}
       onClose={onClose}
-      slotProps={{ transition: { onExited: queue.onExited } }}
+      slotProps={{ transition: { onExited } }}
       anchorOrigin={{ vertical, horizontal: "center" }}
       autoHideDuration={isSuccess ? NOTIFICATION_TIMEOUT : null}
     >
@@ -109,6 +144,51 @@ const NotificationSnackbar = ({ queue, vertical }) => {
           component="div"
           dangerouslySetInnerHTML={{ __html: msgData.html }}
         />
+        {count > 1 && (
+          <>
+            <Link
+              component="button"
+              type="button"
+              variant="body2"
+              color="inherit"
+              underline="hover"
+              aria-expanded={expanded}
+              onClick={() => setExpanded((isOpen) => !isOpen)}
+              sx={{ fontWeight: "medium" }}
+            >
+              {detailsLabel}
+            </Link>
+            <Collapse in={expanded}>
+              <Box
+                component="ul"
+                sx={{
+                  m: 0,
+                  p: 0,
+                  listStyle: "none",
+                  maxHeight: "40vh",
+                  overflowY: "auto"
+                }}
+              >
+                {newestFirst.map((m) => (
+                  <Box
+                    component="li"
+                    key={`${m.receivedAt}-${m.html}`}
+                    sx={{ mb: 1 }}
+                  >
+                    <Typography variant="caption" component="div">
+                      {formatSentAt(m)}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      component="div"
+                      dangerouslySetInnerHTML={{ __html: m.html }}
+                    />
+                  </Box>
+                ))}
+              </Box>
+            </Collapse>
+          </>
+        )}
       </Alert>
     </Snackbar>
   );
@@ -120,11 +200,9 @@ const SnackbarNotification = ({
   clearSnackbarMessage,
   history
 }) => {
-  // separate queues, so a success never waits behind an error
-  const errors = useMessageQueue(clearSnackbarMessage);
-  const successes = useMessageQueue(clearSnackbarMessage);
-  // bumped when the page path changes
-  const [pageChanges, setPageChanges] = useState(0);
+  // separate lists, so a success never waits behind an error
+  const errors = useMessages(clearSnackbarMessage, { grouped: true });
+  const successes = useMessages(clearSnackbarMessage);
   const addMessage = (msg) =>
     (msg.type === "success" ? successes : errors).add(msg);
   // this two methods are for on-demand messaging
@@ -132,25 +210,16 @@ const SnackbarNotification = ({
   const errorMessage = (msg) => addMessage({ html: msg, type: "warning" });
   const messageContext = useMemo(() => ({ successMessage, errorMessage }), []);
 
-  // drop waiting errors on a path change, before the new page adds its own
+  // leaving a page closes its errors, successes keep their timer
   useEffect(() => {
     if (!history) return;
     let path = history.location.pathname;
     return history.listen(() => {
       if (history.location.pathname === path) return;
       path = history.location.pathname;
-      errors.setMessages(([head]) => (head ? [head] : []));
-      setPageChanges((n) => n + 1);
+      errors.close();
     });
   }, [history]);
-
-  // leaving a page closes its error, successes keep their timer
-  useEffect(() => {
-    if (!pageChanges) return;
-    if (errors.open) {
-      errors.close();
-    }
-  }, [pageChanges]);
 
   // when snackbarMessage changes in base-reducer, we trigger the snackbar
   useEffect(() => {

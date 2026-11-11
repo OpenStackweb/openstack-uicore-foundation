@@ -78,7 +78,7 @@ describe("SnackbarNotification", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  describe("pinned errors and replacement", () => {
+  describe("pinned and grouped errors", () => {
     const errorA = { html: "First error", type: "warning" };
     const errorB = { html: "Second error", type: "error" };
     let clearSnackbarMessage;
@@ -99,6 +99,13 @@ describe("SnackbarNotification", () => {
 
     const close = () =>
       fireEvent.click(screen.getByRole("button", { name: /close/i }));
+
+    const openDetails = () =>
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: "snackbar_notification.view_details"
+        })
+      );
 
     beforeEach(() => {
       jest.useFakeTimers();
@@ -128,17 +135,37 @@ describe("SnackbarNotification", () => {
       expect(screen.getByText("First error")).toBeInTheDocument();
     });
 
-    test("shows the next message only after the current one is closed", () => {
+    test("closes every error in the group at once", () => {
       const { rerender } = render(ui(errorA));
       rerender(ui(errorB));
       advance(1000);
-      expect(screen.getByText("First error")).toBeInTheDocument();
-      expect(screen.queryByText("Second error")).not.toBeInTheDocument();
 
       close();
       advance(1000);
       expect(screen.queryByText("First error")).not.toBeInTheDocument();
+      expect(screen.queryByText("Second error")).not.toBeInTheDocument();
+      expect(clearSnackbarMessage).toHaveBeenCalledTimes(1);
+    });
+
+    test("shows an error that arrives while the group fades out", () => {
+      const { rerender } = render(ui(errorA));
+      close();
+      rerender(ui(errorB));
+      // the fading snackbar keeps its own text
+      expect(screen.queryByText("Second error")).not.toBeInTheDocument();
+      advance(1000);
+      expect(screen.queryByText("First error")).not.toBeInTheDocument();
       expect(screen.getByText("Second error")).toBeInTheDocument();
+    });
+
+    test("closes one snackbar per Escape press", () => {
+      const { rerender } = render(ui(errorA));
+      rerender(ui({ html: "Saved", type: "success" }));
+      advance(0);
+
+      fireEvent.keyDown(document, { key: "Escape" });
+      advance(1000);
+      expect(screen.getAllByRole("alert")).toHaveLength(1);
     });
 
     test("shows a success next to an error without waiting", () => {
@@ -175,7 +202,7 @@ describe("SnackbarNotification", () => {
       expect(screen.queryByText("Saved again")).not.toBeInTheDocument();
     });
 
-    test("shows both in order when two arrive in the same render", () => {
+    test("groups two errors from the same render, newest first", () => {
       const TwoErrors = () => {
         const { errorMessage } = useSnackbarMessage();
         return (
@@ -200,12 +227,11 @@ describe("SnackbarNotification", () => {
       );
 
       fireEvent.click(screen.getByText("send"));
-      expect(screen.getByText("First error")).toBeInTheDocument();
-
-      close();
-      advance(1000);
-      expect(screen.queryByText("First error")).not.toBeInTheDocument();
-      expect(screen.getByText("Second error")).toBeInTheDocument();
+      openDetails();
+      const items = screen.getAllByRole("listitem");
+      expect(items).toHaveLength(2);
+      expect(items[0]).toHaveTextContent("Second error");
+      expect(items[1]).toHaveTextContent("First error");
     });
 
     test("ignores a repeat within the dedupe window", () => {
@@ -220,23 +246,21 @@ describe("SnackbarNotification", () => {
 
     test("shows a repeat that arrives after the error is closed", () => {
       const { rerender } = render(ui(errorA));
-      fireEvent.click(screen.getByRole("button", { name: /close/i }));
+      close();
       rerender(ui({ ...errorA }));
       advance(1000);
 
       expect(screen.getByText("First error")).toBeInTheDocument();
     });
 
-    test("queues a repeat that arrives after the dedupe window", () => {
+    test("groups a repeat that arrives after the dedupe window", () => {
       const { rerender } = render(ui(errorA));
       advance(NOTIFICATION_DEDUPE_WINDOW);
       rerender(ui({ ...errorA }));
       advance(1000);
 
-      close();
-      advance(1000);
-      expect(clearSnackbarMessage).toHaveBeenCalledTimes(1);
-      expect(screen.getByText("First error")).toBeInTheDocument();
+      openDetails();
+      expect(screen.getAllByRole("listitem")).toHaveLength(2);
     });
 
     test("ignores a blank message so the next one still shows", () => {
@@ -303,13 +327,30 @@ describe("SnackbarNotification", () => {
         expect(screen.getByText("Saved")).toBeInTheDocument();
       });
 
-      test("drops an error waiting behind the message on screen", () => {
+      test("closes every error in the group", () => {
         const { rerender } = render(page(errorA));
         rerender(page(errorB));
         changePage("/other");
         advance(1000);
-        advance(1000);
+        expect(screen.queryByText("First error")).not.toBeInTheDocument();
         expect(screen.queryByText("Second error")).not.toBeInTheDocument();
+      });
+
+      test("shows an error after leaving a page with none on screen", () => {
+        const { rerender } = render(page(null));
+        changePage("/other");
+        rerender(page(errorA));
+        advance(1000);
+        expect(screen.getByText("First error")).toBeInTheDocument();
+      });
+
+      test("keeps an error that arrives while the group fades out", () => {
+        const { rerender } = render(page(errorA));
+        close();
+        rerender(page(errorB));
+        changePage("/other");
+        advance(1000);
+        expect(screen.getByText("Second error")).toBeInTheDocument();
       });
 
       test("keeps an error the new page adds on mount", () => {
