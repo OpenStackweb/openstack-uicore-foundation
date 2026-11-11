@@ -154,6 +154,15 @@ describe("SnackbarNotification", () => {
     expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
   });
 
+  test("says the copy failed when there is no clipboard", () => {
+    render(ui({ html: "Not found", type: "warning" }));
+
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+
+    expect(screen.getByRole("status")).toHaveTextContent("general.copy_failed");
+    expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
+  });
+
   test("keeps a newer copy's check mark when an earlier copy finishes late", async () => {
     let acceptFirst;
     mockClipboard(
