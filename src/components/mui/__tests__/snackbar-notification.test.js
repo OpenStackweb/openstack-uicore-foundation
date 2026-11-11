@@ -16,7 +16,7 @@ jest.mock("react-redux", () => ({
 }));
 
 jest.mock("../../../utils/actions", () => ({
-  clearSnackbarMessage: jest.fn()
+  clearConsumedSnackbarMessage: jest.fn()
 }));
 
 import React from "react";
@@ -34,7 +34,7 @@ import {
 describe("SnackbarNotification", () => {
   test("renders children", () => {
     render(
-      <SnackbarNotification clearSnackbarMessage={jest.fn()}>
+      <SnackbarNotification clearConsumedSnackbarMessage={jest.fn()}>
         <div>Child content</div>
       </SnackbarNotification>
     );
@@ -45,7 +45,7 @@ describe("SnackbarNotification", () => {
     render(
       <SnackbarNotification
         snackbarMessage={{ html: "Operation successful!", type: "success" }}
-        clearSnackbarMessage={jest.fn()}
+        clearConsumedSnackbarMessage={jest.fn()}
       >
         <div>App</div>
       </SnackbarNotification>
@@ -57,7 +57,7 @@ describe("SnackbarNotification", () => {
     render(
       <SnackbarNotification
         snackbarMessage={{ html: "Something went wrong", type: "warning" }}
-        clearSnackbarMessage={jest.fn()}
+        clearConsumedSnackbarMessage={jest.fn()}
       >
         <div>App</div>
       </SnackbarNotification>
@@ -69,7 +69,7 @@ describe("SnackbarNotification", () => {
     render(
       <SnackbarNotification
         snackbarMessage={null}
-        clearSnackbarMessage={jest.fn()}
+        clearConsumedSnackbarMessage={jest.fn()}
       >
         <div>App</div>
       </SnackbarNotification>
@@ -81,12 +81,12 @@ describe("SnackbarNotification", () => {
   describe("pinned and grouped errors", () => {
     const errorA = { html: "First error", type: "warning" };
     const errorB = { html: "Second error", type: "error" };
-    let clearSnackbarMessage;
+    let clearConsumedSnackbarMessage;
 
     const ui = (snackbarMessage) => (
       <SnackbarNotification
         snackbarMessage={snackbarMessage}
-        clearSnackbarMessage={clearSnackbarMessage}
+        clearConsumedSnackbarMessage={clearConsumedSnackbarMessage}
       >
         <div>App</div>
       </SnackbarNotification>
@@ -109,7 +109,7 @@ describe("SnackbarNotification", () => {
 
     beforeEach(() => {
       jest.useFakeTimers();
-      clearSnackbarMessage = jest.fn();
+      clearConsumedSnackbarMessage = jest.fn();
     });
     afterEach(() => jest.useRealTimers());
 
@@ -144,7 +144,12 @@ describe("SnackbarNotification", () => {
       advance(1000);
       expect(screen.queryByText("First error")).not.toBeInTheDocument();
       expect(screen.queryByText("Second error")).not.toBeInTheDocument();
-      expect(clearSnackbarMessage).toHaveBeenCalledTimes(1);
+    });
+
+    test("clears the redux message while the error stays pinned", () => {
+      render(ui(errorA));
+      expect(clearConsumedSnackbarMessage).toHaveBeenCalledWith(errorA);
+      expect(screen.getByText("First error")).toBeInTheDocument();
     });
 
     test("shows an error that arrives while the group fades out", () => {
@@ -220,7 +225,7 @@ describe("SnackbarNotification", () => {
       render(
         <SnackbarNotification
           snackbarMessage={null}
-          clearSnackbarMessage={clearSnackbarMessage}
+          clearConsumedSnackbarMessage={clearConsumedSnackbarMessage}
         >
           <TwoErrors />
         </SnackbarNotification>
@@ -281,7 +286,7 @@ describe("SnackbarNotification", () => {
       render(
         <SnackbarNotification
           snackbarMessage={null}
-          clearSnackbarMessage={clearSnackbarMessage}
+          clearConsumedSnackbarMessage={clearConsumedSnackbarMessage}
         >
           <BlankThenError />
         </SnackbarNotification>
@@ -297,7 +302,7 @@ describe("SnackbarNotification", () => {
       const page = (snackbarMessage, children = <div>App</div>) => (
         <SnackbarNotification
           snackbarMessage={snackbarMessage}
-          clearSnackbarMessage={clearSnackbarMessage}
+          clearConsumedSnackbarMessage={clearConsumedSnackbarMessage}
           history={history}
         >
           {children}

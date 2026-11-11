@@ -33,7 +33,7 @@ import {
   NOTIFICATION_TIMEOUT
 } from "../../../utils/constants";
 import { empty, formatEpoch } from "../../../utils/methods";
-import { clearSnackbarMessage } from "../../../utils/actions";
+import { clearConsumedSnackbarMessage } from "../../../utils/actions";
 
 /*
  This component works in two ways:
@@ -45,7 +45,7 @@ const formatSentAt = (msg) =>
   formatEpoch(msg.receivedAt / MILLISECONDS_IN_SECOND, "h:mm:ss a");
 
 // a queue shows its first message, a group shows all of them at once
-const useMessages = (clearSnackbarMessage, { grouped = false } = {}) => {
+const useMessages = ({ grouped = false } = {}) => {
   const [messages, setMessages] = useState([]);
   // the messages fading out stay on screen until they are gone
   const [closing, setClosing] = useState(null);
@@ -87,7 +87,6 @@ const useMessages = (clearSnackbarMessage, { grouped = false } = {}) => {
   const onExited = () => {
     const closed = closingRef.current;
     closingRef.current = [];
-    clearSnackbarMessage();
     setMessages((prev) => prev.filter((m) => !closed.includes(m)));
     setClosing(null);
   };
@@ -197,12 +196,12 @@ const NotificationSnackbar = ({ queue, vertical }) => {
 const SnackbarNotification = ({
   children,
   snackbarMessage,
-  clearSnackbarMessage,
+  clearConsumedSnackbarMessage,
   history
 }) => {
   // separate lists, so a success never waits behind an error
-  const errors = useMessages(clearSnackbarMessage, { grouped: true });
-  const successes = useMessages(clearSnackbarMessage);
+  const errors = useMessages({ grouped: true });
+  const successes = useMessages();
   const addMessage = (msg) =>
     (msg.type === "success" ? successes : errors).add(msg);
   // this two methods are for on-demand messaging
@@ -225,6 +224,8 @@ const SnackbarNotification = ({
   useEffect(() => {
     if (!empty(snackbarMessage?.html)) {
       addMessage(snackbarMessage);
+      // the list owns it now, so a persisted store won't replay it on reload
+      clearConsumedSnackbarMessage(snackbarMessage);
     }
   }, [snackbarMessage]);
 
@@ -250,6 +251,6 @@ const mapStateToProps = ({ baseState }) => ({
   snackbarMessage: baseState.snackbarMessage
 });
 
-export default connect(mapStateToProps, { clearSnackbarMessage })(
+export default connect(mapStateToProps, { clearConsumedSnackbarMessage })(
   SnackbarNotification
 );
