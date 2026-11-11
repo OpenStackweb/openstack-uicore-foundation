@@ -63,13 +63,14 @@ const notifySnackbarError = (message, callback) => (dispatch) => {
 };
 
 // secrets, payment details and personal information are never copied
-const SENSITIVE_KEYS = /^(.*_key|.*(token|secret|password).*|hash|.*emails?|.*phone.*|.*(first|last)_name|.*full_?names?|surname|(.*_)?owner_name|requestor_name|(.*_)?address(\d|_.*)?|zip_code|gender|ip|payment_info_details|payment_gateway_result)$/i;
+const SENSITIVE_KEYS = /^(.*_key|.*(token|secret|password).*|hash|.*emails?|.*phone.*|.*(first|last)_name|.*full_?names?|surname|(.*_)?owner_name|requestor_name|(.*_)?address(\d|_.*)?|zip_code|gender|ip|payment_info_details|payment_gateway_result|answers?)$/i;
 
 const formatPayload = (label, data) => {
     // strings can't be redacted by key, so only objects are copied
     if (data == null || typeof data !== "object" || !Object.keys(data).length) return "";
     const json = JSON.stringify(data, (key, value) => (typeof value !== "boolean" && SENSITIVE_KEYS.test(key) ? "[REDACTED]" : value), 2);
-    return `${label}: ${json.length > ERROR_DETAILS_MAX_LENGTH ? `${json.slice(0, ERROR_DETAILS_MAX_LENGTH)}… (truncated)` : json}`;
+    const text = json.length > ERROR_DETAILS_MAX_LENGTH ? `${json.slice(0, ERROR_DETAILS_MAX_LENGTH)}… (truncated)` : json;
+    return `${label}: ${text}`;
 };
 
 // copyable context for bug reports; query strings are dropped since they carry the access_token
@@ -92,7 +93,7 @@ const buildErrorDetails = (err) => {
 };
 
 export const snackbarErrorHandler = (err, res) => (dispatch, state) => {
-    let details = "";
+    let details;
     // details are optional; a failure here must not stop the snackbar or the 401 re-login
     try {
         details = buildErrorDetails(err);

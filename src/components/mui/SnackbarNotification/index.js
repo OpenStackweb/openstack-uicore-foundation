@@ -25,6 +25,7 @@ import {
   Tooltip,
   Typography
 } from "@mui/material";
+import { visuallyHidden } from "@mui/utils";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
@@ -48,6 +49,13 @@ import { clearConsumedSnackbarMessage } from "../../../utils/actions";
 
 const formatSentAt = (msg) =>
   formatEpoch(msg.receivedAt / MILLISECONDS_IN_SECOND, "h:mm:ss a");
+
+const toCopyText = (msg) => {
+  const html = String(msg.html).replace(/<br\s*\/?>/gi, "\n");
+  const text = new DOMParser().parseFromString(html, "text/html").body
+    .textContent;
+  return [text.trim(), msg.details].filter(Boolean).join("\n\n");
+};
 
 // a queue shows its first message, a group shows all of them at once
 const useMessages = ({ grouped = false } = {}) => {
@@ -125,23 +133,35 @@ const NotificationSnackbar = ({ queue, vertical }) => {
     queue.onExited();
   };
 
-  // Ignore clipboard results belonging to an earlier message.
+  // clipboard results for an earlier message are ignored
   const [copyResult, setCopyResult] = useState(null);
   const copyStatus = copyResult?.message === msgData ? copyResult.status : null;
+  const copyStatusKey = {
+    copied: "general.copied",
+    failed: "general.copy_failed"
+  }[copyStatus];
+  const copyLabel =
+    count > 1 ? "general.copy_all_errors" : "general.copy_error";
   const handleCopy = () => {
-    const html = String(msgData.html).replace(/<br\s*\/?>/gi, "\n");
-    const text = new DOMParser().parseFromString(html, "text/html").body
-      .textContent;
+    const finish = (status) => setCopyResult({ message: msgData, status });
+    // a group copies oldest first, each error under its position and sent time
+    const copyText =
+      count > 1
+        ? queue.shown
+            .map(
+              (m, i) =>
+                `[${i + 1}/${count}] ${formatSentAt(m)}\n${toCopyText(m)}`
+            )
+            .join("\n\n")
+        : toCopyText(msgData);
     // the clipboard can be missing (non-https page) or blocked by the browser
     try {
-      navigator.clipboard
-        .writeText([text.trim(), msgData.details].filter(Boolean).join("\n\n"))
-        .then(
-          () => setCopyResult({ message: msgData, status: "copied" }),
-          () => setCopyResult({ message: msgData, status: "failed" })
-        );
+      navigator.clipboard.writeText(copyText).then(
+        () => finish("copied"),
+        () => finish("failed")
+      );
     } catch (e) {
-      setCopyResult({ message: msgData, status: "failed" });
+      finish("failed");
     }
   };
 
@@ -163,17 +183,11 @@ const NotificationSnackbar = ({ queue, vertical }) => {
         action={
           isSuccess ? undefined : (
             <>
-              <Tooltip
-                title={T.translate(
-                  {
-                    copied: "general.copied",
-                    failed: "general.copy_failed"
-                  }[copyStatus] || "general.copy_error"
-                )}
-              >
+              <Tooltip title={T.translate(copyStatusKey || copyLabel)}>
                 <IconButton
                   size="small"
                   color="inherit"
+                  aria-label={T.translate(copyLabel)}
                   onClick={handleCopy}
                 >
                   {copyStatus === "copied" ? (
@@ -183,6 +197,10 @@ const NotificationSnackbar = ({ queue, vertical }) => {
                   )}
                 </IconButton>
               </Tooltip>
+              {/* a live region, since screen readers skip the tooltip change */}
+              <Box component="span" role="status" sx={visuallyHidden}>
+                {copyStatusKey && T.translate(copyStatusKey)}
+              </Box>
               <IconButton
                 size="small"
                 color="inherit"

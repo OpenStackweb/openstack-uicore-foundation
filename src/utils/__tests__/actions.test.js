@@ -231,6 +231,7 @@ describe('Utils Actions', () => {
                 send_speaker_email: true,
                 owner: { email: "jane@example.com", first_name: "Jane", phone_number: "555-0100", billing_address_1: "1 Main St" },
                 payment: { payment_info_details: { brand: "visa", last4: "4242" }, live_secret_key: "sk_live_123" },
+                extra_questions: [{ question_id: 3, answer: "1990-01-01" }],
                 access_token: "abc"
             });
             const body = { message: "Validation Failed", errors: { start_date: ["The start date field is required."] }, user_password: "password2" };
@@ -241,7 +242,7 @@ describe('Utils Actions', () => {
             expect(payload.details).toContain('"ticket_type_id": 7');
             expect(payload.details).toContain('"send_speaker_email": true');
             expect(payload.details).toContain("The start date field is required.");
-            ["jane@example.com", "Jane", "555-0100", "1 Main St", "visa", "4242", "sk_live_123", '"abc"', "password2"]
+            ["jane@example.com", "Jane", "555-0100", "1 Main St", "visa", "4242", "sk_live_123", "1990-01-01", '"abc"', "password2"]
                 .forEach((value) => expect(payload.details).not.toContain(value));
         });
 
@@ -279,10 +280,10 @@ describe('Utils Actions', () => {
             const onLineSpy = jest.spyOn(navigator, "onLine", "get").mockReturnValue(false);
 
             store.dispatch(snackbarErrorHandler({ method: "GET", url: "https://api.example.com/api/v1/summits" }));
+            onLineSpy.mockRestore();
 
             const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
             expect(payload.details).toContain("Request: GET https://api.example.com/api/v1/summits (no response, offline)");
-            onLineSpy.mockRestore();
         });
 
         test('builds details for a post request made with a URI object', () => {
