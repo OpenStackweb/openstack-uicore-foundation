@@ -207,6 +207,18 @@ describe("SnackbarNotification", () => {
       expect(screen.queryByText("Saved again")).not.toBeInTheDocument();
     });
 
+    test("ignores a repeat success while the first is still on screen", () => {
+      const saved = { html: "Saved", type: "success" };
+      const { rerender } = render(ui(saved));
+      advance(2000);
+      rerender(ui({ ...saved }));
+      // one tick for the auto-hide, one for the exit transition
+      advance(NOTIFICATION_TIMEOUT - 2000);
+      advance(1000);
+      advance(1000);
+      expect(screen.queryByText("Saved")).not.toBeInTheDocument();
+    });
+
     test("groups two errors from the same render, newest first", () => {
       const TwoErrors = () => {
         const { errorMessage } = useSnackbarMessage();
