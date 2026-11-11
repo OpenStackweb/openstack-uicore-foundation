@@ -136,6 +136,11 @@ const NotificationSnackbar = ({ queue, vertical }) => {
   // clipboard results for an earlier message are ignored
   const [copyResult, setCopyResult] = useState(null);
   const copyStatus = copyResult?.message === msgData ? copyResult.status : null;
+  // clipboard callbacks only see their own render, so they read a ref
+  const msgRef = useRef(msgData);
+  useEffect(() => {
+    msgRef.current = msgData;
+  });
   const copyStatusKey = {
     copied: "general.copied",
     failed: "general.copy_failed"
@@ -143,7 +148,9 @@ const NotificationSnackbar = ({ queue, vertical }) => {
   const copyLabel =
     count > 1 ? "general.copy_all_errors" : "general.copy_error";
   const handleCopy = () => {
-    const finish = (status) => setCopyResult({ message: msgData, status });
+    // a late result for a message no longer on screen is dropped
+    const finish = (status) =>
+      msgRef.current === msgData && setCopyResult({ message: msgData, status });
     // a group copies oldest first, each error under its position and sent time
     const copyText =
       count > 1

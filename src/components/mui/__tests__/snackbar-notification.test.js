@@ -154,6 +154,30 @@ describe("SnackbarNotification", () => {
     expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
   });
 
+  test("keeps a newer copy's check mark when an earlier copy finishes late", async () => {
+    let acceptFirst;
+    mockClipboard(
+      jest
+        .fn()
+        .mockReturnValueOnce(
+          new Promise((resolve) => {
+            acceptFirst = resolve;
+          })
+        )
+        .mockResolvedValueOnce()
+    );
+    const { rerender } = render(ui({ html: "First error", type: "warning" }));
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+    rerender(ui({ html: "Second error", type: "error" }));
+    fireEvent.click(screen.getByLabelText("general.copy_all_errors"));
+    await screen.findByTestId("CheckIcon");
+
+    await act(async () => {
+      acceptFirst();
+    });
+    expect(screen.getByTestId("CheckIcon")).toBeInTheDocument();
+  });
+
   test("clears the copied state when a new message with the same text shows", async () => {
     mockClipboard(jest.fn().mockResolvedValue());
     const { rerender } = render(ui({ html: "Not found", type: "warning" }));
