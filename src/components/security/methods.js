@@ -18,6 +18,13 @@ import URI from "urijs";
 import IdTokenVerifier from "idtoken-verifier";
 import {SET_LOGGED_USER} from "./actions";
 import {getRandomBytes, getSHA256} from "../../utils/crypto";
+import {
+    getOAuth2ClientId,
+    getOAuth2Flow,
+    useOAuth2RefreshToken,
+    getOAuth2IDPBaseUrl,
+    getOAuth2Scopes,
+} from "../../utils/config";
 
 import {
     AUTH_ERROR_ACCESS_TOKEN_EXPIRED,
@@ -31,6 +38,8 @@ import {
     AUTH_ERROR_MISSING_PKCE_PARAM,
     AUTH_ERROR_MISSING_NONCE_PARAM,
 } from "./constants";
+
+export { getOAuth2ClientId, getOAuth2Flow, useOAuth2RefreshToken, getOAuth2IDPBaseUrl, getOAuth2Scopes } from "../../utils/config";
 
 /**
  * @ignore
@@ -50,7 +59,6 @@ const NONCE = 'nonce';
 const PKCE = 'pkce';
 const ID_TOKEN = 'idToken';
 const BACK_ULR_PARAM_NAME = 'BackUrl';
-
 
 /**
  *
@@ -342,10 +350,69 @@ const _getAccessToken = async () => {
     return accessToken;
 }
 
+const _global =
+    typeof globalThis !== 'undefined'
+        ? globalThis
+        : typeof window !== 'undefined'
+          ? window
+          : {};
+
+const ACCESS_TOKEN_RESOLVER_KEY = Symbol.for('openstack-uicore-foundation.accessTokenResolver');
+
+/**
+ * Optional resolver for getAccessToken. When present, getAccessToken
+ * delegates to it; otherwise the built-in flow runs. Pass a non-function
+ * (or nothing) to reset to the built-in.
+ *
+ * The slot lives on a global under a Symbol.for key so every copy of this
+ * module shares it: bundles that inlined methods.js, nested installs of the
+ * package, and symlinked dev installs all read the same registry entry.
+ *
+ * Resolver contract:
+ * - must resolve to the access token string; nothing downstream validates it,
+ *   so resolving undefined sends `access_token=undefined` rather than failing.
+ * - a rejection is treated as an auth failure by every caller (the Dropzone
+ *   input logs the user out via initLogOut); handle transient errors inside
+ *   the resolver.
+ * - when this module runs on a server the registration is process-wide, so the
+ *   resolver must not capture per-request state.
+ */
+export const setAccessTokenResolver = (resolver) => {
+    _global[ACCESS_TOKEN_RESOLVER_KEY] = typeof resolver === 'function' ? resolver : null;
+};
+
+/**
+ * Optional handlers set via setAuthHandlers. When present, initLogOut and
+ * authErrorHandler defer to them instead of redirecting the browser:
+ *   initLogOut()                 replaces the IDP end-session redirect
+ *   authErrorHandler({ status }) replaces the 401 login / 403 logout paths
+ * The two keys are independent: with only initLogOut set, a 403 still shows
+ * the built-in dialog and then calls the injected logout. Without handlers
+ * uicore keeps its built-in behavior. Call with no argument to clear both.
+ * The handlers live on a global under a Symbol.for key so every copy of
+ * this module shares them.
+ */
+const AUTH_HANDLERS_KEY = Symbol.for('openstack-uicore-foundation.authHandlers');
+
+const readAuthHandlers = () =>
+    _global[AUTH_HANDLERS_KEY] || { initLogOut: null, authErrorHandler: null };
+
+export const setAuthHandlers = ({ initLogOut, authErrorHandler } = {}) => {
+    _global[AUTH_HANDLERS_KEY] = {
+        initLogOut: typeof initLogOut === 'function' ? initLogOut : null,
+        authErrorHandler: typeof authErrorHandler === 'function' ? authErrorHandler : null,
+    };
+};
+
+export const getAuthHandlers = () => ({ ...readAuthHandlers() });
+
 /**
  * @returns {Promise<*|undefined>}
  */
 export const getAccessToken = async () => {
+    const resolveAccessToken = _global[ACCESS_TOKEN_RESOLVER_KEY];
+    if (resolveAccessToken) return resolveAccessToken();
+
     if (typeof navigator !== 'undefined' && navigator.locks) {
         return await navigator.locks.request(GET_TOKEN_SILENTLY_LOCK_KEY, async lock => {
             console.log(`openstack-uicore-foundation::Security::methods::getAccessToken web lock api`, lock);
@@ -413,7 +480,6 @@ export const clearAccessToken = async () => {
         }
     }
 }
-
 
 export const refreshAccessToken = async (refresh_token) => {
 
@@ -535,42 +601,12 @@ export const getIdToken = () => {
     return null;
 };
 
-export const getOAuth2ClientId = () => {
-    if (typeof window !== 'undefined') {
-        return window.OAUTH2_CLIENT_ID;
-    }
-    return null;
-};
-
-export const getOAuth2Flow = () => {
-    if (typeof window !== 'undefined') {
-        return window.OAUTH2_FLOW || "token id_token";
-    }
-    return "token id_token";
-}
-
-export const useOAuth2RefreshToken = () => {
-    if (typeof window !== 'undefined') {
-        return new Boolean(window.OAUTH2_USE_REFRESH_TOKEN || true);
-    }
-    return true;
-}
-
-export const getOAuth2IDPBaseUrl = () => {
-    if (typeof window !== 'undefined') {
-        return window.IDP_BASE_URL;
-    }
-    return null;
-};
-
-export const getOAuth2Scopes = () => {
-    if (typeof window !== 'undefined') {
-        return window.SCOPES;
-    }
-    return null;
-};
-
 export const initLogOut = () => {
+    const { initLogOut: injectedLogOut } = readAuthHandlers();
+    if (injectedLogOut) {
+        injectedLogOut();
+        return;
+    }
     let location = getCurrentLocation();
     location.replace(getLogoutUrl(getIdToken()).toString());
 }

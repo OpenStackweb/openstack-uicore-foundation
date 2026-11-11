@@ -74,23 +74,35 @@ describe("MuiTable", () => {
     expect(screen.getByText("mui_table.no_items")).toBeInTheDocument();
   });
 
-  test("renders edit button when onEdit is provided", () => {
-    setup({ onEdit: jest.fn() });
-    expect(screen.getAllByTestId("action-edit")).toHaveLength(2);
+  test.each([
+    ["without action columns", {}, 2],
+    ["with the row menu column", { onEdit: jest.fn(), onDelete: jest.fn() }, 3]
+  ])("passes the column count to function children %s", (_, overrides, expected) => {
+    const children = jest.fn((colCount) => (
+      <tr>
+        <td>{`extra row spans ${colCount}`}</td>
+      </tr>
+    ));
+    setup({ ...overrides, children });
+    expect(children).toHaveBeenCalledWith(expected);
+    expect(screen.getByText(`extra row spans ${expected}`)).toBeInTheDocument();
   });
 
-  test("calls onEdit when edit button is clicked", async () => {
+  test("calls onEdit once from the row menu's Edit item", async () => {
     const onEdit = jest.fn();
     setup({ onEdit });
-    await userEvent.click(screen.getAllByTestId("action-edit")[0]);
-    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
+    await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[1]);
+    await userEvent.click(screen.getByRole("menuitem", { name: "general.edit" }));
+    expect(onEdit).toHaveBeenCalledTimes(1);
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 2 }));
   });
 
   test("calls showConfirmDialog and then onDelete when delete confirmed", async () => {
     const onDelete = jest.fn();
     showConfirmDialog.mockResolvedValueOnce(true);
     setup({ onDelete });
-    await userEvent.click(screen.getAllByTestId("action-delete")[0]);
+    await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    await userEvent.click(screen.getByRole("menuitem", { name: "general.delete" }));
     await new Promise((r) => setTimeout(r, 0));
     expect(showConfirmDialog).toHaveBeenCalled();
     expect(onDelete).toHaveBeenCalledWith(1);
@@ -100,7 +112,8 @@ describe("MuiTable", () => {
     const onDelete = jest.fn();
     showConfirmDialog.mockResolvedValueOnce(false);
     setup({ onDelete });
-    await userEvent.click(screen.getAllByTestId("action-delete")[0]);
+    await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    await userEvent.click(screen.getByRole("menuitem", { name: "general.delete" }));
     await new Promise((r) => setTimeout(r, 0));
     expect(onDelete).not.toHaveBeenCalled();
   });
@@ -130,10 +143,17 @@ describe("MuiTable", () => {
     expect(onArchive).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
   });
 
-  test("hides delete button when canDelete returns false", () => {
+  test("hides delete menu when canDelete returns false", () => {
     const onDelete = jest.fn();
     setup({ onDelete, canDelete: (row) => row.id !== 1 });
-    expect(screen.getAllByTestId("action-delete")).toHaveLength(1);
+    expect(screen.getAllByTestId("row-actions-menu-trigger")).toHaveLength(1);
+  });
+
+  test("keeps Edit in the menu when canDelete returns false", async () => {
+    setup({ onEdit: jest.fn(), onDelete: jest.fn(), canDelete: (row) => row.id !== 1 });
+    await userEvent.click(screen.getAllByTestId("row-actions-menu-trigger")[0]);
+    expect(screen.getByRole("menuitem", { name: "general.edit" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "general.delete" })).not.toBeInTheDocument();
   });
 
   test("renders pagination (top and bottom) when perPage and currentPage are set", () => {
@@ -171,18 +191,11 @@ describe("MuiTable", () => {
     ];
     const disabledOptions = { sortCol: "", sortDir: 1, disableProp: "is_disabled" };
 
-    test("disables edit button for rows where disableProp is truthy", () => {
-      setup({ data: disabledData, onEdit: jest.fn(), options: disabledOptions });
-      const buttons = screen.getAllByTestId("action-edit");
-      expect(buttons[0]).toBeDisabled();
-      expect(buttons[1]).not.toBeDisabled();
-    });
-
-    test("disables delete button for rows where disableProp is truthy", () => {
-      setup({ data: disabledData, onDelete: jest.fn(), options: disabledOptions });
-      const buttons = screen.getAllByTestId("action-delete");
-      expect(buttons[0]).toBeDisabled();
-      expect(buttons[1]).not.toBeDisabled();
+    test("disables the row menu for rows where disableProp is truthy", () => {
+      setup({ data: disabledData, onEdit: jest.fn(), onDelete: jest.fn(), options: disabledOptions });
+      const triggers = screen.getAllByTestId("row-actions-menu-trigger");
+      expect(triggers[0]).toBeDisabled();
+      expect(triggers[1]).not.toBeDisabled();
     });
 
     test("disables select button for rows where disableProp is truthy", () => {
@@ -280,7 +293,8 @@ describe("MuiTable", () => {
     test("passes the total column count, including action columns", () => {
       setup({ data: [customRow], onDelete: jest.fn() });
       expect(customRow.renderRow).toHaveBeenCalledWith(columns.length + 1);
-      expect(screen.queryByTestId("action-delete")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("row-actions-menu-trigger")).not.toBeInTheDocument();
     });
   });
+
 });

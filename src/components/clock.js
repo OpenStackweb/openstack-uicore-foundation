@@ -14,7 +14,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import moment from "moment-timezone";
 import FragmentParser from "./fragment-parser";
-import {getTimeServiceUrl} from '../utils/methods';
+import {getTimeServiceUrl} from '../utils/config';
 
 /**
  * class Clock
@@ -114,6 +114,9 @@ class Clock extends React.Component {
 
     getServerTime = () => {
         const timeServiceUrl = getTimeServiceUrl();
+        // No endpoint configured: go straight to the local-clock fallback
+        // instead of fetching '' or "undefined".
+        if (!timeServiceUrl) return Promise.reject(null);
         return fetch(`${timeServiceUrl}`).then(async (response) => {
             if (response.status === 200) {
                 return response.json();
