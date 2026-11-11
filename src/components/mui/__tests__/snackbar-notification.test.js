@@ -146,7 +146,7 @@ describe("SnackbarNotification", () => {
       expect(screen.queryByText("Second error")).not.toBeInTheDocument();
     });
 
-    test("clears the redux message while the error stays pinned", () => {
+    test("clears the redux message as soon as it is read", () => {
       render(ui(errorA));
       expect(clearConsumedSnackbarMessage).toHaveBeenCalledWith(errorA);
       expect(screen.getByText("First error")).toBeInTheDocument();
@@ -214,7 +214,6 @@ describe("SnackbarNotification", () => {
       rerender(ui({ ...saved }));
       // one tick for the auto-hide, one for the exit transition
       advance(NOTIFICATION_TIMEOUT - 2000);
-      advance(1000);
       advance(1000);
       expect(screen.queryByText("Saved")).not.toBeInTheDocument();
     });
