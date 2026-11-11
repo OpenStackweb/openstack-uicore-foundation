@@ -164,6 +164,7 @@ module.exports = {
         'components/mui/upload-btn': './src/components/mui/UploadBtn/index.js',
         'components/mui/upload-dialog': './src/components/mui/UploadDialog/index.js',
         'components/mui/info-note': './src/components/mui/InfoNote/index.jsx',
+        'components/mui/info-tooltip': './src/components/mui/InfoTooltip/index.js',
         'components/mui/grid-filter': './src/components/mui/GridFilter/index.js',
 
         // models
