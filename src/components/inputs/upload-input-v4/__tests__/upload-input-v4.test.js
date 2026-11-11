@@ -202,7 +202,7 @@ describe('UploadInputV4', () => {
       act(() => { fireEvent.click(screen.getByRole('button', { name: 'Remove sample.png' })); });
 
       expect(onRemove).toHaveBeenCalledTimes(1);
-      expect(onRemove).toHaveBeenCalledWith(file);
+      expect(onRemove.mock.calls[0][0]).toBe(file);
     });
 
     test('deleting a delivered row the parent has not confirmed calls onRemove with the File', async () => {
@@ -218,7 +218,7 @@ describe('UploadInputV4', () => {
       act(() => { fireEvent.click(screen.getByRole('button', { name: 'Remove doc.pdf' })); });
 
       expect(onRemove).toHaveBeenCalledTimes(1);
-      expect(onRemove).toHaveBeenCalledWith(file);
+      expect(onRemove.mock.calls[0][0]).toBe(file);
       expect(screen.queryByText('doc.pdf')).not.toBeInTheDocument();
     });
 
