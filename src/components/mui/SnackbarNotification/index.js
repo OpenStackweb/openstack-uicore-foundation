@@ -165,10 +165,6 @@ const NotificationSnackbar = ({ queue, vertical }) => {
     }
   };
 
-  useEffect(() => {
-    setCopyResult(null);
-  }, [queue.current]);
-
   return (
     <Snackbar
       open={queue.open}

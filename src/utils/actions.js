@@ -63,7 +63,7 @@ const notifySnackbarError = (message, callback) => (dispatch) => {
 };
 
 // secrets, payment details and personal information are never copied
-const SENSITIVE_KEYS = /^(.*_key|.*(token|secret|password).*|hash|.*emails?|.*phone.*|.*(first|last)_name|.*full_?names?|surname|(.*_)?owner_name|requestor_name|(.*_)?address(\d|_.*)?|zip_code|gender|ip|payment_info_details|payment_gateway_result|answers?)$/i;
+const SENSITIVE_KEYS = /^(.*_key|.*(token|secret|password).*|hash|.*emails?|.*phone.*|.*(first|last)_name|.*full_?names?|surname|(.*_)?owner_name|requestor_name|contact_name|(.*_)?address(\d|_.*)?|zip_code|gender|ip|payment_info_details|payment_gateway_result|answers?)$/i;
 
 const formatPayload = (label, data) => {
     // strings can't be redacted by key, so only objects are copied
