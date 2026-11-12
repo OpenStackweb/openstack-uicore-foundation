@@ -13,7 +13,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Box } from "@mui/material";
 
 const reorder = (list, startIndex, endIndex, updateOrderKey) => {
@@ -30,9 +30,9 @@ const DragAndDropList = ({
   items,
   onReorder,
   renderItem,
-  idKey,
-  updateOrderKey,
-  droppableId
+  idKey = "id",
+  updateOrderKey = "order",
+  droppableId = "droppable"
 }) => {
   const handleDragEnd = (result) => {
     if (!result.destination) return;
@@ -93,10 +93,5 @@ DragAndDropList.propTypes = {
   droppableId: PropTypes.string
 };
 
-DragAndDropList.defaultProps = {
-  idKey: "id",
-  updateOrderKey: "order",
-  droppableId: "droppable"
-};
 
 export default DragAndDropList;

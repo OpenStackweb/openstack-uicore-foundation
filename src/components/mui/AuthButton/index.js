@@ -131,10 +131,12 @@ const AuthButton = ({
             </ListItemIcon>
             <ListItemText
               primary={T.translate("general.settings")}
-              primaryTypographyProps={{
-                sx: {
-                  fontSize: menuFontSize,
-                  color: theme.palette.text.primary
+              slotProps={{
+                primary: {
+                  sx: {
+                    fontSize: menuFontSize,
+                    color: theme.palette.text.primary
+                  }
                 }
               }}
             />
@@ -145,10 +147,12 @@ const AuthButton = ({
             </ListItemIcon>
             <ListItemText
               primary={T.translate("general.profile")}
-              primaryTypographyProps={{
-                sx: {
-                  fontSize: menuFontSize,
-                  color: theme.palette.text.primary
+              slotProps={{
+                primary: {
+                  sx: {
+                    fontSize: menuFontSize,
+                    color: theme.palette.text.primary
+                  }
                 }
               }}
             />
@@ -166,10 +170,12 @@ const AuthButton = ({
             </ListItemIcon>
             <ListItemText
               primary={T.translate("buttons.sign_out")}
-              primaryTypographyProps={{
-                sx: {
-                  fontSize: menuFontSize,
-                  color: theme.palette.text.primary
+              slotProps={{
+                primary: {
+                  sx: {
+                    fontSize: menuFontSize,
+                    color: theme.palette.text.primary
+                  }
                 }
               }}
             />

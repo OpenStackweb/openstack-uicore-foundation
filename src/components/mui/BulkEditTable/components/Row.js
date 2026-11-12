@@ -43,11 +43,11 @@ const Row = (props) => {
     editRow,
     onToggle,
     onFieldChange,
-    onEdit,
-    onDelete,
-    idKey,
-    collapseActions,
-    actionsBreakpoint
+    onEdit = null,
+    onDelete = null,
+    idKey = "id",
+    collapseActions = false,
+    actionsBreakpoint = "md"
   } = props;
 
   const isEditingRow = isSelected && editEnabled;
@@ -161,12 +161,5 @@ Row.propTypes = {
   actionsBreakpoint: PropTypes.string
 };
 
-Row.defaultProps = {
-  idKey: "id",
-  onEdit: null,
-  onDelete: null,
-  collapseActions: false,
-  actionsBreakpoint: "md"
-};
 
 export default Row;

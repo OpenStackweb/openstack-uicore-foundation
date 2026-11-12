@@ -36,23 +36,23 @@ const TableCard = ({ title, rows = [], columns = [] }) => (
         <ListItem sx={{ display: "flex", height: 50, gap: 2 }}>
           {columns.map((col, i) => (
             // eslint-disable-next-line react/no-array-index-key
-            <Heading key={`col-${col.key}-${i}`}>{col.label}</Heading>
+            (<Heading key={`col-${col.key}-${i}`}>{col.label}</Heading>)
           ))}
         </ListItem>
         <Divider component="li" role="presentation" />
         {rows.map((row, i) => (
           // eslint-disable-next-line react/no-array-index-key
-          <React.Fragment key={`row-${i}`}>
+          (<React.Fragment key={`row-${i}`}>
             <ListItem sx={{ display: "flex", minHeight: 60, gap: 2 }}>
               {columns.map((col, j) => (
                 // eslint-disable-next-line react/no-array-index-key
-                <Value key={`col-val-${col.key}-${j}`}>{row[col.key]}</Value>
+                (<Value key={`col-val-${col.key}-${j}`}>{row[col.key]}</Value>)
               ))}
             </ListItem>
             {i < rows.length - 1 && (
               <Divider component="li" role="presentation" />
             )}
-          </React.Fragment>
+          </React.Fragment>)
         ))}
       </List>
     </CardContent>

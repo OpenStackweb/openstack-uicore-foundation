@@ -20,7 +20,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import { IconButton } from "@mui/material";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 
 import styles from "../components/styles.module.less";
 

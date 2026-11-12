@@ -79,7 +79,7 @@ const renderNewRow = (columns, new_row, addNew, handleChange) => {
     return cells;
 };
 
-const SortableTable = ({data, options, columns, dropCallback, orderField, idField}) => {
+const SortableTable = ({data, options, columns, dropCallback, orderField, idField = 'id'}) => {
 
     const [rows, setRows] = useState(data);
     const [newRow, setNewRow] = useState({});
@@ -215,9 +215,6 @@ const SortableTable = ({data, options, columns, dropCallback, orderField, idFiel
     );
 };
 
-SortableTable.defaultProps = {
-    idField: 'id',
-}
 
 SortableTable.propTypes = {
     data: PropTypes.array.isRequired,

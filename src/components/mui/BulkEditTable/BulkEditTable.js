@@ -36,6 +36,8 @@ import {
   getActionsMenuBreakpoint
 } from "../tables/components/table-styles";
 
+const defaultGetName = (item) => item.name;
+
 const BulkEditTable = ({
   options,
   columns,
@@ -49,14 +51,14 @@ const BulkEditTable = ({
   onPerPageChange,
   paginationPosition,
   pageSliderVisible,
-  idKey,
-  onEdit,
-  onDelete,
-  getName,
-  deleteDialogTitle,
-  deleteDialogBody,
-  deleteDialogConfirmText,
-  confirmButtonColor
+  idKey = "id",
+  onEdit = null,
+  onDelete = null,
+  getName = defaultGetName,
+  deleteDialogTitle = null,
+  deleteDialogBody = null,
+  deleteDialogConfirmText = null,
+  confirmButtonColor = null
 }) => {
   const {
     selectedRows,
@@ -260,15 +262,5 @@ BulkEditTable.propTypes = {
   confirmButtonColor: PropTypes.string
 };
 
-BulkEditTable.defaultProps = {
-  idKey: "id",
-  onEdit: null,
-  onDelete: null,
-  getName: (item) => item.name,
-  deleteDialogTitle: null,
-  deleteDialogBody: null,
-  deleteDialogConfirmText: null,
-  confirmButtonColor: null
-};
 
 export default BulkEditTable;

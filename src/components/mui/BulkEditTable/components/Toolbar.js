@@ -17,7 +17,7 @@ import T from "i18n-react/dist/i18n-react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 
-const Toolbar = ({ editEnabled, selectedCount, onEdit, onApply, onCancel }) => (
+const Toolbar = ({ editEnabled, selectedCount = 0, onEdit, onApply, onCancel }) => (
   <Box sx={{ display: "flex", gap: 1, width: { xs: "100%", sm: "auto" } }}>
     {editEnabled ? (
       <>
@@ -58,8 +58,5 @@ Toolbar.propTypes = {
   onCancel: PropTypes.func
 };
 
-Toolbar.defaultProps = {
-  selectedCount: 0
-};
 
 export default Toolbar;

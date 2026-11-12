@@ -36,12 +36,12 @@ const MODE_FORMATS = {
 
 const DateTimeInput = ({
   id,
-  value,
-  mode,
-  label,
-  placeholder,
-  disabled,
-  timezone,
+  value = null,
+  mode = "datetime",
+  label = "",
+  placeholder = "",
+  disabled = false,
+  timezone = null,
   onChange,
   ...rest
 }) => {
@@ -110,13 +110,5 @@ DateTimeInput.propTypes = {
   onChange: PropTypes.func.isRequired
 };
 
-DateTimeInput.defaultProps = {
-  value: null,
-  mode: "datetime",
-  label: "",
-  placeholder: "",
-  disabled: false,
-  timezone: null
-};
 
 export default DateTimeInput;

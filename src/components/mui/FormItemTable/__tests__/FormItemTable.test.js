@@ -277,7 +277,7 @@ jest.mock("../../formik-inputs/mui-formik-datepicker", () => ({
 
 jest.mock("../../formik-inputs/mui-formik-select", () => ({
   __esModule: true,
-  default: ({ name, label, options, children }) => (
+  default: ({ name, label, options }) => (
     <select data-testid={`select-${name}`} name={name}>
       <option value="">{label}</option>
       {options &&
@@ -286,7 +286,6 @@ jest.mock("../../formik-inputs/mui-formik-select", () => ({
             {opt.label}
           </option>
         ))}
-      {children}
     </select>
   )
 }));
@@ -326,10 +325,10 @@ jest.mock("../../formik-inputs/mui-formik-dropdown-checkbox", () => ({
       {options &&
         options.map((opt) => (
           // eslint-disable-next-line jsx-a11y/label-has-associated-control
-          <label key={opt.value}>
+          (<label key={opt.value}>
             <input type="checkbox" value={opt.value} />
             {opt.label}
-          </label>
+          </label>)
         ))}
     </div>
   )
@@ -343,10 +342,10 @@ jest.mock("../../formik-inputs/mui-formik-dropdown-radio", () => ({
       {options &&
         options.map((opt) => (
           // eslint-disable-next-line jsx-a11y/label-has-associated-control
-          <label key={opt.value}>
+          (<label key={opt.value}>
             <input type="radio" name={name} value={opt.value} />
             {opt.label}
-          </label>
+          </label>)
         ))}
     </div>
   )

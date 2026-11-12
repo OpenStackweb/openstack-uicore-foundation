@@ -17,7 +17,14 @@ import { Chip, IconButton } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import T from "i18n-react/dist/i18n-react";
 
-const FilterButton = ({ filterCount, onClick, onDelete, iconSx }) => {
+const DEFAULT_ICON_SX = {};
+
+const FilterButton = ({
+  filterCount,
+  onClick,
+  onDelete,
+  iconSx = DEFAULT_ICON_SX
+}) => {
   if (filterCount > 0) {
     return (
       <Chip
@@ -58,8 +65,5 @@ FilterButton.propTypes = {
   iconSx: PropTypes.object
 };
 
-FilterButton.defaultProps = {
-  iconSx: {}
-};
 
 export default FilterButton;

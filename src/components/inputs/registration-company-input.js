@@ -13,15 +13,15 @@
 
 import React from 'react';
 import PropTypes from 'prop-types'
-import AsyncCreatableSelect from "react-select/lib/AsyncCreatable";
+import AsyncCreatableSelect from "react-select/async-creatable";
 import { queryRegistrationCompanies } from '../../utils/query-actions';
 import isEqual from 'lodash/isEqual';
 const NullValue = { value: null, label: '' };
 const NewId = 0;
 
 const RegistrationCompanyInput = ({
-        error, onChange, id, disabled, className, summitId, onError,
-        value, placeholder, tabSelectsValue, selectStyles, createLabel, options2Show, ...rest }) => {
+        error, onChange, id, disabled = false, className = 'registration_company_dll', summitId, onError,
+        value, placeholder = 'Select a company', tabSelectsValue = false, selectStyles, createLabel = 'Select ', options2Show = 20, ...rest }) => {
 
     const isNullValue = (val) => isEqual(val, {id: null, name: ''})
 
@@ -101,14 +101,6 @@ const RegistrationCompanyInput = ({
 
 export default RegistrationCompanyInput;
 
-RegistrationCompanyInput.defaultProps = {
-    placeholder: 'Select a company',
-    disabled: false,
-    tabSelectsValue: false,
-    createLabel: 'Select ',
-    className:'registration_company_dll',
-    options2Show: 20,
-}
 
 RegistrationCompanyInput.propTypes = {
     onError: PropTypes.func.isRequired,

@@ -17,6 +17,25 @@ import './datetimepicker.less';
 import Datetime from 'react-datetime';
 import moment from 'moment-timezone';
 
+// react-datetime v3 renamed these props; keep accepting the v2 names so consumers don't break
+const mapLegacyProps = ({
+    defaultValue, viewDate, defaultViewDate, viewMode, onBlur, onFocus,
+    onViewModeChange, disableCloseOnClickOutside, ...props
+}) => {
+    const mapped = {...props};
+    if (defaultValue !== undefined && mapped.initialValue === undefined) mapped.initialValue = defaultValue;
+    const legacyViewDate = viewDate !== undefined ? viewDate : defaultViewDate;
+    if (legacyViewDate !== undefined && mapped.initialViewDate === undefined) mapped.initialViewDate = legacyViewDate;
+    if (viewMode !== undefined && mapped.initialViewMode === undefined) mapped.initialViewMode = viewMode;
+    if (onBlur && !mapped.onClose) mapped.onClose = onBlur;
+    if (onFocus && !mapped.onOpen) mapped.onOpen = onFocus;
+    if (onViewModeChange && !mapped.onNavigate) mapped.onNavigate = onViewModeChange;
+    if (disableCloseOnClickOutside !== undefined && mapped.closeOnClickOutside === undefined) {
+        mapped.closeOnClickOutside = !disableCloseOnClickOutside;
+    }
+    return mapped;
+};
+
 export default class DateTimePicker extends React.Component {
 
     constructor(props) {
@@ -79,7 +98,8 @@ export default class DateTimePicker extends React.Component {
 
     render() {
         let validate = (typeof this.props.validation != 'undefined');
-        let {onChange, id, value, format, error, inputProps, disabled, ...rest} = this.props;
+        let {onChange, id, value, format, error, inputProps, disabled, ...props} = this.props;
+        let rest = mapLegacyProps(props);
         let has_error = ( this.props.hasOwnProperty('error') && error != '' );
         let className = 'form-control ' + (has_error ? 'error' : '');
         let inputDisabled = (this.props.hasOwnProperty('disabled')) ? disabled : false;

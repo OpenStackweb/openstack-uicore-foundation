@@ -116,7 +116,7 @@ export const findCanonicalUpgrade = (value, results) => {
   return findExistingCompany(results, value.name);
 };
 
-const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, value, error, helperText, onBlur, placeholder, options2Show, disableShrink, ...rest }) => {
+const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERAL", label = "Company", value, error, helperText, onBlur, placeholder, options2Show = 20, disableShrink = false, ...rest }) => {
   const [inputValue, setInputValue] = React.useState("");
   const [options, setOptions] = React.useState([]);
 
@@ -249,7 +249,10 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
           helperText={helperText}
           error={error}
           margin="normal"
-          InputLabelProps={disableShrink ? { shrink: false } : undefined}
+          slotProps={{
+            ...params.slotProps,
+            inputLabel: disableShrink ? { shrink: false } : undefined
+          }}
         />
       )}
       renderOption={(props, option) => {
@@ -275,12 +278,6 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name, label, v
   );
 };
 
-CompanyInputV2.defaultProps = {
-  name: "GENERAL",
-  label: "Company",
-  options2Show: 20,
-  disableShrink: false
-};
 
 CompanyInputV2.propTypes = {
   summitId: PropTypes.number.isRequired,

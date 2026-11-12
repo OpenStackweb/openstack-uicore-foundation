@@ -37,8 +37,5 @@ RoundButton.propTypes = {
   sx: PropTypes.object
 };
 
-RoundButton.defaultProps = {
-  sx: {}
-};
 
 export default RoundButton;

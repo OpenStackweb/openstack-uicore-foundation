@@ -29,10 +29,10 @@ const CustomDialog = ({
   title,
   open,
   onClose,
-  maxWidth,
-  fullWidth,
-  primaryAction,
-  secondaryAction,
+  maxWidth = "sm",
+  fullWidth = true,
+  primaryAction = null,
+  secondaryAction = null,
   children
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,7 +76,6 @@ const CustomDialog = ({
       onClose={handleClose}
       maxWidth={maxWidth}
       fullWidth={fullWidth}
-      disableEscapeKeyDown={isSubmitting}
     >
       <DialogTitle>{title}</DialogTitle>
       <IconButton
@@ -143,11 +142,5 @@ CustomDialog.propTypes = {
   children: PropTypes.node.isRequired
 };
 
-CustomDialog.defaultProps = {
-  maxWidth: "sm",
-  fullWidth: true,
-  primaryAction: null,
-  secondaryAction: null
-};
 
 export default CustomDialog;

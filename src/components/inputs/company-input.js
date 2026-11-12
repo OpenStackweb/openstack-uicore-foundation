@@ -13,9 +13,9 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import AsyncSelect from 'react-select/lib/Async';
+import AsyncSelect from 'react-select/async';
 import {queryCompanies} from '../../utils/query-actions';
-import AsyncCreatableSelect from "react-select/lib/AsyncCreatable";
+import AsyncCreatableSelect from "react-select/async-creatable";
 
 export default class CompanyInput extends React.Component {
 

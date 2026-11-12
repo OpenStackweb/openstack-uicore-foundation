@@ -13,7 +13,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import AsyncSelect from 'react-select/lib/Async';
+import AsyncSelect from 'react-select/async';
 import { querySponsors } from '../../utils/query-actions';
 
 const SponsorInput = ({ id, summitId, value, error, multi, onChange, queryFunction, ...rest }) => {

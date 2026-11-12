@@ -44,7 +44,7 @@ describe("MuiFormikDatepicker", () => {
   test("shows required marker in label", () => {
     renderWithFormik({ required: true });
 
-    expect(screen.getByLabelText("Test Date *")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Test Date *" })).toBeInTheDocument();
   });
 
   test("shows validation error on submit without value", async () => {
@@ -64,7 +64,6 @@ describe("MuiFormikDatepicker", () => {
     const user = userEvent.setup();
     renderWithFormik({ required: true });
 
-    await user.click(screen.getByLabelText("Test Date *"));
     await user.click(screen.getByRole("button", { name: "Choose date" }));
 
     const today = await screen.findByRole("gridcell", {
@@ -72,26 +71,29 @@ describe("MuiFormikDatepicker", () => {
     });
     await user.click(today);
 
-    const input = screen.getByLabelText("Test Date *");
-    expect(input).not.toHaveValue("");
-    expect(input).not.toHaveValue("MM/DD/YYYY");
+    const monthSpinbutton = screen.getByRole("spinbutton", { name: "Month" });
+    expect(monthSpinbutton).not.toHaveTextContent("MM");
   });
 
   describe("timeZone", () => {
     // 3am UTC on Nov 6 is still Nov 5 in Los Angeles
     const value = moment.utc("2026-11-06T03:00:00Z");
 
+    // v9 fields render spinbuttons; the formatted value lives on the hidden named input
+    const hiddenInput = (container) =>
+      container.querySelector('input[name="test_date"]');
+
     test("shows the value in the given time zone", () => {
-      renderWithFormik(
+      const { container } = renderWithFormik(
         { timeZone: "America/Los_Angeles" },
         { test_date: value }
       );
-      expect(screen.getByLabelText("Test Date")).toHaveValue("11/05/2026");
+      expect(hiddenInput(container)).toHaveValue("11/05/2026");
     });
 
     test("keeps the value's own time zone without it", () => {
-      renderWithFormik({}, { test_date: value });
-      expect(screen.getByLabelText("Test Date")).toHaveValue("11/06/2026");
+      const { container } = renderWithFormik({}, { test_date: value });
+      expect(hiddenInput(container)).toHaveValue("11/06/2026");
     });
   });
 });

@@ -32,15 +32,15 @@ const optionShape = PropTypes.shape({
 
 const AsyncSelectInput = ({
   id,
-  value,
-  label,
-  placeholder,
-  disabled,
-  multiple,
+  value = null,
+  label = "",
+  placeholder = "",
+  disabled = false,
+  multiple = false,
   queryFunction,
-  formatOption,
-  debounceWait,
-  minSearchLength,
+  formatOption = defaultFormatOption,
+  debounceWait = DEBOUNCE_WAIT_250,
+  minSearchLength = 0,
   onChange,
   ...rest
 }) => {
@@ -134,12 +134,13 @@ const AsyncSelectInput = ({
           label={label}
           placeholder={finalPlaceholder}
           slotProps={{
+            ...params.slotProps,
             input: {
-              ...params.InputProps,
+              ...params.slotProps?.input,
               endAdornment: (
                 <>
                   {loading && <CircularProgress color="inherit" size={16} />}
-                  {params.InputProps?.endAdornment}
+                  {params.slotProps?.input?.endAdornment}
                 </>
               )
             }
@@ -166,15 +167,5 @@ AsyncSelectInput.propTypes = {
   onChange: PropTypes.func.isRequired
 };
 
-AsyncSelectInput.defaultProps = {
-  value: null,
-  label: "",
-  placeholder: "",
-  disabled: false,
-  multiple: false,
-  formatOption: defaultFormatOption,
-  debounceWait: DEBOUNCE_WAIT_250,
-  minSearchLength: 0
-};
 
 export default AsyncSelectInput;

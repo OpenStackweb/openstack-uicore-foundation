@@ -27,8 +27,8 @@ const unitToBytesFactor = (unit) => 1024 ** UNIT_POWERS[unit];
 const MuiFormikFilesizeField = ({
   name,
   label,
-  displayUnit,
-  valueUnit,
+  displayUnit = "MB",
+  valueUnit = "B",
   ...props
 }) => {
   const [field, meta, helpers] = useField(name);
@@ -107,9 +107,5 @@ MuiFormikFilesizeField.propTypes = {
   valueUnit: PropTypes.oneOf(Object.keys(UNIT_POWERS))
 };
 
-MuiFormikFilesizeField.defaultProps = {
-  displayUnit: "MB",
-  valueUnit: "B"
-};
 
 export default MuiFormikFilesizeField;

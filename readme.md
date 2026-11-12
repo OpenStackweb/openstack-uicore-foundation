@@ -21,7 +21,7 @@ import UploadInputV3 from 'openstack-uicore-foundation/lib/components/inputs/upl
 ```
 
 Components that pull in heavy 3rd-party dependencies (MUI, Stripe,
-react-beautiful-dnd, etc.) are intentionally commented out of
+@hello-pangea/dnd, etc.) are intentionally commented out of
 `src/components/index.js` (see the `// these include 3rd party deps` block)
 so that consumers who don't use them aren't forced to install those peer
 dependencies just to import something unrelated from the barrel. These
@@ -31,6 +31,42 @@ will not resolve them.
 ### Enviroment Variables
 
 * TIMEINTERVALSINCE1970_API_URL                         = URL used on clock component to get server time   
+
+## Migrating to 6.0
+
+6.0 moves the library to MUI v9 and adds React 19 support. Update the app before bumping it.
+
+### Peer dependencies
+
+| Package | 5.x | 6.0 |
+|---|---|---|
+| `react`, `react-dom` | `^17` | `^18 \|\| ^19` |
+| `@mui/material`, `@mui/icons-material`, `@mui/x-date-pickers` | `^6` / `^7` | `^9` |
+| `react-select` | `^2` | `^5.10.2` |
+| `react-final-form` / `final-form` | `^6` / `^4` | `^7` / `^5` |
+| `react-datetime` | `^2` | `^3.3.1` |
+| `react-redux` / `redux` | `^7` / `^3 \|\| ^4` | `^7 \|\| ^8 \|\| ^9` / `^3 \|\| ^4 \|\| ^5` |
+
+New peers: `@hello-pangea/dnd` (replaces `react-beautiful-dnd`), `@vis.gl/react-google-maps` and `@googlemaps/markerclusterer` (replace `react-google-maps`). `react-bootstrap`, `react-rte` and `react-google-maps` are no longer used.
+
+### Removed
+
+- `inputs/editor-input` and `inputs/editor-input-v2`, and the `TextEditor` barrel export. Use `inputs/editor-input-v3` (`id`, `name`, `value`, `onChange`, `error`); its `onChange` gets the same `{ target: { id, value } }` event.
+- The `inputProps` prop of `mui/addon-type-select` and `mui/formik-inputs/addon-type-select`; pass `error` / `helperText` instead.
+
+### Behavior changes
+
+- `google-map` (`GMap`) is now a function component: refs to the old class instance no longer work. It reuses the Maps script the app already loads.
+- `inputs/datetimepicker` still accepts the react-datetime v2 prop names (`defaultValue`, `viewDate`, `viewMode`, `onBlur`, `onFocus`, …) and maps them to v3.
+- Function components no longer read `defaultProps`; omitted props get the same defaults through default parameters.
+
+### In the app
+
+- If the app imports `react-select` directly, switch `react-select/lib/Async`, `lib/Creatable` and `lib/AsyncCreatable` to `react-select/async`, `react-select/creatable` and `react-select/async-creatable`.
+- Follow the [MUI v7](https://mui.com/material-ui/migration/upgrade-to-v7/) and later migration guides for the app's own MUI code. Two changes no codemod covers:
+  - System props on `Box`, `Stack` and `Typography` (`<Box display="flex" mt={2}>`, `<Typography color="text.secondary">`) are ignored; move them into `sx`.
+  - In `sx`, a bare palette name no longer resolves to a color: use `color: "error.main"`, not `color: "error"`.
+- `Grid2` is now `Grid`, and `Grid`'s legacy `item` / `xs` props are gone (use `size`).
 
 ## How to publish new version
 
