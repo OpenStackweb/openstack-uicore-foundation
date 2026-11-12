@@ -20,13 +20,13 @@ const BLOCKED_KEYS = ["e", "E"];
 
 const NumberInput = ({
   id,
-  value,
-  label,
-  placeholder,
-  disabled,
-  min,
-  max,
-  integer,
+  value = null,
+  label = "",
+  placeholder = "",
+  disabled = false,
+  min = null,
+  max = null,
+  integer = false,
   onChange,
   ...rest
 }) => {
@@ -109,14 +109,5 @@ NumberInput.propTypes = {
   onChange: PropTypes.func.isRequired
 };
 
-NumberInput.defaultProps = {
-  value: null,
-  label: "",
-  placeholder: "",
-  disabled: false,
-  min: null,
-  max: null,
-  integer: false
-};
 
 export default NumberInput;

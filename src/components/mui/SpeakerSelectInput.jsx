@@ -22,9 +22,16 @@ const defaultFormatOption = (speaker) => ({
   label: `${speaker.first_name} ${speaker.last_name} (${speaker.email || speaker.id})`
 });
 
-const SpeakerSelectInput = ({ summitId, queryFunction, placeholder, ...rest }) => (
+const SpeakerSelectInput = ({
+  summitId = null,
+  queryFunction = null,
+  formatOption = defaultFormatOption,
+  placeholder,
+  ...rest
+}) => (
   <AsyncSelectInput
     queryFunction={queryFunction || ((input, callback) => querySpeakersRaw(summitId, input, callback))}
+    formatOption={formatOption}
     placeholder={placeholder || T.translate("placeholders.speaker")}
     // eslint-disable-next-line react/jsx-props-no-spreading
     {...rest}
@@ -38,10 +45,5 @@ SpeakerSelectInput.propTypes = {
   placeholder: PropTypes.string
 };
 
-SpeakerSelectInput.defaultProps = {
-  summitId: null,
-  queryFunction: null,
-  formatOption: defaultFormatOption
-};
 
 export default SpeakerSelectInput;

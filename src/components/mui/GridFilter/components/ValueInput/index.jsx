@@ -31,10 +31,25 @@ const INPUT_TYPE_MAP = {
   company: CompanySelectInput
 };
 
-const ValueInput = ({ type, ...rest }) => {
+const ValueInput = ({
+  type = null,
+  value = null,
+  label = "",
+  placeholder = "",
+  options = null,
+  ...rest
+}) => {
   const Component = type ? INPUT_TYPE_MAP[type] : Dropdown; // use dropdown as a placeholder
-  // eslint-disable-next-line react/jsx-props-no-spreading
-  return Component ? <Component {...rest} /> : null;
+  return Component ? (
+    <Component
+      value={value}
+      label={label}
+      placeholder={placeholder}
+      options={options}
+      // eslint-disable-next-line react/jsx-props-no-spreading
+      {...rest}
+    />
+  ) : null;
 };
 
 ValueInput.propTypes = {
@@ -61,12 +76,5 @@ ValueInput.propTypes = {
   onChange: PropTypes.func.isRequired
 };
 
-ValueInput.defaultProps = {
-  type: null,
-  value: null,
-  label: "",
-  placeholder: "",
-  options: null
-};
 
 export default ValueInput;

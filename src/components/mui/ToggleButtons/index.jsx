@@ -15,7 +15,12 @@ import React from "react";
 import { ToggleButtonGroup, ToggleButton } from "@mui/material";
 import PropTypes from "prop-types";
 
-const ToggleButtons = ({ options, value, onChange, color = "primary" }) => (
+const ToggleButtons = ({
+  options,
+  value = null,
+  onChange,
+  color = "primary"
+}) => (
   <ToggleButtonGroup
     value={value}
     color={color}
@@ -57,9 +62,5 @@ ToggleButtons.propTypes = {
   onChange: PropTypes.func.isRequired
 };
 
-ToggleButtons.defaultProps = {
-  value: null,
-  color: "primary"
-};
 
 export default ToggleButtons;

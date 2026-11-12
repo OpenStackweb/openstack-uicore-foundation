@@ -22,9 +22,15 @@ const defaultFormatOption = (company) => ({
   label: company.name
 });
 
-const CompanySelectInput = ({ queryFunction, placeholder, ...rest }) => (
+const CompanySelectInput = ({
+  queryFunction = null,
+  formatOption = defaultFormatOption,
+  placeholder,
+  ...rest
+}) => (
   <AsyncSelectInput
     queryFunction={queryFunction || queryCompaniesRaw}
+    formatOption={formatOption}
     placeholder={placeholder || T.translate("placeholders.company")}
     // eslint-disable-next-line react/jsx-props-no-spreading
     {...rest}
@@ -37,9 +43,5 @@ CompanySelectInput.propTypes = {
   placeholder: PropTypes.string
 };
 
-CompanySelectInput.defaultProps = {
-  queryFunction: null,
-  formatOption: defaultFormatOption
-};
 
 export default CompanySelectInput;

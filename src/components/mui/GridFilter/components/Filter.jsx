@@ -24,7 +24,14 @@ import { OPERATORS } from "../utils";
 
 const OPERATOR_VALUES = Object.values(OPERATORS).map((op) => op.value);
 
-const Filter = ({ id, value, criterias, onChange, onAdd, onDelete }) => {
+const Filter = ({
+  id,
+  value = null,
+  criterias,
+  onChange,
+  onAdd,
+  onDelete
+}) => {
   const criteriaOptions = criterias.map(({ key, label }) => ({
     value: key,
     label
@@ -182,8 +189,5 @@ Filter.propTypes = {
   onDelete: PropTypes.func.isRequired
 };
 
-Filter.defaultProps = {
-  value: null
-};
 
 export default Filter;

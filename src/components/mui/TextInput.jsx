@@ -18,10 +18,10 @@ import T from "i18n-react/dist/i18n-react";
 
 const TextInput = ({
   id,
-  value,
-  label,
-  placeholder,
-  disabled,
+  value = null,
+  label = "",
+  placeholder = "",
+  disabled = false,
   onChange,
   ...rest
 }) => {
@@ -53,11 +53,5 @@ TextInput.propTypes = {
   onChange: PropTypes.func.isRequired
 };
 
-TextInput.defaultProps = {
-  value: null,
-  label: "",
-  placeholder: "",
-  disabled: false
-};
 
 export default TextInput;

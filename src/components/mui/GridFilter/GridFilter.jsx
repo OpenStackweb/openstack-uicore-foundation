@@ -36,13 +36,16 @@ const OPERATOR_VALUES = Object.values(OPERATORS).map((op) => op.value);
 
 // For usage INSTRUCTIONS see readme.md in this directory.
 
+const noop = () => {};
+const DEFAULT_ICON_SX = {};
+
 const GridFilter = ({
   id,
   criterias,
   hideJoinOperators = false,
-  onApply,
+  onApply = noop,
   saveFilters,
-  iconSx
+  iconSx = DEFAULT_ICON_SX
 }) => {
   const { joinOperator, filterCount, valuesWithIds } = useGridFilter(id);
   const valuesString = useMemo(
@@ -235,10 +238,5 @@ GridFilter.propTypes = {
   iconSx: PropTypes.object
 };
 
-GridFilter.defaultProps = {
-  hideJoinOperators: false,
-  onApply: () => {},
-  iconSx: {}
-};
 
 export default connect(null, { saveFilters })(GridFilter);

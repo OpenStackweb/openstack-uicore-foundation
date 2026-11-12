@@ -16,12 +16,14 @@ import T from "i18n-react/dist/i18n-react";
 import { Select, FormControl, MenuItem, InputLabel } from "@mui/material";
 import PropTypes from "prop-types";
 
+const DEFAULT_OPTIONS = [];
+
 const Dropdown = ({
   id,
-  value,
-  options,
-  placeholder,
-  label,
+  value = null,
+  options = DEFAULT_OPTIONS,
+  placeholder = "",
+  label = "",
   onChange,
   ...rest
 }) => {
@@ -97,11 +99,5 @@ Dropdown.propTypes = {
   onChange: PropTypes.func.isRequired
 };
 
-Dropdown.defaultProps = {
-  value: null,
-  label: "",
-  placeholder: "",
-  options: []
-};
 
 export default Dropdown;
