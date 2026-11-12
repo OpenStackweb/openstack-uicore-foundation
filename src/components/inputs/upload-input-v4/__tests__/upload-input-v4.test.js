@@ -188,6 +188,57 @@ describe('UploadInputV4', () => {
       render(<UploadInputV4 {...defaultProps} value={files} canDelete={true} />);
       expect(screen.queryAllByRole('button')).toHaveLength(0);
     });
+
+    // V3 reported these through Dropzone's removedfile; callers reset their
+    // uploading state and clear a pending file in onRemove.
+    test('cancelling an in-flight upload calls onRemove with the selected File', async () => {
+      holdPuts();
+      const onRemove = jest.fn();
+      const { container } = render(<UploadInputV4 {...defaultProps} onRemove={onRemove} />);
+      const file = fileOf('sample.png', 11264, 'image/png');
+      select(container, file);
+      await waitFor(() => expect(api.puts()).toHaveLength(1));
+
+      act(() => { fireEvent.click(screen.getByRole('button', { name: 'Remove sample.png' })); });
+
+      expect(onRemove).toHaveBeenCalledTimes(1);
+      expect(onRemove.mock.calls[0][0]).toBe(file);
+    });
+
+    test('deleting a delivered row the parent has not confirmed calls onRemove with the File', async () => {
+      const onRemove = jest.fn();
+      const onUploadComplete = jest.fn();
+      const { container } = render(
+        <UploadInputV4 {...defaultProps} onRemove={onRemove} onUploadComplete={onUploadComplete} />
+      );
+      const file = fileOf('doc.pdf', 2048, 'application/pdf');
+      select(container, file);
+      await waitFor(() => expect(onUploadComplete).toHaveBeenCalledTimes(1));
+
+      act(() => { fireEvent.click(screen.getByRole('button', { name: 'Remove doc.pdf' })); });
+
+      expect(onRemove).toHaveBeenCalledTimes(1);
+      expect(onRemove.mock.calls[0][0]).toBe(file);
+      expect(screen.queryByText('doc.pdf')).not.toBeInTheDocument();
+    });
+
+    test('deleting a delivered row after its file left Uppy passes name and size, never the row id', async () => {
+      const onRemove = jest.fn();
+      const onUploadComplete = jest.fn();
+      const { container } = render(
+        <UploadInputV4 {...defaultProps} maxFiles={2} onRemove={onRemove} onUploadComplete={onUploadComplete} />
+      );
+      select(container, fileOf('doc.pdf', 2048, 'application/pdf'));
+      await waitFor(() => expect(onUploadComplete).toHaveBeenCalledTimes(1));
+      // A new selection takes delivered files out of Uppy; the unconfirmed row stays.
+      select(container, fileOf('other.pdf', 4096, 'application/pdf'));
+      await waitFor(() => expect(api.puts()).toHaveLength(2));
+
+      act(() => { fireEvent.click(screen.getByRole('button', { name: 'Remove doc.pdf' })); });
+
+      expect(onRemove).toHaveBeenCalledTimes(1);
+      expect(onRemove.mock.calls[0][0]).toEqual({ name: 'doc.pdf', size: 2048 });
+    });
   });
 
   describe('Accessibility', () => {

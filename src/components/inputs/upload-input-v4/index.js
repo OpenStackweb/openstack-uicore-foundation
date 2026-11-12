@@ -311,10 +311,16 @@ const UploadInputV4 = ({
     onRemove(file);
   }, [onRemove, filePreviews]);
 
+  // V3 reported this through Dropzone's removedfile, which Uppy has no equivalent of.
+  // Callers rely on it to reset their uploading state or drop a pending file. Like V3,
+  // pass the File (never the row: its `id` is Uppy's, and callers read `id` as a saved
+  // upload's). A delivered file has left Uppy once another file is selected.
   const handleDeleteUploading = useCallback((file) => {
+    const uppyFile = uppy?.getFile(file.id);
     dropUploadingRow(file.id);
-    if (uppy?.getFile(file.id)) uppy.removeFile(file.id);
-  }, [uppy, dropUploadingRow]);
+    if (uppyFile) uppy.removeFile(file.id);
+    if (onRemove) onRemove(uppyFile?.data ?? { name: file.name, size: file.size });
+  }, [uppy, dropUploadingRow, onRemove]);
 
   const handleDismissError = useCallback((file) => {
     setErrorFiles(prev => prev.filter(f => f.id !== file.id));
