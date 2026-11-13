@@ -77,17 +77,24 @@ const useMessages = ({ grouped = false } = {}) => {
       // a blank message never opens, since it would block the queue
       if (empty(msg.html)) return prev;
       const now = Date.now();
-      // skip a repeat unless the first is fading out; errors only within the dedupe window
-      const isRepeat = prev.some(
+      // a repeat adds its details to the first, unless the first is fading out; errors only within the dedupe window
+      const repeat = prev.find(
         (m) =>
           !closingRef.current.includes(m) &&
           m.html === msg.html &&
           m.type === msg.type &&
           (!grouped || now - m.receivedAt < NOTIFICATION_DEDUPE_WINDOW)
       );
-      if (isRepeat) return prev;
-      const next = { ...msg, receivedAt: now };
-      return [...prev, next];
+      if (!repeat) return [...prev, { ...msg, receivedAt: now }];
+      if (!msg.details) return prev;
+      return prev.map((m) =>
+        m === repeat
+          ? {
+              ...m,
+              details: [m.details, msg.details].filter(Boolean).join("\n\n")
+            }
+          : m
+      );
     });
 
   // closes what is on screen; anything newer shows once it has faded out

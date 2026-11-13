@@ -387,6 +387,24 @@ describe("SnackbarNotification", () => {
       await screen.findByTestId("CheckIcon");
     });
 
+    test("adds a repeat's details to the error it repeats", async () => {
+      const writeText = jest.fn().mockResolvedValue();
+      mockClipboard(writeText);
+      const { rerender } = render(
+        ui({ ...errorA, details: "Request: GET /api/v1/summits (500)" })
+      );
+      rerender(
+        ui({ ...errorA, details: "Request: GET /api/v1/attendees (500)" })
+      );
+
+      fireEvent.click(screen.getByLabelText("general.copy_error"));
+
+      expect(writeText).toHaveBeenCalledWith(
+        "First error\n\nRequest: GET /api/v1/summits (500)\n\nRequest: GET /api/v1/attendees (500)"
+      );
+      await screen.findByTestId("CheckIcon");
+    });
+
     test("ignores a repeat within the dedupe window", () => {
       const { rerender } = render(ui(errorA));
       rerender(ui({ ...errorA }));
