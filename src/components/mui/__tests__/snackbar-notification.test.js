@@ -32,6 +32,28 @@ import {
 } from "../../../utils/constants";
 
 describe("SnackbarNotification", () => {
+  let clearConsumedSnackbarMessage;
+
+  const ui = (snackbarMessage) => (
+    <SnackbarNotification
+      snackbarMessage={snackbarMessage}
+      clearConsumedSnackbarMessage={clearConsumedSnackbarMessage}
+    >
+      <div>App</div>
+    </SnackbarNotification>
+  );
+
+  const mockClipboard = (writeText) =>
+    Object.assign(navigator, { clipboard: { writeText } });
+
+  beforeEach(() => {
+    clearConsumedSnackbarMessage = jest.fn();
+  });
+
+  afterEach(() => {
+    delete navigator.clipboard;
+  });
+
   test("renders children", () => {
     render(
       <SnackbarNotification clearConsumedSnackbarMessage={jest.fn()}>
@@ -78,19 +100,117 @@ describe("SnackbarNotification", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  test("copies an error as plain text with its details", async () => {
+    const writeText = jest.fn().mockResolvedValue();
+    mockClipboard(writeText);
+    render(
+      ui({
+        html: "Start date is required.<br>End date is invalid.<br>",
+        type: "warning",
+        details: "Request: PUT /api/v1/summits/1 (412)"
+      })
+    );
+
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+
+    expect(writeText).toHaveBeenCalledWith(
+      "Start date is required.\nEnd date is invalid.\n\nRequest: PUT /api/v1/summits/1 (412)"
+    );
+    // let the copied state settle inside the test
+    await screen.findByTestId("CheckIcon");
+  });
+
+  test("shows the check mark and announces Copied only after the clipboard accepts the text", async () => {
+    let accept;
+    mockClipboard(
+      jest.fn(
+        () =>
+          new Promise((resolve) => {
+            accept = resolve;
+          })
+      )
+    );
+    render(ui({ html: "Not found", type: "warning" }));
+
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+    expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+
+    accept();
+    expect(await screen.findByTestId("CheckIcon")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("general.copied");
+  });
+
+  test("says the copy failed when the clipboard rejects it", async () => {
+    mockClipboard(jest.fn().mockRejectedValue(new Error("blocked")));
+    render(ui({ html: "Not found", type: "warning" }));
+
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+
+    expect(await screen.findByText("general.copy_failed")).toHaveAttribute(
+      "role",
+      "status"
+    );
+    expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
+  });
+
+  test("says the copy failed when there is no clipboard", () => {
+    render(ui({ html: "Not found", type: "warning" }));
+
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+
+    expect(screen.getByRole("status")).toHaveTextContent("general.copy_failed");
+    expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
+  });
+
+  test("keeps a newer copy's check mark when an earlier copy finishes late", async () => {
+    let acceptFirst;
+    mockClipboard(
+      jest
+        .fn()
+        .mockReturnValueOnce(
+          new Promise((resolve) => {
+            acceptFirst = resolve;
+          })
+        )
+        .mockResolvedValueOnce()
+    );
+    const { rerender } = render(ui({ html: "First error", type: "warning" }));
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+    rerender(ui({ html: "Second error", type: "error" }));
+    fireEvent.click(screen.getByLabelText("general.copy_all_errors"));
+    await screen.findByTestId("CheckIcon");
+
+    await act(async () => {
+      acceptFirst();
+    });
+    expect(screen.getByTestId("CheckIcon")).toBeInTheDocument();
+  });
+
+  test("clears the copied state when a new message with the same text shows", async () => {
+    mockClipboard(jest.fn().mockResolvedValue());
+    const { rerender } = render(ui({ html: "Not found", type: "warning" }));
+    fireEvent.click(screen.getByLabelText("general.copy_error"));
+    await screen.findByTestId("CheckIcon");
+
+    // a repeat only shows once the copied one is closed
+    fireEvent.click(screen.getByRole("button", { name: /close/i }));
+    rerender(ui({ html: "Not found", type: "warning" }));
+
+    expect(await screen.findByTestId("ContentCopyIcon")).toBeInTheDocument();
+    expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument();
+  });
+
+  test("keeps only the close button on a success message", () => {
+    render(ui({ html: "Saved", type: "success" }));
+
+    expect(screen.queryByLabelText("general.copy_error")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Close")).toBeInTheDocument();
+  });
+
   describe("pinned and grouped errors", () => {
     const errorA = { html: "First error", type: "warning" };
     const errorB = { html: "Second error", type: "error" };
-    let clearConsumedSnackbarMessage;
-
-    const ui = (snackbarMessage) => (
-      <SnackbarNotification
-        snackbarMessage={snackbarMessage}
-        clearConsumedSnackbarMessage={clearConsumedSnackbarMessage}
-      >
-        <div>App</div>
-      </SnackbarNotification>
-    );
 
     const advance = (ms) =>
       act(() => {
@@ -109,7 +229,6 @@ describe("SnackbarNotification", () => {
 
     beforeEach(() => {
       jest.useFakeTimers();
-      clearConsumedSnackbarMessage = jest.fn();
     });
     afterEach(() => jest.useRealTimers());
 
@@ -248,6 +367,42 @@ describe("SnackbarNotification", () => {
       expect(items).toHaveLength(2);
       expect(items[0]).toHaveTextContent("Second error");
       expect(items[1]).toHaveTextContent("First error");
+    });
+
+    test("copies every error in the group, oldest first", async () => {
+      const writeText = jest.fn().mockResolvedValue();
+      mockClipboard(writeText);
+      jest.setSystemTime(new Date(2026, 10, 10, 17, 18, 52));
+      const { rerender } = render(
+        ui({ ...errorA, details: "Request: PUT /api/v1/summits/1 (412)" })
+      );
+      jest.setSystemTime(new Date(2026, 10, 10, 17, 18, 55));
+      rerender(ui(errorB));
+
+      fireEvent.click(screen.getByLabelText("general.copy_all_errors"));
+
+      expect(writeText).toHaveBeenCalledWith(
+        "[1/2] 5:18:52 pm\nFirst error\n\nRequest: PUT /api/v1/summits/1 (412)\n\n[2/2] 5:18:55 pm\nSecond error"
+      );
+      await screen.findByTestId("CheckIcon");
+    });
+
+    test("adds a repeat's details to the error it repeats", async () => {
+      const writeText = jest.fn().mockResolvedValue();
+      mockClipboard(writeText);
+      const { rerender } = render(
+        ui({ ...errorA, details: "Request: GET /api/v1/summits (500)" })
+      );
+      rerender(
+        ui({ ...errorA, details: "Request: GET /api/v1/attendees (500)" })
+      );
+
+      fireEvent.click(screen.getByLabelText("general.copy_error"));
+
+      expect(writeText).toHaveBeenCalledWith(
+        "First error\n\nRequest: GET /api/v1/summits (500)\n\nRequest: GET /api/v1/attendees (500)"
+      );
+      await screen.findByTestId("CheckIcon");
     });
 
     test("ignores a repeat within the dedupe window", () => {

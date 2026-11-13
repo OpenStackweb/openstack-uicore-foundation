@@ -19,11 +19,17 @@ import {
   Alert,
   Box,
   Collapse,
+  IconButton,
   Link,
   Snackbar,
+  Tooltip,
   Typography
 } from "@mui/material";
+import { visuallyHidden } from "@mui/utils";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ErrorIcon from "@mui/icons-material/Error";
 import SnackbarNotificationContext from "./Context";
 export { useSnackbarMessage } from "./Context";
@@ -43,6 +49,13 @@ import { clearConsumedSnackbarMessage } from "../../../utils/actions";
 
 const formatSentAt = (msg) =>
   formatEpoch(msg.receivedAt / MILLISECONDS_IN_SECOND, "h:mm:ss a");
+
+const toCopyText = (msg) => {
+  const html = String(msg.html).replace(/<br\s*\/?>/gi, "\n");
+  const text = new DOMParser().parseFromString(html, "text/html").body
+    .textContent;
+  return [text.trim(), msg.details].filter(Boolean).join("\n\n");
+};
 
 // a queue shows its first message, a group shows all of them at once
 const useMessages = ({ grouped = false } = {}) => {
@@ -64,17 +77,24 @@ const useMessages = ({ grouped = false } = {}) => {
       // a blank message never opens, since it would block the queue
       if (empty(msg.html)) return prev;
       const now = Date.now();
-      // skip a repeat unless the first is fading out; errors only within the dedupe window
-      const isRepeat = prev.some(
+      // a repeat adds its details to the first, unless the first is fading out; errors only within the dedupe window
+      const repeat = prev.find(
         (m) =>
           !closingRef.current.includes(m) &&
           m.html === msg.html &&
           m.type === msg.type &&
           (!grouped || now - m.receivedAt < NOTIFICATION_DEDUPE_WINDOW)
       );
-      if (isRepeat) return prev;
-      const next = { ...msg, receivedAt: now };
-      return [...prev, next];
+      if (!repeat) return [...prev, { ...msg, receivedAt: now }];
+      if (!msg.details) return prev;
+      return prev.map((m) =>
+        m === repeat
+          ? {
+              ...m,
+              details: [m.details, msg.details].filter(Boolean).join("\n\n")
+            }
+          : m
+      );
     });
 
   // closes what is on screen; anything newer shows once it has faded out
@@ -120,6 +140,45 @@ const NotificationSnackbar = ({ queue, vertical }) => {
     queue.onExited();
   };
 
+  // clipboard results for an earlier message are ignored
+  const [copyResult, setCopyResult] = useState(null);
+  const copyStatus = copyResult?.message === msgData ? copyResult.status : null;
+  // clipboard callbacks only see their own render, so they read a ref
+  const msgRef = useRef(msgData);
+  useEffect(() => {
+    msgRef.current = msgData;
+  });
+  const copyStatusKey = {
+    copied: "general.copied",
+    failed: "general.copy_failed"
+  }[copyStatus];
+  const copyLabel =
+    count > 1 ? "general.copy_all_errors" : "general.copy_error";
+  const handleCopy = () => {
+    // a late result for a message no longer on screen is dropped
+    const finish = (status) =>
+      msgRef.current === msgData && setCopyResult({ message: msgData, status });
+    // a group copies oldest first, each error under its position and sent time
+    const copyText =
+      count > 1
+        ? queue.shown
+            .map(
+              (m, i) =>
+                `[${i + 1}/${count}] ${formatSentAt(m)}\n${toCopyText(m)}`
+            )
+            .join("\n\n")
+        : toCopyText(msgData);
+    // the clipboard can be missing (non-https page) or blocked by the browser
+    try {
+      navigator.clipboard.writeText(copyText).then(
+        () => finish("copied"),
+        () => finish("failed")
+      );
+    } catch (e) {
+      finish("failed");
+    }
+  };
+
   return (
     <Snackbar
       open={queue.open}
@@ -130,6 +189,39 @@ const NotificationSnackbar = ({ queue, vertical }) => {
     >
       <Alert
         onClose={onClose}
+        // a custom action replaces Alert's close button, so errors re-add it
+        action={
+          isSuccess ? undefined : (
+            <>
+              <Tooltip title={T.translate(copyStatusKey || copyLabel)}>
+                <IconButton
+                  size="small"
+                  color="inherit"
+                  aria-label={T.translate(copyLabel)}
+                  onClick={handleCopy}
+                >
+                  {copyStatus === "copied" ? (
+                    <CheckIcon fontSize="small" />
+                  ) : (
+                    <ContentCopyIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </Tooltip>
+              {/* a live region, since screen readers skip the tooltip change */}
+              <Box component="span" role="status" sx={visuallyHidden}>
+                {copyStatusKey && T.translate(copyStatusKey)}
+              </Box>
+              <IconButton
+                size="small"
+                color="inherit"
+                aria-label={T.translate("general.close")}
+                onClick={onClose}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </>
+          )
+        }
         severity={msgData.type}
         variant="filled"
         sx={{ width: "100%", backgroundColor: `${msgData.type}.light` }}
