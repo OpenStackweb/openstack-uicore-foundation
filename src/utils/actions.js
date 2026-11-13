@@ -46,6 +46,12 @@ export const clearSnackbarMessage = () => (dispatch) => {
     dispatch(createAction(CLEAR_SNACKBAR_MESSAGE)({}));
 };
 
+// only clears if no newer message has replaced it
+export const clearConsumedSnackbarMessage = (msg) => (dispatch, getState) => {
+    if (getState().baseState.snackbarMessage === msg)
+        dispatch(createAction(CLEAR_SNACKBAR_MESSAGE)({}));
+};
+
 export const setSnackbarMessage = (message) => (dispatch) => {
     dispatch(createAction(SET_SNACKBAR_MESSAGE)(message));
 };

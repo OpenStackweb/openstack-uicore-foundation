@@ -1,4 +1,4 @@
-import {authErrorHandler, snackbarErrorHandler, SET_SNACKBAR_MESSAGE, VALIDATE} from "../actions";
+import {authErrorHandler, snackbarErrorHandler, clearConsumedSnackbarMessage, CLEAR_SNACKBAR_MESSAGE, SET_SNACKBAR_MESSAGE, VALIDATE} from "../actions";
 import {setAuthHandlers} from "../../components/security/methods";
 import { CLEAR_SESSION_STATE } from "../../components/security/actions";
 import configureMockStore from 'redux-mock-store';
@@ -207,6 +207,22 @@ describe('Utils Actions', () => {
             expect(types).toContain(SET_SNACKBAR_MESSAGE);
             // CLEAR_SESSION_STATE is only dispatched by initLogin
             expect(types).toContain(CLEAR_SESSION_STATE);
+        });
+    });
+
+    describe('clearConsumedSnackbarMessage', () => {
+        const msg = { html: 'Saved', type: 'success' };
+
+        test('clears the slot when it still holds the message', () => {
+            const slotStore = mockStore({ baseState: { snackbarMessage: msg } });
+            slotStore.dispatch(clearConsumedSnackbarMessage(msg));
+            expect(slotStore.getActions()).toEqual([{ type: CLEAR_SNACKBAR_MESSAGE, payload: {} }]);
+        });
+
+        test('keeps a newer message in the slot', () => {
+            const slotStore = mockStore({ baseState: { snackbarMessage: { ...msg } } });
+            slotStore.dispatch(clearConsumedSnackbarMessage(msg));
+            expect(slotStore.getActions()).toEqual([]);
         });
     });
 });
