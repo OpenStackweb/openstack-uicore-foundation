@@ -2,6 +2,8 @@ import {authErrorHandler, snackbarErrorHandler, clearConsumedSnackbarMessage, CL
 import {setAuthHandlers} from "../../components/security/methods";
 import { CLEAR_SESSION_STATE } from "../../components/security/actions";
 import configureMockStore from 'redux-mock-store';
+import request from 'superagent/lib/client';
+import URI from "urijs";
 import Swal from 'sweetalert2';
 import thunk from 'redux-thunk'
 

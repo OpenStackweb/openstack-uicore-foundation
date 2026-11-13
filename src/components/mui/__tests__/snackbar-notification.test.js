@@ -32,12 +32,12 @@ import {
 } from "../../../utils/constants";
 
 describe("SnackbarNotification", () => {
-  let clearSnackbarMessage;
+  let clearConsumedSnackbarMessage;
 
   const ui = (snackbarMessage) => (
     <SnackbarNotification
       snackbarMessage={snackbarMessage}
-      clearSnackbarMessage={clearSnackbarMessage}
+      clearConsumedSnackbarMessage={clearConsumedSnackbarMessage}
     >
       <div>App</div>
     </SnackbarNotification>
@@ -47,7 +47,7 @@ describe("SnackbarNotification", () => {
     Object.assign(navigator, { clipboard: { writeText } });
 
   beforeEach(() => {
-    clearSnackbarMessage = jest.fn();
+    clearConsumedSnackbarMessage = jest.fn();
   });
 
   afterEach(() => {
@@ -211,16 +211,6 @@ describe("SnackbarNotification", () => {
   describe("pinned and grouped errors", () => {
     const errorA = { html: "First error", type: "warning" };
     const errorB = { html: "Second error", type: "error" };
-    let clearConsumedSnackbarMessage;
-
-    const ui = (snackbarMessage) => (
-      <SnackbarNotification
-        snackbarMessage={snackbarMessage}
-        clearConsumedSnackbarMessage={clearConsumedSnackbarMessage}
-      >
-        <div>App</div>
-      </SnackbarNotification>
-    );
 
     const advance = (ms) =>
       act(() => {
@@ -239,7 +229,6 @@ describe("SnackbarNotification", () => {
 
     beforeEach(() => {
       jest.useFakeTimers();
-      clearConsumedSnackbarMessage = jest.fn();
     });
     afterEach(() => jest.useRealTimers());
 
