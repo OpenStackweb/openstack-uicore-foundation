@@ -1,7 +1,9 @@
-import {authErrorHandler, snackbarErrorHandler, clearConsumedSnackbarMessage, CLEAR_SNACKBAR_MESSAGE, SET_SNACKBAR_MESSAGE, VALIDATE} from "../actions";
+import {authErrorHandler, snackbarErrorHandler, getRequest, clearConsumedSnackbarMessage, CLEAR_SNACKBAR_MESSAGE, SET_SNACKBAR_MESSAGE, VALIDATE} from "../actions";
 import {setAuthHandlers} from "../../components/security/methods";
 import { CLEAR_SESSION_STATE } from "../../components/security/actions";
 import configureMockStore from 'redux-mock-store';
+import request from 'superagent/lib/client';
+import URI from "urijs";
 import Swal from 'sweetalert2';
 import thunk from 'redux-thunk'
 
@@ -191,6 +193,11 @@ describe('Utils Actions', () => {
     });
 
     describe('snackbarErrorHandler', () => {
+        const copiedDetails = (err) => {
+            store.dispatch(snackbarErrorHandler(err));
+            return store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE).payload.details;
+        };
+
         test('401 shows the snackbar and still runs the re-login', () => {
             windowSpy.mockImplementation(() => ({
                 location: {
@@ -207,6 +214,102 @@ describe('Utils Actions', () => {
             expect(types).toContain(SET_SNACKBAR_MESSAGE);
             // CLEAR_SESSION_STATE is only dispatched by initLogin
             expect(types).toContain(CLEAR_SESSION_STATE);
+        });
+
+        test('adds request details without the query string', () => {
+            const err = {
+                status: 404,
+                response: {
+                    body: { message: "Entity Not Found" },
+                    req: { method: "PUT", url: "https://api.example.com/api/v1/summits/1?access_token=secret&expand=x" }
+                }
+            };
+
+            const details = copiedDetails(err);
+
+            expect(details).toContain("Request: PUT https://api.example.com/api/v1/summits/1 (404)");
+            expect(details).not.toContain("secret");
+        });
+
+        test('copies the request and 4xx response bodies with sensitive fields redacted', () => {
+            const req = request.put("https://api.example.com/api/v1/summits/1/attendees/2").send({
+                ticket_type_id: 7,
+                send_speaker_email: true,
+                owner: { email: "jane@example.com", first_name: "Jane", phone_number: "555-0100", billing_address_1: "1 Main St" },
+                payment: { payment_info_details: { brand: "visa", last4: "4242" }, live_secret_key: "sk_live_123" },
+                extra_questions: [{ question_id: 3, answer: "1990-01-01" }],
+                client: { contact_name: "Ann Lee" },
+                qr_code: "BDG|123|jane@example.com|Jane Doe",
+                access_token: "abc"
+            });
+            const body = { message: "Validation Failed", errors: { start_date: ["The start date field is required."] }, user_password: "password2" };
+
+            const details = copiedDetails({ status: 412, response: { body, req } });
+
+            expect(details).toContain('"ticket_type_id": 7');
+            expect(details).toContain('"send_speaker_email": true');
+            expect(details).toContain("The start date field is required.");
+            ["jane@example.com", "Jane", "555-0100", "1 Main St", "visa", "4242", "sk_live_123", "1990-01-01", "Ann Lee", "BDG|123", '"abc"', "password2"]
+                .forEach((value) => expect(details).not.toContain(value));
+        });
+
+        test('skips 5xx response bodies and truncates long payloads', () => {
+            const req = request.post("https://api.example.com/api/v1/summits").send({ notes: "x".repeat(5000) });
+
+            const details = copiedDetails({ status: 500, response: { body: { trace: "debug output" }, req } });
+
+            expect(details).toContain("… (truncated)");
+            expect(details).not.toContain("x".repeat(2001));
+            expect(details).not.toContain("debug output");
+        });
+
+        test('still notifies and re-logs in when the details cannot be built', () => {
+            windowSpy.mockImplementation(() => ({
+                location: {
+                    href: 'https://example.com',
+                    pathname:'/',
+                    replace: () => {}
+                },
+                localStorage: localStorageMock
+            }));
+            const err = { status: 401, get response() { throw new Error("unreadable"); } };
+
+            expect(copiedDetails(err)).toBe("");
+            expect(store.getActions().map((a) => a.type)).toContain(CLEAR_SESSION_STATE);
+        });
+
+        test('flags a missing response when the browser is offline', () => {
+            const onLineSpy = jest.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+
+            const details = copiedDetails({ method: "GET", url: "https://api.example.com/api/v1/summits" });
+            onLineSpy.mockRestore();
+
+            expect(details).toContain("Request: GET https://api.example.com/api/v1/summits (no response, offline)");
+        });
+
+        test('builds details for a post request made with a URI object', () => {
+            // postRequest, deleteRequest, postFile and putFile hand superagent a URI, not a string
+            const req = request.post(URI("https://api.example.com/api/v1/summits").query({ access_token: "secret" })).send({ name: "Summit" });
+
+            const details = copiedDetails({ status: 412, response: { body: { errors: ["Name taken."] }, req } });
+
+            expect(details).toContain("Request: POST https://api.example.com/api/v1/summits (412)");
+            expect(details).toContain('"name": "Summit"');
+            expect(details).not.toContain("secret");
+        });
+
+        test('names a GET that timed out', async () => {
+            // superagent's timeout error carries only timeout, code and errno
+            const timeoutErr = Object.assign(new Error("Timeout of 60000ms exceeded"), { timeout: 60000, code: "ECONNABORTED" });
+            const req = { method: "GET", timeout: () => req, end: (callback) => callback(timeoutErr) };
+            const getSpy = jest.spyOn(request, "get").mockReturnValue(req);
+
+            await store.dispatch(getRequest(null, null, "https://api.example.com/api/v1/summits", snackbarErrorHandler)({ page: 2, access_token: "secret" })).catch(() => {});
+            getSpy.mockRestore();
+
+            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
+            expect(payload.details).toContain("Request: GET https://api.example.com/api/v1/summits (timed out)");
+            expect(payload.details).not.toContain("secret");
         });
     });
 

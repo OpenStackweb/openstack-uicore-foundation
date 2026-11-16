@@ -18,10 +18,10 @@ URI.escapeQuerySpace = false;
 let http = request;
 import Swal from 'sweetalert2';
 import T from "i18n-react/dist/i18n-react";
-import { isClearingSessionState, setSessionClearingState, getCurrentPathName } from './methods';
+import { isClearingSessionState, setSessionClearingState, getCurrentPathName, formatEpoch } from './methods';
 import { CLEAR_SESSION_STATE } from '../components/security/actions';
 import { doLogin, initLogOut, getAuthHandlers } from '../components/security/methods';
-import {CODE_200} from "./constants";
+import {CODE_200, ERROR_DETAILS_MAX_LENGTH, MILLISECONDS_IN_SECOND} from "./constants";
 
 export const GENERIC_ERROR  = "Yikes. Something seems to be broken. Our web team has been notified, and we apologize for the inconvenience.";
 export const RESET_LOADING  = 'RESET_LOADING';
@@ -62,8 +62,50 @@ const notifySnackbarError = (message, callback) => (dispatch) => {
     if (typeof callback === "function") callback();
 };
 
+// best-effort redaction by key name of secrets, payment details and personal information
+const SENSITIVE_KEYS = /^(.*_key|.*(token|secret|password).*|hash|.*emails?|.*phone.*|.*(first|last)_name|.*full_?names?|surname|(.*_)?owner_name|requestor_name|contact_name|qr_code|(.*_)?address(\d|_.*)?|zip_code|gender|ip|payment_info_details|payment_gateway_result|answers?)$/i;
+
+const redact = (key, value) => (typeof value !== "boolean" && SENSITIVE_KEYS.test(key) ? "[REDACTED]" : value);
+
+const formatPayload = (label, data) => {
+    // strings can't be redacted by key, so only objects are copied
+    if (data == null || typeof data !== "object" || !Object.keys(data).length) return "";
+    const json = JSON.stringify(data, redact, 2);
+    const text = json.length > ERROR_DETAILS_MAX_LENGTH ? `${json.slice(0, ERROR_DETAILS_MAX_LENGTH)}… (truncated)` : json;
+    return `${label}: ${text}`;
+};
+
+// copyable context for bug reports; query strings are dropped since they carry the access_token
+const buildErrorDetails = (err) => {
+    const req = err.response?.req || err;
+    // post, delete and file requests keep the URI object superagent was given
+    const url = req.url ? String(req.url).split("?")[0] : "";
+    // timeouts carry no status, only the timeout
+    const status = err.status || (err.timeout && "timed out") || (navigator.onLine ? "no response" : "no response, offline");
+    // 5xx bodies can hold debug output, so only 4xx responses are copied
+    const isClientError = err.status >= 400 && err.status < 500;
+    const requestLine = [req.method, url, `(${status})`].filter(Boolean).join(" ");
+    const now = new Date();
+    const localTime = formatEpoch(now.getTime() / MILLISECONDS_IN_SECOND, "M/D/YYYY h:mm:ss a [UTC]Z");
+    return [
+        `Request: ${requestLine}`,
+        formatPayload("Request body", req.toJSON?.().data),
+        isClientError ? formatPayload("Response body", err.response?.body) : "",
+        `Page: ${window.location.pathname}`,
+        `Time: ${now.toISOString()} (${localTime})`
+    ].filter(Boolean).join("\n");
+};
+
 export const snackbarErrorHandler = (err, res) => (dispatch, state) => {
-    authErrorHandler(err, res, notifySnackbarError)(dispatch, state);
+    let details;
+    // details are optional; a failure here must not stop the snackbar or the 401 re-login
+    try {
+        details = buildErrorDetails(err);
+    } catch (e) {
+        details = "";
+    }
+    const notifyWithDetails = (message, callback) => notifySnackbarError({ ...message, details }, callback);
+    authErrorHandler(err, res, notifyWithDetails)(dispatch, state);
 };
 
 export const snackbarSuccessHandler = (message) => (dispatch, state) =>
@@ -225,7 +267,14 @@ export const getRequest =(
             response: 60000,
             deadline: 60000,
         })
-        .end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject, key, useEtag))
+        .end((err, res) => {
+            // a timeout error carries no method or url, so name the request for the copied details
+            if (err && !err.response && !err.url) {
+                err.method = req.method;
+                err.url = key;
+            }
+            responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject, key, useEtag)(err, res);
+        })
 
         schedule(key, req);
     });
