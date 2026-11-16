@@ -65,10 +65,12 @@ const notifySnackbarError = (message, callback) => (dispatch) => {
 // best-effort redaction by key name of secrets, payment details and personal information
 const SENSITIVE_KEYS = /^(.*_key|.*(token|secret|password).*|hash|.*emails?|.*phone.*|.*(first|last)_name|.*full_?names?|surname|(.*_)?owner_name|requestor_name|contact_name|qr_code|(.*_)?address(\d|_.*)?|zip_code|gender|ip|payment_info_details|payment_gateway_result|answers?)$/i;
 
+const redact = (key, value) => (typeof value !== "boolean" && SENSITIVE_KEYS.test(key) ? "[REDACTED]" : value);
+
 const formatPayload = (label, data) => {
     // strings can't be redacted by key, so only objects are copied
     if (data == null || typeof data !== "object" || !Object.keys(data).length) return "";
-    const json = JSON.stringify(data, (key, value) => (typeof value !== "boolean" && SENSITIVE_KEYS.test(key) ? "[REDACTED]" : value), 2);
+    const json = JSON.stringify(data, redact, 2);
     const text = json.length > ERROR_DETAILS_MAX_LENGTH ? `${json.slice(0, ERROR_DETAILS_MAX_LENGTH)}… (truncated)` : json;
     return `${label}: ${text}`;
 };
@@ -82,13 +84,15 @@ const buildErrorDetails = (err) => {
     const status = err.status || (err.timeout && "timed out") || (navigator.onLine ? "no response" : "no response, offline");
     // 5xx bodies can hold debug output, so only 4xx responses are copied
     const isClientError = err.status >= 400 && err.status < 500;
+    const requestLine = [req.method, url, `(${status})`].filter(Boolean).join(" ");
     const now = new Date();
+    const localTime = formatEpoch(now.getTime() / MILLISECONDS_IN_SECOND, "M/D/YYYY h:mm:ss a [UTC]Z");
     return [
-        `Request: ${[req.method, url, `(${status})`].filter(Boolean).join(" ")}`,
+        `Request: ${requestLine}`,
         formatPayload("Request body", req.toJSON?.().data),
         isClientError ? formatPayload("Response body", err.response?.body) : "",
         `Page: ${window.location.pathname}`,
-        `Time: ${now.toISOString()} (${formatEpoch(now.getTime() / MILLISECONDS_IN_SECOND, "M/D/YYYY h:mm:ss a [UTC]Z")})`
+        `Time: ${now.toISOString()} (${localTime})`
     ].filter(Boolean).join("\n");
 };
 

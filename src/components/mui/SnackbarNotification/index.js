@@ -77,7 +77,7 @@ const useMessages = ({ grouped = false } = {}) => {
       // a blank message never opens, since it would block the queue
       if (empty(msg.html)) return prev;
       const now = Date.now();
-      // a repeat adds its details to the first, unless the first is fading out; errors only within the dedupe window
+      // a repeat of an open message adds its details; errors only within the dedupe window
       const repeat = prev.find(
         (m) =>
           !closingRef.current.includes(m) &&
@@ -179,6 +179,38 @@ const NotificationSnackbar = ({ queue, vertical }) => {
     }
   };
 
+  // a custom action replaces Alert's close button, so errors re-add it
+  const errorActions = isSuccess ? undefined : (
+    <>
+      <Tooltip title={T.translate(copyStatusKey || copyLabel)}>
+        <IconButton
+          size="small"
+          color="inherit"
+          aria-label={T.translate(copyLabel)}
+          onClick={handleCopy}
+        >
+          {copyStatus === "copied" ? (
+            <CheckIcon fontSize="small" />
+          ) : (
+            <ContentCopyIcon fontSize="small" />
+          )}
+        </IconButton>
+      </Tooltip>
+      {/* a live region, since screen readers skip the tooltip change */}
+      <Box component="span" role="status" sx={visuallyHidden}>
+        {copyStatusKey && T.translate(copyStatusKey)}
+      </Box>
+      <IconButton
+        size="small"
+        color="inherit"
+        aria-label={T.translate("general.close")}
+        onClick={onClose}
+      >
+        <CloseIcon fontSize="small" />
+      </IconButton>
+    </>
+  );
+
   return (
     <Snackbar
       open={queue.open}
@@ -189,39 +221,7 @@ const NotificationSnackbar = ({ queue, vertical }) => {
     >
       <Alert
         onClose={onClose}
-        // a custom action replaces Alert's close button, so errors re-add it
-        action={
-          isSuccess ? undefined : (
-            <>
-              <Tooltip title={T.translate(copyStatusKey || copyLabel)}>
-                <IconButton
-                  size="small"
-                  color="inherit"
-                  aria-label={T.translate(copyLabel)}
-                  onClick={handleCopy}
-                >
-                  {copyStatus === "copied" ? (
-                    <CheckIcon fontSize="small" />
-                  ) : (
-                    <ContentCopyIcon fontSize="small" />
-                  )}
-                </IconButton>
-              </Tooltip>
-              {/* a live region, since screen readers skip the tooltip change */}
-              <Box component="span" role="status" sx={visuallyHidden}>
-                {copyStatusKey && T.translate(copyStatusKey)}
-              </Box>
-              <IconButton
-                size="small"
-                color="inherit"
-                aria-label={T.translate("general.close")}
-                onClick={onClose}
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </>
-          )
-        }
+        action={errorActions}
         severity={msgData.type}
         variant="filled"
         sx={{ width: "100%", backgroundColor: `${msgData.type}.light` }}

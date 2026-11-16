@@ -193,6 +193,11 @@ describe('Utils Actions', () => {
     });
 
     describe('snackbarErrorHandler', () => {
+        const copiedDetails = (err) => {
+            store.dispatch(snackbarErrorHandler(err));
+            return store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE).payload.details;
+        };
+
         test('401 shows the snackbar and still runs the re-login', () => {
             windowSpy.mockImplementation(() => ({
                 location: {
@@ -220,11 +225,10 @@ describe('Utils Actions', () => {
                 }
             };
 
-            store.dispatch(snackbarErrorHandler(err));
+            const details = copiedDetails(err);
 
-            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
-            expect(payload.details).toContain("Request: PUT https://api.example.com/api/v1/summits/1 (404)");
-            expect(payload.details).not.toContain("secret");
+            expect(details).toContain("Request: PUT https://api.example.com/api/v1/summits/1 (404)");
+            expect(details).not.toContain("secret");
         });
 
         test('copies the request and 4xx response bodies with sensitive fields redacted', () => {
@@ -240,25 +244,23 @@ describe('Utils Actions', () => {
             });
             const body = { message: "Validation Failed", errors: { start_date: ["The start date field is required."] }, user_password: "password2" };
 
-            store.dispatch(snackbarErrorHandler({ status: 412, response: { body, req } }));
+            const details = copiedDetails({ status: 412, response: { body, req } });
 
-            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
-            expect(payload.details).toContain('"ticket_type_id": 7');
-            expect(payload.details).toContain('"send_speaker_email": true');
-            expect(payload.details).toContain("The start date field is required.");
+            expect(details).toContain('"ticket_type_id": 7');
+            expect(details).toContain('"send_speaker_email": true');
+            expect(details).toContain("The start date field is required.");
             ["jane@example.com", "Jane", "555-0100", "1 Main St", "visa", "4242", "sk_live_123", "1990-01-01", "Ann Lee", "BDG|123", '"abc"', "password2"]
-                .forEach((value) => expect(payload.details).not.toContain(value));
+                .forEach((value) => expect(details).not.toContain(value));
         });
 
         test('skips 5xx response bodies and truncates long payloads', () => {
             const req = request.post("https://api.example.com/api/v1/summits").send({ notes: "x".repeat(5000) });
 
-            store.dispatch(snackbarErrorHandler({ status: 500, response: { body: { trace: "debug output" }, req } }));
+            const details = copiedDetails({ status: 500, response: { body: { trace: "debug output" }, req } });
 
-            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
-            expect(payload.details).toContain("… (truncated)");
-            expect(payload.details).not.toContain("x".repeat(2001));
-            expect(payload.details).not.toContain("debug output");
+            expect(details).toContain("… (truncated)");
+            expect(details).not.toContain("x".repeat(2001));
+            expect(details).not.toContain("debug output");
         });
 
         test('still notifies and re-logs in when the details cannot be built', () => {
@@ -272,34 +274,28 @@ describe('Utils Actions', () => {
             }));
             const err = { status: 401, get response() { throw new Error("unreadable"); } };
 
-            store.dispatch(snackbarErrorHandler(err));
-
-            const actions = store.getActions();
-            const { payload } = actions.find((a) => a.type === SET_SNACKBAR_MESSAGE);
-            expect(payload.details).toBe("");
-            expect(actions.map((a) => a.type)).toContain(CLEAR_SESSION_STATE);
+            expect(copiedDetails(err)).toBe("");
+            expect(store.getActions().map((a) => a.type)).toContain(CLEAR_SESSION_STATE);
         });
 
         test('flags a missing response when the browser is offline', () => {
             const onLineSpy = jest.spyOn(navigator, "onLine", "get").mockReturnValue(false);
 
-            store.dispatch(snackbarErrorHandler({ method: "GET", url: "https://api.example.com/api/v1/summits" }));
+            const details = copiedDetails({ method: "GET", url: "https://api.example.com/api/v1/summits" });
             onLineSpy.mockRestore();
 
-            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
-            expect(payload.details).toContain("Request: GET https://api.example.com/api/v1/summits (no response, offline)");
+            expect(details).toContain("Request: GET https://api.example.com/api/v1/summits (no response, offline)");
         });
 
         test('builds details for a post request made with a URI object', () => {
             // postRequest, deleteRequest, postFile and putFile hand superagent a URI, not a string
             const req = request.post(URI("https://api.example.com/api/v1/summits").query({ access_token: "secret" })).send({ name: "Summit" });
 
-            store.dispatch(snackbarErrorHandler({ status: 412, response: { body: { errors: ["Name taken."] }, req } }));
+            const details = copiedDetails({ status: 412, response: { body: { errors: ["Name taken."] }, req } });
 
-            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
-            expect(payload.details).toContain("Request: POST https://api.example.com/api/v1/summits (412)");
-            expect(payload.details).toContain('"name": "Summit"');
-            expect(payload.details).not.toContain("secret");
+            expect(details).toContain("Request: POST https://api.example.com/api/v1/summits (412)");
+            expect(details).toContain('"name": "Summit"');
+            expect(details).not.toContain("secret");
         });
 
         test('says the request timed out', () => {
@@ -310,10 +306,7 @@ describe('Utils Actions', () => {
                 url: "https://api.example.com/api/v1/summits?page=2"
             });
 
-            store.dispatch(snackbarErrorHandler(err));
-
-            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
-            expect(payload.details).toContain("Request: GET https://api.example.com/api/v1/summits (timed out)");
+            expect(copiedDetails(err)).toContain("Request: GET https://api.example.com/api/v1/summits (timed out)");
         });
     });
 
