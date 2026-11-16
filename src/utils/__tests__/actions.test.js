@@ -1,4 +1,4 @@
-import {authErrorHandler, snackbarErrorHandler, clearConsumedSnackbarMessage, CLEAR_SNACKBAR_MESSAGE, SET_SNACKBAR_MESSAGE, VALIDATE} from "../actions";
+import {authErrorHandler, snackbarErrorHandler, getRequest, clearConsumedSnackbarMessage, CLEAR_SNACKBAR_MESSAGE, SET_SNACKBAR_MESSAGE, VALIDATE} from "../actions";
 import {setAuthHandlers} from "../../components/security/methods";
 import { CLEAR_SESSION_STATE } from "../../components/security/actions";
 import configureMockStore from 'redux-mock-store';
@@ -298,15 +298,18 @@ describe('Utils Actions', () => {
             expect(details).not.toContain("secret");
         });
 
-        test('says the request timed out', () => {
-            const err = Object.assign(new Error("Timeout of 60000ms exceeded"), {
-                timeout: 60000,
-                code: "ECONNABORTED",
-                method: "GET",
-                url: "https://api.example.com/api/v1/summits?page=2"
-            });
+        test('names a GET that timed out', async () => {
+            // superagent's timeout error carries only timeout, code and errno
+            const timeoutErr = Object.assign(new Error("Timeout of 60000ms exceeded"), { timeout: 60000, code: "ECONNABORTED" });
+            const req = { method: "GET", timeout: () => req, end: (callback) => callback(timeoutErr) };
+            const getSpy = jest.spyOn(request, "get").mockReturnValue(req);
 
-            expect(copiedDetails(err)).toContain("Request: GET https://api.example.com/api/v1/summits (timed out)");
+            await store.dispatch(getRequest(null, null, "https://api.example.com/api/v1/summits", snackbarErrorHandler)({ page: 2, access_token: "secret" })).catch(() => {});
+            getSpy.mockRestore();
+
+            const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
+            expect(payload.details).toContain("Request: GET https://api.example.com/api/v1/summits (timed out)");
+            expect(payload.details).not.toContain("secret");
         });
     });
 
