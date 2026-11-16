@@ -78,7 +78,7 @@ const buildErrorDetails = (err) => {
     const req = err.response?.req || err;
     // post, delete and file requests keep the URI object superagent was given
     const url = req.url ? String(req.url).split("?")[0] : "";
-    // timeouts carry no method or url, only the timeout
+    // timeouts carry no status, only the timeout
     const status = err.status || (err.timeout && "timed out") || (navigator.onLine ? "no response" : "no response, offline");
     // 5xx bodies can hold debug output, so only 4xx responses are copied
     const isClientError = err.status >= 400 && err.status < 500;
@@ -263,7 +263,14 @@ export const getRequest =(
             response: 60000,
             deadline: 60000,
         })
-        .end(responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject, key, useEtag))
+        .end((err, res) => {
+            // a timeout error carries no method or url, so name the request for the copied details
+            if (err && !err.response && !err.url) {
+                err.method = req.method;
+                err.url = key;
+            }
+            responseHandler(dispatch, state, receiveActionCreator, errorHandler, resolve, reject, key, useEtag)(err, res);
+        })
 
         schedule(key, req);
     });

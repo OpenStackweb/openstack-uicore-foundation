@@ -303,12 +303,17 @@ describe('Utils Actions', () => {
         });
 
         test('says the request timed out', () => {
-            const err = Object.assign(new Error("Timeout of 60000ms exceeded"), { timeout: 60000, code: "ECONNABORTED" });
+            const err = Object.assign(new Error("Timeout of 60000ms exceeded"), {
+                timeout: 60000,
+                code: "ECONNABORTED",
+                method: "GET",
+                url: "https://api.example.com/api/v1/summits?page=2"
+            });
 
             store.dispatch(snackbarErrorHandler(err));
 
             const { payload } = store.getActions().find((a) => a.type === SET_SNACKBAR_MESSAGE);
-            expect(payload.details).toContain("Request: (timed out)");
+            expect(payload.details).toContain("Request: GET https://api.example.com/api/v1/summits (timed out)");
         });
     });
 
