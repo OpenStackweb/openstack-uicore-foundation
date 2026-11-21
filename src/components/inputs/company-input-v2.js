@@ -116,12 +116,49 @@ export const findCanonicalUpgrade = (value, results) => {
   return findExistingCompany(results, value.name);
 };
 
-const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERAL", label = "Company", value, error, helperText, onBlur, placeholder, options2Show = 20, disableShrink = false, ...rest }) => {
+// Default data source: the summit's uploaded registration-companies list.
+// Consumers can swap in another source (e.g. the global companies list via
+// queryCompaniesRaw) through the `queryFunction` prop, which receives
+// (input, callback, perPage).
+const defaultQueryFunction = (summitId) => (input, callback, perPage) => {
+  // Without a summit there is no registration list to query. Fail loudly
+  // (PropTypes don't run on React 19) instead of calling /summits/undefined.
+  if (summitId === undefined || summitId === null) {
+    // eslint-disable-next-line no-console
+    console.error("CompanyInputV2: pass `summitId`, or a `queryFunction` to use another company source.");
+    callback([]);
+    return;
+  }
+  queryRegistrationCompanies(summitId, input, callback, perPage);
+};
+
+// Find a company whose *decorated* label (label !== name) matches `text`.
+// Lets text like "IBM - Gold" resolve to the existing company instead of
+// becoming a new free-text company carrying the decoration in its name.
+export const findCompanyByLabel = (companies, labelOf, text) => {
+  if (!text?.trim()) return null;
+  return (companies || []).find((c) => {
+    if (!isExistingCompany(c)) return false;
+    const companyLabel = labelOf(c);
+    return !namesMatch(companyLabel, c.name) && namesMatch(companyLabel, text);
+  }) || null;
+};
+
+const CompanyInputV2 = ({ summitId, queryFunction, getCompanyLabel = getOptionName, isRequired, sx, onChange, id, name = "GENERAL", label = "Company", value, error, helperText, onBlur, onFocus, placeholder, options2Show = 20, disableShrink = false, ...rest }) => {
   const [inputValue, setInputValue] = React.useState("");
   const [options, setOptions] = React.useState([]);
+  const [focused, setFocused] = React.useState(false);
+  // Every existing company the queries have returned, by id. Used to resolve
+  // decorated-label text back to its company (see findCompanyByLabel).
+  const seenRef = React.useRef(new Map());
 
   // Memoised so the effect below doesn't re-run on every render.
   const normalizedValue = React.useMemo(() => normalizeCompanyValue(value), [value]);
+
+  const runQuery = React.useMemo(
+    () => queryFunction || defaultQueryFunction(summitId),
+    [queryFunction, summitId]
+  );
 
   // Stable wrapper around the parent's onChange. Consumers commonly pass an
   // inline arrow function (new identity each render), so depending on
@@ -131,8 +168,48 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERA
     onChange({ target: { id: name, value: nextValue, type: "companyinput" } });
   });
 
+  // getCompanyLabel only ever sees existing companies; free-text values and
+  // plain strings keep their bare name.
+  const labelOf = (option) =>
+    isExistingCompany(option) ? getCompanyLabel(option) : getOptionName(option);
+  const valueName = getOptionName(normalizedValue);
+  const valueLabel = labelOf(normalizedValue);
+  const isDecorated = !namesMatch(valueLabel, valueName);
+
+  const findByLabel = (text) =>
+    findCompanyByLabel(
+      [normalizedValue, ...seenRef.current.values()],
+      labelOf,
+      text
+    );
+
+  // A decorated selection ("IBM - Gold") shows its label only while the field
+  // is idle. On focus the text swaps to the bare name ("IBM"), so whatever the
+  // user edits, searches and commits is always the name, never the decoration.
+  // Also re-syncs the idle text when the label changes after selection (e.g.
+  // the consumer's label data loads late).
+  const lastLabelRef = React.useRef(valueLabel);
   React.useEffect(() => {
-    if (inputValue === "") {
+    const lastLabel = lastLabelRef.current;
+    lastLabelRef.current = valueLabel;
+    if (!isDecorated && namesMatch(lastLabel, valueLabel)) return;
+    setInputValue((prev) => {
+      const showsValue =
+        namesMatch(prev, valueName) ||
+        namesMatch(prev, valueLabel) ||
+        namesMatch(prev, lastLabel);
+      if (!showsValue) return prev;
+      return focused ? valueName : valueLabel;
+    });
+  }, [focused, valueName, valueLabel, isDecorated]);
+
+  // What to search for: the idle text of a decorated selection is its label,
+  // which matches nothing server-side, so search by the bare name instead.
+  const searchText =
+    isDecorated && namesMatch(inputValue, valueLabel) ? valueName : inputValue;
+
+  React.useEffect(() => {
+    if (searchText === "") {
       setOptions(normalizedValue ? [normalizedValue] : []);
       return undefined;
     }
@@ -151,8 +228,11 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERA
     // field (or types something else): without this, a late response would
     // call onChange with the previous typed value and clobber the clear.
     let cancelled = false;
-    queryRegistrationCompanies(summitId, inputValue, (results) => {
+    runQuery(searchText, (results) => {
       if (cancelled) return;
+      (results || []).forEach((c) => {
+        if (isExistingCompany(c)) seenRef.current.set(c.id, c);
+      });
       setOptions([
         ...(normalizedValue ? [normalizedValue] : []),
         ...(results || [])
@@ -165,7 +245,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERA
       if (upgrade) fireChange(upgrade);
     }, options2Show);
     return () => { cancelled = true; };
-  }, [normalizedValue, inputValue, summitId, options2Show, fireChange]);
+  }, [normalizedValue, searchText, runQuery, options2Show, fireChange]);
 
   return (
     <Autocomplete
@@ -181,6 +261,12 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERA
       includeInputInList
       filterSelectedOptions
       value={normalizedValue}
+      // Controlled so the focus/idle text swap above can rewrite it.
+      inputValue={inputValue}
+      onFocus={(event) => {
+        setFocused(true);
+        if (onFocus) onFocus(event);
+      }}
       // NOTE: `autoSelect` is intentionally NOT set. With it, blurring the field
       // committed the currently *highlighted* option — so merely mousing over a
       // suggestion and then tabbing away silently populated the wrong company.
@@ -200,20 +286,28 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERA
         // when the text already matches the committed value (e.g. right after an
         // explicit selection).
         const typed = (event?.target?.value ?? inputValue).trim();
-        const currentName = getOptionName(normalizedValue);
         if (!typed) {
           // Field emptied (delete-all-text). With disableClearable there's no
           // (x), so this is the only way to clear — propagate null. Skip if
           // already cleared to avoid a redundant change.
           if (normalizedValue) fireChange(null);
-        } else if (!namesMatch(typed, currentName)) {
-          fireChange(resolveTypedCompany(options, typed));
+        } else if (!namesMatch(typed, valueName) && !namesMatch(typed, valueLabel)) {
+          fireChange(findByLabel(typed) || resolveTypedCompany(options, typed));
         }
+        setFocused(false);
         if (onBlur) onBlur(name);
       }}
-      getOptionLabel={getOptionName}
+      // Bare name while focused (so MUI sees the field text as the selected
+      // value), decorated label while idle.
+      getOptionLabel={(option) => (focused ? getOptionName(option) : labelOf(option))}
       onChange={(_, newValue) => {
-        const nextValue = resolveCommittedCompany(newValue, options);
+        // Text that spells out a decorated label ("IBM - Gold"), typed + Enter
+        // or via the Use row, resolves to that company rather than free text.
+        let committedText = "";
+        if (typeof newValue === "string") committedText = newValue;
+        else if (newValue?.isFreeTextOption) committedText = newValue.name;
+        const nextValue =
+          findByLabel(committedText) || resolveCommittedCompany(newValue, options);
         // Prepend the committed value but drop any existing entry with
         // the same id; otherwise resolving to an existing company would
         // produce a duplicate row when the dropdown next opens.
@@ -234,7 +328,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERA
       // to type.
       filterOptions={(opts, params) => {
         const text = getUseRowText(params, normalizedValue);
-        return shouldOfferUseRow(text, opts)
+        return shouldOfferUseRow(text, opts) && !findByLabel(text)
           ? [{ id: 0, name: text, isFreeTextOption: true }, ...opts]
           : opts;
       }}
@@ -260,7 +354,9 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERA
         const optionName = getOptionName(option);
         // The synthetic free-text row reads Use "<typed>" so it's clearly a
         // commit-what-I-typed action, not a matched company.
-        const displayLabel = option?.isFreeTextOption ? `Use "${optionName}"` : optionName;
+        let displayLabel = optionName;
+        if (option?.isFreeTextOption) displayLabel = `Use "${optionName}"`;
+        else displayLabel = labelOf(option);
         return (
           // eslint-disable-next-line react/jsx-props-no-spreading
           <li key={key} {...optionProps}>
@@ -280,7 +376,24 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERA
 
 
 CompanyInputV2.propTypes = {
-  summitId: PropTypes.number.isRequired,
+  // Required unless a custom queryFunction is supplied.
+  summitId: (props, propName, componentName) => {
+    const summitId = props[propName];
+    const missing = summitId === undefined || summitId === null;
+    if (missing && !props.queryFunction) {
+      return new Error(`${componentName}: \`summitId\` is required unless \`queryFunction\` is supplied.`);
+    }
+    if (!missing && typeof summitId !== "number") {
+      return new Error(`${componentName}: \`summitId\` must be a number.`);
+    }
+    return null;
+  },
+  // (input, callback, perPage) => void. Defaults to the summit's
+  // registration-companies list.
+  queryFunction: PropTypes.func,
+  // (company) => string. Display label for existing companies in the
+  // dropdown and the field; matching still uses the bare name.
+  getCompanyLabel: PropTypes.func,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   onChange: PropTypes.func.isRequired,
   isRequired: PropTypes.bool,
@@ -288,6 +401,7 @@ CompanyInputV2.propTypes = {
   error: PropTypes.bool,
   helperText: PropTypes.string,
   onBlur: PropTypes.func,
+  onFocus: PropTypes.func,
   options2Show: PropTypes.number,
   placeholder: PropTypes.string,
   label: PropTypes.string,
