@@ -469,15 +469,22 @@ describe("CompanyInputV2 integration", () => {
     });
 
     describe("custom queryFunction and getCompanyLabel", () => {
-        const renderCustom = ({ queryFunction, getCompanyLabel, onChange }) => {
+        // labelRef lets a test change the label function after render (label
+        // data that loads late in the consumer).
+        const renderCustom = ({ labelRef, onChange = jest.fn() } = {}) => {
+            const calls = [];
+            const queryFunction = jest.fn((input, cb) => { calls.push({ input, cb }); });
+            let forceRender;
             const Wrapper = () => {
                 const [value, setValue] = React.useState(null);
+                const [, setTick] = React.useState(0);
+                forceRender = () => setTick((n) => n + 1);
                 return (
                     <CompanyInputV2
                         name="company"
                         value={value}
                         queryFunction={queryFunction}
-                        getCompanyLabel={getCompanyLabel}
+                        getCompanyLabel={labelRef ? (c) => labelRef.fn(c) : undefined}
                         onChange={(ev) => {
                             onChange(ev);
                             setValue(ev.target.value);
@@ -485,44 +492,111 @@ describe("CompanyInputV2 integration", () => {
                     />
                 );
             };
-            return render(<Wrapper />);
+            render(<Wrapper />);
+            const input = screen.getByRole("combobox");
+            const respond = (results) => act(() => { calls[calls.length - 1].cb(results); });
+            const lastCommitted = () => onChange.mock.calls.map((c) => c[0].target.value).pop();
+            return { input, calls, queryFunction, onChange, respond, lastCommitted, rerender: () => act(() => forceRender()) };
         };
 
         const tierLabel = (c) => (c.id === 1 ? `${c.name} - Gold` : c.name);
+        const IBM = { id: 1, name: "IBM" };
+
+        // Focus, type, get results, click the decorated IBM row.
+        const pickIBM = (ctx) => {
+            fireEvent.focus(ctx.input);
+            fireEvent.change(ctx.input, { target: { value: "IBM" } });
+            ctx.respond([IBM, { id: 2, name: "IBM North America" }]);
+            fireEvent.click(screen.getByText("IBM - Gold"));
+        };
 
         it("queries the supplied queryFunction instead of registration companies", () => {
-            const queryFunction = jest.fn();
-            renderCustom({ queryFunction, onChange: jest.fn() });
-            fireEvent.change(screen.getByRole("combobox"), { target: { value: "IB" } });
+            const { input, queryFunction } = renderCustom();
+            fireEvent.change(input, { target: { value: "IB" } });
             expect(queryFunction).toHaveBeenCalledWith("IB", expect.any(Function), 20);
             expect(queryRegistrationCompanies).not.toHaveBeenCalled();
         });
 
         it("renders existing companies with getCompanyLabel and keeps the Use row bare", () => {
-            let resolveQuery;
-            const queryFunction = jest.fn((_input, cb) => { resolveQuery = cb; });
-            renderCustom({ queryFunction, getCompanyLabel: tierLabel, onChange: jest.fn() });
-            const input = screen.getByRole("combobox");
-            fireEvent.change(input, { target: { value: "IBM N" } });
-            act(() => { resolveQuery([{ id: 1, name: "IBM" }, { id: 2, name: "IBM North America" }]); });
+            const ctx = renderCustom({ labelRef: { fn: tierLabel } });
+            fireEvent.change(ctx.input, { target: { value: "IBM N" } });
+            ctx.respond([IBM, { id: 2, name: "IBM North America" }]);
             expect(screen.getByText("IBM - Gold")).toBeInTheDocument();
             expect(screen.getByText("IBM North America")).toBeInTheDocument();
             expect(screen.getByText('Use "IBM N"')).toBeInTheDocument();
         });
 
-        it("keeps the picked company on blur when the field shows its decorated label", () => {
-            let resolveQuery;
-            const queryFunction = jest.fn((_input, cb) => { resolveQuery = cb; });
-            const onChange = jest.fn();
-            renderCustom({ queryFunction, getCompanyLabel: tierLabel, onChange });
-            const input = screen.getByRole("combobox");
-            fireEvent.change(input, { target: { value: "IBM" } });
-            act(() => { resolveQuery([{ id: 1, name: "IBM" }]); });
-            fireEvent.click(screen.getByText("IBM - Gold"));
-            expect(input.value).toBe("IBM - Gold");
-            fireEvent.blur(input);
-            const committed = onChange.mock.calls.map((c) => c[0].target.value).pop();
-            expect(committed).toEqual({ id: 1, name: "IBM" });
+        it("shows the bare name while focused and the decorated label once idle", () => {
+            const ctx = renderCustom({ labelRef: { fn: tierLabel } });
+            pickIBM(ctx);
+            expect(ctx.input.value).toBe("IBM");
+            fireEvent.blur(ctx.input);
+            expect(ctx.input.value).toBe("IBM - Gold");
+            expect(ctx.lastCommitted()).toEqual(IBM);
+            fireEvent.focus(ctx.input);
+            expect(ctx.input.value).toBe("IBM");
         });
+
+        it("never searches for the decorated label", () => {
+            const ctx = renderCustom({ labelRef: { fn: tierLabel } });
+            pickIBM(ctx);
+            fireEvent.blur(ctx.input);
+            fireEvent.focus(ctx.input);
+            fireEvent.change(ctx.input, { target: { value: "IB" } });
+            const searched = ctx.calls.map((c) => c.input);
+            expect(searched).toEqual(expect.arrayContaining(["IBM", "IB"]));
+            expect(searched.some((text) => text.includes("Gold"))).toBe(false);
+        });
+
+        it("resolves a hand-typed decorated label to the company instead of offering it as free text", () => {
+            const ctx = renderCustom({ labelRef: { fn: tierLabel } });
+            fireEvent.focus(ctx.input);
+            fireEvent.change(ctx.input, { target: { value: "IBM" } });
+            ctx.respond([IBM]);
+            fireEvent.change(ctx.input, { target: { value: "ibm - gold" } });
+            ctx.respond([]);
+            expect(screen.queryByText('Use "ibm - gold"')).not.toBeInTheDocument();
+            fireEvent.blur(ctx.input);
+            expect(ctx.lastCommitted()).toEqual(IBM);
+        });
+
+        it("updates the idle text when the label changes after selection", () => {
+            const labelRef = { fn: (c) => c.name };
+            const ctx = renderCustom({ labelRef });
+            fireEvent.focus(ctx.input);
+            fireEvent.change(ctx.input, { target: { value: "IBM" } });
+            ctx.respond([IBM]);
+            fireEvent.click(screen.getByText("IBM"));
+            fireEvent.blur(ctx.input);
+            expect(ctx.input.value).toBe("IBM");
+            labelRef.fn = tierLabel;
+            ctx.rerender();
+            expect(ctx.input.value).toBe("IBM - Gold");
+            expect(ctx.lastCommitted()).toEqual(IBM);
+        });
+
+        it("only passes existing companies to getCompanyLabel", () => {
+            // A formatter that reads fields free-text values don't have.
+            const labelRef = { fn: (c) => `${c.name} - ${c.tier.toUpperCase()}` };
+            const ctx = renderCustom({ labelRef });
+            fireEvent.focus(ctx.input);
+            fireEvent.change(ctx.input, { target: { value: "Independent" } });
+            ctx.respond([]);
+            fireEvent.blur(ctx.input);
+            expect(ctx.lastCommitted()).toEqual({ id: 0, name: "Independent" });
+            fireEvent.focus(ctx.input);
+            fireEvent.change(ctx.input, { target: { value: "" } });
+            fireEvent.blur(ctx.input);
+            expect(ctx.lastCommitted()).toBeNull();
+        });
+    });
+
+    it("reports a missing summitId instead of querying /summits/undefined", () => {
+        const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+        render(<CompanyInputV2 name="company" value={null} onChange={jest.fn()} />);
+        fireEvent.change(screen.getByRole("combobox"), { target: { value: "IB" } });
+        expect(queryRegistrationCompanies).not.toHaveBeenCalled();
+        expect(consoleError.mock.calls.flat().join(" ")).toMatch(/summitId/);
+        consoleError.mockRestore();
     });
 });
