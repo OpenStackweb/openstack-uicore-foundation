@@ -1,27 +1,32 @@
-import { resolveFont } from './resolve-font';
+import { loadFont } from './resolve-font';
 import { downloadBlob } from './download-blob';
 
 /**
  * Build a PDF from a pure template and return the output verbs.
  *
  * The consumer passes its own (externalized, shared) `pdfMake` instance so there
- * is one VFS. The `template` is a pure `(data, { font }) -> docDefinition`; the
- * resolved family is applied to `defaultStyle.font`. Images referenced by the
- * template must already be base64 `data:` URLs (see imageDataUrl) — pdfmake's
- * browser build won't fetch remote images.
+ * is one VFS. The `template` is a pure `(data, { font, fontMetrics }) ->
+ * docDefinition`; the resolved family is applied to `defaultStyle.font`.
+ * `fontMetrics` gives each style's ascender and capital height (see loadFont).
+ * A style's metrics are null when its file can't be read for them, so a
+ * template checks before it uses them.
+ * Images referenced by the template must already be base64 `data:` URLs or svg
+ * markup (see loadImage) — pdfmake's browser build won't fetch remote images.
  *
  * @param {object}   params.pdfMake  consumer's pdfmake instance
- * @param {*}        params.font     FontSpec (see resolveFont); omit for Helvetica
- * @param {Function} params.template (data, { font }) => docDefinition
+ * @param {*}        params.font     FontSpec (see loadFont); omit for Helvetica
+ * @param {Function} params.template (data, { font, fontMetrics }) => docDefinition
  * @param {*}        params.data     payload for the template
- * @param {Function} [params.onError] called on any build/fetch/layout failure
+ * @param {Function} [params.onError] called when building or outputting the
+ *   document fails. A font that can't be loaded doesn't call it: the document
+ *   prints in Helvetica instead.
  * @returns {Promise<{download, open, print, getBlob, getBase64}>}
  */
 export const createDocument = async ({ pdfMake, font, template, data, onError }) => {
   let handle;
   try {
-    const family = await resolveFont(pdfMake, font);
-    const doc = template(data, { font: family });
+    const { family, fontMetrics } = await loadFont(pdfMake, font);
+    const doc = template(data, { font: family, fontMetrics });
     doc.defaultStyle = { font: family, ...(doc.defaultStyle || {}) };
     handle = pdfMake.createPdf(doc);
   } catch (err) {
