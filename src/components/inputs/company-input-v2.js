@@ -116,12 +116,24 @@ export const findCanonicalUpgrade = (value, results) => {
   return findExistingCompany(results, value.name);
 };
 
-const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERAL", label = "Company", value, error, helperText, onBlur, placeholder, options2Show = 20, disableShrink = false, ...rest }) => {
+// Default data source: the summit's uploaded registration-companies list.
+// Consumers can swap in another source (e.g. the global companies list via
+// queryCompaniesRaw) through the `queryFunction` prop, which receives
+// (input, callback, perPage).
+const defaultQueryFunction = (summitId) => (input, callback, perPage) =>
+  queryRegistrationCompanies(summitId, input, callback, perPage);
+
+const CompanyInputV2 = ({ summitId, queryFunction, getCompanyLabel = getOptionName, isRequired, sx, onChange, id, name = "GENERAL", label = "Company", value, error, helperText, onBlur, placeholder, options2Show = 20, disableShrink = false, ...rest }) => {
   const [inputValue, setInputValue] = React.useState("");
   const [options, setOptions] = React.useState([]);
 
   // Memoised so the effect below doesn't re-run on every render.
   const normalizedValue = React.useMemo(() => normalizeCompanyValue(value), [value]);
+
+  const runQuery = React.useMemo(
+    () => queryFunction || defaultQueryFunction(summitId),
+    [queryFunction, summitId]
+  );
 
   // Stable wrapper around the parent's onChange. Consumers commonly pass an
   // inline arrow function (new identity each render), so depending on
@@ -151,7 +163,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERA
     // field (or types something else): without this, a late response would
     // call onChange with the previous typed value and clobber the clear.
     let cancelled = false;
-    queryRegistrationCompanies(summitId, inputValue, (results) => {
+    runQuery(inputValue, (results) => {
       if (cancelled) return;
       setOptions([
         ...(normalizedValue ? [normalizedValue] : []),
@@ -165,7 +177,7 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERA
       if (upgrade) fireChange(upgrade);
     }, options2Show);
     return () => { cancelled = true; };
-  }, [normalizedValue, inputValue, summitId, options2Show, fireChange]);
+  }, [normalizedValue, inputValue, runQuery, options2Show, fireChange]);
 
   return (
     <Autocomplete
@@ -201,17 +213,24 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERA
         // explicit selection).
         const typed = (event?.target?.value ?? inputValue).trim();
         const currentName = getOptionName(normalizedValue);
+        // The field shows getCompanyLabel(value), which may differ from the
+        // bare name (e.g. "IBM - Gold"); that text is the committed value too.
+        const currentLabel = normalizedValue ? getCompanyLabel(normalizedValue) : "";
         if (!typed) {
           // Field emptied (delete-all-text). With disableClearable there's no
           // (x), so this is the only way to clear — propagate null. Skip if
           // already cleared to avoid a redundant change.
           if (normalizedValue) fireChange(null);
-        } else if (!namesMatch(typed, currentName)) {
+        } else if (!namesMatch(typed, currentName) && !namesMatch(typed, currentLabel)) {
           fireChange(resolveTypedCompany(options, typed));
         }
         if (onBlur) onBlur(name);
       }}
-      getOptionLabel={getOptionName}
+      // Free-text rows always show their bare name; existing companies can be
+      // decorated by the consumer via getCompanyLabel.
+      getOptionLabel={(option) =>
+        isExistingCompany(option) ? getCompanyLabel(option) : getOptionName(option)
+      }
       onChange={(_, newValue) => {
         const nextValue = resolveCommittedCompany(newValue, options);
         // Prepend the committed value but drop any existing entry with
@@ -260,7 +279,9 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERA
         const optionName = getOptionName(option);
         // The synthetic free-text row reads Use "<typed>" so it's clearly a
         // commit-what-I-typed action, not a matched company.
-        const displayLabel = option?.isFreeTextOption ? `Use "${optionName}"` : optionName;
+        let displayLabel = optionName;
+        if (option?.isFreeTextOption) displayLabel = `Use "${optionName}"`;
+        else if (isExistingCompany(option)) displayLabel = getCompanyLabel(option);
         return (
           // eslint-disable-next-line react/jsx-props-no-spreading
           <li key={key} {...optionProps}>
@@ -280,7 +301,14 @@ const CompanyInputV2 = ({ summitId, isRequired, sx, onChange, id, name = "GENERA
 
 
 CompanyInputV2.propTypes = {
-  summitId: PropTypes.number.isRequired,
+  // Required unless a custom queryFunction is supplied.
+  summitId: PropTypes.number,
+  // (input, callback, perPage) => void. Defaults to the summit's
+  // registration-companies list.
+  queryFunction: PropTypes.func,
+  // (company) => string. Display label for existing companies in the
+  // dropdown and the field; matching still uses the bare name.
+  getCompanyLabel: PropTypes.func,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   onChange: PropTypes.func.isRequired,
   isRequired: PropTypes.bool,

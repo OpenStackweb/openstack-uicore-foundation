@@ -467,4 +467,62 @@ describe("CompanyInputV2 integration", () => {
 
         expect(screen.getByText('Use "ti"')).toBeInTheDocument();
     });
+
+    describe("custom queryFunction and getCompanyLabel", () => {
+        const renderCustom = ({ queryFunction, getCompanyLabel, onChange }) => {
+            const Wrapper = () => {
+                const [value, setValue] = React.useState(null);
+                return (
+                    <CompanyInputV2
+                        name="company"
+                        value={value}
+                        queryFunction={queryFunction}
+                        getCompanyLabel={getCompanyLabel}
+                        onChange={(ev) => {
+                            onChange(ev);
+                            setValue(ev.target.value);
+                        }}
+                    />
+                );
+            };
+            return render(<Wrapper />);
+        };
+
+        const tierLabel = (c) => (c.id === 1 ? `${c.name} - Gold` : c.name);
+
+        it("queries the supplied queryFunction instead of registration companies", () => {
+            const queryFunction = jest.fn();
+            renderCustom({ queryFunction, onChange: jest.fn() });
+            fireEvent.change(screen.getByRole("combobox"), { target: { value: "IB" } });
+            expect(queryFunction).toHaveBeenCalledWith("IB", expect.any(Function), 20);
+            expect(queryRegistrationCompanies).not.toHaveBeenCalled();
+        });
+
+        it("renders existing companies with getCompanyLabel and keeps the Use row bare", () => {
+            let resolveQuery;
+            const queryFunction = jest.fn((_input, cb) => { resolveQuery = cb; });
+            renderCustom({ queryFunction, getCompanyLabel: tierLabel, onChange: jest.fn() });
+            const input = screen.getByRole("combobox");
+            fireEvent.change(input, { target: { value: "IBM N" } });
+            act(() => { resolveQuery([{ id: 1, name: "IBM" }, { id: 2, name: "IBM North America" }]); });
+            expect(screen.getByText("IBM - Gold")).toBeInTheDocument();
+            expect(screen.getByText("IBM North America")).toBeInTheDocument();
+            expect(screen.getByText('Use "IBM N"')).toBeInTheDocument();
+        });
+
+        it("keeps the picked company on blur when the field shows its decorated label", () => {
+            let resolveQuery;
+            const queryFunction = jest.fn((_input, cb) => { resolveQuery = cb; });
+            const onChange = jest.fn();
+            renderCustom({ queryFunction, getCompanyLabel: tierLabel, onChange });
+            const input = screen.getByRole("combobox");
+            fireEvent.change(input, { target: { value: "IBM" } });
+            act(() => { resolveQuery([{ id: 1, name: "IBM" }]); });
+            fireEvent.click(screen.getByText("IBM - Gold"));
+            expect(input.value).toBe("IBM - Gold");
+            fireEvent.blur(input);
+            const committed = onChange.mock.calls.map((c) => c[0].target.value).pop();
+            expect(committed).toEqual({ id: 1, name: "IBM" });
+        });
+    });
 });
