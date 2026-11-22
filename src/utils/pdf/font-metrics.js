@@ -11,6 +11,7 @@ const SFNT_VERSIONS = [
 const WOFF_SIGNATURE = 0x774f4646; // "wOFF"
 const WOFF2_SIGNATURE = 0x774f4632; // "wOF2"
 const CAPITAL_H = 0x48;
+const SPACE = 0x20;
 
 const viewOf = (bytes) => new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
@@ -108,7 +109,9 @@ const fontTables = (bytes) => {
   };
 };
 
-// Look up a character's glyph id in a Unicode format 4 cmap subtable.
+// Look up a character's glyph id in a Unicode format 4 cmap subtable. 0 is a
+// character the font has no glyph for, and null a cmap without such a
+// subtable.
 const glyphId = (cmap, code) => {
   const numSubtables = cmap.getUint16(2);
   for (let i = 0; i < numSubtables; i++) {
@@ -139,17 +142,13 @@ const glyphId = (cmap, code) => {
       }
     }
   }
-  return 0;
+  return null;
 };
 
 // The top of the "H" glyph's outline, in font units. Only TrueType outlines
 // (the glyf table) are read.
-const capitalHTop = async (table, head) => {
-  const [cmap, loca, glyf] = await Promise.all([
-    table('cmap'),
-    table('loca'),
-    table('glyf'),
-  ]);
+const capitalHTop = async (table, head, cmap) => {
+  const [loca, glyf] = await Promise.all([table('loca'), table('glyf')]);
   if (!cmap || !loca || !glyf) return null;
   const id = glyphId(cmap, CAPITAL_H);
   if (!id) return null;
@@ -161,9 +160,47 @@ const capitalHTop = async (table, head) => {
   return glyf.getInt16(offset + 8); // yMax
 };
 
+// A copy of a table, so a function that keeps it doesn't keep the whole file.
+const copyOf = (table) =>
+  new DataView(new Uint8Array(table.buffer, table.byteOffset, table.byteLength).slice().buffer);
+
+// A function that gives a text's width per em: the sum of its characters'
+// advance widths, from the cmap, hhea and hmtx tables. A character the font
+// has no glyph for takes the width of glyph 0, which pdfmake prints in its
+// place. Kerning isn't counted, so the result can be a little wider than the
+// printed text. Undefined when the font has no Unicode format 4 cmap or no
+// hmtx table.
+const textWidthReader = (cmap, hhea, hmtx, unitsPerEm) => {
+  if (!cmap || !hmtx || glyphId(cmap, SPACE) === null) return undefined;
+  // Glyphs past the last advance width in hmtx take that last width.
+  const count = hhea.getUint16(34); // numberOfHMetrics
+  if (!count || hmtx.byteLength < count * 4) return undefined;
+  const advances = new Uint16Array(count);
+  for (let i = 0; i < count; i++) advances[i] = hmtx.getUint16(i * 4);
+  const map = copyOf(cmap);
+  const advanceByCode = new Map();
+  const advanceOf = (code) => {
+    if (!advanceByCode.has(code)) {
+      let id;
+      try {
+        id = glyphId(map, code) || 0;
+      } catch (err) {
+        id = 0; // a cmap that points past its own end
+      }
+      advanceByCode.set(code, advances[Math.min(id, count - 1)]);
+    }
+    return advanceByCode.get(code);
+  };
+  return (text) => {
+    let width = 0;
+    for (const char of String(text)) width += advanceOf(char.codePointAt(0));
+    return width / unitsPerEm;
+  };
+};
+
 /**
- * Read a font's ascender and capital height, per em, from a TTF, OTF or WOFF
- * file.
+ * Read a font's ascender, capital height and text widths, per em, from a TTF,
+ * OTF or WOFF file.
  *
  * pdfmake puts a line's baseline one ascender below the top of the line, and
  * takes the ascender from the hhea table. Fonts differ a lot here, so text
@@ -174,19 +211,26 @@ const capitalHTop = async (table, head) => {
  * The capital height comes from the OS/2 table. Fonts whose OS/2 table is too
  * old to have it get the height of their "H" glyph instead.
  *
+ * `textWidth(text)` gives the width of a text in this font, per em, to size a
+ * shape that holds it (a badge, for example). It is missing when the font's
+ * tables can't be read for it.
+ *
  * @param {Uint8Array} bytes - a TTF, OTF or WOFF file
- * @returns {Promise<{ascender: number, capHeight: number}|null>} null for
- *   other formats, for WOFF in a browser that can't inflate it, or when a
- *   value can't be found. It rejects for a damaged file.
+ * @returns {Promise<{ascender: number, capHeight: number, textWidth: Function}|null>}
+ *   null for other formats, for WOFF in a browser that can't inflate it, or
+ *   when the ascender or capital height can't be found. It rejects for a
+ *   damaged file.
  */
 export const readFontMetrics = async (bytes) => {
   const table = fontTables(bytes);
   if (!table) return null;
 
-  const [head, hhea, os2] = await Promise.all([
+  const [head, hhea, os2, cmap, hmtx] = await Promise.all([
     table('head'),
     table('hhea'),
     table('OS/2'),
+    table('cmap'),
+    table('hmtx'),
   ]);
   if (!head || !hhea) return null;
   const unitsPerEm = head.getUint16(18);
@@ -194,13 +238,21 @@ export const readFontMetrics = async (bytes) => {
 
   // OS/2 has sCapHeight from version 2.
   let capHeight = os2 && os2.getUint16(0) >= 2 ? os2.getInt16(88) : 0;
-  if (capHeight <= 0) capHeight = (await capitalHTop(table, head)) || 0;
+  if (capHeight <= 0) capHeight = (await capitalHTop(table, head, cmap)) || 0;
   if (capHeight <= 0) return null;
 
-  return {
+  const metrics = {
     ascender: hhea.getInt16(4) / unitsPerEm,
     capHeight: capHeight / unitsPerEm,
   };
+  let textWidth;
+  try {
+    textWidth = textWidthReader(cmap, hhea, hmtx, unitsPerEm);
+  } catch (err) {
+    textWidth = undefined; // a table cut short
+  }
+  if (textWidth) metrics.textWidth = textWidth;
+  return metrics;
 };
 
 export default readFontMetrics;
