@@ -5,7 +5,7 @@
 /* eslint-disable no-magic-numbers */
 import { fontFormat, isCompleteFontFile, readFontMetrics } from '../font-metrics';
 import {
-  modernTables, oldTables, ttf, woff, woff2, MODERN, OLD,
+  modernTables, oldTables, widthTables, ttf, woff, woff2, MODERN, OLD,
 } from '../__fixtures__/font-files';
 
 const html = new TextEncoder().encode('<!doctype html><html></html>');
@@ -92,5 +92,58 @@ describe('readFontMetrics', () => {
     const broken = woff(modernTables());
     broken.fill(0xff, 44 + 3 * 20); // tables that don't inflate
     await expect(readFontMetrics(broken)).rejects.toThrow();
+  });
+});
+
+describe('textWidth', () => {
+  // The font in widthTables: an ascender of 0.9 and a cap height of 0.7.
+  const WITHOUT_WIDTHS = { ascender: 0.9, capHeight: 0.7 };
+  const textWidthOf = async (bytes) => (await readFontMetrics(bytes)).textWidth;
+
+  it('adds up the advance widths of the characters, per em', async () => {
+    const textWidth = await textWidthOf(ttf(widthTables()));
+    expect(textWidth('AB')).toBeCloseTo(1.3);
+    expect(textWidth('')).toBe(0);
+  });
+
+  it('gives a glyph past the last hmtx width that last width', async () => {
+    const textWidth = await textWidthOf(ttf(widthTables()));
+    expect(textWidth(' ')).toBeCloseTo(0.7);
+  });
+
+  it("gives a character the font doesn't have the width of glyph 0", async () => {
+    const textWidth = await textWidthOf(ttf(widthTables()));
+    expect(textWidth('Z')).toBeCloseTo(0.5);
+    expect(textWidth('\u{1F600}')).toBeCloseTo(0.5); // one character, outside format 4
+  });
+
+  it('reads the widths from a WOFF file', async () => {
+    const textWidth = await textWidthOf(woff(widthTables()));
+    expect(textWidth('A B')).toBeCloseTo(2);
+  });
+
+  it('leaves out textWidth without an hmtx table or a format 4 cmap', async () => {
+    const noHmtx = widthTables();
+    delete noHmtx.hmtx;
+    await expect(readFontMetrics(ttf(noHmtx))).resolves.toEqual(WITHOUT_WIDTHS);
+
+    const noFormat4 = widthTables();
+    new DataView(noFormat4.cmap.buffer).setUint16(12, 6); // the subtable's format
+    await expect(readFontMetrics(ttf(noFormat4))).resolves.toEqual(WITHOUT_WIDTHS);
+  });
+
+  it('leaves out textWidth when hmtx is shorter than hhea says', async () => {
+    const tables = widthTables();
+    tables.hmtx = tables.hmtx.slice(0, 8); // two widths of three
+    await expect(readFontMetrics(ttf(tables))).resolves.toEqual(WITHOUT_WIDTHS);
+  });
+
+  it('gives glyph 0 for a cmap entry that points past the end of the cmap', async () => {
+    const tables = widthTables();
+    // The idRangeOffset of the "A" segment (the second of four).
+    new DataView(tables.cmap.buffer).setUint16(52 + 2, 0xfff0);
+    const textWidth = await textWidthOf(ttf(tables));
+    expect(textWidth('A')).toBeCloseTo(0.5);
+    expect(textWidth('B')).toBeCloseTo(0.7);
   });
 });
