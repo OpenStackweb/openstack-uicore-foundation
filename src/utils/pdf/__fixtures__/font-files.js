@@ -9,28 +9,44 @@ const table = (size, write) => {
   return bytes;
 };
 const head = (unitsPerEm) => table(54, (v) => v.setUint16(18, unitsPerEm));
-const hhea = (ascender) => table(36, (v) => v.setInt16(4, ascender));
+const hhea = (ascender, numberOfHMetrics = 0) =>
+  table(36, (v) => {
+    v.setInt16(4, ascender);
+    v.setUint16(34, numberOfHMetrics);
+  });
 const os2 = (version, capHeight) =>
   table(96, (v) => {
     v.setUint16(0, version);
     v.setInt16(88, capHeight);
   });
-// A Unicode format 4 cmap that maps "H" (0x48) to glyph 1.
-const cmapH = () =>
-  table(44, (v) => {
+// A Unicode format 4 cmap with one segment per character, mapping each
+// character to its glyph id: { H: 1 }. The closing 0xFFFF segment maps to 0.
+const cmap = (glyphs) => {
+  const codes = Object.keys(glyphs).map((char) => char.charCodeAt(0));
+  codes.sort((a, b) => a - b);
+  const segments = [...codes, 0xffff];
+  const endCodes = 26;
+  const startCodes = endCodes + segments.length * 2 + 2;
+  const idDeltas = startCodes + segments.length * 2;
+  return table(idDeltas + segments.length * 4, (v) => {
     v.setUint16(2, 1); // one subtable
     v.setUint16(4, 3); // platform: Windows
     v.setUint16(6, 1); // encoding: Unicode BMP
     v.setUint32(8, 12); // subtable offset
     v.setUint16(12, 4); // format 4
-    v.setUint16(18, 4); // two segments: "H" and the closing 0xFFFF one
-    v.setUint16(26, 0x48); // end codes
-    v.setUint16(28, 0xffff);
-    v.setUint16(32, 0x48); // start codes
-    v.setUint16(34, 0xffff);
-    v.setUint16(36, 0x10000 + 1 - 0x48); // id deltas: "H" + delta wraps to 1
-    v.setUint16(38, 1);
+    v.setUint16(18, segments.length * 2);
+    segments.forEach((code, i) => {
+      const id = code === 0xffff ? 0 : glyphs[String.fromCharCode(code)];
+      v.setUint16(endCodes + i * 2, code);
+      v.setUint16(startCodes + i * 2, code);
+      v.setUint16(idDeltas + i * 2, (0x10000 + id - code) % 0x10000); // id - code, wrapped
+    });
   });
+};
+// Advance widths, one per glyph id, as hmtx stores them (each with a left side
+// bearing of 0).
+const hmtx = (advances) =>
+  table(advances.length * 4, (v) => advances.forEach((advance, i) => v.setUint16(i * 4, advance)));
 // Short loca offsets: glyph 0 is empty, glyph 1 takes 12 bytes.
 const loca = () => table(6, (v) => v.setUint16(4, 6));
 const glyf = (yMax) => table(12, (v) => v.setInt16(8, yMax));
@@ -45,21 +61,21 @@ export const oldTables = () => ({
   head: head(1000),
   hhea: hhea(1011),
   'OS/2': os2(1, 0),
-  cmap: cmapH(),
+  cmap: cmap({ H: 1 }),
   loca: loca(),
   glyf: glyf(705),
 });
+// A font with text widths: glyph 0 is 500 units wide, "A" 600 and "B" 700.
+// hmtx lists three advance widths, so the space (glyph 3) takes the last one.
+export const widthTables = () => ({
+  head: head(1000),
+  hhea: hhea(900, 3),
+  'OS/2': os2(4, 700),
+  cmap: cmap({ A: 1, B: 2, ' ': 3 }),
+  hmtx: hmtx([500, 600, 700]),
+});
 export const MODERN = { ascender: 2070 / 2048, capHeight: 1434 / 2048 };
 export const OLD = { ascender: 1.011, capHeight: 0.705 };
-
-// Helvetica's metrics for every style, as loadFont gives them.
-const HELVETICA = { ascender: 0.718, capHeight: 0.718 };
-export const HELVETICA_FONT_METRICS = {
-  normal: HELVETICA,
-  bold: HELVETICA,
-  italics: HELVETICA,
-  bolditalics: HELVETICA,
-};
 
 // Lay out a file: a header, one directory entry per table, then the tables.
 const pack = (tables, headerSize, entrySize, writeHeader, writeEntry) => {
