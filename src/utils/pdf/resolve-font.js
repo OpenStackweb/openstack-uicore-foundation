@@ -27,24 +27,17 @@
 /* eslint-disable no-magic-numbers */
 import { bytesToBase64, base64ToBytes } from './base64';
 import { fontFormat, isCompleteFontFile, readFontMetrics } from './font-metrics';
+import { HELVETICA_FONT_METRICS } from './helvetica-metrics';
 
 const HELVETICA = 'Helvetica';
 const STYLES = ['normal', 'bold', 'italics', 'bolditalics'];
 const FONT_TIMEOUT_MS = 10000;
 
-// Adobe's AFM files for Helvetica, Helvetica-Bold, Helvetica-Oblique and
-// Helvetica-BoldOblique, which pdfmake ships, give the same Ascender and
-// CapHeight for all four: 718 per 1000 units.
-const HELVETICA_METRICS = { ascender: 0.718, capHeight: 0.718 };
-
 // Cache resolved URL fonts so repeated prints don't refetch. Keyed by the url
 // set; stores the in-flight/resolved { container, fontMetrics } promise.
 const fontCache = new Map();
 
-const allStyles = (value) =>
-  STYLES.reduce((acc, style) => ({ ...acc, [style]: value }), {});
-
-const helvetica = () => ({ family: HELVETICA, fontMetrics: allStyles(HELVETICA_METRICS) });
+const helvetica = () => ({ family: HELVETICA, fontMetrics: { ...HELVETICA_FONT_METRICS } });
 
 // Give every style a file, taken from the closest style the font has.
 const fillStyles = (files) => {
@@ -161,8 +154,8 @@ const loadUrlFont = async (family, urls) => {
  * @param {string|object} font - FontSpec
  * @returns {Promise<{family: string, fontMetrics: object}>} the font family to
  *   use as defaultStyle.font, and `fontMetrics.normal`, `.bold`, `.italics`
- *   and `.bolditalics`: each style's `{ ascender, capHeight }` per em, or null
- *   when its file can't be read for them (see readFontMetrics)
+ *   and `.bolditalics`: each style's `{ ascender, capHeight, textWidth }`, or
+ *   null when its file can't be read for them (see readFontMetrics)
  */
 export const loadFont = async (pdfMake, font) => {
   if (!font || font === HELVETICA || font.family === HELVETICA) return helvetica();

@@ -7,9 +7,10 @@ import { downloadBlob } from './download-blob';
  * The consumer passes its own (externalized, shared) `pdfMake` instance so there
  * is one VFS. The `template` is a pure `(data, { font, fontMetrics }) ->
  * docDefinition`; the resolved family is applied to `defaultStyle.font`.
- * `fontMetrics` gives each style's ascender and capital height (see loadFont).
- * A style's metrics are null when its file can't be read for them, so a
- * template checks before it uses them.
+ * `fontMetrics` gives each style's ascender, capital height and text widths
+ * (see loadFont). A style's metrics are null when its file can't be read for
+ * them, so a template checks before it uses them. Pass `font` and
+ * `fontMetrics` to `badge` so its label prints in the document's font.
  * Images referenced by the template must already be base64 `data:` URLs or svg
  * markup (see loadImage) — pdfmake's browser build won't fetch remote images.
  *

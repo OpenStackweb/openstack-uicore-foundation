@@ -1,13 +1,11 @@
 /**
- * A promise-based fake of pdfmake 0.3.x, matching the REAL contract:
- * createPdf(dd).getBlob() / .getBase64() / .open() / .print() / .download()
- * are all async (return promises) and take NO callbacks. The old 0.1 callback
- * form is gone.
+ * A fake of pdfmake 0.3.x. Like the real one, createPdf(dd).getBlob(),
+ * .getBase64(), .open(), .print() and .download() return promises and take
+ * no callbacks.
  *
- * Every pdf test that exercises createDocument must build its fake from here, so
- * a hand-rolled fake can't drift back to the callback API and false-green (which
- * is exactly what once hid a real "never downloads" bug — the unit test passed
- * while the browser did nothing).
+ * Every pdf test that exercises createDocument builds its fake from here. A
+ * fake that took callbacks would let a test pass while a real download never
+ * starts.
  *
  * Lives in __fixtures__ (not __tests__) so jest doesn't collect it as a suite.
  *

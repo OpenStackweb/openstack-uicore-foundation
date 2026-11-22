@@ -3,7 +3,7 @@
  */
 import { createDocument } from '../create-document';
 import { createFakePdfMake } from '../__fixtures__/fake-pdfmake';
-import { HELVETICA_FONT_METRICS } from '../__fixtures__/font-files';
+import { HELVETICA_FONT_METRICS } from '../helvetica-metrics';
 
 describe('createDocument', () => {
   beforeEach(() => {
