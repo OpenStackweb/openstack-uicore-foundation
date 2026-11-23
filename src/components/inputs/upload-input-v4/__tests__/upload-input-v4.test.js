@@ -324,8 +324,22 @@ describe('UploadInputV4', () => {
       expect(await screen.findByText('File type not allowed')).toBeInTheDocument();
       expect(screen.getByText('video.png')).toBeInTheDocument();
       expect(screen.queryByText(/Uploading/)).not.toBeInTheDocument();
-      expect(onError).toHaveBeenCalledWith(expect.any(Error), 412, 'test-upload');
+      expect(onError).toHaveBeenCalledWith(expect.any(Error), 412, 'test-upload', expect.any(File));
       expect(api.puts()).toHaveLength(0);
+    });
+
+    test('onError passes the File that failed, not a sibling still uploading', async () => {
+      api.respond('PUT', /bucket\.test\/.*bad\.png/, () => api.networkError());
+      holdPuts();
+      const onError = jest.fn();
+      const { container } = render(<UploadInputV4 {...defaultProps} maxFiles={2} onError={onError} />);
+      const good = fileOf('good.png', 2048, 'image/png');
+      const bad = fileOf('bad.png', 2048, 'image/png');
+      select(container, good, bad);
+
+      await screen.findByTitle('Retry');
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError.mock.calls[0][3]).toBe(bad);
     });
 
     test('a connection failure during the PUT shows the readable network message', async () => {
@@ -374,6 +388,30 @@ describe('UploadInputV4', () => {
       expect(screen.queryByText('video.png')).not.toBeInTheDocument();
       expect(dropArea(container)).toBeVisible();
       await waitFor(() => expect(api.calls('DELETE', /.*/).map(r => r.path)).toEqual(['/uploads/t1']));
+    });
+
+    test('dismissing an error row calls onRemove with the File that failed', async () => {
+      api.respond('PUT', /bucket\.test/, () => api.networkError());
+      const onRemove = jest.fn();
+      const { container } = render(<UploadInputV4 {...defaultProps} onRemove={onRemove} />);
+      const file = fileOf('video.png', 2048, 'image/png');
+      select(container, file);
+      await screen.findByTitle('Retry');
+
+      act(() => { fireEvent.click(screen.getByRole('button', { name: 'Dismiss video.png' })); });
+
+      expect(onRemove).toHaveBeenCalledTimes(1);
+      expect(onRemove.mock.calls[0][0]).toBe(file);
+    });
+
+    test('dismissing a row rejected before upload does not call onRemove', async () => {
+      const onRemove = jest.fn();
+      const { container } = render(<UploadInputV4 {...defaultProps} onRemove={onRemove} />);
+      select(container, fileOf('tool.exe', 2048, 'application/octet-stream'));
+
+      act(() => { fireEvent.click(screen.getByRole('button', { name: 'Dismiss tool.exe' })); });
+
+      expect(onRemove).not.toHaveBeenCalled();
     });
 
     test('retry uploads a failed file again and delivers it', async () => {
