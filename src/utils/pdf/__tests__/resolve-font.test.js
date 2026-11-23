@@ -7,8 +7,9 @@ import { bytesToBase64 } from '../base64';
 import { createFakePdfMake } from '../__fixtures__/fake-pdfmake';
 import { neverAnswers, serveFiles } from '../__fixtures__/fetch';
 import {
-  modernTables, oldTables, ttf, woff2, MODERN, OLD, HELVETICA_FONT_METRICS,
+  modernTables, oldTables, widthTables, ttf, woff2, MODERN, OLD,
 } from '../__fixtures__/font-files';
+import { HELVETICA_FONT_METRICS } from '../helvetica-metrics';
 
 const HELVETICA_FONT = { family: 'Helvetica', fontMetrics: HELVETICA_FONT_METRICS };
 
@@ -94,6 +95,16 @@ describe('loadFont', () => {
       family: 'Metrics',
       fontMetrics: { normal: MODERN, bold: OLD, italics: MODERN, bolditalics: OLD },
     });
+  });
+
+  it("gives each style's text widths, read from the file that prints it", async () => {
+    global.fetch = serveFiles({ 'https://w/r.ttf': ttf(widthTables()) });
+    const { fontMetrics } = await loadFont(newPdfMake(), {
+      family: 'Widths',
+      urls: { normal: 'https://w/r.ttf' },
+    });
+    expect(fontMetrics.bold.textWidth('AB')).toBeCloseTo(1.3);
+    expect(fontMetrics.italics).toBe(fontMetrics.normal);
   });
 
   it('fetches each URL once and fills missing styles from the closest one', async () => {
