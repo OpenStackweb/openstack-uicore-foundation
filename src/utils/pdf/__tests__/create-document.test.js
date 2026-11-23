@@ -3,6 +3,7 @@
  */
 import { createDocument } from '../create-document';
 import { createFakePdfMake } from '../__fixtures__/fake-pdfmake';
+import { HELVETICA_FONT_METRICS } from '../__fixtures__/font-files';
 
 describe('createDocument', () => {
   beforeEach(() => {
@@ -11,13 +12,16 @@ describe('createDocument', () => {
   });
   afterEach(() => jest.restoreAllMocks());
 
-  it('resolves font, runs the template with it, and sets defaultStyle.font', async () => {
+  it('resolves font, runs the template with it and its metrics, and sets defaultStyle.font', async () => {
     const { pdfMake } = createFakePdfMake();
     const template = jest.fn((data, ctx) => ({ content: [{ text: data.t }], _ctxFont: ctx.font }));
 
     const api = await createDocument({ pdfMake, font: 'Helvetica', template, data: { t: 'hi' } });
 
-    expect(template).toHaveBeenCalledWith({ t: 'hi' }, { font: 'Helvetica' });
+    expect(template).toHaveBeenCalledWith({ t: 'hi' }, {
+      font: 'Helvetica',
+      fontMetrics: HELVETICA_FONT_METRICS,
+    });
     const doc = pdfMake.createPdf.mock.calls[0][0];
     expect(doc.defaultStyle.font).toBe('Helvetica');
     expect(typeof api.download).toBe('function');
