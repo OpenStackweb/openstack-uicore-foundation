@@ -87,6 +87,11 @@ const resolveErrorMessage = (err) => {
  * (`${FILE_UPLOAD_API_BASE_URL}/api/v1/files`). Dropzone's `timeOut`,
  * `parallelChunkUploads` and `maxConcurrentChunks` are accepted and ignored: Uppy
  * retries each request on its own and limits concurrency across all files.
+ *
+ * Every File reported through `onUploadStart` is later reported once through
+ * `onUploadComplete`, `onError(err, status, id, file)` or `onRemove(file)`, and a
+ * retry starts it again. Dismissing its error row calls `onRemove`, so a parent can
+ * track exactly which files are running or failed.
  */
 const UploadInputV4 = ({
   value = [],
@@ -221,7 +226,8 @@ const UploadInputV4 = ({
         { id: file.id, name: file.name, size: file.size, message: resolveErrorMessage(err) },
       ]);
       const { onError: callback, id: inputId } = propsRef.current;
-      if (callback) callback(err, err?.status, inputId);
+      // the File reported by onUploadStart, so a parent can tell which upload failed
+      if (callback) callback(err, err?.status, inputId, file.data);
     };
     const onFileRemoved = (file) => {
       // A delivered row stays until the parent confirms it through `value`.
@@ -322,10 +328,15 @@ const UploadInputV4 = ({
     if (onRemove) onRemove(uppyFile?.data ?? { name: file.name, size: file.size });
   }, [uppy, dropUploadingRow, onRemove]);
 
+  // A row rejected before Uppy took the file never reported onUploadStart, so it
+  // reports nothing here either.
   const handleDismissError = useCallback((file) => {
     setErrorFiles(prev => prev.filter(f => f.id !== file.id));
-    if (uppy?.getFile(file.id)) uppy.removeFile(file.id);
-  }, [uppy]);
+    const uppyFile = uppy?.getFile(file.id);
+    if (!uppyFile) return;
+    uppy.removeFile(file.id);
+    if (onRemove) onRemove(uppyFile.data);
+  }, [uppy, onRemove]);
 
   const handleRetryError = useCallback((file) => {
     setErrorFiles(prev => prev.filter(f => f.id !== file.id));
